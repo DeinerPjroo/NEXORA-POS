@@ -83,17 +83,20 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
           >
             <option value="none">Sin impuesto adicional automático</option>
             <option value="exclusive">Porcentaje adicional sobre la base</option>
+            <option value="inclusive">Impuesto incluido en los precios</option>
           </select>
         </Field>
         <p className="muted small">
-          Los precios del catálogo se tratan como base. Elige el cálculo que corresponda a tu
-          negocio; esta configuración no determina su régimen tributario. Los precios con impuesto
-          incluido y varios impuestos por producto requieren una ampliación posterior.
+          {mode === 'inclusive'
+            ? 'Se extrae la base y el impuesto del precio final; no se vuelve a sumar al total. '
+            : 'Los precios del catálogo se tratan como base. '}
+          Elige el cálculo que corresponda a tu negocio; esta configuración no determina su régimen
+          tributario. Varios impuestos por producto requieren una ampliación posterior.
         </p>
         <Field label="Nombre del impuesto">
           <input name="tax_name" defaultValue={initial.tax_name} required maxLength={40} />
         </Field>
-        <Field label="Tasa adicional (%)">
+        <Field label={mode === 'inclusive' ? 'Tasa incluida (%)' : 'Tasa adicional (%)'}>
           <input
             value={rate}
             onChange={(event) => setRate(event.target.value)}
@@ -104,8 +107,9 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
           />
         </Field>
         <div className="notice">
-          Redondeo comercial a dos decimales, con mitades hacia arriba. Primero se redondea el
-          subtotal, después se resta el descuento y se calcula el impuesto adicional sobre esa base.
+          {mode === 'inclusive'
+            ? 'Después del descuento se extrae la base, redondeada a dos decimales con mitades hacia arriba. El impuesto es la diferencia respecto al importe participante, conservando el precio final.'
+            : 'Redondeo comercial a dos decimales, con mitades hacia arriba. Primero se redondea el subtotal, después se resta el descuento y se calcula el impuesto adicional sobre esa base.'}
         </div>
         <label className="check-line">
           <input
@@ -121,15 +125,17 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
               <option value="" disabled>
                 Selecciona un tratamiento explícito
               </option>
-              <option value="excluded">Fuera de la base del impuesto adicional</option>
-              <option value="included">Incluir en la base del impuesto adicional</option>
+              <option value="excluded">Fuera del cálculo del impuesto</option>
+              <option value="included">Participa en el cálculo del impuesto</option>
             </select>
           </Field>
         )}
         {tips && (
           <p className="muted small">
             La empresa confirma este cálculo según su operación. No se agrega una propina automática
-            ni se determina un régimen tributario.
+            ni se determina un régimen tributario.{' '}
+            {mode === 'inclusive' &&
+              'Si participa, el impuesto se extrae del importe de propina aceptado; no se añade otro cobro.'}
           </p>
         )}
         <label className="check-line">

@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-008 · Impuesto incluido global (0.11)
+
+Se añade como modo explícito, sin cambiar none/exclusive ni asumir tasa/regulación. Descuento sobre subtotal redondeado; base extraída con 18 decimales de cálculo y half-up final. Impuesto por diferencia, conservando cada centavo del importe participante; total = subtotal − descuento + propina. Si la propina participa, su importe aceptado ya contiene el impuesto.
+
+calculation_version=2 identifica esta fórmula y permanece inmutable. El historial y modos anteriores conservan versión 1. La nueva columna no cambia importes. E1 no implementa perfiles/varios impuestos por producto (E2 pendiente). Se amplía el recorrido existente de ajustes con otra venta en su misma empresa para probar esta combinación sin desactivar límites de registro ni duplicar altas innecesarias.
+
 ## DEC-007 · Partes iguales sobre una venta (0.10)
 
 La primera división es por importes iguales antes del primer pago, de 2–20 partes con mínimo un centavo. El servidor reparte centavos sobrantes a las primeras y mantiene exactamente el total confirmado. Son asignaciones internas del total, sin repartir bases tributarias, productos o propinas ni emitir facturas separadas.

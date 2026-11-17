@@ -381,3 +381,5 @@ alter table `payments` add `account_id` bigint unsigned null;
 
 alter table `payments` add constraint `payments_account_fk` foreign key (`tenant_id`, `sale_id`, `account_id`) references `sale_accounts` (`tenant_id`, `sale_id`, `id`) on delete restrict;
 
+alter table `sales` add `calculation_version` smallint unsigned not null default '1';
+

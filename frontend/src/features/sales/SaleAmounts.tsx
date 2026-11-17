@@ -32,15 +32,20 @@ export function SaleAmounts({
         </dt>
         <dd>{money(amounts.discount_amount)}</dd>
       </div>
-      {amounts.tax_mode === 'exclusive' ? (
+      {amounts.tax_mode !== 'none' ? (
         <>
           <div>
-            <dt>Base del impuesto adicional</dt>
+            <dt>
+              {amounts.tax_mode === 'inclusive'
+                ? 'Base extraída del precio'
+                : 'Base del impuesto adicional'}
+            </dt>
             <dd>{money(amounts.taxable_base)}</dd>
           </div>
           <div>
             <dt>
-              {amounts.tax_name} ({amounts.tax_rate.replace(/\.?0+$/, '') || '0'} %)
+              {amounts.tax_name} ({amounts.tax_rate.replace(/\.?0+$/, '') || '0'} %
+              {amounts.tax_mode === 'inclusive' ? ' incluido' : ''})
             </dt>
             <dd>{money(amounts.tax_amount)}</dd>
           </div>

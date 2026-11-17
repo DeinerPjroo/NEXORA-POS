@@ -1,5 +1,9 @@
 # Arquitectura técnica
 
+## Cálculo incluido versionado (0.11)
+
+IncludedTax recibe importe participante en centavos/tasa validada, divide con BCMath/18 decimales y redondea base half-up una vez. El impuesto es la diferencia frente al importe participante y el total no vuelve a añadirlo. SaleTotals mantiene none/exclusive en versión 1 e inclusive en versión 2, incluyendo tratamiento explícito de propina. sales.calculation_version es inmutable; migración 000011 solo agrega versión 1 a filas previas. No reinterpretar sus importes ni asumir que esto implementa varios impuestos por producto; INCLUDED_TAX.md define el contrato.
+
 ## Asignaciones de cuentas (0.10)
 
 SplitAccounts calcula partes iguales en centavos antes del primer pago; sale_accounts es append-only y payments.account_id conserva la asignación con FK tenant/sale/account. No se crean divisiones en ventas previas. RecordPayments limita acumulados por cuenta y globales dentro del bloqueo común, y las compensaciones conservan esa asignación por su payment original. Saldos/netos se derivan con BCMath; una devolución no reabre deuda. La creación de partes comparte transacción, revisión/idempotencia y auditoría del primer cobro. Una venta/recibo, sin reparto de productos o documentos fiscales múltiples; SPLIT_ACCOUNTS.md define contrato y límites.

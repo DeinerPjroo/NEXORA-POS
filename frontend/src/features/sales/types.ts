@@ -13,7 +13,7 @@ export type PaymentMethod = {
 
 export type SalesSettings = {
   configured: boolean
-  tax_mode: 'none' | 'exclusive'
+  tax_mode: 'none' | 'exclusive' | 'inclusive'
   tax_name: string
   tax_rate: string
   revision: number
@@ -23,6 +23,7 @@ export type SalesSettings = {
   tip_tax_mode: 'included' | 'excluded' | null
 }
 export type SaleQuote = {
+  calculation_version: number
   accounts_preview: AccountPart[]
   currency: string
   catalog_subtotal: string
@@ -30,7 +31,7 @@ export type SaleQuote = {
   rounding_adjustment: string
   discount_amount: string
   taxable_base: string
-  tax_mode: 'none' | 'exclusive'
+  tax_mode: 'none' | 'exclusive' | 'inclusive'
   tax_name: string
   tax_rate: string
   tax_amount: string

@@ -10,13 +10,15 @@ La venta conserva discount_type, discount_value y discount_amount derivado. El p
 
 Las empresas nuevas/existentes comienzan con tip_enabled=false. En Ventas → Configurar ventas, la persona con sales.configure puede habilitar el registro de propinas voluntarias y debe elegir explícitamente su tratamiento en la base del impuesto adicional: excluded o included. La confirmación general de configuración queda auditada. No se asigna una política tributaria ni una tasa legal automática; la empresa elige el cálculo que corresponda a su operación.
 
-included significa **incluir la propina en la base del impuesto adicional**, no que los precios del catálogo tengan impuesto incluido. Los impuestos incluidos en precios/múltiples por producto siguen pendientes en 2.1-E.
+tip_tax_mode=included significa que la propina participa en el impuesto elegido por la empresa; no selecciona por sí mismo el modo de precios. En exclusive se añade el impuesto calculado sobre esa base. Desde 0.11, tax_mode=inclusive extrae el impuesto del importe aceptado, incluida la propina si participa, sin otro cobro. Fórmula en INCLUDED_TAX.md. Varios impuestos por producto siguen pendientes en E2.
 
 El importe de propina es fijo y opcional, inicialmente cero. Un importe positivo requiere sales.tips y tip_confirmed aceptado: el operador declara que el cliente lo aceptó voluntariamente. La UI exige esa confirmación antes de habilitar el cobro. Se conserva tip_confirmed en la venta y auditoría; esto no es verificación externa del consentimiento ni entrega de dinero a empleados.
 
 No se agrega una propina porcentual ni un valor automático, ni se habilita solo por tener permiso. Deshabilitar propinas o cambiar su tratamiento no altera recibos anteriores. Los roles existentes reciben sales.tips automáticamente solo en propietario; otros se configuran explícitamente.
 
 ## Fórmulas y ejemplo de prueba
+
+Esta fórmula corresponde a none/exclusive, versión 1. La versión 2 de precios con impuesto incluido mantiene subtotal/descuento/consentimiento, pero total = subtotal − descuento + propina y extrae impuesto por diferencia; no sumarlo otra vez. INCLUDED_TAX.md contiene fórmula y ejemplos.
 
 BCMath, importes como cadenas y redondeo half-up a dos decimales:
 

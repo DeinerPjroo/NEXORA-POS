@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 0.11.0 · 2026-11-17
+
+- Modo global inclusive explícito: base extraída half-up del importe participante e impuesto por diferencia, sin añadirlo otra vez al total.
+- Descuento fijo/porcentual antes de extraer base; propina participante ya contiene impuesto en su importe aceptado. Tratamiento/consentimiento siguen explícitos.
+- IncludedTax con BCMath/18 decimales y conservación exacta de centavos/precio final. None/exclusive conservan fórmula anterior.
+- Migración 000011 agrega calculation_version=1 al historial; ventas inclusive guardan versión 2 inmutable y elegida por servidor.
+- Configuración y recibo adaptados, con base/impuesto incluido visibles. Abonos, cuentas y devoluciones preservan snapshots ante cambios posteriores.
+- Chromium de ajustes ampliado con venta incluida y cambio de configuración sin reinterpretar recibo; sin desactivar validaciones de registro. Alcance/formulas en INCLUDED_TAX.md; varios impuestos por producto siguen pendientes.
+
 ## 0.10.0 · 2026-11-17
 
 - División opcional en 2–20 partes iguales antes del primer pago, cotizada en servidor y con centavos sobrantes a las primeras partes. Ninguna parte cero.

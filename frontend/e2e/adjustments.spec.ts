@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { formatMoney } from '../src/lib/money'
-import { registerWorkspace, writeApi } from './helpers'
+import type { Sale } from '../src/features/sales/types'
+import { readApi, registerWorkspace, writeApi } from './helpers'
 
-test('descuento porcentual y propina voluntaria: confirmar política, calcular y conservar recibo', async ({
+test('descuento, propina e impuesto incluido: configurar, calcular y conservar recibos', async ({
   page,
 }) => {
-  test.setTimeout(160_000)
+  test.setTimeout(240_000)
   await registerWorkspace(page, 'Oliva Propinas', 'tips')
   await page.goto('/ventas/configuracion')
   await page.getByLabel('Cálculo de impuesto', { exact: true }).selectOption('exclusive')
@@ -118,6 +119,76 @@ test('descuento porcentual y propina voluntaria: confirmar política, calcular y
   await page
     .getByLabel('Motivo de la devolución', { exact: true })
     .fill('Devolución de cobro y propina')
+  await page.getByRole('button', { name: 'Confirmar devolución total', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Devolución total registrada', exact: true }),
+  ).toBeVisible()
+  await page.goto('/ventas/configuracion')
+  await page.getByLabel('Cálculo de impuesto', { exact: true }).selectOption('inclusive')
+  await page.getByLabel('Tasa incluida (%)', { exact: true }).fill('10')
+  await page
+    .getByRole('checkbox', {
+      name: 'Confirmo esta configuración para los próximos cobros.',
+      exact: true,
+    })
+    .check()
+  await page.getByRole('button', { name: 'Confirmar configuración', exact: true }).click()
+  await expect(page.getByText('Configuración de ventas confirmada.', { exact: true })).toBeVisible()
+  await page.goto('/pedidos/nuevo')
+  await page.getByRole('button', { name: 'Agregar Menú especial', exact: true }).click()
+  await page.getByRole('button', { name: 'Registrar pedido', exact: true }).click()
+  await page.getByRole('link', { name: 'Cobrar pedido', exact: true }).click()
+  await page.getByLabel('Descuento en dinero', { exact: true }).fill('10.01')
+  await page.getByLabel('Propina voluntaria', { exact: true }).fill('5.25')
+  await page.getByRole('button', { name: 'Actualizar total', exact: true }).click()
+  await expect(page.getByText('Base extraída del precio', { exact: true })).toBeVisible()
+  await expect(
+    page.locator('.sale-grand-total').getByText(formatMoney('95.25'), { exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText('Impuesto de prueba (10 % incluido)', { exact: true })).toBeVisible()
+  await page
+    .getByLabel('Motivo del descuento', { exact: true })
+    .fill('Ajuste antes de extraer impuesto incluido')
+  await page
+    .getByRole('checkbox', {
+      name: 'Confirmo que el cliente aceptó esta propina voluntariamente.',
+      exact: true,
+    })
+    .check()
+  await page.getByLabel('Efectivo recibido', { exact: true }).fill('100')
+  await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Recibo V-000002', exact: true })).toBeVisible()
+  const includedUrl = page.url()
+  const included = await readApi<{ data: Sale }>(page, `sales/${includedUrl.split('/').at(-1)}`)
+  expect(included.data.calculation_version).toBe(2)
+  expect(included.data.taxable_base).toBe('86.5900')
+  expect(included.data.tax_amount).toBe('8.6600')
+  expect(included.data.total).toBe('95.2500')
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.screenshot({
+    path: '../docs/screenshots/inclusive-tax-receipt-mobile.png',
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await page.goto('/ventas/configuracion')
+  await page.getByLabel('Cálculo de impuesto', { exact: true }).selectOption('none')
+  await page
+    .getByRole('checkbox', {
+      name: 'Confirmo esta configuración para los próximos cobros.',
+      exact: true,
+    })
+    .check()
+  await page.getByRole('button', { name: 'Confirmar configuración', exact: true }).click()
+  await expect(page.getByText('Configuración de ventas confirmada.', { exact: true })).toBeVisible()
+  await page.goto(includedUrl)
+  await expect(page.getByText('Impuesto de prueba (10 % incluido)', { exact: true })).toBeVisible()
+  await page.goto(cashUrl)
+  await expect(page.getByText(formatMoney('1095.25'), { exact: true })).toBeVisible()
+  await page.goto(includedUrl)
+  await page.getByRole('button', { name: 'Devolución total', exact: true }).click()
+  await page
+    .getByLabel('Motivo de la devolución', { exact: true })
+    .fill('Devolución de precio con impuesto incluido')
   await page.getByRole('button', { name: 'Confirmar devolución total', exact: true }).click()
   await expect(
     page.getByRole('heading', { name: 'Devolución total registrada', exact: true }),

@@ -37,7 +37,7 @@ final class SaleTotals
         if (bccomp($discount, $subtotal, 4) > 0) {
             throw ValidationException::withMessages(['discount_amount' => 'El descuento supera el subtotal.']);
         }
-        $goodsBase = bcsub($subtotal, $discount, 4);
+        $goodsAmount = bcsub($subtotal, $discount, 4);
         $tip = Money::bounded($adjustments['tip_amount'] ?? '0');
         if (bccomp($tip, '0', 4) > 0) {
             Gate::authorize('sales.tips');
@@ -46,14 +46,21 @@ final class SaleTotals
             }
         }
         $tipMode = $settings->tip_enabled ? $settings->tip_tax_mode : 'disabled';
-        $base = Money::bounded(bcadd($goodsBase, $tipMode === 'included' ? $tip : '0', 4));
-        $tax = $settings->tax_mode === 'exclusive' ? self::round(bcdiv(bcmul($base, $settings->tax_rate, 8), '100', 8)) : '0.0000';
-        $total = Money::bounded(bcadd(bcadd($goodsBase, $tip, 4), $tax, 4));
+        $base = Money::bounded(bcadd($goodsAmount, $tipMode === 'included' ? $tip : '0', 4));
+        if ($settings->tax_mode === 'inclusive') {
+            $included = IncludedTax::extract($base, $settings->tax_rate);
+            $base = $included['base'];
+            $tax = $included['tax'];
+        } else {
+            $tax = $settings->tax_mode === 'exclusive' ? self::round(bcdiv(bcmul($base, $settings->tax_rate, 8), '100', 8)) : '0.0000';
+        }
+        $total = Money::bounded(bcadd(bcadd($goodsAmount, $tip, 4), $settings->tax_mode === 'exclusive' ? $tax : '0', 4));
         if (bccomp($total, '0', 4) <= 0) {
             throw ValidationException::withMessages(['discount_amount' => 'El total debe ser mayor que cero para registrar un cobro.']);
         }
 
         return [
+            'calculation_version' => $settings->tax_mode === 'inclusive' ? 2 : 1,
             'currency' => $order->currency, 'catalog_subtotal' => $order->subtotal, 'subtotal' => $subtotal,
             'rounding_adjustment' => bcsub($subtotal, $order->subtotal, 4),
             'discount_amount' => Money::normalize($discount), 'taxable_base' => $base,

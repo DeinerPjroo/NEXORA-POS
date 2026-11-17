@@ -1,4 +1,4 @@
-# Venta y devolución con métodos manuales (0.5–0.10)
+# Venta y devolución con métodos manuales (0.5–0.11)
 
 ## Uso
 
@@ -6,12 +6,14 @@ Desde 0.9 hay devoluciones parciales por pago, con límites acumulativos e histo
 
 Desde 0.10 puede dividirse el total en partes iguales antes del primer pago. Se conserva una venta y se asignan pagos/saldos a cada cuenta, con límites de servidor. Ver [SPLIT_ACCOUNTS.md](SPLIT_ACCOUNTS.md).
 
+Desde 0.11 existe modo global de impuesto incluido en precios: se extraen base/impuesto sin añadirlo otra vez al total. Fórmula versión 2 y tratamiento explícito de propina en [INCLUDED_TAX.md](INCLUDED_TAX.md). Los modos anteriores e historia conservan versión 1.
+
 Desde 0.7 se permiten abonos y varios pagos por venta. El total original permanece fijo; el recibo muestra pagos aplicados, saldo e historial. Véanse reglas actuales y devolución de cobros de ventas abonadas en [PAYMENTS.md](PAYMENTS.md). Las reglas de cálculo de este documento siguen vigentes.
 
 Desde 0.8 también hay descuento porcentual calculado por servidor y propina voluntaria opcional/deshabilitada inicialmente, con tratamiento de base y consentimiento explícitos. Fórmula vigente completa en [ADJUSTMENTS.md](ADJUSTMENTS.md); no reinterpretar recibos anteriores ni cambiar total después del primer pago.
 
 1. En **Ventas → Configurar ventas**, confirma el cálculo. La instalación comienza sin configurar y bloquea los cobros hasta esta confirmación.
-2. Elige **sin impuesto adicional automático** o un **porcentaje adicional sobre la base** con nombre/tasa definidos por la empresa. No se asigna un régimen ni una tasa legal automáticamente. Los precios del catálogo se interpretan como base; los impuestos incluidos y múltiples por producto no están soportados.
+2. Elige **sin impuesto adicional automático**, **porcentaje adicional sobre la base** o **impuesto incluido en los precios**, con nombre/tasa definidos por la empresa. No se asigna un régimen ni una tasa legal automáticamente. Varios impuestos por producto siguen pendientes.
 3. Abre una sesión operativa de caja en la sucursal. Desde un pedido no cancelado, entra en **Cobrar pedido** y selecciona un método. Puede cobrarse antes o después de entregar; preparación y pago son estados distintos.
 4. Si corresponde, aplica un descuento fijo en dinero con motivo y permiso sales.discount. Pulsa **Actualizar total** y revisa el cálculo del servidor.
 5. Selecciona la caja y registra el efectivo recibido o referencia del pago manual no efectivo. Confirmar guarda venta, pago, revisión de sesión/pedido, secuencia y auditoría en una transacción. Solo efectivo genera ingreso neto.
@@ -26,6 +28,8 @@ El pago guarda método, nombre, tipo, revisión, procedencia operator y referenc
 El selector de métodos tiene paginación y solo ofrece activos. El servidor vuelve a comprobar revisión/estado al confirmar. Desactivar o renombrar no altera recibos anteriores ni impide devolver por el método histórico.
 
 ## Cálculo definido
+
+Esta sección describe los modos originales none/exclusive (versión 1). El modo inclusive (versión 2) conserva subtotal/descuento/redondeo, pero extrae base e impuesto por diferencia; total = subtotal − descuento + propina. Ver INCLUDED_TAX.md antes de extenderlo.
 
 Importes DECIMAL(19,4), enviados como cadenas y calculados con BCMath. En este circuito COP/USD/EUR se cobran con dos decimales; mitad hacia arriba, no redondeo bancario. El catálogo y las líneas históricas conservan cuatro decimales.
 
@@ -57,6 +61,6 @@ No se cancela un pedido con venta asociada: una persona autorizada gestiona su d
 
 sales.view consulta ventas/recibos; sales.collect cobra; sales.configure confirma configuración; sales.discount descuenta; sales.refund devuelve. La interfaz de cobro también necesita orders.view para consultar el pedido. No exige cash.movements: un cobro es una acción distinta a un movimiento manual. Las nuevas capacidades se conceden automáticamente solo a propietarios existentes; otros roles se configuran explícitamente.
 
-No hay confirmación electrónica de tarjetas/transferencias, pasarelas, división por productos/unión de cuentas, reparto/liquidación de propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. División en partes iguales, abonos/mixtos, devoluciones parciales por pago y registro voluntario de propina sí existen. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
+No hay confirmación electrónica de tarjetas/transferencias, pasarelas, división por productos/unión de cuentas, reparto/liquidación de propinas, varios impuestos por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. Impuesto incluido global, partes iguales, abonos/mixtos, devoluciones parciales por pago y registro voluntario de propina sí existen. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
 
 Continúan pendientes MySQL 8 específico, CI, carga/concurrencia entre procesos, operación fiscal real, backups/restauración y endurecimiento de producción. MariaDB es la referencia monetaria probada; SQLite solo cubre funcionalidad por sus límites de afinidad NUMERIC.

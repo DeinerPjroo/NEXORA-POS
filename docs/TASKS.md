@@ -10,9 +10,9 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-C | COMPLETED | Porcentaje y propinas voluntarias con configuración/snapshot/consentimiento; migración 000008 aplicada, 108/891 SQLite/MariaDB, 12 Playwright y build/formato correctos | 2.1-B |
 | 2.1-D1 | COMPLETED | Devoluciones parciales conectadas, límites acumulados y cierre de remanentes. Migración 000009 aplicada; 122/1097 SQLite/MariaDB, 13 Playwright, build/formato y capturas correctos | 2.1-B/C |
 | 2.1-D2 | COMPLETED | División en partes iguales, FK/asignaciones/saldos y límites por parte/globales. Migración 000010 aplicada; 136/1260 SQLite/MariaDB, 14 Playwright y build/formato/capturas correctos | 2.1-D1 |
-| 2.1-E | PENDING | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores | Catálogo y cálculo versionado |
-| 2.1-E1 | IN_PROGRESS | Impuesto incluido global explícito: extraer base/redondeo, total sin adición doble, propina según tratamiento confirmado y versión de cálculo; conservar modos anteriores | 2.1-D2 |
-| 2.1-E2 | PENDING | Perfiles de varios impuestos por producto, asignación/configuración, snapshots en pedidos y cálculo/recibo por líneas sin cambiar historia; desglosar si es necesario | 2.1-E1 y catálogo |
+| 2.1-E | IN_PROGRESS | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores; E1 global completado, E2 por producto aún pendiente | Catálogo y cálculo versionado |
+| 2.1-E1 | COMPLETED | Impuesto incluido global conectado/versionado, sin doble adición y propina explícita. Migración 000011 aplicada; 144/1357 SQLite/MariaDB, 14 Playwright y build/formato/captura correctos | 2.1-D2 |
+| 2.1-E2 | IN_PROGRESS | Perfiles de varios impuestos por producto, asignación/configuración, snapshots en pedidos y cálculo/recibo por líneas sin cambiar historia; análisis en PRODUCT_TAX_PLAN.md, aún sin código | 2.1-E1 y catálogo |
 | 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |

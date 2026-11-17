@@ -17,7 +17,7 @@ final class SaleCommandRequest extends FormRequest
     public function rules(): array
     {
         $common = ['idempotency_key' => ['required', 'uuid'], 'cash_session_id' => ['required', 'integer', 'min:1'],
-            'cash_revision' => ['required', 'integer', 'min:1'], 'tenant_id' => ['prohibited'], 'total' => ['prohibited'], 'tax_rate' => ['prohibited'], 'provenance' => ['prohibited'], 'provider_confirmed' => ['prohibited']];
+            'cash_revision' => ['required', 'integer', 'min:1'], 'tenant_id' => ['prohibited'], 'total' => ['prohibited'], 'tax_rate' => ['prohibited'], 'calculation_version' => ['prohibited'], 'provenance' => ['prohibited'], 'provider_confirmed' => ['prohibited']];
 
         return $common + ($this->routeIs('sales.refund') ? ['reason' => ['required', 'string', 'min:3', 'max:300'], 'refund_reference' => ['nullable', 'string', 'max:120'],
             'sale_revision' => ['sometimes', 'integer', 'min:1'], 'refund_references' => ['sometimes', 'array', 'list'],
