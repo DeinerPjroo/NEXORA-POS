@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'required' => 'El campo :attribute es obligatorio.',
+    'uploaded' => 'No se pudo subir el archivo :attribute. Comprueba su tamaño y formato.',
+    'file' => 'El campo :attribute debe ser un archivo válido.',
+    'present' => 'El campo :attribute debe estar presente.',
+    'email' => 'Ingresa un correo electrónico válido.',
+    'unique' => 'El valor de :attribute ya está registrado.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'max' => ['string' => 'El campo :attribute admite máximo :max caracteres.', 'array' => 'El campo :attribute admite máximo :max elementos.', 'numeric' => 'El valor máximo es :max.'],
+    'min' => ['string' => 'El campo :attribute necesita al menos :min caracteres.', 'numeric' => 'El valor mínimo es :min.'],
+    'confirmed' => 'La confirmación de la contraseña no coincide.',
+    'prohibited' => 'No se permite enviar el campo :attribute.',
+    'in' => 'Selecciona una opción válida para :attribute.',
+    'exists' => 'El valor de :attribute no es válido.',
+    'regex' => 'El formato de :attribute no es válido.',
+    'array' => 'La estructura de :attribute no es válida.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'timezone' => 'Selecciona una zona horaria válida.',
+    'distinct' => 'Hay valores duplicados en :attribute.',
+    'password' => ['mixed' => 'La contraseña debe incluir mayúsculas y minúsculas.', 'numbers' => 'La contraseña debe incluir un número.'],
+    'attributes' => ['name' => 'nombre', 'company_name' => 'empresa', 'branch_name' => 'sucursal', 'business_type' => 'tipo de negocio', 'email' => 'correo', 'password' => 'contraseña', 'code' => 'código', 'address' => 'dirección', 'phone' => 'teléfono', 'city' => 'ciudad'],
+];

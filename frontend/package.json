@@ -1,0 +1,37 @@
+{
+  "name": "nexora-pos-web",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "check": "tsc -b",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:e2e": "playwright test",
+    "format": "prettier --write src e2e *.ts *.json index.html",
+    "format:check": "prettier --check src e2e *.ts *.json index.html"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "prettier": "^3.10.1",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8"
+  }
+}

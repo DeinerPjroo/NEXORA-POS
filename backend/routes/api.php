@@ -1,0 +1,51 @@
+<?php
+
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\VariantController;
+use App\Http\Controllers\WorkspaceController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')->group(function () {
+    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:registration');
+    Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('auth/forgot-password', [AuthController::class, 'forgot'])->middleware('throttle:recovery');
+    Route::post('auth/reset-password', [AuthController::class, 'reset'])->middleware('throttle:recovery');
+    Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+        Route::get('auth/me', [AuthController::class, 'me']);
+        Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::get('auth/sessions', [AuthController::class, 'sessions']);
+        Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
+        Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
+        Route::get('workspace/team', [WorkspaceController::class, 'team']);
+        Route::get('workspace/company', [WorkspaceController::class, 'settings']);
+        Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
+        Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
+        Route::put('workspace/theme', [WorkspaceController::class, 'publishTheme']);
+        Route::get('branches', [BranchController::class, 'index']);
+        Route::post('branches', [BranchController::class, 'store']);
+        Route::put('branches/{branch}', [BranchController::class, 'update']);
+        Route::get('roles', [RoleController::class, 'index']);
+        Route::post('roles', [RoleController::class, 'store']);
+        Route::put('roles/{role}', [RoleController::class, 'update']);
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::post('categories', [CategoryController::class, 'store']);
+        Route::put('categories/{category}', [CategoryController::class, 'update']);
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/{product}', [ProductController::class, 'show']);
+        Route::post('products', [ProductController::class, 'store']);
+        Route::put('products/{product}', [ProductController::class, 'update']);
+        Route::get('products/{product}/image', [ProductImageController::class, 'show']);
+        Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
+        Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
+        Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/variants', [VariantController::class, 'index']);
+            Route::post('products/{product}/variants', [VariantController::class, 'store']);
+            Route::put('products/{product}/variants/{variant}', [VariantController::class, 'update']);
+        });
+    });
+});

@@ -1,0 +1,114 @@
+# Nexora POS
+
+**El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
+
+La entrega **0.3.0** amplía el catálogo con **fotografías privadas y variantes de productos**. También funcionan registro empresarial, sesiones, recuperación de contraseña, sucursales, roles y permisos, resumen del espacio, configuración regional e identidad visual versionada. El frontend consume la API real. Punto de venta, caja, cocina, inventario, suscripciones y el editor avanzado siguen pendientes.
+
+## Entorno y requisitos
+
+Verificado el 17 de noviembre de 2026 en Windows: PHP **8.3.31**, Composer **2.8.9**, Node **24.10.0**, npm **11.6.1**. PHP tiene PDO MySQL, PDO SQLite, mbstring, OpenSSL, cURL, fileinfo, XML y ZIP. Framework instalado: Laravel **13.43.0**, Sanctum **4.5.0**, React **19.3.1**, Vite **8.3.8**, Tailwind **4.3.5**. Las versiones exactas están en los archivos lock.
+
+La conexión configurada en `backend/.env` ya funciona con **MariaDB 10.4.32 de XAMPP** en `127.0.0.1:3306`, usando el driver mysql de PDO. Las migraciones están aplicadas y la suite backend pasó también en una base temporal de ese servidor. Esto verifica MariaDB; la validación específica de MySQL 8 para despliegue continúa pendiente. Durante el trabajo se realizó un arranque normal de MariaDB al detectarlo detenido; no se repararon archivos de datos ni se modificaron otros proyectos.
+
+## Instalar y ejecutar
+
+Desde la raíz, en PowerShell:
+
+```powershell
+cd backend
+composer install
+# Solo si .env todavía no existe:
+Copy-Item .env.example .env
+php artisan key:generate
+```
+
+En esta entrega `.env` y la clave local ya fueron creados. **No copies el ejemplo ni regeneres la clave si ya configuraste tu entorno.** Edita localmente estas variables, sin compartir la contraseña en el repositorio:
+
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nexora_pos
+DB_USERNAME=tu_usuario
+DB_PASSWORD="tu_contraseña"
+```
+
+Crea una base nueva en MySQL Workbench, usando un usuario autorizado:
+
+```sql
+CREATE DATABASE nexora_pos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Si ya existe, selecciónala y revisa que sea la base destinada a Nexora. Después, desde `backend/`:
+
+```powershell
+php artisan config:clear
+php artisan nexora:doctor
+php artisan migrate --seed
+php artisan serve --host=127.0.0.1 --port=8001
+```
+
+En una segunda terminal, desde la raíz:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Abre **http://127.0.0.1:5173/registro**, registra tu empresa y crea tu contraseña. No hay cuentas compartidas ni contraseñas predeterminadas. Usa siempre el mismo host (`127.0.0.1`) para la SPA y Laravel. Vite envía `/api` y `/sanctum` al backend mediante proxy y las sesiones usan cookies HttpOnly con protección CSRF.
+
+El backend usa el puerto **8001** porque el 8000 lo ocupa otro proyecto local. Escribe el comando sin una barra `\` al final. Si indica que el puerto ya está ocupado, comprueba si Nexora sigue ejecutándose antes de iniciar otra instancia.
+
+XAMPP provee PHP, pero no es necesario activar Apache para usar estos dos servidores locales. No abras la raíz del repositorio desde Apache: un despliegue PHP debe exponer exclusivamente `backend/public`.
+
+## Pruebas
+
+```powershell
+cd backend
+php artisan test
+php vendor/bin/pint --test
+```
+
+PHPUnit usa SQLite **en memoria** y no toca MySQL. Las pruebas verifican registro atómico, aislamiento entre empresas, claves compuestas, permisos, suspensión, límites de acceso, validación visual, revisiones y recuperación de contraseña.
+
+Para probar con el servidor MySQL/MariaDB configurado, desde la raíz:
+
+```powershell
+php scripts/test-mysql.php
+```
+
+El script crea una base temporal nueva de nombre aleatorio, ejecuta la suite y elimina exclusivamente esa base al finalizar. Necesita permiso CREATE/DROP DATABASE. No utiliza ni limpia tablas de la base de trabajo. Una guarda en TestCase impide ejecutar RefreshDatabase sobre una base SQL distinta de la generada por el script. No ejecutes PHPUnit apuntando manualmente a tu base real.
+
+Catálogo disponible en `/productos` y `/categorias`: categorías, productos, búsqueda, filtros, paginación, SKU/barcode y precios/costos precisos. Abre **Ver ficha y presentaciones** para subir una fotografía o crear variantes con precio y disponibilidad propios. Los permisos catalog.view/manage/costs se mantienen; otros roles se configuran desde Roles y permisos. El costo requiere permiso separado. Aún no hay cobros ni inventario automático.
+
+Fotografías: JPEG, PNG o WebP, hasta 2 MB, entre 32 y 2048 px por lado. PHP necesita **GD con soporte JPEG/PNG/WebP** (verificado en XAMPP). El servidor vuelve a codificar las imágenes y elimina metadatos; no se aceptan SVG ni GIF. Se conservan en `backend/storage/app/catalog`, fuera del directorio público. No ejecutes storage:link para este disco; la API entrega la imagen únicamente a sesiones de su empresa con catalog.view. Incluye ese directorio en backups junto con la base; el disco local requiere un volumen persistente en despliegue.
+
+```powershell
+cd frontend
+npm run check
+npm run build
+npm run format:check
+npx playwright install chromium
+npm run test:e2e
+```
+
+Playwright levanta sus propios servidores en **8011 y 5199**, usa exclusivamente `backend/database/e2e.sqlite` y fotografías en `.runtime/e2e-catalog`, sin modificar `.env`. Mantiene registros de prueba entre ejecuciones y genera correos únicos; un prefijo de caché por ejecución evita acumular los límites de intentos entre corridas. No reutiliza servidores ajenos ni ejecuta `migrate:fresh`. Las capturas de `docs/screenshots/` corresponden a este entorno de prueba, no a un restaurante real.
+
+## Correo, seguridad y producción
+
+El modo local `MAIL_MAILER=log` escribe el enlace de recuperación en `backend/storage/logs/laravel.log`; **no envía correos**. Para entrega real configura SMTP y comprueba el transporte. No publiques logs ni archivos `.env`.
+
+El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar pruebas con ese motor, configurar HTTPS y `SESSION_SECURE_COOKIE=true`, `APP_DEBUG=false`, dominio propio, SMTP, procesos de cola, copias de seguridad y restauración, monitoreo y revisión de seguridad. El proxy debe servir el frontend y `/api` + `/sanctum` bajo el mismo origen. Ver [arquitectura](docs/ARCHITECTURE.md).
+
+## Documentación
+
+- [Requerimientos completos del producto](docs/REQUIREMENTS.md)
+- [Arquitectura y decisiones](docs/ARCHITECTURE.md)
+- [Base de datos y modelo relacional](docs/DATABASE.md)
+- [DDL para MySQL Workbench](docs/database/initial-schema.mysql.sql)
+- [Sistema de diseño](docs/DESIGN_SYSTEM.md)
+- [Contrato API](docs/API.md)
+- [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
+
+Las carpetas `mobile/` y `desktop/` reservan productos futuros; todavía no contienen aplicaciones.

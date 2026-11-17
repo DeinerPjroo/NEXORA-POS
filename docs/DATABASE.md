@@ -1,0 +1,91 @@
+# Base de datos
+
+## Modelo inicial implementado
+
+La fuente ejecutable son las migraciones de `backend/database/migrations`. El [DDL MySQL](database/initial-schema.mysql.sql) se genera desde ellas con `php scripts/export-schema.php`, sin conectarse al servidor ni leer sus datos. No es un archivo `.mwb`; MySQL Workbench permite importarlo para construir y guardar el modelo EER.
+
+```mermaid
+erDiagram
+    TENANTS ||--o{ USERS : contiene
+    TENANTS ||--o{ BRANCHES : contiene
+    TENANTS ||--o{ ROLES : define
+    ROLES ||--o{ USERS : asigna
+    ROLES ||--o{ ROLE_PERMISSION : concede
+    PERMISSIONS ||--o{ ROLE_PERMISSION : cataloga
+    TENANTS ||--|| WORKSPACE_SETTINGS : configura
+    TENANTS ||--o{ THEME_VERSIONS : versiona
+    TENANTS ||--o{ AUDIT_LOGS : registra
+    USERS o|--o{ AUDIT_LOGS : ejecuta
+    USERS ||--o{ SESSIONS : inicia
+    TENANTS ||--o{ CATEGORIES : organiza
+    TENANTS ||--o{ PRODUCTS : posee
+    CATEGORIES ||--o{ PRODUCTS : agrupa
+    PRODUCTS ||--o{ PRODUCT_VARIANTS : presenta
+```
+
+| Tabla | Propósito y restricciones |
+| --- | --- |
+| tenants | Empresa, UUID público único, nombre, tipo, estado, moneda, zona e idioma. |
+| users | Identidad global con correo único, password hash, tenant obligatorio, rol y estado. Índice único `(tenant_id,id)`. |
+| roles | Nombre único por empresa, propietario protegido. Único `(tenant_id,id)` para claves compuestas. |
+| permissions | Catálogo global de acciones implementadas, sin tenant; sembrado mediante DatabaseSeeder. |
+| role_permission | Relación N:M con PK `(role_id,permission_id)`, tenant obligatorio y FK compuesta al rol. |
+| branches | Empresa, código único por empresa, datos de contacto, estado activo. No se borran por API. |
+| categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id). |
+| products | Categoría con FK compuesta, SKU y barcode únicos por empresa (barcode nullable), precio/costo DECIMAL(19,4), estado, disponibilidad y revisión. |
+| product_variants | FK compuesta (tenant_id,product_id) al producto; SKU y barcode únicos por empresa, nombre único por producto, precio/costo DECIMAL(19,4), estados y timestamps. |
+| workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
+| theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
+| audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |
+| sessions | Sesiones Laravel en servidor, user_id indexado, payload cifrado, actividad. Es infraestructura central, no consultable por tenant a través de API. |
+| password_reset_tokens | Token hasheado por correo y fecha, expira según broker Laravel. |
+| cache / cache_locks | Caché central y bloqueo; hoy se usa para límites de acceso. |
+| jobs / job_batches / failed_jobs | Infraestructura de colas Laravel; aún sin jobs de negocio. |
+
+Las FKs `(tenant_id,role_id) → roles(tenant_id,id)` en usuarios y pivot, y `(tenant_id,actor_id) → users(tenant_id,id)` en auditoría evitan referencias entre empresas incluso mediante escritura SQL directa. Todas restringen borrado. El tenant no es mass assignable en los modelos scoped. Fechas se serializan como ISO 8601 para renderizar según zona empresarial. El entorno usa America/Bogota; se debe unificar zona de las conexiones y revisar conversión temporal al desplegar MySQL.
+
+Infraestructura `sessions.user_id` sigue el esquema Laravel con índice, sin FK: las sesiones se revocan explícitamente. No almacena `tenant_id`; la identidad de sesión resuelve la empresa en servidor. No hay borrado lógico todavía porque no se implementaron operaciones de borrado. Sucursales y usuarios tienen estado; los futuros catálogos con referencias históricas podrán usar soft deletes.
+
+## MySQL Workbench
+
+1. Regenerar desde la raíz: `php scripts/export-schema.php`.
+2. En Workbench: **File → Import → Reverse Engineer MySQL Create Script**.
+3. Elegir `docs/database/initial-schema.mysql.sql` y colocar los objetos importados en un diagrama EER.
+4. Revisar claves compuestas y guardar el modelo como `.mwb` desde Workbench.
+
+El script es para modelado en una base vacía. Para ejecutar Nexora, usar `php artisan migrate --seed`; importar el DDL manualmente no crea el historial de migraciones y provocaría colisiones al migrar. El exportador usa la gramática oficial MySQL de Laravel en modo pretend; **no equivale a una ejecución validada en MySQL**. La importación visual en Workbench queda pendiente de comprobar en su aplicación.
+
+## Catálogo implementado y resto de Fase 2 previsto
+
+Ya existen categories, products y product_variants con las restricciones descritas arriba. products incluye image_path e image_mime nullable para una fotografía privada. Los bytes viven en storage/app/catalog por empresa/producto, sin enlaces públicos. Subcategorías, galerías de varias imágenes y los demás dominios siguientes **son diseño pendiente**. Sus tablas operativas llevarán tenant_id, índices de empresa y FKs compuestas.
+
+Los SKU y barcode tienen índices únicos por tabla/empresa. La unicidad adicional entre productos y variantes se asegura en servicios mediante comprobaciones bajo el mismo bloqueo de fila de empresa; no existe una restricción SQL que cruce ambas tablas. No realizar escrituras directas de códigos evitando estos servicios. Las variantes no tienen una revisión independiente: toda modificación incrementa products.revision dentro de la transacción.
+
+- Catálogo: categories con parent_id del mismo tenant; products N:1 categoría; product_variants N:1 producto; product_images; branch_prices único por variante/sucursal/canal; product_modifiers y modifier_options.
+- Salones: dining_rooms N:1 sucursal; dining_tables N:1 salón, nombre, forma, capacidad, posición/tamaño/rotación; floor_plan_versions JSON validado para decoración y geometría; table_groups/table_group_members para uniones temporales.
+- Pedidos: orders N:1 sucursal y cliente opcional, canal, UUID e idempotencia; order_tables N:M mesas; order_items con snapshot del producto/variante/precio/impuesto y notas; order_item_modifiers; order_status_history; order_transfers para movimientos auditados.
+- Caja: cash_registers N:1 sucursal; cash_sessions N:1 caja/operador, apertura/cierre; cash_movements con tipo y referencia; payment_methods configurables; expenses con autorización.
+- Venta: sales N:1 pedido, número único por tenant/serie/sucursal; sale_items snapshots; payments N:1 venta/método; payment_allocations para pagos parciales o distribuidos; refunds/refund_items compensatorios; invoice_series, invoices e invoice_lines separados del recibo de pedido.
+- Clientes y reservas: customers; customer_addresses; reservations y reservation_tables; dirección de venta como snapshot.
+
+Dinero `DECIMAL(19,4)` y cantidades `DECIMAL(19,6)`; no floats. Reglas de redondeo definidas antes de pagos. Índices compuestos `(tenant_id,branch_id,created_at)`, estados y claves de idempotencia. Ninguna anulación elimina una venta o pago histórico. Estado de caja bloqueado al confirmar movimientos, sumas controladas en transacción.
+
+## Modelo previsto: gestión avanzada
+
+Ingredientes y productos terminados comparten stock_items, units y unit_conversions controladas. inventories por sucursal/almacén, stock_batches con vencimiento, stock_movements/kardex y stock_counts/stock_count_lines. recipes/recipe_versions/recipe_lines permiten ingredientes y subrecetas con prevención de ciclos. sale_consumptions conserva el vínculo venta-receta-lote y cantidades utilizadas.
+
+Suppliers → purchase_orders → purchase_order_lines → goods_receipts/receipt_lines generan movimientos; supplier_payables/payable_payments gestionan cuentas. Transferencias: stock_transfers y transfer_lines, estados de despacho/recepción. Waste_records enlaza desperdicios con movimiento y motivo.
+
+Kitchen_stations, product_station_routes, kitchen_tickets/ticket_items y preparation_events derivan de pedidos; canales Reverb privados por empresa y sucursal. Employees enlaza users opcionalmente con branch_assignments N:M; shifts, attendance y commission_rules. No todo empleado debe tener una cuenta de acceso.
+
+## Modelo previsto: Studio y SaaS
+
+Themes, ui_layouts/ui_layout_versions por rol/dispositivo, component_definitions, print_templates/print_template_versions, custom_field_definitions/custom_field_values y automation_rules/automation_runs. Reglas con condiciones/acciones tipadas, sin scripts de usuario. Adaptar el tema inicial mediante migración de schema_version.
+
+Plans, plan_prices con moneda/vigencia, modules, plan_module, subscriptions, subscription_events y usage_counters. Los precios iniciales propuestos (49.900 / 99.900 / 199.900 COP) son requisitos provisionales de Fase 5; no están sembrados ni facturados hoy. Soporte: support_requests; anuncios: platform_notices; acceso SaaS: admin_access_grants y admin_audit_logs en dominio separado de la auditoría del restaurante.
+
+Fidelización: loyalty_accounts/transactions, coupons/redemptions, customer_memberships. Delivery: delivery_zones, delivery_rates, deliveries, delivery_status_events y courier_assignments. Menú QR: public_menus, menu_publications y table_qr_tokens limitados/revocables. Notificaciones: notifications y delivery_attempts. Offline: devices, sync_operations, outbox_events, inbox_receipts y conflict_records con claves de deduplicación.
+
+## Evolución y operaciones
+
+Antes de incorporar una tabla: definir dominio, retención, tenant, sucursal, relaciones, índices y autorización. Migraciones incrementales con estrategia expand/contract para cambios incompatibles; no editar migraciones ya publicadas. Backups cifrados y restauraciones de prueba antes de migraciones productivas. Este entorno inicial aún no tiene servicio de backups o réplica configurado.

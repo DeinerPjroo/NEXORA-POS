@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:nexora:theme:1",
+  "title": "Nexora Theme v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["primary", "secondary", "mode", "radius"],
+  "properties": {
+    "primary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "secondary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "mode": { "enum": ["light", "dark"] },
+    "radius": { "enum": ["rounded", "soft"] }
+  }
+}
