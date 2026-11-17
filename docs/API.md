@@ -193,6 +193,22 @@ El recibo conserva business_name, branch_name/address, currency, catalog_subtota
 
 La devolución total exige caja abierta de la misma sucursal/moneda y efectivo esperado suficiente. Puede ser una sesión posterior. Se guarda un único egreso y sale_refund, status=refunded, sin modificar el pago o los importes históricos. Reintentos idempotentes no repiten la salida; otro UUID tras devolver responde 409. Un pedido vendido no se cancela ni se cobra de nuevo después de devolver. Pagos parciales, medios electrónicos, impuestos incluidos y devolución parcial están pendientes. Más reglas en [SALES.md](SALES.md).
 
+## Métodos configurables desde 0.6.0
+
+| Método / ruta | Permiso | Contrato |
+| --- | --- | --- |
+| GET payment-methods | sales.view, sales.collect o sales.configure | data + meta; status=active/inactive, page y per_page (20, máximo 50); efectivo principal primero |
+| POST payment-methods | sales.configure | idempotency_key UUID, name (60), code (2–20, a-z/0-9/_/-), kind=cash/non_cash, is_active; 201 bajo data |
+| PUT payment-methods/{paymentMethod} | sales.configure | name, is_active y revision; 409 si obsoleta. code, kind, is_system y tenant_id no se pueden establecer al editar |
+
+Código normalizado a minúsculas; nombre/código únicos por empresa, sin borrado. Efectivo principal no se desactiva. Respuestas incluyen id/code/name/kind/is_active/is_system/revision y provenance=operator. Una creación repetida con la misma clave/contenido no duplica métodos; payload incompatible devuelve 409.
+
+POST orders/{order}/collect admite payment_method_id y method_revision (obligatoria con ID), payment_reference (120). Si se omite ID conserva el cobro en efectivo anterior. El método debe ser propio/activo y tener revisión vigente. non_cash exige referencia no vacía y received_amount igual al total exacto, sin cambio: conserva cash_session_id como sesión operativa y aumenta su revisión, pero no crea CashMovement ni cambia expected_amount. cash mantiene ingreso neto y cambio anteriores.
+
+El pago conserva payment_method_id, method_name, method_kind, method_revision, provenance=operator y reference. method es el código histórico. Nunca implica confirmación de proveedor. Se rechazan provenance/provider_confirmed enviados por cliente. El campo cash_movement_id es nullable para no efectivo.
+
+POST sales/{sale}/refund usa el método histórico aunque esté desactivado/renombrado. Si no efectivo requiere refund_reference (120), conserva sesión/revisión y registra devolución total sin salida de efectivo ni requisito de saldo. En efectivo conserva salida/fondos anteriores. La respuesta refund incluye reference. No se permite seleccionar otro método para transformar una devolución en salida de caja. Abonos/mixtos y conciliación siguen pendientes.
+
 ## Referencia de errores
 
 | Código | Significado |

@@ -20,6 +20,7 @@ import { SalesPage } from './features/sales/SalesPage'
 import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { CheckoutPage } from './features/sales/CheckoutPage'
+import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 
 export default function App() {
   return (
@@ -30,6 +31,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/ventas/metodos"
+          element={
+            <PermissionBoundary permission="sales.configure">
+              <PaymentMethodsPage />
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/ventas"
           element={

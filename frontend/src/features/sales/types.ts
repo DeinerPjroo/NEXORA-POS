@@ -1,5 +1,16 @@
 import type { OrderItem } from '../operations/types'
 
+export type PaymentMethod = {
+  id: number
+  code: string
+  name: string
+  kind: 'cash' | 'non_cash'
+  is_active: boolean
+  is_system: boolean
+  revision: number
+  provenance: 'operator'
+}
+
 export type SalesSettings = {
   configured: boolean
   tax_mode: 'none' | 'exclusive'
@@ -41,7 +52,13 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
     id: number
     cash_session_id: number
     amount: string
-    method: 'cash'
+    method: string
+    method_name: string
+    method_kind: 'cash' | 'non_cash'
+    payment_method_id: number
+    method_revision: number
+    provenance: 'operator'
+    reference: string | null
     received_amount: string
     change_amount: string
     created_at: string
@@ -50,6 +67,7 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
     id: number
     amount: string
     reason: string
+    reference: string | null
     created_at: string
     cash_session_id: number
   } | null

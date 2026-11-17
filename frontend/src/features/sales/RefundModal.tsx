@@ -12,6 +12,7 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
   const client = useQueryClient()
   const toast = useToast()
   const [cashId, setCashId] = useState('')
+  const isCash = sale.payment?.method_kind !== 'non_cash'
   const cash = useQuery({
     queryKey: ['refund-cash', sale.branch_id],
     queryFn: () => api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${sale.branch_id}`),
@@ -48,14 +49,20 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
       cash_session_id: selected.id,
       cash_revision: selected.revision,
       reason: new FormData(event.currentTarget).get('reason'),
+      refund_reference: new FormData(event.currentTarget).get('refund_reference') || null,
     })
   }
   return (
     <Modal title={`Devolver ${sale.receipt_code}`} onClose={onClose}>
       <form className="form-stack" onSubmit={submit}>
         <p>
-          Registrarás una salida de <strong>{formatMoney(sale.total, sale.currency)}</strong> por la
-          devolución total. El recibo y el ingreso originales se conservan.
+          Registrarás una devolución total de{' '}
+          <strong>{formatMoney(sale.total, sale.currency)}</strong> por el método original:{' '}
+          {sale.payment?.method_name ?? 'Efectivo'}.{' '}
+          {isCash
+            ? 'Genera una salida de efectivo.'
+            : 'Registro manual sin salida de efectivo ni confirmación de proveedor.'}{' '}
+          El recibo y pago originales se conservan.
         </p>
         <ErrorNotice error={operation.error || cash.error} />
         <OperationNotice uncertain={operation.uncertain} />
@@ -84,6 +91,11 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
           <Field label="Motivo de la devolución">
             <textarea name="reason" minLength={3} maxLength={300} required rows={3} />
           </Field>
+          {!isCash && (
+            <Field label="Referencia de la devolución">
+              <input name="refund_reference" required maxLength={120} />
+            </Field>
+          )}
         </fieldset>
         {!operation.uncertain &&
           operation.error instanceof ApiError &&

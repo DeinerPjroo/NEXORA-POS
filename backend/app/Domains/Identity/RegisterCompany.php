@@ -3,6 +3,7 @@
 namespace App\Domains\Identity;
 
 use App\Domains\Cash\DefaultRegister;
+use App\Domains\Sales\DefaultPaymentMethod;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Permission;
@@ -47,6 +48,7 @@ final class RegisterCompany
                 $branch = Branch::create(['name' => $data['branch_name'], 'code' => 'PRINCIPAL']);
                 DefaultRegister::create($branch);
                 SalesSetting::create([]);
+                DefaultPaymentMethod::create();
                 $theme = config('nexora.theme');
                 WorkspaceSetting::create(['revision' => 1, 'theme' => $theme]);
                 ThemeVersion::create(['version' => 1, 'schema_version' => 1, 'theme' => $theme, 'created_at' => now()]);

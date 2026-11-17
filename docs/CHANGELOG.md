@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 0.6.0 · 2026-11-17
+
+- Continuidad contrastada con origin/main a487f23, sin avances locales posteriores. Nuevos TASKS, PROJECT_STATE, HANDOFF y DECISIONS; protocolo permanente de incrementos y publicación autorizada.
+- Pruebas SQL conservan cada esquema aislado nuevo. No ejecutan DROP DATABASE según instrucción vigente; guardas de aislamiento preservadas.
+- Métodos de pago por empresa: código/tipo estables, nombre/estado/revisión, paginación y creación idempotente. Efectivo principal protegido.
+- Cobro manual no efectivo con referencia e importe exacto, snapshot de método/procedencia y sin alterar saldo de efectivo. Compatibilidad del cobro anterior sin método.
+- Devolución total por método histórico, con referencia si no efectivo; conserva el pago y no produce salida de caja para registros no efectivos.
+- Migración incremental aplicada en MariaDB, referencias compuestas y recibos anteriores preservados. Sin integración o confirmación de banco/pasarela.
+
 ## 0.5.0 · 2026-11-17
 
 - Configuración explícita antes del primer cobro: sin impuesto adicional o porcentaje sobre base, revisión y redondeo half-up a dos decimales.

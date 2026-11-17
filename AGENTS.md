@@ -29,6 +29,7 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Ventas: exigir configuración confirmada, revisar pedido/configuración/caja y total esperado. Dos decimales half-up: subtotal global, descuento fijo antes del impuesto adicional, impuesto redondeado, total positivo. No inventar tasas legales ni interpretar precios incluidos.
 - Cobro en efectivo: movimiento por total neto, registrar recibido/cambio, una venta por pedido y recibo interno correlativo por tenant. Venta/pago/caja/auditoría/secuencia deben confirmar o revertir juntos.
 - Devolución total única: salida compensatoria con motivo, caja abierta de misma sucursal/moneda y fondos suficientes. Conservar venta/pago, impedir cancelar o recobrar pedido vendido. Nunca confundir recibo interno con documento fiscal.
+- Métodos 0.6: cash/non_cash inmutables, nombre/estado con revisión; efectivo principal activo. Copiar método/nombre/tipo/revisión/procedencia/referencia al pago. Solo cash mueve efectivo; non_cash exige referencia e importe exacto, conserva sesión abierta/revisión, no modifica saldo y nunca equivale a confirmación bancaria. La devolución usa el método histórico.
 
 ## Protocolo de continuidad autónoma
 

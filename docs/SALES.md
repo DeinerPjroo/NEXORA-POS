@@ -1,13 +1,21 @@
-# Venta y devolución en efectivo (0.5)
+# Venta y devolución con métodos manuales (0.5–0.6)
 
 ## Uso
 
 1. En **Ventas → Configurar ventas**, confirma el cálculo. La instalación comienza sin configurar y bloquea los cobros hasta esta confirmación.
 2. Elige **sin impuesto adicional automático** o un **porcentaje adicional sobre la base** con nombre/tasa definidos por la empresa. No se asigna un régimen ni una tasa legal automáticamente. Los precios del catálogo se interpretan como base; los impuestos incluidos y múltiples por producto no están soportados.
-3. Abre una caja de la sucursal. Desde un pedido no cancelado, entra en **Cobrar en efectivo**. Puede cobrarse antes o después de entregar; preparación y pago son estados distintos.
+3. Abre una sesión operativa de caja en la sucursal. Desde un pedido no cancelado, entra en **Cobrar pedido** y selecciona un método. Puede cobrarse antes o después de entregar; preparación y pago son estados distintos.
 4. Si corresponde, aplica un descuento fijo en dinero con motivo y permiso sales.discount. Pulsa **Actualizar total** y revisa el cálculo del servidor.
-5. Selecciona la caja y registra el efectivo recibido. **Confirmar cobro en efectivo** guarda venta, pago, ingreso neto, revisión del pedido, secuencia interna y auditoría en una transacción.
+5. Selecciona la caja y registra el efectivo recibido o referencia del pago manual no efectivo. Confirmar guarda venta, pago, revisión de sesión/pedido, secuencia y auditoría en una transacción. Solo efectivo genera ingreso neto.
 6. El recibo se consulta en **Ventas**, puede imprimirse con el diálogo del navegador y conserva importes y datos comerciales históricos. Su numeración V-000001 es interna por empresa, no una resolución fiscal ni una factura electrónica.
+
+## Métodos configurables desde 0.6
+
+En Ventas → Métodos de pago (sales.configure), crear métodos cash o non_cash, con código único y nombre por empresa. Código y tipo no cambian; el nombre/estado requieren revisión. Sin borrado. Efectivo principal protegido contra desactivación; una API antigua sin método sigue usando ese efectivo.
+
+El pago guarda método, nombre, tipo, revisión, procedencia operator y referencia como snapshot. Los no efectivos exigen referencia y total exacto, no calculan cambio, no generan CashMovement ni alteran expected_amount. Sí requieren sesión operativa abierta de la misma sucursal/moneda e incrementan su revisión, evitando cerrar sobre una sesión desactualizada. No se verifica ninguna referencia con bancos o pasarelas. No llamar gateway/confirmed a estos registros manuales.
+
+El selector de métodos tiene paginación y solo ofrece activos. El servidor vuelve a comprobar revisión/estado al confirmar. Desactivar o renombrar no altera recibos anteriores ni impide devolver por el método histórico.
 
 ## Cálculo definido
 
@@ -33,7 +41,7 @@ La venta conserva nombre comercial, sucursal/dirección, importes, tasa/modo y r
 
 ## Devolución total
 
-Desde un recibo cobrado, **Devolución total** requiere sales.refund, motivo y caja abierta de la misma sucursal/moneda con efectivo esperado suficiente. Puede utilizarse una sesión posterior si la original ya cerró. Se registra una única devolución del total original y un egreso; la venta pasa a devuelta y conserva el pago y el ingreso originales. El reintento no vuelve a sacar efectivo.
+Desde un recibo cobrado, **Devolución total** requiere sales.refund, motivo y sesión abierta de la misma sucursal/moneda. Puede ser una sesión posterior. Usa el método histórico: en efectivo exige fondos y registra egreso; no efectivo exige refund_reference y no modifica el efectivo. Una única devolución del total original cambia la venta a devuelta, conservando pago y movimiento originales cuando existan. El reintento no repite el registro ni la salida de dinero.
 
 No se cancela un pedido con venta asociada: una persona autorizada gestiona su devolución desde el recibo. Devolver no cambia el estado de preparación, no repone inventario y no permite volver a cobrar ese mismo pedido. Este incremento no incluye devoluciones parciales, cambio de productos, notas fiscales ni anulaciones de documentos tributarios.
 
@@ -41,6 +49,6 @@ No se cancela un pedido con venta asociada: una persona autorizada gestiona su d
 
 sales.view consulta ventas/recibos; sales.collect cobra; sales.configure confirma configuración; sales.discount descuenta; sales.refund devuelve. La interfaz de cobro también necesita orders.view para consultar el pedido. No exige cash.movements: un cobro es una acción distinta a un movimiento manual. Las nuevas capacidades se conceden automáticamente solo a propietarios existentes; otros roles se configuran explícitamente.
 
-No hay pagos electrónicos, tarjetas, transferencias verificadas, pasarelas, pagos parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. La impresión es la del navegador, sin garantía de formato térmico. El sistema registra efectivo declarado por el operador; no observa físicamente el dinero.
+No hay confirmación electrónica de tarjetas/transferencias, pasarelas, pagos parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
 
 Continúan pendientes MySQL 8 específico, CI, carga/concurrencia entre procesos, operación fiscal real, backups/restauración y endurecimiento de producción. MariaDB es la referencia monetaria probada; SQLite solo cubre funcionalidad por sus límites de afinidad NUMERIC.

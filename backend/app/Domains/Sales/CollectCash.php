@@ -7,6 +7,7 @@ use App\Domains\Operations\IdempotentOperation;
 use App\Domains\Operations\Money;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Models\Sale;
 use App\Models\SalesSetting;
 use App\Models\User;
@@ -33,18 +34,30 @@ final class CollectCash
             if (bccomp($data['received_amount'], $totals['total'], 4) < 0) {
                 throw ValidationException::withMessages(['received_amount' => 'El efectivo recibido no alcanza para cubrir el total.']);
             }
+            $method = PaymentMethod::when(isset($data['payment_method_id']), fn ($q) => $q->whereKey($data['payment_method_id']), fn ($q) => $q->where('code', 'cash'))->lockForUpdate()->firstOrFail();
+            abort_unless($method->is_active, 409, 'El método de pago está inactivo.');
+            abort_if(isset($data['payment_method_id']) && $method->revision !== (int) $data['method_revision'], 409, 'El método de pago cambió. Revisa sus datos antes de confirmar.');
+            $isCash = $method->kind === 'cash';
+            if (! $isCash && (! filled($data['payment_reference'] ?? null) || bccomp($data['received_amount'], $totals['total'], 4) !== 0)) {
+                throw ValidationException::withMessages(['payment_reference' => 'El registro manual no efectivo exige referencia e importe exacto, sin cambio.']);
+            }
             $sale = Sale::create([...$totals, 'branch_id' => $branch->id, 'order_id' => $order->id, 'created_by' => $actor->id,
                 'receipt_number' => $settings->next_receipt_number, 'status' => 'paid', 'business_name' => $actor->tenant()->value('name'),
                 'branch_name' => $branch->name, 'branch_address' => $branch->address, 'discount_reason' => $data['discount_reason'] ?? null]);
-            $movement = app(CashLedger::class)->record($actor, $data, $branch->id, $order->currency, $sale->total, 'income', 'Cobro recibo V-'.str_pad((string) $sale->receipt_number, 6, '0', STR_PAD_LEFT));
-            Payment::create(['sale_id' => $sale->id, 'branch_id' => $branch->id, 'cash_session_id' => $movement->cash_session_id,
-                'cash_movement_id' => $movement->id, 'actor_id' => $actor->id, 'amount' => $sale->total, 'method' => 'cash',
+            $movement = $isCash ? app(CashLedger::class)->record($actor, $data, $branch->id, $order->currency, $sale->total, 'income', 'Cobro recibo V-'.str_pad((string) $sale->receipt_number, 6, '0', STR_PAD_LEFT)) : null;
+            if (! $isCash) {
+                app(CashLedger::class)->registerNonCash($data, $branch->id, $order->currency);
+            }
+            Payment::create(['sale_id' => $sale->id, 'branch_id' => $branch->id, 'cash_session_id' => $data['cash_session_id'],
+                'cash_movement_id' => $movement?->id, 'actor_id' => $actor->id, 'amount' => $sale->total, 'method' => $method->code,
+                'payment_method_id' => $method->id, 'method_name' => $method->name, 'method_kind' => $method->kind,
+                'method_revision' => $method->revision, 'provenance' => 'operator', 'reference' => $data['payment_reference'] ?? null,
                 'received_amount' => Money::normalize($data['received_amount']), 'change_amount' => bcsub($data['received_amount'], $sale->total, 4), 'created_at' => now()]);
             $settings->next_receipt_number++;
             $settings->save();
             $order->revision++;
             $order->save();
-            Audit::record('sale.paid', 'Se registró una venta cobrada en efectivo.', $actor, ['sale_id' => $sale->id, 'order_id' => $order->id, 'total' => $sale->total]);
+            Audit::record('sale.paid', 'Se registró una venta con pago declarado por el operador.', $actor, ['sale_id' => $sale->id, 'order_id' => $order->id, 'total' => $sale->total, 'method' => $method->code, 'provenance' => 'operator']);
 
             return $sale;
         });

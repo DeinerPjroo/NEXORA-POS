@@ -13,7 +13,8 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
 import { SaleAmounts } from './SaleAmounts'
 import { SaleReceipt } from './SaleReceipt'
-import type { CashOption, Sale, SaleQuote, SalesSettings } from './types'
+import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
+import type { CashOption, PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 
 export function CheckoutPage() {
   const { orderId = '' } = useParams()
@@ -48,7 +49,7 @@ export function CheckoutPage() {
       <PageTitle
         eyebrow="DEL PEDIDO A LA VENTA"
         title={`Cobrar pedido #${order.id}`}
-        description={`${order.branch_name} · Efectivo · ${order.currency}`}
+        description={`${order.branch_name} · Registro de pago · ${order.currency}`}
       />
       {order.sale_id ? (
         <div className="panel empty-state">
@@ -89,6 +90,10 @@ function CheckoutForm({ order }: { order: Order }) {
   const [cashId, setCashId] = useState('')
   const [received, setReceived] = useState('')
   const [result, setResult] = useState<Sale | null>(null)
+  const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null)
+  const methods = useDefaultPaymentMethod()
+  const method = chosenMethod ?? methods.data?.data[0]
+  const isCash = method?.kind === 'cash'
   const quote = useQuery({
     queryKey: ['sale-quote', order.id, applied],
     queryFn: ({ signal }) =>
@@ -140,7 +145,7 @@ function CheckoutForm({ order }: { order: Order }) {
       operation.send({})
       return
     }
-    if (!quote.data || !selected) return
+    if (!quote.data || !selected || !method) return
     operation.send({
       order_revision: quote.data.data.order_revision,
       settings_revision: quote.data.data.settings_revision,
@@ -148,7 +153,10 @@ function CheckoutForm({ order }: { order: Order }) {
       cash_revision: selected.revision,
       discount_amount: applied,
       discount_reason: new FormData(event.currentTarget).get('discount_reason') || null,
-      received_amount: normalizedReceived,
+      payment_method_id: method.id,
+      method_revision: method.revision,
+      payment_reference: new FormData(event.currentTarget).get('payment_reference') || null,
+      received_amount: isCash ? normalizedReceived : quote.data.data.total.replace(/00$/, ''),
       expected_total: quote.data.data.total.replace(/00$/, ''),
     })
   }
@@ -159,12 +167,24 @@ function CheckoutForm({ order }: { order: Order }) {
         <div className="panel-heading">
           <h2>
             <Banknote size={19} />
-            Registrar efectivo
+            Registrar cobro
           </h2>
         </div>
-        <ErrorNotice error={operation.error || cash.error || quote.error} />
+        <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
         <OperationNotice uncertain={operation.uncertain} />
         <fieldset disabled={operation.locked} className="form-stack">
+          <PaymentMethodField method={method} onPick={setChosenMethod} />
+          {!isCash && method && (
+            <>
+              <p className="notice">
+                Registro manual no efectivo. No se verifica con una pasarela ni modifica el efectivo
+                de caja.
+              </p>
+              <Field label="Referencia del pago">
+                <input name="payment_reference" required maxLength={120} />
+              </Field>
+            </>
+          )}
           {can('sales.discount') && (
             <>
               <Field label="Descuento en dinero">
@@ -218,23 +238,27 @@ function CheckoutForm({ order }: { order: Order }) {
               {can('cash.view') && <Link to="/caja"> Ir a caja</Link>}
             </p>
           )}
-          <Field
-            label="Efectivo recibido"
-            hint="Registra el dinero entregado por el cliente. El servidor confirma el cambio."
-          >
-            <input
-              value={received}
-              onChange={(event) => setReceived(event.target.value)}
-              inputMode="decimal"
-              required
-              pattern="[0-9]+([.,][0-9]{1,2})?"
-              autoComplete="off"
-            />
-          </Field>
-          <div className="checkout-change">
-            <span>Cambio a entregar</span>
-            <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
-          </div>
+          {isCash && (
+            <>
+              <Field
+                label="Efectivo recibido"
+                hint="Registra el dinero entregado por el cliente. El servidor confirma el cambio."
+              >
+                <input
+                  value={received}
+                  onChange={(event) => setReceived(event.target.value)}
+                  inputMode="decimal"
+                  required
+                  pattern="[0-9]+([.,][0-9]{1,2})?"
+                  autoComplete="off"
+                />
+              </Field>
+              <div className="checkout-change">
+                <span>Cambio a entregar</span>
+                <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
+              </div>
+            </>
+          )}
         </fieldset>
         {operation.error instanceof ApiError && operation.error.status === 409 && (
           <button
@@ -244,6 +268,8 @@ function CheckoutForm({ order }: { order: Order }) {
               operation.reset()
               void quote.refetch()
               void cash.refetch()
+              setChosenMethod(null)
+              void methods.refetch()
               void client.invalidateQueries({ queryKey: ['order', order.id] })
             }}
           >
@@ -252,8 +278,10 @@ function CheckoutForm({ order }: { order: Order }) {
           </button>
         )}
         <p className="muted small">
-          Al confirmar registras una venta y el ingreso neto en caja. El recibo es interno; no es
-          una factura electrónica.
+          {isCash
+            ? 'Al confirmar registras una venta y el ingreso neto de efectivo en caja.'
+            : 'Al confirmar registras una venta con pago manual no efectivo, sin movimiento de efectivo.'}{' '}
+          El recibo es interno; no es una factura electrónica.
         </p>
         <Submit
           pending={operation.isPending}
@@ -264,10 +292,16 @@ function CheckoutForm({ order }: { order: Order }) {
               quote.isFetching ||
               !selected ||
               discountChanged ||
-              change === null)
+              !method ||
+              methods.isError ||
+              (isCash && change === null))
           }
         >
-          {operation.uncertain ? 'Reintentar cobro' : 'Confirmar cobro en efectivo'}
+          {operation.uncertain
+            ? 'Reintentar cobro'
+            : isCash
+              ? 'Confirmar cobro en efectivo'
+              : 'Confirmar pago manual'}
         </Submit>
       </form>
       <section className="panel checkout-summary">

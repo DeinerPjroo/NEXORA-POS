@@ -6,6 +6,7 @@ use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\RoleController;
@@ -27,6 +28,9 @@ Route::prefix('v1')->group(function () {
         Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::get('payment-methods', [PaymentMethodController::class, 'index']);
+        Route::post('payment-methods', [PaymentMethodController::class, 'store']);
+        Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update']);
         Route::get('sales/settings', [SalesSettingController::class, 'show']);
         Route::put('sales/settings', [SalesSettingController::class, 'update']);
         Route::get('sales/cash-context', [SaleController::class, 'cashContext']);

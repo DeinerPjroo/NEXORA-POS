@@ -30,7 +30,7 @@ export function SaleDetailPage() {
       <PageTitle
         eyebrow="UN REGISTRO QUE SE CONSERVA"
         title={`Recibo ${sale.receipt_code}`}
-        description={`${sale.branch_name} · ${sale.status === 'paid' ? 'Venta cobrada en efectivo' : 'Venta con devolución total'}`}
+        description={`${sale.branch_name} · ${sale.status === 'paid' ? `Venta · ${sale.payment?.method_name ?? 'Efectivo'}` : 'Venta con devolución total'}`}
         action={
           <div className="operation-actions">
             <button className="button secondary" onClick={() => window.print()}>

@@ -56,8 +56,9 @@ erDiagram
 | idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
 | sales_settings | Una fila por empresa, configured inicialmente false, modo/tasa/nombre de impuesto adicional, revisión y próxima secuencia interna. Actualización con bloqueo y confirmación explícita. |
 | sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales históricos, importes DECIMAL(19,4), ajuste firmado, impuesto/descuento y estado paid/refunded. Solo el estado se puede actualizar por modelo. |
-| payments | Un cobro cash por venta, recibido/cambio/importe, caja y movimiento enlazados mediante FKs compuestas por empresa/sucursal/sesión. Append-only. |
-| sale_refunds | Una devolución total por venta con importe, motivo, actor y caja/movimiento de salida enlazados con FKs compuestas. Append-only. |
+| payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
+| payments | Un pago manual por venta en 0.6; FK compuesta a payment_methods, snapshot de nombre/tipo/revisión/procedencia/referencia. Sesión operativa obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
+| sale_refunds | Una devolución total por venta, motivo/referencia, actor y sesión con FKs compuestas. cash_movement_id nullable para no efectivo. Usa el método histórico del pago. Append-only. |
 | workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
 | theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
 | audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |
@@ -88,7 +89,7 @@ Los SKU y barcode tienen índices únicos por tabla/empresa. La unicidad adicion
 - Catálogo: categories con parent_id del mismo tenant; products N:1 categoría; product_variants N:1 producto; product_images; branch_prices único por variante/sucursal/canal; product_modifiers y modifier_options.
 - Salones: dining_rooms N:1 sucursal; dining_tables N:1 salón, nombre, forma, capacidad, posición/tamaño/rotación; floor_plan_versions JSON validado para decoración y geometría; table_groups/table_group_members para uniones temporales.
 - Pedidos: ampliar orders con cliente enlazado; order_tables N:M mesas; snapshots de impuestos en detalle, order_item_modifiers y order_transfers para movimientos auditados. El historial básico ya existe como order_events.
-- Caja: ampliar movimientos con referencias a pagos reales; payment_methods configurables, expenses con autorización y conciliación. Caja/sesiones y movimientos manuales ya existen.
+- Caja: ampliar conciliación y expenses con autorización. Caja/sesiones, movimientos manuales, métodos configurables y vínculos a pagos ya existen. Los no efectivos no crean movimiento de efectivo.
 - Venta: ampliar la relación actual única pedido/venta a la política de cuentas divididas que se defina; hoy los detalles se conservan en order_items inmutables. Métodos y pagos parciales/mixtos necesitarán migrar la unicidad de payments, payment_allocations y devoluciones parciales con refund_items. invoice_series, invoices e invoice_lines separados del recibo interno.
 - Clientes y reservas: customers; customer_addresses; reservations y reservation_tables; dirección de venta como snapshot.
 

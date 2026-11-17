@@ -289,3 +289,41 @@ alter table `sale_refunds` add constraint `sale_refunds_movement_fk` foreign key
 
 alter table `sale_refunds` add constraint `sale_refunds_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+create table `payment_methods` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `code` varchar(20) not null, `name` varchar(60) not null, `kind` varchar(20) not null, `is_active` tinyint(1) not null default '1', `is_system` tinyint(1) not null default '0', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `payment_methods` add constraint `payment_methods_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `payment_methods` add unique `payment_methods_tenant_id_id_unique`(`tenant_id`, `id`);
+
+alter table `payment_methods` add unique `payment_methods_tenant_id_code_unique`(`tenant_id`, `code`);
+
+alter table `payment_methods` add unique `payment_methods_tenant_id_name_unique`(`tenant_id`, `name`);
+
+alter table `payments` add `payment_method_id` bigint unsigned null;
+
+alter table `payments` add `method_name` varchar(60) not null default 'Efectivo';
+
+alter table `payments` add `method_kind` varchar(20) not null default 'cash';
+
+alter table `payments` add `method_revision` int unsigned null;
+
+alter table `payments` add `provenance` varchar(20) not null default 'operator';
+
+alter table `payments` add `reference` varchar(120) null;
+
+alter table `payments` add constraint `payments_method_fk` foreign key (`tenant_id`, `payment_method_id`) references `payment_methods` (`tenant_id`, `id`) on delete restrict;
+
+alter table `payments` drop foreign key `payments_movement_fk`;
+
+alter table `payments` modify `cash_movement_id` bigint unsigned null;
+
+alter table `payments` add constraint `payments_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` drop foreign key `sale_refunds_movement_fk`;
+
+alter table `sale_refunds` modify `cash_movement_id` bigint unsigned null;
+
+alter table `sale_refunds` add constraint `sale_refunds_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add `reference` varchar(120) null;
+

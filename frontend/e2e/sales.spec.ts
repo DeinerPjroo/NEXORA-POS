@@ -5,7 +5,7 @@ import { formatMoney } from '../src/lib/money'
 test('venta en efectivo: impuesto configurado, descuento, cambio, reintentos y devolución', async ({
   page,
 }) => {
-  test.setTimeout(180_000)
+  test.setTimeout(240_000)
   await page.goto('/registro')
   await page.getByLabel('Nombre del restaurante', { exact: true }).fill('Oliva Ventas')
   await page.getByLabel('Tu nombre', { exact: true }).fill('Ana Pérez')
@@ -58,7 +58,7 @@ test('venta en efectivo: impuesto configurado, descuento, cambio, reintentos y d
   await page.getByRole('button', { name: 'Registrar pedido', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Detalle del pedido' })).toBeVisible()
   const orderUrl = page.url()
-  await page.getByRole('link', { name: 'Cobrar en efectivo', exact: true }).click()
+  await page.getByRole('link', { name: 'Cobrar pedido', exact: true }).click()
   await page.getByLabel('Descuento en dinero', { exact: true }).fill('10.12')
   await page.getByRole('button', { name: 'Actualizar total', exact: true }).click()
   await expect(
@@ -152,9 +152,68 @@ test('venta en efectivo: impuesto configurado, descuento, cambio, reintentos y d
     fullPage: true,
     animations: 'disabled',
   })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.unroute('**/api/v1/sales/*/refund')
+  await page.goto('/ventas/metodos')
+  await page.getByRole('button', { name: 'Nuevo método', exact: true }).click()
+  await page.getByLabel('Nombre del método', { exact: true }).fill('Transferencia manual')
+  await page.getByLabel('Código del método', { exact: true }).fill('transfer')
+  await page.getByRole('button', { name: 'Guardar método', exact: true }).click()
+  await expect(page.getByRole('row', { name: /Transferencia manual transfer/ })).toBeVisible()
+  await page.screenshot({
+    path: '../docs/screenshots/payment-methods.png',
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await page.goto('/pedidos/nuevo')
+  await page.getByRole('button', { name: 'Agregar Menú de prueba', exact: true }).click()
+  await page.getByRole('button', { name: 'Registrar pedido', exact: true }).click()
+  await page.getByRole('link', { name: 'Cobrar pedido', exact: true }).click()
+  await page.getByRole('button', { name: 'Método: Efectivo', exact: true }).click()
+  await page
+    .getByRole('dialog', { name: 'Elige un método de pago' })
+    .getByRole('button', { name: /Transferencia manual/ })
+    .click()
+  await page.getByLabel('Referencia del pago', { exact: true }).fill('BANK-001')
+  await expect(page.getByLabel('Efectivo recibido', { exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Confirmar pago manual', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Recibo V-000002', exact: true })).toBeVisible()
+  const nonCashReceipt = page.url()
+  await expect(
+    page.getByRole('heading', { name: 'Pago manual no efectivo', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText('Transferencia manual · BANK-001', { exact: true })).toBeVisible()
+  await page.screenshot({
+    path: '../docs/screenshots/non-cash-receipt.png',
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await page.goto('/ventas/metodos')
+  await page
+    .getByRole('button', { name: 'Editar método Transferencia manual', exact: true })
+    .click()
+  await page.getByLabel('Nombre del método', { exact: true }).fill('Transferencia archivada')
+  await page.getByRole('checkbox', { name: 'Disponible para nuevos cobros', exact: true }).uncheck()
+  await page.getByRole('button', { name: 'Guardar método', exact: true }).click()
+  await expect(
+    page.getByRole('row', { name: /Transferencia archivada transfer.*Inactivo/ }),
+  ).toBeVisible()
+  await page.goto(nonCashReceipt)
+  await expect(page.getByText('Transferencia manual · BANK-001', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Devolución total', exact: true }).click()
+  await page
+    .getByLabel('Motivo de la devolución', { exact: true })
+    .fill('Devolución manual de prueba')
+  await page.getByLabel('Referencia de la devolución', { exact: true }).fill('BANK-DEV-001')
+  await page.getByRole('button', { name: 'Confirmar devolución total', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Devolución total registrada', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText('Referencia: BANK-DEV-001', { exact: true })).toBeVisible()
   await page.goto(cashUrl)
   await expect(page.getByText(formatMoney('1000.0000'), { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('row', { name: /Devolución recibo V-000001/ })).toHaveCount(1)
+  await expect(page.getByRole('row', { name: /recibo V-000002/ })).toHaveCount(0)
   await page.getByRole('button', { name: 'Cerrar caja', exact: true }).click()
   await page.getByLabel('Efectivo contado al cierre').fill('1000')
   await page.getByRole('button', { name: 'Confirmar cierre', exact: true }).click()

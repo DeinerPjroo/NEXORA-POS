@@ -110,7 +110,15 @@ CollectCash utiliza IdempotentOperation y una transacción que guarda Sale, Paym
 
 RefundCash agrega una devolución total y un egreso bajo bloqueo, verifica fondos esperados y caja abierta de la misma sucursal/moneda, conserva pago/importes y cambia estado a refunded. Se admite otra sesión posterior; solo una devolución por venta. Pedidos vendidos no se cancelan, y su preparación sigue separada del pago. Las FKs compuestas enlazan venta/pedido/sucursal, pago o devolución/caja/movimiento, y actores del tenant.
 
-Las listas/detalles de ventas usan sales.view; cobrar, configurar, descontar y devolver tienen permisos separados. Impresión del recibo mediante navegador y CSS específico, sin adaptador de hardware ni emisión fiscal. Solo efectivo declarado; no hay pasarela o verificación externa. Contrato y límites en [SALES.md](SALES.md).
+Las listas/detalles de ventas usan sales.view; cobrar, configurar, descontar y devolver tienen permisos separados. Impresión del recibo mediante navegador y CSS específico, sin adaptador de hardware ni emisión fiscal. Pagos declarados por el operador; no hay pasarela o verificación externa. Contrato y límites en [SALES.md](SALES.md).
+
+## Métodos de pago manuales implementados en 0.6
+
+PaymentMethod y SavePaymentMethod reutilizan el contexto de tenant, revisión, auditoría e idempotencia administrativa. Código/tipo inmutables, nombre/estado editables y efectivo principal siempre activo. Cada pago conserva método/nombre/tipo/revisión, provenance=operator y referencia; jamás se anuncia como confirmado por proveedor. Se conserva el servicio CollectCash como entrada compatible para las API anteriores, ampliando su selección de método.
+
+CashLedger centraliza verificación de sesión abierta/sucursal/moneda/revisión. Métodos cash registran ingreso/egreso neto; non_cash incrementan revisión de la sesión operativa, sin cambiar expected_amount ni crear CashMovement. Los no efectivos exigen importe exacto y referencia. RefundCash toma el tipo histórico, no el método activo actual; exige referencia no efectiva o fondos si efectivo. La migración 000006 permite movimiento nullable y agrega FK compuesta al método, sin cambiar importes de ventas anteriores. Su reversión automática se rechaza para no perder historia financiera.
+
+La prueba de navegador crea/usa/archiva un método, comprueba su nombre histórico, registra devolución y cierra caja con el mismo efectivo esperado. Abonos/mixtos y conciliación se incorporarán sobre estas entidades, no con otra plataforma de ventas.
 
 ## Offline y dispositivos futuros
 

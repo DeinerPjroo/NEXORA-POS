@@ -27,7 +27,9 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
       <div className="receipt-reference">
         <span>Pedido #{sale.order_id}</span>
         {sale.reference && <span>{sale.reference}</span>}
-        <span>{sale.currency} · Efectivo</span>
+        <span>
+          {sale.currency} · {sale.payment?.method_name ?? 'Efectivo'}
+        </span>
       </div>
       <div className="receipt-items">
         {sale.items?.map((item) => (
@@ -50,7 +52,7 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
       {sale.discount_reason && (
         <p className="receipt-discount-note">Motivo del descuento: {sale.discount_reason}</p>
       )}
-      {sale.payment && (
+      {sale.payment?.method_kind !== 'non_cash' && sale.payment && (
         <dl className="sale-amounts receipt-cash">
           <div>
             <dt>Efectivo recibido</dt>
@@ -66,11 +68,25 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
           </div>
         </dl>
       )}
+      {sale.payment?.method_kind === 'non_cash' && (
+        <section className="receipt-refund">
+          <h3>Pago manual no efectivo</h3>
+          <p>
+            {sale.payment.method_name} · {sale.payment.reference}
+          </p>
+          <strong>{formatMoney(sale.payment.amount, sale.currency)}</strong>
+          <p>
+            Declarado por el operador. Sin confirmación de banco o pasarela. No modifica el efectivo
+            de caja.
+          </p>
+        </section>
+      )}
       {sale.refund && (
         <section className="receipt-refund">
           <h3>Devolución total registrada</h3>
           <strong>{formatMoney(sale.refund.amount, sale.currency)}</strong>
           <p>{sale.refund.reason}</p>
+          {sale.refund.reference && <p>Referencia: {sale.refund.reference}</p>}
           <small>
             {date(sale.refund.created_at)} · Sesión de caja #{sale.refund.cash_session_id}
           </small>
@@ -80,7 +96,7 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
       <footer className="receipt-footer">
         <strong>Documento interno. No es factura electrónica.</strong>
         <p>
-          No acredita emisión ni validación DIAN. El cobro corresponde al efectivo declarado por el
+          No acredita emisión ni validación DIAN. El pago fue registrado manualmente por el
           operador.
         </p>
         <small>Nexora POS · El futuro de tu restaurante.</small>

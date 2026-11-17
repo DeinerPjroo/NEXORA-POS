@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.5.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, caja, pedidos y venta/devolución en efectivo. Todavía no se declara lista para producción.
+Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.6.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, caja, pedidos y venta/devolución con métodos manuales. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -39,23 +39,27 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.5.
 - Recibo interno correlativo por empresa, datos comerciales e importes históricos, consulta filtrada y detalle/impresión mediante navegador. No es factura electrónica.
 - Devolución total única con permiso/motivo y salida compensatoria en caja abierta de la misma sucursal/moneda con fondos suficientes, incluso una sesión posterior. Pago original conservado.
 - Nuevos permisos sales.view/collect/configure/discount/refund; propietarios existentes reciben las capacidades, otros roles se configuran explícitamente. Alcance en SALES.md.
+- Métodos configurables cash/non_cash, revisión y creación idempotente; paginación, estado, código/tipo estable y efectivo principal protegido.
+- Pago manual no efectivo con referencia y total exacto; nombre/tipo/revisión/procedencia históricos, sin movimiento de efectivo. Se conserva la compatibilidad de efectivo sin método explícito.
+- Devolución por método histórico incluso archivado. No efectivo requiere referencia y no altera caja; efectivo conserva salida/fondos. Sin confirmación bancaria ni pasarela.
+- Protocolo autónomo y documentos de continuidad creados. Comparación con a487f23, sin avances posteriores al iniciar. Primer commit de continuidad 942ce39 publicado en origin/main.
 
 ## Verificaciones realizadas
 
-Continuación autónoma: código local y origin/main contrastados en a487f23, sin cambios locales previos ni avances posteriores. La suite de referencia volvió a pasar en SQLite (82/591). La política nueva de pruebas SQL conserva cada base aislada; los resultados históricos de la tabla de 0.5 describen la limpieza anterior. Estado vigente en PROJECT_STATE.json y tareas en TASKS.md.
+Continuación autónoma: código local y origin/main contrastados en a487f23, sin cambios locales previos ni avances posteriores. La suite de referencia volvió a pasar en SQLite/MariaDB (82/591); la actual de 0.6 pasó 90/684. Las pruebas SQL conservan cada base aislada; ejecuciones anteriores a esta política utilizaban limpieza. Estado vigente en PROJECT_STATE.json y tareas en TASKS.md.
 
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 82 pruebas y 591 aserciones aprobadas en SQLite en memoria: identidad, catálogo, caja/pedidos/ventas, permisos, precisión, referencias entre empresas, idempotencia, conflictos y rollback de auditoría |
-| `php scripts/test-mysql.php` | 82 pruebas y 591 aserciones aprobadas en MariaDB 10.4.32 en una base nueva temporal; eliminada al finalizar, sin ejecutar pruebas sobre la base de trabajo |
+| `php artisan test` | 90 pruebas y 684 aserciones aprobadas en SQLite en memoria: identidad, catálogo, caja/pedidos/ventas/métodos, permisos, precisión, aislamiento, idempotencia, conflictos y rollback |
+| `php scripts/test-mysql.php` | 90 pruebas y 684 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_669b0ab734efe31d conservada, sin ejecutar DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 10 pruebas: 8 recorridos Chromium y 2 comprobaciones de dinero/borrador. Incluye catálogo/móvil/conflictos, respuesta perdida al abrir caja, arqueo, pedidos con variantes, venta con impuesto/descuento/cambio, impresión y respuesta perdida en cobro/devolución sin duplicados |
+| `npm run test:e2e` | 10 pruebas aprobadas: 8 recorridos Chromium y 2 comprobaciones de dinero/borrador. Incluye catálogo/móvil/conflictos, caja/pedidos, venta con impuesto/descuento/cambio, impresión, reintentos y método manual creado/usado/archivado/devuelto sin alterar efectivo |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -71,6 +75,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pagos electrónicos/parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, descuentos porcentuales, devoluciones parciales, KDS/Reverb, inventarios/recetas, compras, alta de empleados o asignación por sucursal, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración ni landing comercial. Caja contempla efectivo declarado y venta/devolución total; la entrega del pedido sigue separada del pago. En catálogo siguen pendientes galerías múltiples, subcategorías, grupos de modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado drag-and-drop, widgets, documentos, automatizaciones, importación/exportación de layouts, aplicaciones móvil/escritorio, sincronización offline, impresión térmica/hardware o integración DIAN.
+No existen todavía mesas, pagos confirmados por pasarela/parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, descuentos porcentuales, devoluciones parciales, conciliación, KDS/Reverb, inventarios/recetas, compras, alta de empleados o asignación por sucursal, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración ni landing comercial. Hay métodos configurables registrados manualmente, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo siguen pendientes galerías múltiples, subcategorías, grupos de modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, importación/exportación de layouts, aplicaciones móvil/escritorio, offline, impresión térmica/hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

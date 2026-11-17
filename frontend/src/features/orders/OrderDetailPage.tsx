@@ -98,7 +98,7 @@ export function OrderDetailPage() {
             : order.status !== 'cancelled' &&
               can('sales.collect') && (
                 <Link className="button primary" to={`/pedidos/${order.id}/cobrar`}>
-                  Cobrar en efectivo
+                  Cobrar pedido
                 </Link>
               )}
           <OrderActions key={`${order.id}:${order.revision}`} order={order} />

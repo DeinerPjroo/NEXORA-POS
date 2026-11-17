@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.5.0** incorpora **venta y cobro en efectivo, cambio, recibos internos y devolución total**. También funcionan caja/arqueo, pedidos con preparación, catálogo con fotografías/variantes, registro empresarial, sesiones, sucursales, roles e identidad visual versionada. El cálculo de impuesto adicional requiere confirmación explícita de la empresa; no se asigna una tasa legal. Mesas, pagos electrónicos, cocina en tiempo real, inventario y facturación siguen pendientes. Entregar un pedido por sí solo no registra un pago.
+La entrega **0.6.0** amplía ventas con **métodos configurables y registro manual de pagos/devoluciones no efectivos**, además del efectivo y cambio existentes. También funcionan caja/arqueo, pedidos, catálogo, identidad y personalización. Los pagos manuales no equivalen a una confirmación bancaria; solo los métodos de efectivo modifican su saldo en caja. El cálculo de impuesto adicional requiere confirmación de la empresa, sin asignación de tasa legal. Mesas, abonos/mixtos, pasarelas, cocina en tiempo real, inventario y facturación siguen pendientes.
 
 ## Entorno y requisitos
 
@@ -80,7 +80,7 @@ php scripts/test-mysql.php
 
 El script crea una base temporal nueva de nombre aleatorio y ejecuta la suite. Necesita permiso CREATE DATABASE. Por la instrucción de continuidad, conserva la base aislada y muestra su nombre al terminar: nunca ejecuta DROP DATABASE ni reutiliza bases anteriores. No utiliza ni limpia tablas de la base de trabajo. Una guarda en TestCase impide ejecutar RefreshDatabase sobre una base SQL distinta de la generada por el script. No ejecutes PHPUnit apuntando manualmente a tu base real. Los esquemas conservados requieren administración posterior y consumen espacio.
 
-Catálogo disponible en `/productos` y `/categorias`: categorías, productos, búsqueda, filtros, paginación, SKU/barcode y precios/costos precisos. Abre **Ver ficha y presentaciones** para subir una fotografía o crear variantes con precio y disponibilidad propios. Los permisos catalog.view/manage/costs se mantienen; otros roles se configuran desde Roles y permisos. El costo requiere permiso separado. Aún no hay cobros ni inventario automático.
+Catálogo disponible en `/productos` y `/categorias`: categorías, productos, búsqueda, filtros, paginación, SKU/barcode y precios/costos precisos. Abre **Ver ficha y presentaciones** para subir una fotografía o crear variantes con precio y disponibilidad propios. Los permisos catalog.view/manage/costs se mantienen; otros roles se configuran desde Roles y permisos. El costo requiere permiso separado. El inventario automático sigue pendiente.
 
 Fotografías: JPEG, PNG o WebP, hasta 2 MB, entre 32 y 2048 px por lado. PHP necesita **GD con soporte JPEG/PNG/WebP** (verificado en XAMPP). El servidor vuelve a codificar las imágenes y elimina metadatos; no se aceptan SVG ni GIF. Se conservan en `backend/storage/app/catalog`, fuera del directorio público. No ejecutes storage:link para este disco; la API entrega la imagen únicamente a sesiones de su empresa con catalog.view. Incluye ese directorio en backups junto con la base; el disco local requiere un volumen persistente en despliegue.
 
@@ -107,7 +107,9 @@ Los permisos cash.view/manage/movements y orders.view/manage/cancel se configura
 
 Primero entra en **Ventas → Configurar ventas** y confirma el cálculo: sin impuesto adicional automático o un porcentaje adicional sobre precios base. Se cobra a dos decimales con mitades hacia arriba. No se determina automáticamente el régimen tributario; los precios con impuestos incluidos y varios impuestos por producto no están soportados.
 
-Abre una caja y entra en **Pedidos → detalle → Cobrar en efectivo**. Aplica descuento fijo autorizado si corresponde, revisa el total del servidor, elige caja e indica el recibido. Se guarda el cambio y un ingreso por el total neto. Cada pedido admite una sola venta, protegida también ante reintentos con otra clave.
+Abre una caja y entra en **Pedidos → detalle → Cobrar pedido**. Aplica descuento fijo autorizado si corresponde, revisa el total y elige método/caja. En efectivo indica el recibido: se guarda el cambio y un ingreso por el total neto. Con método no efectivo introduce la referencia: registra el total exacto sin cambio ni movimiento de efectivo. Cada pedido admite una sola venta, protegida también ante reintentos con otra clave.
+
+Desde **Ventas → Métodos de pago** puedes crear métodos de efectivo o no efectivos manuales, renombrarlos y desactivarlos con sales.configure. Código/tipo son inmutables y el efectivo principal permanece activo. Los recibos conservan nombre/tipo/referencia originales. Las devoluciones siguen el método histórico, incluso si fue desactivado; las no efectivas requieren referencia y no descuentan caja. Todos son registros del operador, sin confirmación de pasarela.
 
 En **Ventas** puedes consultar/imprimir el recibo interno y registrar una **devolución total** con motivo y caja abierta con fondos suficientes, conservando la operación original. Permisos separados sales.view/collect/configure/discount/refund. No hay cobro electrónico ni factura DIAN; la impresión utiliza el navegador. Detalle de cálculo, devoluciones y límites en [SALES.md](docs/SALES.md).
 
