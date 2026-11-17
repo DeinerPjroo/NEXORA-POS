@@ -17,7 +17,7 @@ final class EnvironmentDoctor extends Command
         $this->info('Nexora POS · Diagnóstico local');
         $this->line('PHP: '.PHP_VERSION);
         $this->line('Motor configurado: '.config('database.default'));
-        foreach (['pdo', 'mbstring', 'openssl', 'fileinfo', 'gd'] as $extension) {
+        foreach (['pdo', 'mbstring', 'openssl', 'fileinfo', 'gd', 'bcmath'] as $extension) {
             if (! extension_loaded($extension)) {
                 $this->error('Falta la extensión PHP: '.$extension);
 

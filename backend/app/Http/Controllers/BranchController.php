@@ -22,6 +22,7 @@ final class BranchController extends Controller
         Gate::authorize('create', Branch::class);
         $branch = DB::transaction(function () use ($request) {
             $branch = Branch::create($request->validated());
+            \App\Domains\Cash\DefaultRegister::create($branch);
             Audit::record('branch.created', 'Se creó la sucursal '.$branch->name.'.', $request->user(), ['branch_id' => $branch->id]);
 
             return $branch;

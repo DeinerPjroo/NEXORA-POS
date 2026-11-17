@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::table('product_variants', fn (Blueprint $table) => $table->unique(['tenant_id', 'product_id', 'id'], 'variants_product_identity'));
         Schema::create('cash_registers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->restrictOnDelete();
@@ -101,7 +102,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreign(['tenant_id', 'order_id'])->references(['tenant_id', 'id'])->on('orders')->restrictOnDelete();
             $table->foreign(['tenant_id', 'product_id'])->references(['tenant_id', 'id'])->on('products')->restrictOnDelete();
-            $table->foreign(['tenant_id', 'variant_id'])->references(['tenant_id', 'id'])->on('product_variants')->restrictOnDelete();
+            $table->foreign(['tenant_id', 'product_id', 'variant_id'], 'order_items_product_variant_fk')->references(['tenant_id', 'product_id', 'id'])->on('product_variants')->restrictOnDelete();
         });
         Schema::create('order_events', function (Blueprint $table) {
             $table->id();
@@ -150,6 +151,7 @@ return new class extends Migration
     public function down(): void
     {
         foreach (['idempotency_records', 'order_events', 'order_items', 'orders', 'cash_movements'] as $name) Schema::dropIfExists($name);
+        Schema::table('product_variants', fn (Blueprint $table) => $table->dropUnique('variants_product_identity'));
         Schema::table('cash_registers', fn (Blueprint $table) => $table->dropForeign('cash_register_active_session_fk'));
         Schema::dropIfExists('cash_sessions');
         Schema::dropIfExists('cash_registers');

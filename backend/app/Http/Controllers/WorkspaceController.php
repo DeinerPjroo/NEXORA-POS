@@ -55,8 +55,8 @@ final class WorkspaceController extends Controller
 
         return DB::transaction(function () use ($request) {
             $company = Tenant::whereKey($request->user()->tenant_id)->lockForUpdate()->firstOrFail();
-            if ($company->currency !== $request->validated('currency') && Product::exists()) {
-                throw ValidationException::withMessages(['currency' => 'La moneda no se puede cambiar mientras existan productos con precios registrados.']);
+            if ($company->currency !== $request->validated('currency') && (Product::exists() || \App\Models\CashSession::exists() || \App\Models\Order::exists())) {
+                throw ValidationException::withMessages(['currency' => 'La moneda no se puede cambiar cuando existen productos, sesiones de caja o pedidos.']);
             }
             $company->update($request->validated());
             Audit::record('company.updated', 'Se actualizó la información de la empresa.', $request->user());

@@ -21,6 +21,12 @@ final class PermissionCatalog
         'catalog.view' => ['Consultar catálogo', 'Catálogo'],
         'catalog.manage' => ['Administrar catálogo', 'Catálogo'],
         'catalog.costs' => ['Consultar y editar costos del catálogo', 'Catálogo'],
+        'cash.view' => ['Consultar caja', 'Caja'],
+        'cash.manage' => ['Administrar y abrir/cerrar caja', 'Caja'],
+        'cash.movements' => ['Registrar movimientos manuales', 'Caja'],
+        'orders.view' => ['Consultar pedidos', 'Pedidos'],
+        'orders.manage' => ['Crear y preparar pedidos', 'Pedidos'],
+        'orders.cancel' => ['Cancelar pedidos', 'Pedidos'],
     ];
 
     public static function seed(): void
