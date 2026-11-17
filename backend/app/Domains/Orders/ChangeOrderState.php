@@ -18,6 +18,7 @@ final class ChangeOrderState
         return app(IdempotentOperation::class)->run($actor, 'order.state.'.$order->id, $data, Order::class, function ($data) use ($actor, $order) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if($order->revision !== (int) $data['revision'], 409, 'El pedido cambió. Actualiza su estado antes de continuar.');
+            abort_if($data['status'] === 'cancelled' && $order->sale()->exists(), 409, 'El pedido tiene una venta registrada. Gestiona la devolución desde su recibo.');
             $next = ['open' => 'preparing', 'preparing' => 'ready', 'ready' => 'delivered'];
             $allowed = $data['status'] === 'cancelled' ? in_array($order->status, ['open', 'preparing', 'ready'], true) : ($next[$order->status] ?? null) === $data['status'];
             abort_unless($allowed, 409, 'No se permite ese cambio de estado.');

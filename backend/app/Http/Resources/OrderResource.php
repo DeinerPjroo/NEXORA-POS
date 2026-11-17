@@ -16,6 +16,8 @@ final class OrderResource extends JsonResource
             'notes' => $this->notes, 'currency' => $this->currency, 'subtotal' => $this->subtotal,
             'status' => $this->status, 'revision' => $this->revision, 'created_at' => $this->created_at,
             'items_count' => $this->items_count ?? null,
+            'sale_id' => $this->whenLoaded('sale', fn () => $this->sale?->id),
+            'sale_status' => $this->whenLoaded('sale', fn () => $this->sale?->status),
             'items' => $this->whenLoaded('items', fn () => $this->items->map(fn ($item) => $item->only('id', 'product_id', 'variant_id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes'))),
             'events' => $this->whenLoaded('events', fn () => $this->events->map(fn ($event) => $event->only('id', 'from_status', 'to_status', 'reason', 'created_at'))),
         ];

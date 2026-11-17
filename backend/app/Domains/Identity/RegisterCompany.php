@@ -7,6 +7,7 @@ use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\SalesSetting;
 use App\Models\Tenant;
 use App\Models\ThemeVersion;
 use App\Models\User;
@@ -45,6 +46,7 @@ final class RegisterCompany
                 $user->save();
                 $branch = Branch::create(['name' => $data['branch_name'], 'code' => 'PRINCIPAL']);
                 DefaultRegister::create($branch);
+                SalesSetting::create([]);
                 $theme = config('nexora.theme');
                 WorkspaceSetting::create(['revision' => 1, 'theme' => $theme]);
                 ThemeVersion::create(['version' => 1, 'schema_version' => 1, 'theme' => $theme, 'created_at' => now()]);

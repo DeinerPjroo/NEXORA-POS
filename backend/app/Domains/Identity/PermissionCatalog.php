@@ -27,6 +27,11 @@ final class PermissionCatalog
         'orders.view' => ['Consultar pedidos', 'Pedidos'],
         'orders.manage' => ['Crear y preparar pedidos', 'Pedidos'],
         'orders.cancel' => ['Cancelar pedidos', 'Pedidos'],
+        'sales.view' => ['Consultar ventas y recibos', 'Ventas'],
+        'sales.collect' => ['Cobrar pedidos en efectivo', 'Ventas'],
+        'sales.configure' => ['Configurar cálculo de ventas', 'Ventas'],
+        'sales.discount' => ['Aplicar descuentos', 'Ventas'],
+        'sales.refund' => ['Registrar devolución total', 'Ventas'],
     ];
 
     public static function seed(): void
