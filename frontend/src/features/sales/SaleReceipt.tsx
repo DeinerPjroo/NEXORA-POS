@@ -58,15 +58,20 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
       <PaymentHistory sale={sale} />
       {!!sale.refunds.length && (
         <section className="receipt-refund">
-          <h3>Devolución total registrada</h3>
+          <h3>
+            {sale.status === 'refunded'
+              ? 'Devolución total registrada'
+              : 'Devoluciones parciales registradas'}
+          </h3>
           <strong>{formatMoney(sale.refunded_amount, sale.currency)}</strong>
-          <p>{sale.refunds[0].reason}</p>
           {sale.refunds.map((refund) => (
             <div key={refund.id}>
               <p>
+                Pago #{refund.payment_id} ·{' '}
                 {sale.payments.find((payment) => payment.id === refund.payment_id)?.method_name} ·{' '}
                 {formatMoney(refund.amount, sale.currency)}
               </p>
+              <p>{refund.reason}</p>
               {refund.reference && <p>Referencia: {refund.reference}</p>}
               <small>
                 {date(refund.created_at)} · Sesión de caja #{refund.cash_session_id}
@@ -76,6 +81,16 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
           {sale.cancelled_balance !== '0.0000' && (
             <p>Saldo no cobrado cancelado: {formatMoney(sale.cancelled_balance, sale.currency)}</p>
           )}
+          <dl className="sale-amounts">
+            <div>
+              <dt>Importe neto de la venta</dt>
+              <dd>{formatMoney(sale.effective_total, sale.currency)}</dd>
+            </div>
+            <div>
+              <dt>Pagos netos tras devoluciones</dt>
+              <dd>{formatMoney(sale.net_paid_amount, sale.currency)}</dd>
+            </div>
+          </dl>
           <p>El pago y la venta originales se conservan.</p>
         </section>
       )}

@@ -363,3 +363,7 @@ alter table `sales` add `tip_confirmed` tinyint(1) not null default '0';
 
 alter table `sales` add `tip_tax_mode` varchar(20) not null default 'disabled';
 
+alter table `sale_refunds` add index `refunds_payment_lookup`(`tenant_id`, `payment_id`);
+
+alter table `sale_refunds` drop index `sale_refunds_tenant_id_payment_id_unique`;
+

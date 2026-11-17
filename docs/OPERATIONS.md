@@ -21,7 +21,7 @@ Caja registra efectivo declarado por el usuario: apertura, movimientos manuales,
 
 ## Ampliaciones pendientes
 
-Pagos electrónicos o parciales/mixtos, propinas, impuestos incluidos y varios impuestos por producto, descuentos porcentuales, devoluciones parciales, cuentas divididas, inventario, mesas, KDS en tiempo real e impresoras térmicas. No usar el subtotal de un pedido como factura ni como comprobante de pago; la venta tiene su recibo interno separado.
+Pasarelas/confirmación electrónica, impuestos incluidos y varios impuestos por producto, cuentas divididas, inventario, mesas, KDS en tiempo real e impresoras térmicas. Abonos/mixtos manuales, propinas voluntarias, descuentos porcentuales y devoluciones parciales por pago ya están disponibles; consultar PAYMENTS.md, ADJUSTMENTS.md y REFUNDS.md. No usar el subtotal de un pedido como factura ni como comprobante de pago; la venta tiene su recibo interno separado.
 
 ## Concurrencia y almacenamiento
 

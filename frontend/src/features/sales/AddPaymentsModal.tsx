@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
-import { api, ApiError } from '../../lib/api'
+import { ApiError } from '../../lib/api'
 import { formatMoney, moneyUnits, unitsToMoney } from '../../lib/money'
 import { ErrorNotice, Field, Modal, Submit, useToast } from '../../components/ui'
 import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
 import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
-import type { CashOption, PaymentMethod, Sale } from './types'
+import type { PaymentMethod, Sale } from './types'
+import { useSalesCash } from './useSalesCash'
 
 type DraftPayment = {
   key: string
@@ -29,13 +30,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
   const [reference, setReference] = useState('')
   const methods = useDefaultPaymentMethod()
   const method = chosen ?? methods.data?.data[0]
-  const cash = useQuery({
-    queryKey: ['installment-cash', snapshot.branch_id],
-    queryFn: () =>
-      api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${snapshot.branch_id}`),
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
+  const cash = useSalesCash(snapshot.branch_id)
   const selected =
     cash.data?.data.find((item) => String(item.id) === cashId) ??
     (cashId === '' ? cash.data?.data[0] : undefined)

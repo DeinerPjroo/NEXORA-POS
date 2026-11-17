@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.8.0** agrega **descuento porcentual y propinas voluntarias**, con configuración/consentimiento explícitos y snapshots históricos. Conserva abonos, pagos mixtos, saldo, métodos manuales, pedidos y caja. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. El cálculo adicional se confirma por empresa, sin asignación de régimen/tasa legal. Mesas, devoluciones parciales, cuentas divididas, pasarelas, cocina, inventario y facturación siguen pendientes.
+La entrega **0.9.0** agrega **devoluciones parciales por pago**, límites acumulativos, historial y devolución completa posterior solo del remanente. Devolver no genera deuda nueva; se conservan abonos/mixtos, descuentos y propinas voluntarias. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. El cálculo adicional se confirma por empresa, sin asignación de régimen/tasa legal. Mesas, cuentas divididas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [REFUNDS.md](docs/REFUNDS.md).
 
 ## Entorno y requisitos
 

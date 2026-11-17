@@ -1,5 +1,7 @@
 # Abonos y pagos mixtos manuales (0.7)
 
+Actualización 0.9: devoluciones parciales y remanentes por pago en [REFUNDS.md](REFUNDS.md). Se conserva el total y no se genera deuda nueva por devolver. Una venta partially_refunded con saldo positivo permite agregar pagos.
+
 ## Alcance y uso
 
 Se amplía la venta existente, sin duplicar pedidos, recibos ni servicios. El primer cobro puede aplicar el total o un importe menor. Desde el recibo con estado **Abonada**, **Agregar pagos** permite preparar uno o varios métodos y confirmar un lote. La interfaz de seguimiento de abonos requiere sales.view y sales.collect; quien solo tiene permiso de cobro conserva el cobro completo anterior.
@@ -33,9 +35,9 @@ No se crea una venta vacía sin primer pago. Registrar pago no adelanta preparac
 
 La acción **Devolución total** cierra la venta y compensa cada pago por su método histórico, incluso si el método fue archivado. Devuelve solo el importe recibido/aplicado; jamás devuelve el saldo no pagado. En una venta de 100.01 con abono de 40.00, devuelve 40.00 y cancela saldo de 60.01, conservando el total original.
 
-Cada sale_refund se enlaza al payment original con FK compuesta tenant/sale/payment y es único para ese pago en este incremento. El lote completo es atómico e idempotente. Efectivo requiere fondos de una sesión abierta de la misma sucursal/moneda; no efectivo exige referencia por pago y no genera egreso de caja. La revisión de venta es obligatoria para ventas abonadas o de varios pagos, evitando devolver una lista desactualizada. La UI siempre la envía.
+Cada sale_refund se enlaza al payment original con FK compuesta tenant/sale/payment. Desde 0.9 admite varias compensaciones por pago hasta su importe aplicado; el cierre devuelve solo el remanente. El lote completo es atómico e idempotente. Efectivo requiere fondos de una sesión abierta de la misma sucursal/moneda; no efectivo exige referencia por pago con remanente y no genera egreso de caja. La revisión de venta es obligatoria para ventas abonadas, parcialmente devueltas o de varios pagos, evitando devolver una lista desactualizada. La UI siempre la envía.
 
-Las devoluciones de una parte elegida de un pago o por productos aún están pendientes (2.1-D). Una vez cerrada/devuelta, la venta no admite abonos nuevos. No hay reposición de inventario ni documento fiscal.
+Las devoluciones de una parte elegida de un pago existen desde 0.9; la devolución por productos sigue pendiente. Una vez cerrada/devuelta, la venta no admite abonos nuevos. No hay reposición de inventario ni documento fiscal.
 
 ## Ejemplo probado
 

@@ -1,25 +1,23 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, ApiError } from '../../lib/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { ApiError } from '../../lib/api'
 import { formatMoney } from '../../lib/money'
 import { ErrorNotice, Field, Modal, Submit, useToast } from '../../components/ui'
 import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
-import type { CashOption, Sale } from './types'
+import type { Sale } from './types'
+import { useSalesCash } from './useSalesCash'
 
 export function RefundModal({ sale: initial, onClose }: { sale: Sale; onClose: () => void }) {
   const [sale] = useState(initial)
   const client = useQueryClient()
   const toast = useToast()
   const [cashId, setCashId] = useState('')
-  const nonCash = sale.payments.filter((payment) => payment.method_kind === 'non_cash')
-  const cash = useQuery({
-    queryKey: ['refund-cash', sale.branch_id],
-    queryFn: () => api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${sale.branch_id}`),
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
+  const nonCash = sale.payments.filter(
+    (payment) => payment.method_kind === 'non_cash' && payment.refundable_amount !== '0.0000',
+  )
+  const cash = useSalesCash(sale.branch_id)
   const selected =
     cash.data?.data.find((item) => String(item.id) === cashId) ??
     (cashId === '' ? cash.data?.data[0] : undefined)
@@ -62,8 +60,8 @@ export function RefundModal({ sale: initial, onClose }: { sale: Sale; onClose: (
     <Modal title={`Devolver ${sale.receipt_code}`} onClose={onClose}>
       <form className="form-stack" onSubmit={submit}>
         <p>
-          Devolverás los <strong>{formatMoney(sale.paid_amount, sale.currency)}</strong> registrados
-          como recibidos, por sus métodos originales. El saldo no cobrado de{' '}
+          Devolverás los <strong>{formatMoney(sale.net_paid_amount, sale.currency)}</strong> que aún
+          pueden devolverse, por sus métodos originales. El saldo no cobrado de{' '}
           {formatMoney(sale.balance_due, sale.currency)} se cancela. Solo los pagos de efectivo
           generan salida de caja. La venta y los pagos originales se conservan.
         </p>

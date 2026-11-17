@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.8.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, descuentos porcentuales y propinas voluntarias. Todavía no se declara lista para producción.
+Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.9.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, descuentos porcentuales, propinas voluntarias y devoluciones parciales por pago. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -22,7 +22,7 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.8.
 - Búsqueda, filtros y paginación de servidor. Selector de categorías con búsqueda y páginas, sin limitarlo a las primeras categorías.
 - Permisos catalog.view/catalog.manage/catalog.costs; costos ocultos en API para quien no tiene permiso. Nuevas capacidades concedidas automáticamente solo a propietarios existentes.
 - Revisiones y bloqueos para evitar sobrescritura de productos/categorías. Moneda protegida desde el primer producto, con validación del contexto monetario al guardar.
-- MariaDB conectado y migración del catálogo aplicada. Script de pruebas SQL en base temporal aleatoria, con limpieza exclusiva de esa base y guardas antes de RefreshDatabase.
+- MariaDB conectado y migración del catálogo aplicada. Script de pruebas SQL en esquema aleatorio nuevo conservado y guardas antes de RefreshDatabase; DROP DATABASE prohibido por continuidad.
 - Ficha por producto en /productos/:id. Carga, sustitución y retirada de una fotografía privada; JPEG/PNG/WebP validados y recodificados con GD. Sin rutas de archivos expuestas por API.
 - Variantes paginadas con nombre, SKU/barcode, precio/costo y disponibilidad propios, relación tenant/producto protegida y desactivación sin borrado.
 - Un espacio de SKU y otro de barcode compartidos entre productos y variantes en el servidor; escritura serializada por empresa y restricciones propias por tabla.
@@ -46,7 +46,7 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.8.
 - Abono inicial y lotes de pagos/mixtos sobre una sola venta con total inmutable, saldo exacto BCMath y estado Abonada/Cobrada/Devuelta.
 - Revisión de venta/saldo/caja y métodos; rechazo de sobrepago, escritura atómica del lote y rollback de auditoría. Reintento de lote sin duplicación.
 - Recibos con pagos aplicados/saldo, historial por método/fecha y filtros de ventas abonadas. Vista móvil y formulario de lote verificados.
-- Devolución de todos los cobros por método original, FK a cada pago y cancelación separada del saldo nunca cobrado. Sin selección de devoluciones parciales todavía; reglas en PAYMENTS.md.
+- Devoluciones parciales por pago con límite acumulado, revisión/idempotencia y rollback atómico. Devolución completa posterior compensa solo remanentes y cancela por separado el saldo nunca cobrado. FK a pago original e historial preservados. Devolver no crea deuda; reglas en REFUNDS.md.
 - Descuento porcentual calculado half-up sobre subtotal redondeado; tipo/valor/importe históricos y fijo anterior compatible.
 - Propina opcional inicialmente deshabilitada, habilitación y tratamiento de base explícitos, sales.tips y declaración de voluntariedad obligatoria/persistida. Sin propina automática ni política tributaria asignada.
 - Editor de ajustes con cotización aplicada y consentimiento, recibo desglosado y ajustes bloqueados después del primer pago. Sin distribución/liquidación a empleados; ADJUSTMENTS.md describe el alcance.
@@ -58,15 +58,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 108 pruebas y 891 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, permisos, precisión, aislamiento, idempotencia, conflictos, rollback y referencias |
-| `php scripts/test-mysql.php` | 108 pruebas y 891 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_0721acbd9026822f conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 122 pruebas y 1097 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones parciales, permisos, precisión, aislamiento, idempotencia, conflictos, rollback y referencias |
+| `php scripts/test-mysql.php` | 122 pruebas y 1097 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_850420c7ee770e3f conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 12 aprobadas: 10 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, configuración y consentimiento de tip, porcentaje, snapshot tras cambio de política, móvil, impresión, devolución y cierre |
+| `npm run test:e2e` | 13 aprobadas en 9.2 minutos: 11 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip/porcentaje, snapshot, devoluciones parciales repetidas, pago posterior sin nueva deuda, devolución de remanentes, móvil, impresión y cierre |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -82,6 +82,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, cuentas divididas, liquidación/reparto de propinas, impuestos incluidos o múltiples por producto, devoluciones parciales por selección, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, cuentas divididas, liquidación/reparto de propinas, impuestos incluidos o múltiples por producto, devoluciones por producto, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

@@ -31,7 +31,7 @@ final class PermissionCatalog
         'sales.collect' => ['Cobrar pedidos en efectivo', 'Ventas'],
         'sales.configure' => ['Configurar cálculo de ventas', 'Ventas'],
         'sales.discount' => ['Aplicar descuentos', 'Ventas'],
-        'sales.refund' => ['Registrar devolución total', 'Ventas'],
+        'sales.refund' => ['Registrar devoluciones parciales y totales', 'Ventas'],
         'sales.tips' => ['Registrar propinas voluntarias', 'Ventas'],
     ];
 

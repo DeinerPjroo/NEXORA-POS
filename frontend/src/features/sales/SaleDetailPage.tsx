@@ -9,6 +9,7 @@ import { CatalogError } from '../catalog/catalog-ui'
 import { RefundModal } from './RefundModal'
 import { SaleReceipt } from './SaleReceipt'
 import { AddPaymentsModal } from './AddPaymentsModal'
+import { PartialRefundModal } from './PartialRefundModal'
 import { saleStates } from './types'
 import type { Sale } from './types'
 
@@ -17,6 +18,7 @@ export function SaleDetailPage() {
   const can = useCan()
   const [refund, setRefund] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [partial, setPartial] = useState(false)
   const query = useQuery({
     queryKey: ['sale', Number(saleId)],
     queryFn: ({ signal }) => api<{ data: Sale }>(`sales/${encodeURIComponent(saleId)}`, { signal }),
@@ -40,11 +42,20 @@ export function SaleDetailPage() {
               <Printer size={16} />
               Imprimir recibo
             </button>
-            {sale.status === 'partially_paid' && can('sales.collect') && (
-              <button className="button primary" onClick={() => setAdding(true)}>
-                Agregar pagos
-              </button>
-            )}
+            {sale.balance_due !== '0.0000' &&
+              sale.status !== 'refunded' &&
+              can('sales.collect') && (
+                <button className="button primary" onClick={() => setAdding(true)}>
+                  Agregar pagos
+                </button>
+              )}
+            {sale.net_paid_amount !== '0.0000' &&
+              sale.status !== 'refunded' &&
+              can('sales.refund') && (
+                <button className="button secondary" onClick={() => setPartial(true)}>
+                  Devolución parcial
+                </button>
+              )}
             {sale.status !== 'refunded' && can('sales.refund') && (
               <button className="button secondary" onClick={() => setRefund(true)}>
                 <Undo2 size={16} />
@@ -60,8 +71,11 @@ export function SaleDetailPage() {
           Ver pedido original
         </Link>
       )}
-      {adding && sale.status === 'partially_paid' && (
+      {adding && sale.balance_due !== '0.0000' && sale.status !== 'refunded' && (
         <AddPaymentsModal sale={sale} onClose={() => setAdding(false)} />
+      )}
+      {partial && sale.status !== 'refunded' && (
+        <PartialRefundModal sale={sale} onClose={() => setPartial(false)} />
       )}
       {refund && sale.status !== 'refunded' && (
         <RefundModal sale={sale} onClose={() => setRefund(false)} />

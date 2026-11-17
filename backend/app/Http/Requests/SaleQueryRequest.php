@@ -18,7 +18,7 @@ final class SaleQueryRequest extends FormRequest
     {
         return $this->routeIs('sales.quote') ? SaleAdjustmentRules::rules() : [
             'branch_id' => ['sometimes', 'integer', Rule::exists('branches', 'id')->where('tenant_id', app(TenantContext::class)->id())],
-            'status' => ['sometimes', Rule::in(['paid', 'partially_paid', 'refunded'])], 'page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'status' => ['sometimes', Rule::in(['paid', 'partially_paid', 'partially_refunded', 'refunded'])], 'page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

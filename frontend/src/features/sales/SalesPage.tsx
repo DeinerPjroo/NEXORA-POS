@@ -76,6 +76,7 @@ export function SalesPage() {
           <option value="">Todos los estados</option>
           <option value="paid">Cobradas</option>
           <option value="partially_paid">Con saldo pendiente</option>
+          <option value="partially_refunded">Con devolución parcial</option>
           <option value="refunded">Devueltas</option>
         </select>
         {can('orders.view') && (

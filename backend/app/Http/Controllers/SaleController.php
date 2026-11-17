@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Domains\Sales\AddPayments;
 use App\Domains\Sales\CollectCash;
+use App\Domains\Sales\PartialRefund;
 use App\Domains\Sales\RefundCash;
 use App\Domains\Sales\SaleTotals;
 use App\Http\Requests\AddPaymentsRequest;
+use App\Http\Requests\PartialRefundRequest;
 use App\Http\Requests\SaleCommandRequest;
 use App\Http\Requests\SaleQueryRequest;
 use App\Http\Resources\SaleResource;
@@ -57,6 +59,11 @@ final class SaleController extends Controller
     }
 
     public function addPayments(AddPaymentsRequest $request, Sale $sale, AddPayments $service)
+    {
+        return new SaleResource($service->execute($request->user(), $sale, $request->validated())->load('payment', 'refund', 'payments', 'refunds', 'order.items'));
+    }
+
+    public function partialRefund(PartialRefundRequest $request, Sale $sale, PartialRefund $service)
     {
         return new SaleResource($service->execute($request->user(), $sale, $request->validated())->load('payment', 'refund', 'payments', 'refunds', 'order.items'));
     }

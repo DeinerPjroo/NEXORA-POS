@@ -8,8 +8,8 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-A | COMPLETED | Métodos configurables y cobro/devolución manual no efectivo. Backend 90/684 SQLite/MariaDB y 10 Playwright; migración aplicada, build/formato y capturas verificados | Ventas 0.5 |
 | 2.1-B | COMPLETED | Abonos/mixtos, saldo e historial, devolución de importes realmente cobrados. Migración 000007 aplicada; 100/808 SQLite/MariaDB, 11 Playwright, build/formato y capturas correctos | 2.1-A |
 | 2.1-C | COMPLETED | Porcentaje y propinas voluntarias con configuración/snapshot/consentimiento; migración 000008 aplicada, 108/891 SQLite/MariaDB, 12 Playwright y build/formato correctos | 2.1-B |
-| 2.1-D1 | IN_PROGRESS | Devoluciones parciales por pago: sumas limitadas a cobro remanente, revisión/idempotencia, transacción/auditoría, historial y efectivo correcto; no crear deuda por devolver | 2.1-B/C |
-| 2.1-D2 | PENDING | División de una cuenta en partes iguales antes del primer pago, asignación de pagos/saldos por parte y límites contra sobrepago; sin duplicar ventas | 2.1-D1 |
+| 2.1-D1 | COMPLETED | Devoluciones parciales conectadas, límites acumulados y cierre de remanentes. Migración 000009 aplicada; 122/1097 SQLite/MariaDB, 13 Playwright, build/formato y capturas correctos | 2.1-B/C |
+| 2.1-D2 | IN_PROGRESS | División de una cuenta en partes iguales antes del primer pago, asignación de pagos/saldos por parte y límites contra sobrepago; sin duplicar ventas | 2.1-D1 |
 | 2.1-E | PENDING | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores | Catálogo y cálculo versionado |
 | 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
@@ -34,3 +34,12 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 0.5: 82 pruebas backend / 591 aserciones en SQLite y MariaDB; 10 Playwright. Resultados heredados contrastados con código; las ejecuciones de esta continuación se registran en PROJECT_STATE/HANDOFF conforme ocurren.
 
 Ninguna fila agregada representa una fase completada. Antes de iniciar cada bloque grande, desglosar criterios e implementar un incremento funcional a la vez.
+
+## Criterios del siguiente incremento 2.1-D2
+
+- División opcional en 2–20 partes iguales elegida antes del primer pago. Total global inmutable; repartir centavos sobrantes a las primeras partes de forma determinista. Rechazar partes de importe cero.
+- Conservar una venta y un recibo interno. Partes append-only con tenant/sale, número e importe; payments se asignan por FK compuesta a una parte de esa venta. No reasignar historia ni dividir ventas anteriores.
+- Cotización de servidor con distribución previa; cobro inicial identifica parte. Abonos/mixtos posteriores limitados por saldo de parte y venta, incluso si varias líneas se aplican a la misma parte.
+- Devoluciones enlazadas al payment conservan su parte y la regla de 0.9: no crear deuda nueva. Cierre completo cancela saldos no cobrados y compensa solo remanentes.
+- UI con selección de parte, importes/saldos e historial en recibo, reintento exacto y revisión. Sin división por productos ni múltiples documentos fiscales en este incremento.
+- Verificar centavos, límites acumulados, pertenencia/FK, atomicidad, idempotencia, pagos mixtos, devoluciones y compatibilidad sin división en SQLite/MariaDB y Chromium antes de publicar.

@@ -46,7 +46,7 @@ final class RecordPayments
                 'provenance' => 'operator', 'reference' => $line['reference'] ?? null, 'received_amount' => Money::normalize($line['received_amount']),
                 'change_amount' => bcsub($line['received_amount'], $line['amount'], 4), 'created_at' => now()]);
         }
-        $sale->status = bccomp($sum, $balance, 4) === 0 ? 'paid' : 'partially_paid';
+        $sale->status = $sale->refunds->isNotEmpty() ? 'partially_refunded' : (bccomp($sum, $balance, 4) === 0 ? 'paid' : 'partially_paid');
         $sale->revision++;
         $sale->save();
         $sale->unsetRelation('payments');

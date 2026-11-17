@@ -1,6 +1,14 @@
 import { expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
+export async function readApi<T>(page: Page, path: string): Promise<T> {
+  const response = await page.request.get(`/api/v1/${path}`, {
+    headers: { Origin: 'http://127.0.0.1:5199', Accept: 'application/json' },
+  })
+  expect(response.ok()).toBe(true)
+  return response.json()
+}
+
 export async function registerWorkspace(page: Page, name: string, prefix: string) {
   await page.goto('/registro')
   await page.getByLabel('Nombre del restaurante', { exact: true }).fill(name)

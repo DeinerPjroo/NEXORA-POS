@@ -20,10 +20,18 @@ Se conserva el servicio CollectCash y la API de cobro único como entrada compat
 
 El movimiento nullable no significa efectivo perdido: solo non_cash lo deja vacío; cash exige y crea su movimiento en el mismo servicio/transacción. Una devolución no puede elegir otro tipo para convertir un registro no efectivo en salida de dinero. Código/tipo no se editan y el efectivo principal no se desactiva.
 
-## DEC-005 · Ajustes voluntarios y porcentaje (0.8 en verificación)
+## DEC-005 · Ajustes voluntarios y porcentaje (0.8)
 
 El descuento porcentual usa hasta dos decimales entre 0 y 100, se aplica al subtotal global ya redondeado y se redondea half-up. Se conservan tipo/valor/importe derivado, motivo y permiso sales.discount. El fijo anterior sigue siendo la opción predeterminada y API compatible.
 
 Las propinas son de importe fijo, inicialmente deshabilitadas. Habilitarlas requiere elegir explícitamente si participan en la base del impuesto adicional y confirmar configuración. Esto es un cálculo elegido por la empresa, sin asignar régimen/tasa legal; included/excluded aquí se refiere a la base de la propina, no a precios con impuestos incluidos (2.1-E sigue pendiente). No se agrega porcentaje ni importe automático.
 
 La propina positiva exige sales.tips y confirmación del operador de que fue aceptada voluntariamente, guardada en snapshot y auditoría. El descuento no reduce la propina. Total = subtotal − descuento + propina + impuesto, con base elegida explícitamente. Ajustes fijados antes del primer pago; abonos posteriores no pueden cambiarlos. Devolver todos los cobros incluye la parte de propina realmente pagada, nunca dinero no recibido. No se implementa distribución/liquidación de propinas a empleados en este incremento.
+
+## DEC-006 · Compensaciones parciales (0.9)
+
+La devolución parcial se asigna al payment original y tiene límite acumulado, sin reinterpretar productos/impuestos/propinas. Se retira solo la unicidad por pago mediante nueva migración; FK e historia quedan. RecordRefunds se comparte con el cierre completo y comprueba método histórico/fondos/referencias dentro de la transacción bloqueada e idempotente.
+
+Devolver reduce tanto el importe neto de la venta como lo recibido neto: no aumenta deuda. balance_due permanece total − paid mientras esté abierta; net_paid = paid − refunded. Devolver todos los abonos no cancela la deuda restante; el cierre completo explícito sí la cancela y devuelve solo remanentes. Si ya no queda dinero que devolver, valida/avanza sesión sin filas financieras cero. RefundCash antiguo permanece compatible.
+
+Una prueba de navegador detectó revisión de caja reutilizada desde la caché de 15 segundos al abrir devolución después de un abono. useSalesCash obtiene snapshot por formulario, sin actualización de fondo ni reutilización entre operaciones; un conflicto real sigue exigiendo revisión explícita y el envío incierto permanece congelado.

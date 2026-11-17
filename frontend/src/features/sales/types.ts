@@ -45,11 +45,13 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
   id: number
   order_id: number
   branch_id: number
-  status: 'paid' | 'partially_paid' | 'refunded'
+  status: 'paid' | 'partially_paid' | 'partially_refunded' | 'refunded'
   revision: number
   paid_amount: string
   balance_due: string
   refunded_amount: string
+  net_paid_amount: string
+  effective_total: string
   cancelled_balance: string
   tip_confirmed: boolean
   payments: SalePayment[]
@@ -66,6 +68,8 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
     id: number
     cash_session_id: number
     amount: string
+    refunded_amount: string
+    refundable_amount: string
     method: string
     method_name: string
     method_kind: 'cash' | 'non_cash'
@@ -89,4 +93,9 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
 export type CashOption = { id: number; name: string; revision: number; currency: string }
 export type SalePayment = NonNullable<Sale['payment']>
 export type SaleRefund = NonNullable<Sale['refund']> & { payment_id: number }
-export const saleStates = { paid: 'Cobrada', partially_paid: 'Abonada', refunded: 'Devuelta' }
+export const saleStates = {
+  paid: 'Cobrada',
+  partially_paid: 'Abonada',
+  partially_refunded: 'Devolución parcial',
+  refunded: 'Devuelta',
+}

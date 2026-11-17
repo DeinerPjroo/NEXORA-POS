@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## 0.9.0 · 2026-11-17
+
+- Devoluciones parciales por pago original, de 1–20 líneas atómicas, límite acumulado, motivo y referencia no efectiva. Método histórico incluso archivado.
+- PartialRefund/RecordRefunds y SaleBalance separan pagos brutos, compensaciones, neto, saldo y total original. Devolver no genera ni cancela deuda pendiente.
+- Abonos posteriores admitidos si queda saldo tras una devolución parcial. Devolución completa posterior devuelve solo remanentes y cancela explícitamente lo no cobrado.
+- Cierre sin dinero remanente valida sesión/revisión y audita sin inventar movimientos ni compensaciones cero. Historial append-only y FK conservados.
+- Formularios de cobro/abono/devolución consultan una revisión de caja nueva al abrirse, sin reutilizar caché de la operación anterior. Reintento incierto congelado y exacto.
+- Recibo con importes netos e historial de motivos por devolución, filtros/estado de devolución parcial y vista móvil.
+- Migración incremental 000009 permite varias compensaciones por pago sin cambiar filas ni importes anteriores. Alcance y API en REFUNDS.md.
+
 ## 0.8.0 · 2026-11-17
 
 - Descuento porcentual de hasta dos decimales, calculado half-up sobre subtotal redondeado; tipo/valor/importe históricos y fijo anterior compatible.

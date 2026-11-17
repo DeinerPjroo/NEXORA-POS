@@ -15,7 +15,8 @@ import { SaleAmounts } from './SaleAmounts'
 import { SaleReceipt } from './SaleReceipt'
 import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
 import { SaleAdjustments, useSaleAdjustments } from './SaleAdjustments'
-import type { CashOption, PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
+import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
+import { useSalesCash } from './useSalesCash'
 
 export function CheckoutPage() {
   const { orderId = '' } = useParams()
@@ -103,12 +104,7 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
     refetchOnReconnect: false,
     staleTime: Infinity,
   })
-  const cash = useQuery({
-    queryKey: ['checkout-cash', order.branch_id],
-    queryFn: () => api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${order.branch_id}`),
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
+  const cash = useSalesCash(order.branch_id)
   const selected =
     cash.data?.data.find((item) => String(item.id) === cashId) ??
     (cashId === '' ? cash.data?.data[0] : undefined)
