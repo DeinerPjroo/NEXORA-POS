@@ -42,6 +42,8 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.5.
 
 ## Verificaciones realizadas
 
+Continuación autónoma: código local y origin/main contrastados en a487f23, sin cambios locales previos ni avances posteriores. La suite de referencia volvió a pasar en SQLite (82/591). La política nueva de pruebas SQL conserva cada base aislada; los resultados históricos de la tabla de 0.5 describen la limpieza anterior. Estado vigente en PROJECT_STATE.json y tareas en TASKS.md.
+
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |

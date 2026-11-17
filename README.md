@@ -78,7 +78,7 @@ Para probar con el servidor MySQL/MariaDB configurado, desde la raíz:
 php scripts/test-mysql.php
 ```
 
-El script crea una base temporal nueva de nombre aleatorio, ejecuta la suite y elimina exclusivamente esa base al finalizar. Necesita permiso CREATE/DROP DATABASE. No utiliza ni limpia tablas de la base de trabajo. Una guarda en TestCase impide ejecutar RefreshDatabase sobre una base SQL distinta de la generada por el script. No ejecutes PHPUnit apuntando manualmente a tu base real.
+El script crea una base temporal nueva de nombre aleatorio y ejecuta la suite. Necesita permiso CREATE DATABASE. Por la instrucción de continuidad, conserva la base aislada y muestra su nombre al terminar: nunca ejecuta DROP DATABASE ni reutiliza bases anteriores. No utiliza ni limpia tablas de la base de trabajo. Una guarda en TestCase impide ejecutar RefreshDatabase sobre una base SQL distinta de la generada por el script. No ejecutes PHPUnit apuntando manualmente a tu base real. Los esquemas conservados requieren administración posterior y consumen espacio.
 
 Catálogo disponible en `/productos` y `/categorias`: categorías, productos, búsqueda, filtros, paginación, SKU/barcode y precios/costos precisos. Abre **Ver ficha y presentaciones** para subir una fotografía o crear variantes con precio y disponibilidad propios. Los permisos catalog.view/manage/costs se mantienen; otros roles se configuran desde Roles y permisos. El costo requiere permiso separado. Aún no hay cobros ni inventario automático.
 
@@ -128,5 +128,6 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [Reglas de caja y pedidos](docs/OPERATIONS.md)
 - [Venta, cálculo y devolución en efectivo](docs/SALES.md)
 - [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
+- [Tareas](docs/TASKS.md), [estado estructurado](docs/PROJECT_STATE.json), [continuidad](docs/HANDOFF.md) y [decisiones](docs/DECISIONS.md)
 
 Las carpetas `mobile/` y `desktop/` reservan productos futuros; todavía no contienen aplicaciones.

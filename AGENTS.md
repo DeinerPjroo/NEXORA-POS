@@ -19,7 +19,7 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Actualizar documentación y ejecutar pruebas relevantes antes de cerrar un cambio.
 - Verificaciones: backend: `php artisan test`, `vendor/bin/pint --test`; frontend: `npm run check`, `npm run build`, `npm run test:e2e` con servicios de prueba dedicados.
 - No usar `migrate:fresh` contra bases de usuarios. Pruebas E2E usan exclusivamente backend/database/e2e.sqlite.
-- Pruebas MySQL/MariaDB: `php scripts/test-mysql.php` desde raíz. Crea y limpia únicamente su esquema aleatorio. Nunca ejecutar PHPUnit sobre la base de trabajo; TestCase valida la marca del esquema antes de RefreshDatabase.
+- Pruebas MySQL/MariaDB: `php scripts/test-mysql.php` desde raíz. Crea un esquema aleatorio nuevo y lo conserva al terminar. Está prohibido ejecutar DROP DATABASE, incluso para limpiar pruebas. Nunca ejecutar PHPUnit sobre la base de trabajo; TestCase valida la marca del esquema antes de RefreshDatabase.
 - Catálogo: dinero como cadenas decimales, costos protegidos por catalog.costs, revisión obligatoria en PUT. No cambiar moneda si existen productos ni aceptar contexto monetario obsoleto.
 - Fotografías privadas en disco catalog: no generar enlaces públicos, aceptar solo JPEG/PNG/WebP acotados y recodificar con GD. Mutaciones de imagen/variante incrementan revisión del producto; conservar la revisión original al abrir formularios.
 - SKU y barcode: comprobar disponibilidad en productos y variantes bajo bloqueo de empresa. Las variantes se archivan; nunca se transfieren de producto/empresa.
@@ -29,3 +29,14 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Ventas: exigir configuración confirmada, revisar pedido/configuración/caja y total esperado. Dos decimales half-up: subtotal global, descuento fijo antes del impuesto adicional, impuesto redondeado, total positivo. No inventar tasas legales ni interpretar precios incluidos.
 - Cobro en efectivo: movimiento por total neto, registrar recibido/cambio, una venta por pedido y recibo interno correlativo por tenant. Venta/pago/caja/auditoría/secuencia deben confirmar o revertir juntos.
 - Devolución total única: salida compensatoria con motivo, caja abierta de misma sucursal/moneda y fondos suficientes. Conservar venta/pago, impedir cancelar o recobrar pedido vendido. Nunca confundir recibo interno con documento fiscal.
+
+## Protocolo de continuidad autónoma
+
+- Autorización vigente: avanzar secuencialmente por todos los incrementos pendientes hasta una primera versión integral. No preguntar al terminar cada módulo. Conservar avances locales y remotos; no reiniciar fases ni duplicar dominios.
+- Antes de retomar: leer README, REQUIREMENTS, ARCHITECTURE, ROADMAP, PROGRESS, CHANGELOG, DATABASE, OPERATIONS, SALES y los documentos TASKS, PROJECT_STATE, HANDOFF y DECISIONS. Revisar código, migraciones, pruebas, git status e historial y comparar con origin sin sobrescribir trabajo.
+- Por incremento: criterios de aceptación y dependencias, implementación conectada, migración incremental, pruebas y correcciones, verificación de regresiones, documentación, commit descriptivo y push normal al repositorio autorizado https://github.com/DeinerPjroo/NEXORA-POS. Nunca force push ni subir .env/credenciales/tokens/datos reales.
+- Mantener docs/TASKS.md, PROJECT_STATE.json, HANDOFF.md y DECISIONS.md con estados PENDING, IN_PROGRESS, TESTING, COMPLETED o BLOCKED, tarea activa/última/próxima, dependencias, bloqueos y resultados reales.
+- Las dependencias externas no bloquean tareas independientes. Solicitar intervención solo para operaciones destructivas, credenciales, contratación, decisión comercial importante, cambio de tecnología principal, bloqueo irresoluble o publicación en producción.
+- Prohibido modificar otros proyectos o detener Horizonte (puerto 8000). Nexora conserva 8001/5173; pruebas 8011/5199. No ejecutar migrate:fresh sobre la base de trabajo, DROP DATABASE, ni borrar información real.
+- No marcar integración como funcional sin verificarla. Pagos registrados por operador siempre identificados como manuales; pasarelas/hardware/DIAN requieren pruebas externas reales.
+- Al llegar a un límite real de ejecución/contexto, dejar cambios seguros y continuidad precisa. No anunciar como terminadas fases o capacidades pendientes.

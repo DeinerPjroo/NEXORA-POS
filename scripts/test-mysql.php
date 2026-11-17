@@ -41,15 +41,9 @@ try {
     fwrite(STDERR, "No se completó la prueba. Verifica conexión y permiso para crear una base temporal.\n");
     fwrite(STDERR, 'Diagnóstico: '.get_class($error).' (código '.$error->getCode().')'.PHP_EOL);
 } finally {
-    // Solo elimina la base que este proceso acaba de crear con éxito.
+    // La instrucción de continuidad prohíbe DROP DATABASE, incluso para pruebas.
     if ($created && preg_match('/^nexora_test_[a-f0-9]{16}$/D', $database)) {
-        try {
-            $connection->statement('DROP DATABASE `'.$database.'`');
-            echo 'Base temporal eliminada. La base de Nexora no se modificó.'.PHP_EOL;
-        } catch (Throwable) {
-            fwrite(STDERR, 'No se pudo limpiar la base temporal: '.$database.PHP_EOL);
-            $status = 1;
-        }
+        echo 'Base aislada conservada: '.$database.'. No se ejecutó DROP DATABASE ni se modificó la base de Nexora.'.PHP_EOL;
     }
 }
 exit($status);
