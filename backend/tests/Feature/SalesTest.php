@@ -6,6 +6,7 @@ use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
 use App\Domains\Sales\SaleTotals;
 use App\Domains\Tenancy\TenantContext;
+use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Payment;
@@ -15,6 +16,7 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use LogicException;
 use Tests\TestCase;
@@ -267,5 +269,30 @@ class SalesTest extends TestCase
         $session = $this->postJson('/api/v1/cash/registers/'.$register['id'].'/open', ['idempotency_key' => (string) Str::uuid(), 'opening_amount' => '0', 'currency' => 'COP'])->assertCreated()->json('data');
         $this->expectException(QueryException::class);
         DB::table('payments')->where('sale_id', $sale['id'])->update(['cash_session_id' => $session['id']]);
+    }
+
+    public function test_audit_failure_rolls_back_payment_cash_order_and_sequence_together(): void
+    {
+        $work = $this->workspace($this->owner());
+        $this->configure();
+        Event::listen('eloquent.creating: '.AuditLog::class, function ($log) {
+            if ($log->action === 'sale.paid') {
+                throw new \RuntimeException('Fallo de auditoría de prueba');
+            }
+        });
+        $this->withoutExceptionHandling();
+        try {
+            $this->postJson('/api/v1/orders/'.$work['order']['id'].'/collect', $this->payment($work));
+            $this->fail('La transacción debe fallar junto con la auditoría.');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Fallo de auditoría de prueba', $error->getMessage());
+        }
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+        $this->assertDatabaseCount('idempotency_records', 2);
+        $this->assertSame(1, (int) DB::table('orders')->value('revision'));
+        $this->assertSame(1, (int) DB::table('sales_settings')->value('next_receipt_number'));
+        $this->getJson('/api/v1/cash/sessions/'.$work['session']['id'])->assertJsonPath('data.expected_amount', '1000.0000');
     }
 }

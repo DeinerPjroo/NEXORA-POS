@@ -76,9 +76,9 @@ Los precios pertenecen a la moneda de la empresa. El guardado de productos exige
 
 La suite se ejecutó tanto en SQLite como en MariaDB 10.4.32. scripts/test-mysql.php crea un esquema con nombre aleatorio y pasa su configuración al subproceso sin imprimir secretos. Tests/TestCase verifica la marca del esquema antes de permitir pruebas SQL con RefreshDatabase. Al finalizar solo se elimina el esquema creado por esa ejecución. MySQL 8, CI y pruebas de concurrencia/carga aún requieren validación específica.
 
-Servicios de aplicación y transacciones para venta/pago/movimiento. Precios e impuestos se copian como snapshots a cada detalle; los cambios del catálogo no alteran ventas anteriores. Dinero `DECIMAL(19,4)`; cantidades `DECIMAL(19,6)`; cálculos con aritmética decimal en PHP, sin `float`. Redondeo definido por moneda y política tributaria validada antes de implementar cobros.
+Servicios de aplicación y transacciones para venta/pago/movimiento. Los precios se conservan en order_items inmutables; la venta copia configuración e importes globales de impuesto/descuento. Los cambios del catálogo no alteran recibos anteriores. Dinero `DECIMAL(19,4)`; cantidades actuales de pedido enteras y futuras de inventario `DECIMAL(19,6)`; cálculos con aritmética decimal en PHP, sin `float`. El circuito en efectivo define dos decimales half-up y exige confirmar el modo de cálculo, sin determinar automáticamente régimen o tasas legales.
 
-Confirmar una venta requerirá caja abierta, autorización, bloqueo de registros necesarios, clave idempotente única por empresa/canal y sumas de pagos compatibles con el saldo. Anulaciones y devoluciones crearán operaciones compensatorias enlazadas al original. Nunca borrado físico financiero. Inventario con kardex inmutable, recetas versionadas, conversiones de unidades y consumos reproducibles. Prohibir stock negativo o permitirlo será una regla explícita con permisos y auditoría. Eventos se publicarán después del commit; para entrega fiable se usará outbox transaccional e inbox de deduplicación.
+Confirmar una venta en efectivo ya exige caja abierta, autorización, bloqueos, revisiones y clave idempotente. Una devolución total crea una operación compensatoria enlazada al original. Nunca borrado físico financiero. Pagos electrónicos/mixtos y devoluciones parciales requieren ampliación. Inventario futuro con kardex inmutable, recetas versionadas, conversiones de unidades y consumos reproducibles. Prohibir stock negativo o permitirlo será una regla explícita con permisos y auditoría. Eventos se publicarán después del commit; para entrega fiable se usará outbox transaccional e inbox de deduplicación.
 
 ## Medios privados y variantes implementados
 
@@ -96,11 +96,21 @@ Los servicios CashOperations, CreateOrder y ChangeOrderState ejecutan comandos b
 
 Cada caja tiene active_session_id con FK compuesta a una sesión de esa misma caja. Apertura, movimientos y cierre son atómicos. La revisión de sesión protege un conteo basado en datos antiguos. CashMovement, OrderItem, OrderEvent e IdempotencyRecord rechazan actualización/borrado por modelo; no existen rutas para modificar su historia. Las restricciones y servicios no autorizan SQL directo de clientes.
 
-El servidor usa BCMath y cadenas DECIMAL(19,4), comprueba límites y nunca calcula dinero mediante float. El cierre admite diferencia negativa; egresos no superan el esperado. Pedidos guardan snapshots y exigen variante cuando exista, producto/categoría disponibles, revisión y precio esperados. Cantidades actuales enteras de 1 a 999; cantidades fraccionarias de inventario quedan para su dominio. Una entrega no genera ingreso de caja. Moneda inmutable después de productos, sesiones o pedidos.
+El servidor usa BCMath y cadenas DECIMAL(19,4), comprueba límites y nunca calcula dinero mediante float. El cierre admite diferencia negativa; egresos no superan el esperado. Pedidos guardan snapshots y exigen variante cuando exista, producto/categoría disponibles, revisión y precio esperados. Cantidades actuales enteras de 1 a 999; cantidades fraccionarias de inventario quedan para su dominio. Una entrega no genera ingreso de caja; cobrar es un comando separado desde 0.5. Moneda inmutable después de productos, sesiones o pedidos.
 
 La UI retiene UUID y payload exactos mientras un formulario incierto permanece montado. El usuario reintenta explícitamente sin modificar campos; cerrar o recargar puede perder el formulario. No hay almacenamiento persistente, sincronización ni tiempo real. Permisos operativos abarcan sucursales del tenant; asignación granular de empleados posterior. Véanse reglas y límites en [OPERATIONS.md](OPERATIONS.md).
 
 Las pruebas en SQLite son funcionales: su afinidad NUMERIC puede redondear importes extremos. MariaDB/MySQL con DECIMAL es la referencia de persistencia y la suite SQL temporal verifica los límites; no se declara SQLite un motor financiero offline preparado.
+
+## Venta en efectivo implementada en 0.5
+
+SalesSetting se crea sin configurar; la persona con sales.configure debe confirmar modo de impuesto, tasa y redondeo. SaleTotals redondea subtotal global half-up a dos decimales, resta descuento fijo autorizado, calcula/redondea un impuesto adicional y exige total positivo. No soporta impuestos incluidos/múltiples por producto. La cotización es de lectura; CollectCash recalcula bajo bloqueo y compara revisiones de pedido/configuración/caja y total esperado antes de confirmar.
+
+CollectCash utiliza IdempotentOperation y una transacción que guarda Sale, Payment, CashMovement income por total neto, incremento de revisión del pedido, secuencia interna y auditoría. Un fallo de auditoría revierte todo. La unicidad tenant/order impide un segundo cobro incluso con otra clave. El recibido y cambio permanecen en Payment; no se registra todo el recibido como ingreso neto. Los snapshots de empresa/sucursal/importes y las líneas inmutables del pedido permiten reproducir el recibo.
+
+RefundCash agrega una devolución total y un egreso bajo bloqueo, verifica fondos esperados y caja abierta de la misma sucursal/moneda, conserva pago/importes y cambia estado a refunded. Se admite otra sesión posterior; solo una devolución por venta. Pedidos vendidos no se cancelan, y su preparación sigue separada del pago. Las FKs compuestas enlazan venta/pedido/sucursal, pago o devolución/caja/movimiento, y actores del tenant.
+
+Las listas/detalles de ventas usan sales.view; cobrar, configurar, descontar y devolver tienen permisos separados. Impresión del recibo mediante navegador y CSS específico, sin adaptador de hardware ni emisión fiscal. Solo efectivo declarado; no hay pasarela o verificación externa. Contrato y límites en [SALES.md](SALES.md).
 
 ## Offline y dispositivos futuros
 

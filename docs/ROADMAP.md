@@ -13,10 +13,10 @@ No hay fechas comerciales comprometidas. Cada etapa depende de pruebas e integri
 
 ## Siguiente incremento
 
-1. Catálogo, caja manual y pedidos con estados/idempotencia ya implementados y migrados. La conexión MariaDB funciona y la suite pasó en un esquema temporal independiente. El alcance y sus límites están en OPERATIONS.md.
+1. Catálogo, caja, pedidos y venta/devolución en efectivo ya implementados y migrados. La conexión MariaDB funciona y la suite pasó en un esquema temporal independiente. Alcance y límites en OPERATIONS.md y SALES.md.
 2. Añadir CI y validación específica de MySQL 8; mantener pruebas SQL aisladas con scripts/test-mysql.php.
 3. Completar endurecimiento de identidad: verificación de correo, auditoría de autorización denegada, MFA/PIN y bloqueo según prioridad de operación.
-4. Continuar Fase 2 con ventas y pagos: definir impuestos, redondeo por moneda, descuentos, métodos, conciliación, cobro parcial y compensaciones antes de conectar pedidos con ingresos de caja. Seleccionar y verificar proveedores reales de pago; los pedidos actuales aún no son ventas.
+4. Ampliar ventas: impuestos incluidos/múltiples por producto, pagos parciales/mixtos, devoluciones parciales, propinas y cuentas divididas con reglas explícitas. Seleccionar y verificar proveedores reales antes de registrar pagos electrónicos como confirmados.
 5. Incorporar salones/mesas y asignaciones por sucursal; después abordar KDS y actualización en tiempo real con permisos y pruebas de concurrencia.
 
 ## Dependencias incorporadas por necesidad

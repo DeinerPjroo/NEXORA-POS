@@ -46,7 +46,7 @@ export function OrderActions({ order }: { order: Order }) {
             <ArrowRight size={16} />
           </button>
         )}
-        {can('orders.cancel') && (
+        {can('orders.cancel') && !order.sale_id && (
           <button
             className="button secondary"
             disabled={operation.locked}

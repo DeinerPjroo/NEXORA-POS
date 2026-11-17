@@ -70,7 +70,7 @@ export function CashPage() {
             setHistoryPage(1)
           }}
         />
-        <span className="muted">Los pedidos aún no generan ingresos en caja.</span>
+        <span className="muted">Solo los cobros confirmados generan ingresos por ventas.</span>
       </div>
       {context.error ? (
         <CatalogError error={context.error} onRetry={() => void context.refetch()} />

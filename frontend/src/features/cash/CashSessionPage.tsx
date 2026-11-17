@@ -80,7 +80,7 @@ export function CashSessionPage() {
       <section className="panel cash-ledger">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">MOVIMIENTOS MANUALES</p>
+            <p className="eyebrow">MOVIMIENTOS DE EFECTIVO</p>
             <h2>El recorrido de tu efectivo</h2>
           </div>
           {session.status === 'open' && can('cash.movements') && (
@@ -97,8 +97,8 @@ export function CashSessionPage() {
           )}
         </div>
         <p className="muted operation-note">
-          El esperado corresponde a la apertura y los movimientos manuales. Los pedidos no se
-          consideran cobros.
+          El esperado incluye apertura, movimientos manuales, cobros y devoluciones. Registrar o
+          entregar un pedido por sí solo no mueve efectivo.
         </p>
         {movements.error ? (
           <CatalogError error={movements.error} onRetry={() => void movements.refetch()} />
@@ -148,7 +148,7 @@ export function CashSessionPage() {
               </table>
             </div>
             {!movements.data.data.length && (
-              <p className="empty-inline muted">Aún no hay movimientos manuales en esta sesión.</p>
+              <p className="empty-inline muted">Aún no hay movimientos en esta sesión.</p>
             )}
             <Pagination
               meta={movements.data.meta}

@@ -314,8 +314,8 @@ export function OrderComposer() {
             <strong>{formatMoney(cartSubtotal(cart), currency)}</strong>
           </div>
           <p className="muted small">
-            Este registro no incluye cobro ni factura. Los impuestos y ajustes se definirán al
-            implementar ventas.
+            Este registro no incluye cobro ni factura. El descuento, impuesto adicional y redondeo
+            se calculan al cobrar el pedido.
           </p>
           {conflict && (
             <button

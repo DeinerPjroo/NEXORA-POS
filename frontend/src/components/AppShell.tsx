@@ -22,6 +22,7 @@ import {
   X,
   Wallet,
   ShoppingBag,
+  ReceiptText,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { Brand, ErrorNotice, Loading, useToast } from './ui'
@@ -30,6 +31,7 @@ import { useCan, useSession } from '../features/auth/SessionProvider'
 const navigation = [
   { to: '/inicio', label: 'Vista general', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, permission: 'orders.view' },
+  { to: '/ventas', label: 'Ventas', icon: ReceiptText, permission: 'sales.view' },
   { to: '/caja', label: 'Caja', icon: Wallet, permission: 'cash.view' },
   { to: '/productos', label: 'Productos', icon: Package, permission: 'catalog.view' },
   { to: '/categorias', label: 'Categorías', icon: Tags, permission: 'catalog.view' },

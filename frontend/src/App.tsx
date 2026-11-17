@@ -16,6 +16,10 @@ import { CashSessionPage } from './features/cash/CashSessionPage'
 import { OrdersPage } from './features/orders/OrdersPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { OrderComposer } from './features/orders/OrderComposer'
+import { SalesPage } from './features/sales/SalesPage'
+import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
+import { SaleDetailPage } from './features/sales/SaleDetailPage'
+import { CheckoutPage } from './features/sales/CheckoutPage'
 
 export default function App() {
   return (
@@ -26,6 +30,40 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/ventas"
+          element={
+            <PermissionBoundary permission="sales.view">
+              <SalesPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/ventas/configuracion"
+          element={
+            <PermissionBoundary permission="sales.configure">
+              <SalesSettingsPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/ventas/:saleId"
+          element={
+            <PermissionBoundary permission="sales.view">
+              <SaleDetailPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/pedidos/:orderId/cobrar"
+          element={
+            <PermissionBoundary permission="sales.collect">
+              <PermissionBoundary permission="orders.view">
+                <CheckoutPage />
+              </PermissionBoundary>
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/caja"
           element={

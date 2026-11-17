@@ -104,7 +104,7 @@ Cada variante requiere name (máximo 80), sku (máximo 40), sale_price como cade
 
 Crear/editar variantes o cambiar/retirar imagen incrementa la revisión del producto. Esto evita que un formulario anterior sobrescriba cambios realizados desde otra pestaña. No se envía revision de variante: el control pertenece al producto. Las variantes se archivan con is_active=false; no hay DELETE ni traslado a otro producto.
 
-La respuesta de producto ahora incluye image_url (nullable), variants_count y available_variants_count. sellable exige producto/categoría activos y disponibilidad manual; si existen variantes, además requiere al menos una activa y disponible. El precio base se presenta como referencia cuando hay variantes. Crear pedidos exige selección de variante disponible y usa su precio. La API de venta/pago sigue pendiente.
+La respuesta de producto ahora incluye image_url (nullable), variants_count y available_variants_count. sellable exige producto/categoría activos y disponibilidad manual; si existen variantes, además requiere al menos una activa y disponible. El precio base se presenta como referencia cuando hay variantes. Crear pedidos exige selección de variante disponible y usa su precio. Desde 0.5 hay venta en efectivo; medios de pago electrónicos siguen pendientes.
 
 ## Caja y pedidos desde 0.4.0
 
@@ -152,7 +152,46 @@ Pedido mínimo (reemplaza IDs, UUID y revisión con valores actuales):
 
 channel admite dine_in/takeaway, sin asignación a mesas todavía. reference máximo 80, customer_name 100 y notes general 1000. De 1 a 100 líneas, quantity entera 1–999 y notas por línea de hasta 300. Si el producto tiene variantes, variant_id es obligatorio y debe corresponder a una disponible de ese producto. Todos deben estar activos/disponibles, incluida categoría y sucursal. Precio/revisión obsoletos devuelven 409; el servidor calcula unit_price, line_subtotal y subtotal mediante BCMath, sin aceptar subtotal o status del cliente. Guarda nombres/SKU/precios como snapshots.
 
-Estados: open → preparing → ready → delivered. Se permite cancelled desde open/preparing/ready con orders.cancel y motivo. Sin reversión ni cancelación de entregados. Los cambios requieren revisión actual y agregan un evento; nunca borran historia. Un pedido entregado no genera ingresos de caja, cobros, impuestos ni factura. Consultar [reglas operativas](OPERATIONS.md).
+Estados: open → preparing → ready → delivered. Se permite cancelled desde open/preparing/ready con orders.cancel y motivo, siempre que no exista venta. Sin reversión ni cancelación de entregados. Los cambios requieren revisión actual y agregan un evento; nunca borran historia. Un pedido entregado no genera ingresos de caja, cobros, impuestos ni factura por sí solo. Las respuestas incluyen sale_id y sale_status nullable. Consultar [reglas operativas](OPERATIONS.md).
+
+## Ventas en efectivo desde 0.5.0
+
+| Método / ruta | Permiso | Contrato |
+| --- | --- | --- |
+| GET sales/settings | sales.view, sales.collect o sales.configure | data: configured, tax_mode, tax_name, tax_rate, revision, rounding=half_up y decimal_places=2 |
+| PUT sales/settings | sales.configure | revision, confirmed=true, tax_mode=none/exclusive, tax_name (40), tax_rate cadena 0–100 con hasta 4 decimales; confirma configuración y aumenta revisión |
+| GET sales/cash-context | sales.collect o sales.refund | branch_id obligatorio del tenant; data: sesiones abiertas y cajas activas con id, name, revision, currency |
+| GET orders/{order}/quote | sales.collect; sales.discount si descuento positivo | discount_amount cadena obligatoria; data: cálculo, order_revision y settings_revision. Solo consulta, sin registrar cobros |
+| POST orders/{order}/collect | sales.collect; sales.discount si corresponde | Comando de cobro descrito abajo; 201, venta bajo data con pago, líneas y refund nullable |
+| GET sales | sales.view | data + meta; branch_id y status=paid/refunded opcionales, page/per_page (20, máximo 50) |
+| GET sales/{sale} | sales.view | data: recibo interno con líneas históricas, pago y devolución nullable |
+| POST sales/{sale}/refund | sales.refund | idempotency_key UUID, cash_session_id, cash_revision y reason (3–300); devolución total, 200 con venta actualizada |
+
+La configuración nace configured=false: no se puede cotizar/cobrar hasta confirmar. none exige tasa cero y significa sin cálculo adicional automático; no asigna un régimen fiscal. exclusive aplica un solo porcentaje adicional sobre la base después del descuento, sin impuestos incluidos ni múltiples por producto. El cliente no puede cambiar next_receipt_number.
+
+Cobro mínimo (usar revisiones actuales de cotización y caja):
+
+```json
+{
+  "idempotency_key": "e6cbced5-2de6-439e-955e-bec347b6ec8b",
+  "cash_session_id": 1,
+  "cash_revision": 1,
+  "order_revision": 1,
+  "settings_revision": 2,
+  "discount_amount": "10.12",
+  "discount_reason": "Descuento autorizado",
+  "expected_total": "389.52",
+  "received_amount": "400.00"
+}
+```
+
+Importes del comando como cadenas no negativas, máximo 15 enteros y 2 decimales, sin exponentes. discount_reason obligatorio si el descuento es positivo. total, tax_rate y tenant_id están prohibidos: el servidor calcula y verifica. La cotización redondea subtotal global a dos decimales, resta descuento y redondea el impuesto adicional, con BCMath y mitades hacia arriba. Total positivo, descuento ≤ subtotal y recibido ≥ total. Respuestas monetarias con cuatro decimales; rounding_adjustment firmado frente al subtotal de catálogo.
+
+El pedido no puede estar cancelado ni tener venta previa; la caja debe estar abierta en su sucursal/moneda. Conflictos de revisión/configuración/caja/total devuelven 409. Una venta por pedido incluso usando otra clave UUID. Misma clave/contenido/usuario devuelve la venta actual sin repetir movimiento. Cobrar aumenta la revisión del pedido, sin cambiar preparación. La transacción incluye venta, pago, movimiento income por total neto, secuencia y auditoría; recibido y cambio se conservan en payments.
+
+El recibo conserva business_name, branch_name/address, currency, catalog_subtotal, subtotal, rounding_adjustment, discount_amount/reason, taxable_base, tax_mode/name/rate, tax_amount, total y settings_revision. receipt_code V-000001 es numeración interna por tenant. El detalle incluye items de order_items inmutables, payment (received_amount/change_amount/amount/cash_session_id) y refund (amount/reason/cash_session_id/created_at) cuando existe. No es factura electrónica ni verificación de efectivo físico.
+
+La devolución total exige caja abierta de la misma sucursal/moneda y efectivo esperado suficiente. Puede ser una sesión posterior. Se guarda un único egreso y sale_refund, status=refunded, sin modificar el pago o los importes históricos. Reintentos idempotentes no repiten la salida; otro UUID tras devolver responde 409. Un pedido vendido no se cancela ni se cobra de nuevo después de devolver. Pagos parciales, medios electrónicos, impuestos incluidos y devolución parcial están pendientes. Más reglas en [SALES.md](SALES.md).
 
 ## Referencia de errores
 

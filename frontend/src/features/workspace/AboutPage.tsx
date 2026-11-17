@@ -14,7 +14,7 @@ export function AboutPage() {
         <Sparkles size={32} />
         <h2>Nexora POS</h2>
         <p>El futuro de tu restaurante.</p>
-        <span className="pill violet">Versión 0.4 · Caja y pedidos</span>
+        <span className="pill violet">Versión 0.5 · Ventas en efectivo</span>
       </div>
       <div className="roadmap-list">
         {[
@@ -27,7 +27,7 @@ export function AboutPage() {
           [
             '02',
             'La operación, conectada',
-            'Catálogo, apertura y cierre de caja, movimientos manuales y pedidos con preparación. Ventas, pagos y mesas pendientes.',
+            'Catálogo, caja, pedidos y ventas en efectivo con recibos y devolución total. Mesas y otros métodos de pago pendientes.',
             'Operación inicial disponible',
           ],
           [

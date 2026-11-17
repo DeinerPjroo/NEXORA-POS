@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.4.0** incorpora **apertura y cierre de caja, movimientos manuales y pedidos con estados de preparación**. También funcionan catálogo con fotografías/variantes, registro empresarial, sesiones, recuperación de contraseña, sucursales, roles, configuración regional e identidad visual versionada. El frontend consume la API real. Ventas, cobros, impuestos, mesas, cocina en tiempo real, inventario y suscripciones siguen pendientes. Un pedido entregado no registra un pago.
+La entrega **0.5.0** incorpora **venta y cobro en efectivo, cambio, recibos internos y devolución total**. También funcionan caja/arqueo, pedidos con preparación, catálogo con fotografías/variantes, registro empresarial, sesiones, sucursales, roles e identidad visual versionada. El cálculo de impuesto adicional requiere confirmación explícita de la empresa; no se asigna una tasa legal. Mesas, pagos electrónicos, cocina en tiempo real, inventario y facturación siguen pendientes. Entregar un pedido por sí solo no registra un pago.
 
 ## Entorno y requisitos
 
@@ -101,7 +101,15 @@ En **Caja** elige sucursal, abre la caja principal con su base y registra ingres
 
 En **Pedidos → Nuevo pedido**, agrega productos, elige una presentación cuando tengan variantes y registra cantidades enteras, notas y referencia. El flujo permite pendiente → preparación → listo → entregado y cancelación con motivo antes de entregar. El servidor valida precios/revisiones y calcula importes usando **BCMath**; un cambio de catálogo no modifica pedidos anteriores.
 
-Los permisos cash.view/manage/movements y orders.view/manage/cancel se configuran en Roles y permisos; tomar pedidos también requiere catalog.view. La migración concede las capacidades nuevas automáticamente solo a propietarios existentes. Los pedidos no aumentan la caja ni generan facturas. Ante una respuesta perdida, mantén abierto el formulario y usa **Reintentar envío** para consultar la misma operación sin duplicarla; no hay cola offline ni persistencia del formulario al recargar. Consulta las [reglas operativas](docs/OPERATIONS.md).
+Los permisos cash.view/manage/movements y orders.view/manage/cancel se configuran en Roles y permisos; tomar pedidos también requiere catalog.view. La migración concede las capacidades nuevas automáticamente solo a propietarios existentes. Registrar/entregar pedidos no aumenta la caja. Ante una respuesta perdida, mantén abierto el formulario y usa la opción de reintento para consultar la misma operación sin duplicarla; no hay cola offline ni persistencia del formulario al recargar. Consulta las [reglas operativas](docs/OPERATIONS.md).
+
+## Ventas en efectivo
+
+Primero entra en **Ventas → Configurar ventas** y confirma el cálculo: sin impuesto adicional automático o un porcentaje adicional sobre precios base. Se cobra a dos decimales con mitades hacia arriba. No se determina automáticamente el régimen tributario; los precios con impuestos incluidos y varios impuestos por producto no están soportados.
+
+Abre una caja y entra en **Pedidos → detalle → Cobrar en efectivo**. Aplica descuento fijo autorizado si corresponde, revisa el total del servidor, elige caja e indica el recibido. Se guarda el cambio y un ingreso por el total neto. Cada pedido admite una sola venta, protegida también ante reintentos con otra clave.
+
+En **Ventas** puedes consultar/imprimir el recibo interno y registrar una **devolución total** con motivo y caja abierta con fondos suficientes, conservando la operación original. Permisos separados sales.view/collect/configure/discount/refund. No hay cobro electrónico ni factura DIAN; la impresión utiliza el navegador. Detalle de cálculo, devoluciones y límites en [SALES.md](docs/SALES.md).
 
 ## Correo, seguridad y producción
 
@@ -118,6 +126,7 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [Sistema de diseño](docs/DESIGN_SYSTEM.md)
 - [Contrato API](docs/API.md)
 - [Reglas de caja y pedidos](docs/OPERATIONS.md)
+- [Venta, cálculo y devolución en efectivo](docs/SALES.md)
 - [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
 
 Las carpetas `mobile/` y `desktop/` reservan productos futuros; todavía no contienen aplicaciones.

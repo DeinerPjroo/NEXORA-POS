@@ -227,3 +227,65 @@ alter table `idempotency_records` add unique `idempotency_records_tenant_id_key_
 
 alter table `idempotency_records` add constraint `idempotency_records_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `orders` add unique `orders_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `cash_sessions` add unique `sessions_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `cash_movements` add unique `movements_session_identity`(`tenant_id`, `cash_session_id`, `id`);
+
+create table `sales_settings` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `configured` tinyint(1) not null default '0', `tax_mode` varchar(20) not null default 'none', `tax_name` varchar(40) not null default 'Impuesto adicional', `tax_rate` decimal(7, 4) not null default '0', `revision` int unsigned not null default '1', `next_receipt_number` bigint unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `sales_settings` add constraint `sales_settings_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `sales_settings` add unique `sales_settings_tenant_id_unique`(`tenant_id`);
+
+create table `sales` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `order_id` bigint unsigned not null, `created_by` bigint unsigned not null, `receipt_number` bigint unsigned not null, `status` varchar(20) not null default 'paid', `currency` varchar(3) not null, `business_name` varchar(120) not null, `branch_name` varchar(120) not null, `branch_address` varchar(255) null, `tax_mode` varchar(20) not null, `tax_name` varchar(40) not null, `tax_rate` decimal(7, 4) not null, `catalog_subtotal` decimal(19, 4) not null, `subtotal` decimal(19, 4) not null, `discount_amount` decimal(19, 4) not null, `taxable_base` decimal(19, 4) not null, `tax_amount` decimal(19, 4) not null, `total` decimal(19, 4) not null, `rounding_adjustment` decimal(19, 4) not null, `discount_reason` varchar(200) null, `settings_revision` int unsigned not null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `sales` add constraint `sales_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `sales` add unique `sales_tenant_id_id_unique`(`tenant_id`, `id`);
+
+alter table `sales` add unique `sales_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `sales` add unique `sales_tenant_id_order_id_unique`(`tenant_id`, `order_id`);
+
+alter table `sales` add unique `sales_tenant_id_receipt_number_unique`(`tenant_id`, `receipt_number`);
+
+alter table `sales` add index `sales_tenant_id_branch_id_created_at_index`(`tenant_id`, `branch_id`, `created_at`);
+
+alter table `sales` add constraint `sales_order_branch_fk` foreign key (`tenant_id`, `branch_id`, `order_id`) references `orders` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `sales` add constraint `sales_tenant_id_created_by_foreign` foreign key (`tenant_id`, `created_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `payments` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `sale_id` bigint unsigned not null, `cash_session_id` bigint unsigned not null, `cash_movement_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `amount` decimal(19, 4) not null, `method` varchar(20) not null default 'cash', `received_amount` decimal(19, 4) not null, `change_amount` decimal(19, 4) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `payments` add constraint `payments_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `payments` add unique `payments_tenant_id_sale_id_unique`(`tenant_id`, `sale_id`);
+
+alter table `payments` add unique `payments_tenant_id_cash_movement_id_unique`(`tenant_id`, `cash_movement_id`);
+
+alter table `payments` add constraint `payments_sale_fk` foreign key (`tenant_id`, `branch_id`, `sale_id`) references `sales` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `payments` add constraint `payments_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `payments` add constraint `payments_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `payments` add constraint `payments_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `sale_refunds` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `sale_id` bigint unsigned not null, `cash_session_id` bigint unsigned not null, `cash_movement_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `amount` decimal(19, 4) not null, `reason` varchar(300) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `sale_refunds` add constraint `sale_refunds_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `sale_refunds` add unique `sale_refunds_tenant_id_sale_id_unique`(`tenant_id`, `sale_id`);
+
+alter table `sale_refunds` add unique `sale_refunds_tenant_id_cash_movement_id_unique`(`tenant_id`, `cash_movement_id`);
+
+alter table `sale_refunds` add constraint `sale_refunds_sale_fk` foreign key (`tenant_id`, `branch_id`, `sale_id`) references `sales` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add constraint `sale_refunds_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add constraint `sale_refunds_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add constraint `sale_refunds_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

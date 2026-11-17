@@ -65,6 +65,8 @@ export type Order = {
   status: OrderStatus
   revision: number
   items_count: number | null
+  sale_id: number | null
+  sale_status: 'paid' | 'refunded' | null
   items?: OrderItem[]
   events?: OrderEvent[]
   created_at: string

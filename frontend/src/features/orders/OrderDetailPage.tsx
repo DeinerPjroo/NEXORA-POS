@@ -83,8 +83,24 @@ export function OrderDetailPage() {
             <strong>{formatMoney(order.subtotal, order.currency)}</strong>
           </div>
           <p className="muted small">
-            Pedido sin cobro registrado. No es una factura ni un comprobante de pago.
+            {order.sale_id
+              ? order.sale_status === 'refunded'
+                ? 'Este pedido tiene una venta con devolución total.'
+                : 'Este pedido tiene una venta cobrada.'
+              : 'Pedido sin cobro registrado. No es una factura ni un comprobante de pago.'}
           </p>
+          {order.sale_id
+            ? can('sales.view') && (
+                <Link className="button secondary" to={`/ventas/${order.sale_id}`}>
+                  Ver recibo de venta
+                </Link>
+              )
+            : order.status !== 'cancelled' &&
+              can('sales.collect') && (
+                <Link className="button primary" to={`/pedidos/${order.id}/cobrar`}>
+                  Cobrar en efectivo
+                </Link>
+              )}
           <OrderActions key={`${order.id}:${order.revision}`} order={order} />
         </section>
         <section className="panel order-timeline">

@@ -1,5 +1,16 @@
 # Historial de cambios
 
+## 0.5.0 · 2026-11-17
+
+- Configuración explícita antes del primer cobro: sin impuesto adicional o porcentaje sobre base, revisión y redondeo half-up a dos decimales.
+- Venta en efectivo desde pedido, descuento fijo con permiso/motivo, cálculo de cambio y movimiento por ingreso neto.
+- Recibo interno correlativo por empresa, snapshots comerciales/importes, lista filtrada y consulta/impresión desde navegador.
+- Devolución total única con salida compensatoria, motivo y fondos suficientes; admite una caja posterior de la misma sucursal/moneda.
+- Venta/pago/caja/pedido/secuencia/auditoría atómicos, idempotencia y unicidad de venta por pedido. No permite cancelar pedidos vendidos.
+- Permisos sales.view/collect/configure/discount/refund, FKs compuestas e historia protegida contra edición/borrado.
+- Migración aplicada en MariaDB. Nuevas pruebas cubren cobro/devolución, precisión, aislamiento, permisos, conflictos, límites y reversión si falla auditoría.
+- Sin pagos electrónicos, impuestos incluidos/múltiples por producto, devolución parcial ni documentos fiscales/DIAN. Alcance en SALES.md.
+
 ## 0.4.0 · 2026-11-17
 
 - Cajas por sucursal, apertura única, movimientos manuales, cierre y arqueo con diferencia firmada. Sin edición o borrado del historial.

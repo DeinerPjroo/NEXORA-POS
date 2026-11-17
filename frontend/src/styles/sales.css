@@ -1,0 +1,273 @@
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.checkout-form,
+.checkout-summary,
+.sales-settings-form {
+  padding: 26px;
+  min-width: 0;
+}
+.sales-settings-form {
+  max-width: 720px;
+}
+.checkout-summary .panel-heading {
+  margin-bottom: 22px;
+}
+.checkout-order-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.checkout-order-line > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.checkout-order-line > :last-child {
+  flex-shrink: 0;
+}
+.checkout-change {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: var(--canvas);
+}
+.checkout-change strong {
+  font-size: 23px;
+}
+.sale-amounts {
+  margin: 24px 0 0;
+}
+.sale-amounts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  margin: 15px 0;
+  font-size: 13px;
+}
+.sale-amounts dt {
+  color: var(--muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sale-amounts dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.sale-amounts .sale-grand-total {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 23px;
+  font-weight: 750;
+}
+.sale-grand-total dt {
+  color: inherit;
+}
+.receipt-sheet {
+  max-width: 700px;
+  padding: 36px;
+  margin: 0 auto;
+}
+.receipt-header {
+  text-align: center;
+}
+.receipt-header h2 {
+  font-size: 26px;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.receipt-header p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.receipt-header > strong {
+  display: block;
+  margin: 20px 0 7px;
+  font-size: 20px;
+}
+.receipt-header .pill {
+  margin-top: 10px;
+}
+.receipt-reference {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 26px 0 10px;
+  padding: 16px 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.receipt-items .checkout-order-line > div > span,
+.receipt-items small {
+  display: block;
+  margin-top: 6px;
+}
+.receipt-items small {
+  color: var(--muted);
+}
+.receipt-items p {
+  font-size: 12px;
+}
+.receipt-discount-note {
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.receipt-cash,
+.receipt-refund {
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+.receipt-refund {
+  margin-top: 22px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.receipt-refund h3 {
+  margin: 12px 0;
+}
+.receipt-refund > strong {
+  font-size: 20px;
+}
+.receipt-refund small {
+  color: var(--muted);
+}
+.receipt-footer {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px dashed var(--line);
+  text-align: center;
+  font-size: 12px;
+}
+.receipt-footer p,
+.receipt-footer small {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.receipt-order-link {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.sales-list-panel {
+  padding: 20px;
+}
+.sale-order-id {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+.check-line {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.check-line input {
+  width: 17px;
+  height: 17px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+@media (max-width: 1000px) {
+  .checkout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .checkout-summary {
+    grid-row: 1;
+  }
+}
+@media (max-width: 600px) {
+  .checkout-form,
+  .checkout-summary,
+  .sales-settings-form,
+  .receipt-sheet {
+    padding: 20px;
+  }
+  .sale-amounts .sale-grand-total {
+    font-size: 20px;
+  }
+  .sale-amounts > div {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .sale-amounts dd {
+    margin-left: auto;
+  }
+  .checkout-order-line {
+    flex-wrap: wrap;
+  }
+  .sales-list-panel {
+    padding: 12px;
+  }
+}
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  html,
+  body,
+  #root,
+  .app-shell,
+  .workspace-main,
+  .page-content {
+    background: white !important;
+    color: black !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    min-height: 0 !important;
+    max-width: none !important;
+  }
+  .sidebar,
+  .topbar,
+  .workspace-footer,
+  .skip-link,
+  .sale-detail-page > :not(.receipt-sheet) {
+    display: none !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .receipt-sheet,
+  .receipt-sheet * {
+    visibility: visible;
+    color: black !important;
+  }
+  .receipt-sheet {
+    position: static;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: white;
+  }
+  .receipt-sheet .pill {
+    border: 1px solid #aaa;
+    background: white;
+  }
+  .receipt-sheet .checkout-order-line,
+  .receipt-sheet .sale-amounts > div,
+  .receipt-refund {
+    break-inside: avoid;
+  }
+}

@@ -26,3 +26,6 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Operación: usar BCMath y cadenas decimales; apertura/movimiento/cierre y pedidos requieren UUID idempotente, revisión cuando corresponde y auditoría transaccional. Historial append-only.
 - Un pedido entregado no equivale a venta ni pago y no modifica caja. Exigir variante disponible cuando exista; copiar precio/nombre/SKU y recalcular subtotal en servidor.
 - No cambiar moneda empresarial si existen productos, sesiones de caja o pedidos. Conservar clave y payload exactos ante respuesta incierta mientras el formulario permanezca abierto.
+- Ventas: exigir configuración confirmada, revisar pedido/configuración/caja y total esperado. Dos decimales half-up: subtotal global, descuento fijo antes del impuesto adicional, impuesto redondeado, total positivo. No inventar tasas legales ni interpretar precios incluidos.
+- Cobro en efectivo: movimiento por total neto, registrar recibido/cambio, una venta por pedido y recibo interno correlativo por tenant. Venta/pago/caja/auditoría/secuencia deben confirmar o revertir juntos.
+- Devolución total única: salida compensatoria con motivo, caja abierta de misma sucursal/moneda y fondos suficientes. Conservar venta/pago, impedir cancelar o recobrar pedido vendido. Nunca confundir recibo interno con documento fiscal.
