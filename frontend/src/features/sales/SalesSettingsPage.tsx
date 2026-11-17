@@ -35,6 +35,8 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
   const [mode, setMode] = useState(initial.tax_mode)
   const [rate, setRate] = useState(initial.tax_rate)
   const [revision] = useState(initial.revision)
+  const [tips, setTips] = useState(initial.tip_enabled)
+  const [tipMode, setTipMode] = useState(initial.tip_tax_mode ?? '')
   const client = useQueryClient()
   const toast = useToast()
   const mutation = useMutation({
@@ -53,6 +55,8 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
       tax_mode: mode,
       tax_name: fields.get('tax_name'),
       tax_rate: rate.replace(',', '.'),
+      tip_enabled: tips,
+      tip_tax_mode: tipMode || null,
     })
   }
   return (
@@ -103,6 +107,31 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
           Redondeo comercial a dos decimales, con mitades hacia arriba. Primero se redondea el
           subtotal, después se resta el descuento y se calcula el impuesto adicional sobre esa base.
         </div>
+        <label className="check-line">
+          <input
+            type="checkbox"
+            checked={tips}
+            onChange={(event) => setTips(event.target.checked)}
+          />
+          Permitir registro de propinas voluntarias
+        </label>
+        {tips && (
+          <Field label="Tratamiento de la propina en la base">
+            <select required value={tipMode} onChange={(event) => setTipMode(event.target.value)}>
+              <option value="" disabled>
+                Selecciona un tratamiento explícito
+              </option>
+              <option value="excluded">Fuera de la base del impuesto adicional</option>
+              <option value="included">Incluir en la base del impuesto adicional</option>
+            </select>
+          </Field>
+        )}
+        {tips && (
+          <p className="muted small">
+            La empresa confirma este cálculo según su operación. No se agrega una propina automática
+            ni se determina un régimen tributario.
+          </p>
+        )}
         <label className="check-line">
           <input name="confirmed" type="checkbox" required />
           Confirmo esta configuración para los próximos cobros.

@@ -4,6 +4,8 @@
 
 Se amplía la venta existente, sin duplicar pedidos, recibos ni servicios. El primer cobro puede aplicar el total o un importe menor. Desde el recibo con estado **Abonada**, **Agregar pagos** permite preparar uno o varios métodos y confirmar un lote. La interfaz de seguimiento de abonos requiere sales.view y sales.collect; quien solo tiene permiso de cobro conserva el cobro completo anterior.
 
+Desde 0.8, porcentaje y propina opcional se fijan antes de ese primer pago; ver ADJUSTMENTS.md. Los lotes siguientes no pueden modificarlos. Los abonos cubren el total global, sin reparto específico entre productos y propinas.
+
 Cada pago conserva método/tipo/nombre/revisión, importe aplicado, recibido/cambio, referencia, procedencia operator, sesión y fecha. Solo los métodos cash producen movimientos de efectivo; non_cash son declaraciones manuales sin confirmación bancaria. No hay pasarela, pagos pendientes de aprobación externa ni conversión de moneda.
 
 ## Invariantes

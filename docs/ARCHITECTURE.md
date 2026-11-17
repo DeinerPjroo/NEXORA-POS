@@ -130,6 +130,14 @@ RefundCash compensa todos los pagos originales por sus importes/métodos, exige 
 
 La UI permite primer abono, lote con uno o varios métodos, saldo e historial, reintento explícito con payload congelado y recibo móvil/impreso. La consulta de ventas es necesaria para el seguimiento de abonos; se conserva el cobro completo para un operador sin sales.view. No hay proveedores externos ni conciliación bancaria. Las listas cargan pagos asociados para calcular saldos exactos; medir tamaño/carga y evolucionar paginación/lecturas agregadas antes de producción.
 
+## Ajustes voluntarios y porcentuales implementados en 0.8
+
+SaleAdjustmentRules comparte validación entre cotización y cobro; SaleTotals calcula porcentaje half-up sobre subtotal redondeado, conserva valor/tipo/importe derivado y tip/base elegidos. El fijo anterior sigue compatible. Propinas inicialmente deshabilitadas, modo explícito de base en configuración, permiso sales.tips y confirmación de voluntariedad comprobados otra vez en servicio antes de crear venta. Confirmación e importes quedan en snapshot y auditoría.
+
+La configuración modifica solo nuevos cálculos. El total no se cambia después del primer pago; AddPayments rechaza campos de ajuste. La UI separa borrador/aplicado/consentimiento, exige actualizar la cotización y compara revisiones/total al confirmar; la aritmética final sigue en BCMath. SaleAdjustments evita duplicar el editor dentro de CheckoutPage. No hay tasas legales, propinas automáticas, liquidación a empleados ni identificación de qué parte de cada abono es propina.
+
+Migración 000008 agrega campos y copia el descuento fijo anterior como metadato, sin alterar importes. Los recibos anteriores conservan resultado y los nuevos desglosan porcentaje/propina. ADJUSTMENTS.md define fórmula, ejemplos y límites.
+
 ## Offline y dispositivos futuros
 
 Cliente local SQLite y cola de comandos con UUID/ULID, `tenant_id`, sucursal, dispositivo, revisión y clave idempotente. Sincronización con acknowledgements, reintentos exponenciales y dead-letter. Pedidos: comandos de dominio; inventario y pagos: reconciliación con servidor, sin reemplazar saldos con «última escritura gana». Conflictos de precio/stock/caja necesitan resolución visible. No cachear respuestas privadas globalmente ni prometer pagos offline de proveedores que no los soportan. La web actual muestra desconexión y exige acceso al servidor; no tiene service worker ni cola offline.

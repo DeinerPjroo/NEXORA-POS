@@ -55,8 +55,8 @@ erDiagram
 | order_items | Pedido/producto/variante con FKs compuestas (incluye tenant/producto/variante), nombres/SKU/precio históricos, cantidad entera y subtotal/notas. Append-only. |
 | order_events | Pedido/actor, estado anterior/nuevo, motivo y fecha; append-only. |
 | idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
-| sales_settings | Una fila por empresa, configured inicialmente false, modo/tasa/nombre de impuesto adicional, revisión y próxima secuencia interna. Actualización con bloqueo y confirmación explícita. |
-| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales históricos e importes DECIMAL(19,4) inmutables. Estado paid/partially_paid/refunded y revision son las únicas mutaciones de negocio por modelo. |
+| sales_settings | Una fila por empresa, configured inicialmente false, impuesto adicional, revisión y secuencia. tip_enabled false y tip_tax_mode nullable hasta confirmación explícita included/excluded sobre su base. |
+| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales e importes DECIMAL(19,4) inmutables. Incluye discount_type/value/amount y tip_amount/tip_tax_mode/tip_confirmed desde 0.8. Solo estado/revisión mutables. |
 | payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
 | payments | Varios pagos manuales por venta desde 0.7; FK a payment_methods y único (tenant,sale,id) para referencia histórica. Snapshot de método/procedencia/referencia. Sesión obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
 | sale_refunds | Compensación completa de cada pago al cerrar la venta; FK (tenant,sale,payment_id) y único tenant/payment_id. Motivo/referencia/actor/sesión; cash_movement_id nullable. Append-only. La selección de devoluciones parciales se implementará después. |

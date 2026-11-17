@@ -32,6 +32,7 @@ final class PermissionCatalog
         'sales.configure' => ['Configurar cálculo de ventas', 'Ventas'],
         'sales.discount' => ['Aplicar descuentos', 'Ventas'],
         'sales.refund' => ['Registrar devolución total', 'Ventas'],
+        'sales.tips' => ['Registrar propinas voluntarias', 'Ventas'],
     ];
 
     public static function seed(): void

@@ -20,13 +20,18 @@ export function SaleAmounts({ amounts }: { amounts: Omit<SaleQuote, 'order_revis
         <dd>{money(amounts.subtotal)}</dd>
       </div>
       <div>
-        <dt>Descuento</dt>
+        <dt>
+          Descuento
+          {amounts.discount_type === 'percentage'
+            ? ` (${amounts.discount_value.replace(/\.?0+$/, '') || '0'} %)`
+            : ''}
+        </dt>
         <dd>{money(amounts.discount_amount)}</dd>
       </div>
       {amounts.tax_mode === 'exclusive' ? (
         <>
           <div>
-            <dt>Base después del descuento</dt>
+            <dt>Base del impuesto adicional</dt>
             <dd>{money(amounts.taxable_base)}</dd>
           </div>
           <div>
@@ -40,6 +45,15 @@ export function SaleAmounts({ amounts }: { amounts: Omit<SaleQuote, 'order_revis
         <div>
           <dt>Impuesto adicional calculado</dt>
           <dd>{money('0')}</dd>
+        </div>
+      )}
+      {amounts.tip_amount !== '0.0000' && (
+        <div>
+          <dt>
+            Propina voluntaria
+            {amounts.tip_tax_mode === 'included' ? ' · Incluida en la base' : ' · Fuera de la base'}
+          </dt>
+          <dd>{money(amounts.tip_amount)}</dd>
         </div>
       )}
       <div className="sale-grand-total">

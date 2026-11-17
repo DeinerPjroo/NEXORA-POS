@@ -13,6 +13,6 @@ final class SalesSetting extends Model
 
     protected function casts(): array
     {
-        return ['configured' => 'boolean', 'revision' => 'integer', 'tax_rate' => 'decimal:4'];
+        return ['configured' => 'boolean', 'tip_enabled' => 'boolean', 'revision' => 'integer', 'tax_rate' => 'decimal:4'];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Domains\Sales\SaleAdjustmentRules;
 use App\Domains\Sales\SaleTotals;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,9 +26,9 @@ final class SaleCommandRequest extends FormRequest
                 'payment_method_id' => ['sometimes', 'integer', 'min:1'], 'method_revision' => ['required_with:payment_method_id', 'integer', 'min:1'],
                 'payment_reference' => ['nullable', 'string', 'max:120'],
                 'order_revision' => ['required', 'integer', 'min:1'], 'settings_revision' => ['required', 'integer', 'min:1'],
-                'discount_amount' => ['required', ...SaleTotals::cashRules()],
-                'discount_reason' => [Rule::requiredIf(fn () => is_string($this->input('discount_amount')) && preg_match('/^[0-9]+(?:\.[0-9]{1,2})?$/D', $this->input('discount_amount')) && bccomp($this->input('discount_amount'), '0', 4) > 0), 'nullable', 'string', 'min:3', 'max:200'],
+                'discount_reason' => [Rule::requiredIf(fn () => SaleAdjustmentRules::positive($this->input($this->input('discount_type') === 'percentage' ? 'discount_value' : 'discount_amount'))), 'nullable', 'string', 'min:3', 'max:200'],
+                'tip_confirmed' => SaleAdjustmentRules::positive($this->input('tip_amount')) ? ['required', 'accepted'] : ['sometimes', 'boolean'],
                 'expected_total' => ['required', ...SaleTotals::cashRules()], 'received_amount' => ['required', ...SaleTotals::cashRules()],
-            ]);
+            ] + SaleAdjustmentRules::rules());
     }
 }

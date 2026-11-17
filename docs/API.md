@@ -235,6 +235,18 @@ GET sales acepta status=partially_paid además de paid/refunded. Respuestas de v
 
 POST sales/{sale}/refund devuelve **todos los pagos aplicados** y cancela el saldo nunca cobrado. sale_revision es obligatoria si hay varios pagos o la venta está abonada; la UI la envía siempre. Para cada pago no efectivo, enviar refund_references como lista [{payment_id, reference}], todos pertenecientes a esa venta. refund_reference singular se mantiene para exactamente un pago no efectivo. Cada compensación queda ligada por FK al pago original; la transacción es atómica e idempotente. Total original inmutable; refunded_amount puede ser menor que total si se cerró una venta abonada, y cancelled_balance deja explícita la diferencia no cobrada. No son devoluciones de partes elegidas de un pago/producto: eso sigue pendiente. Reglas en [PAYMENTS.md](PAYMENTS.md).
 
+## Ajustes desde 0.8.0
+
+PUT sales/settings admite tip_enabled booleano y tip_tax_mode=included/excluded. Habilitar requiere modo explícito y confirmed; defaults false/null conservan cobros anteriores sin propina. Si campos nuevos se omiten, se preservan. GET devuelve ambos. included se refiere a base del impuesto adicional, no a precios con impuesto incluido.
+
+GET orders/{order}/quote y POST orders/{order}/collect admiten discount_type=fixed/percentage (default fixed). Fijo usa discount_amount anterior. Porcentaje requiere discount_value cadena 0–100 con hasta 2 decimales; discount_amount del cliente está prohibido en ese modo. Se calcula y redondea en servidor sobre subtotal global redondeado. Motivo y sales.discount si el valor solicitado es positivo, incluso si el importe derivado redondea a cero.
+
+tip_amount opcional como cadena no negativa de dos decimales (default cero). Positivo exige configuración habilitada, sales.tips y, al confirmar cobro, tip_confirmed aceptado. Cotizar no registra consentimiento ni pago. El cliente no puede saltarse el permiso, fijar tasa o editar un total después de su primer pago. Nuevos campos en cotización: discount_type/value, tip_amount y tip_tax_mode. Venta incluye además tip_confirmed booleano persistido; los registros antiguos tienen propina cero/confirmación false y descuento fijo.
+
+Ejemplo de ajustes de cotización: `?discount_type=percentage&discount_value=12.50&tip_amount=5.25`. Al cobrar se agregan los mismos campos, motivo del descuento y `tip_confirmed: true`, junto a revisiones/caja/recibido/expected_total del contrato anterior. No enviar discount_amount simultáneamente con porcentaje. El total incluye propina y el impuesto según tratamiento de base confirmado. Referencia matemática y alcance en [ADJUSTMENTS.md](ADJUSTMENTS.md).
+
+POST sales/{sale}/payments rechaza tip_amount, tip_confirmed, discount_type/value/amount: los lotes posteriores solo liquidan el saldo original. Cambiar configuración no reinterpreta ventas anteriores. La devolución completa sigue compensando los importes efectivamente aplicados; no liquida propinas a empleados ni asigna cada abono entre productos/propinas.
+
 ## Referencia de errores
 
 | Código | Significado |

@@ -349,3 +349,17 @@ alter table `payments` drop index `payments_tenant_id_sale_id_unique`;
 
 alter table `sale_refunds` drop index `sale_refunds_tenant_id_sale_id_unique`;
 
+alter table `sales_settings` add `tip_enabled` tinyint(1) not null default '0';
+
+alter table `sales_settings` add `tip_tax_mode` varchar(20) null;
+
+alter table `sales` add `discount_type` varchar(20) not null default 'fixed';
+
+alter table `sales` add `discount_value` decimal(19, 4) not null default '0';
+
+alter table `sales` add `tip_amount` decimal(19, 4) not null default '0';
+
+alter table `sales` add `tip_confirmed` tinyint(1) not null default '0';
+
+alter table `sales` add `tip_tax_mode` varchar(20) not null default 'disabled';
+

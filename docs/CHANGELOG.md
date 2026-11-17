@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 0.8.0 · 2026-11-17
+
+- Descuento porcentual de hasta dos decimales, calculado half-up sobre subtotal redondeado; tipo/valor/importe históricos y fijo anterior compatible.
+- Propinas de importe fijo, voluntarias y deshabilitadas por defecto. Habilitación exige tratamiento de base explícito y confirmación empresarial, sin política tributaria automática.
+- sales.tips y consentimiento del operador obligatorios para propina positiva; confirmación persistida y auditada.
+- Total y ajustes fijos desde primer pago, con abonos/mixtos/refund anteriores preservados. Pagos posteriores rechazan cambios de ajustes.
+- Refactor de controles de cotización a SaleAdjustments, recibo con porcentaje/propina y configuración versionada; sin reparto/liquidación a empleados.
+- Migración 000008 aplicada en MariaDB: solo nuevos campos/metadatos, sin alterar importes antiguos. Detalles en ADJUSTMENTS.md.
+
 ## 0.7.0 · 2026-11-17
 
 - Abono inicial opcional con total de venta inmutable y saldo exacto calculado con BCMath.

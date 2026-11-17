@@ -16,7 +16,7 @@ No hay fechas comerciales comprometidas. Cada etapa depende de pruebas e integri
 1. Catálogo, caja, pedidos y venta/devolución con métodos manuales ya implementados y migrados. La conexión MariaDB funciona y la suite pasó en un esquema temporal independiente conservado. Alcance en OPERATIONS.md/SALES.md, tareas en TASKS.md y estado en PROJECT_STATE.json.
 2. Añadir CI y validación específica de MySQL 8; mantener pruebas SQL aisladas con scripts/test-mysql.php.
 3. Completar endurecimiento de identidad: verificación de correo, auditoría de autorización denegada, MFA/PIN y bloqueo según prioridad de operación.
-4. Ampliar ventas: propinas/descuento porcentual (2.1-C), devolución parcial/división de cuentas (2.1-D), impuestos incluidos/múltiples (2.1-E) y conciliación (2.1-F). Abonos/mixtos manuales ya operan desde 0.7. Verificar proveedores reales antes de anunciar confirmación electrónica.
+4. Ampliar ventas: devolución parcial/división de cuentas (2.1-D), impuestos incluidos/múltiples (2.1-E) y conciliación (2.1-F). Abonos/mixtos operan desde 0.7; porcentaje/propina voluntaria desde 0.8. Verificar proveedores reales antes de anunciar confirmación electrónica.
 5. Incorporar salones/mesas y asignaciones por sucursal; después abordar KDS y actualización en tiempo real con permisos y pruebas de concurrencia.
 
 ## Dependencias incorporadas por necesidad

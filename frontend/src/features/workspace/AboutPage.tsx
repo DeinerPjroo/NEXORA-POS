@@ -14,7 +14,7 @@ export function AboutPage() {
         <Sparkles size={32} />
         <h2>Nexora POS</h2>
         <p>El futuro de tu restaurante.</p>
-        <span className="pill violet">Versión 0.7 · Abonos y pagos mixtos</span>
+        <span className="pill violet">Versión 0.8 · Descuentos y propinas voluntarias</span>
       </div>
       <div className="roadmap-list">
         {[
@@ -27,7 +27,7 @@ export function AboutPage() {
           [
             '02',
             'La operación, conectada',
-            'Catálogo, caja, pedidos, abonos y pagos mixtos manuales con recibos y devolución de cobros. Mesas y pasarelas pendientes.',
+            'Catálogo, caja, pedidos, abonos, pagos mixtos, descuentos y propinas voluntarias con recibos e historial. Mesas y pasarelas pendientes.',
             'Operación inicial disponible',
           ],
           [

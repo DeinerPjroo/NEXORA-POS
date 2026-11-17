@@ -35,7 +35,7 @@ final class SaleController extends Controller
 
     public function quote(SaleQueryRequest $request, Order $order, SaleTotals $totals)
     {
-        return ['data' => [...$totals->calculate($order, SalesSetting::firstOrFail(), $request->validated('discount_amount')), 'order_revision' => $order->revision]];
+        return ['data' => [...$totals->calculate($order, SalesSetting::firstOrFail(), $request->validated('discount_amount', '0'), $request->validated()), 'order_revision' => $order->revision]];
     }
 
     public function cashContext(Request $request)

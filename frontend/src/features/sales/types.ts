@@ -19,6 +19,8 @@ export type SalesSettings = {
   revision: number
   rounding: 'half_up'
   decimal_places: number
+  tip_enabled: boolean
+  tip_tax_mode: 'included' | 'excluded' | null
 }
 export type SaleQuote = {
   currency: string
@@ -34,6 +36,10 @@ export type SaleQuote = {
   total: string
   settings_revision: number
   order_revision: number
+  discount_type: 'fixed' | 'percentage'
+  discount_value: string
+  tip_amount: string
+  tip_tax_mode: 'included' | 'excluded' | 'disabled'
 }
 export type Sale = Omit<SaleQuote, 'order_revision'> & {
   id: number
@@ -45,6 +51,7 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
   balance_due: string
   refunded_amount: string
   cancelled_balance: string
+  tip_confirmed: boolean
   payments: SalePayment[]
   refunds: SaleRefund[]
   business_name: string

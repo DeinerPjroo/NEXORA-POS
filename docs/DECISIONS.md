@@ -19,3 +19,11 @@ El efectivo mueve caja por ingreso/egreso neto; non_cash se asocia a la sesión 
 Se conserva el servicio CollectCash y la API de cobro único como entrada compatible; sin payment_method_id se usa efectivo. Los pagos existentes reciben solo campos adicionales de método/procedencia, sin cambiar importes. La migración 000006 crea efectivo por empresa y enlaza pagos anteriores; el descenso automático se rechaza porque eliminar métodos/metadatos perdería historia. Sus FKs se declaran por columnas y nombre explícito para que SQLite pueda reconstruirlas y MariaDB conserve el nombre publicado.
 
 El movimiento nullable no significa efectivo perdido: solo non_cash lo deja vacío; cash exige y crea su movimiento en el mismo servicio/transacción. Una devolución no puede elegir otro tipo para convertir un registro no efectivo en salida de dinero. Código/tipo no se editan y el efectivo principal no se desactiva.
+
+## DEC-005 · Ajustes voluntarios y porcentaje (0.8 en verificación)
+
+El descuento porcentual usa hasta dos decimales entre 0 y 100, se aplica al subtotal global ya redondeado y se redondea half-up. Se conservan tipo/valor/importe derivado, motivo y permiso sales.discount. El fijo anterior sigue siendo la opción predeterminada y API compatible.
+
+Las propinas son de importe fijo, inicialmente deshabilitadas. Habilitarlas requiere elegir explícitamente si participan en la base del impuesto adicional y confirmar configuración. Esto es un cálculo elegido por la empresa, sin asignar régimen/tasa legal; included/excluded aquí se refiere a la base de la propina, no a precios con impuestos incluidos (2.1-E sigue pendiente). No se agrega porcentaje ni importe automático.
+
+La propina positiva exige sales.tips y confirmación del operador de que fue aceptada voluntariamente, guardada en snapshot y auditoría. El descuento no reduce la propina. Total = subtotal − descuento + propina + impuesto, con base elegida explícitamente. Ajustes fijados antes del primer pago; abonos posteriores no pueden cambiarlos. Devolver todos los cobros incluye la parte de propina realmente pagada, nunca dinero no recibido. No se implementa distribución/liquidación de propinas a empleados en este incremento.

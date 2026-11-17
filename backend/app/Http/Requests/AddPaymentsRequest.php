@@ -19,6 +19,7 @@ final class AddPaymentsRequest extends FormRequest
             'payments' => ['required', 'array', 'list', 'min:1', 'max:20'], 'payments.*' => ['required', 'array:payment_method_id,method_revision,amount,received_amount,reference'],
             'payments.*.payment_method_id' => ['required', 'integer', 'min:1'], 'payments.*.method_revision' => ['required', 'integer', 'min:1'],
             'payments.*.amount' => ['required', ...SaleTotals::cashRules()], 'payments.*.received_amount' => ['required', ...SaleTotals::cashRules()],
-            'payments.*.reference' => ['nullable', 'string', 'max:120'], 'tenant_id' => ['prohibited'], 'provenance' => ['prohibited'], 'total' => ['prohibited']];
+            'payments.*.reference' => ['nullable', 'string', 'max:120'], 'tenant_id' => ['prohibited'], 'provenance' => ['prohibited'], 'total' => ['prohibited'],
+            'tip_amount' => ['prohibited'], 'tip_confirmed' => ['prohibited'], 'discount_type' => ['prohibited'], 'discount_value' => ['prohibited'], 'discount_amount' => ['prohibited']];
     }
 }

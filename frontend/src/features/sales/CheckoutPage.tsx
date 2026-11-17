@@ -14,6 +14,7 @@ import { useOperation } from '../operations/useOperation'
 import { SaleAmounts } from './SaleAmounts'
 import { SaleReceipt } from './SaleReceipt'
 import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
+import { SaleAdjustments, useSaleAdjustments } from './SaleAdjustments'
 import type { CashOption, PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 
 export function CheckoutPage() {
@@ -75,18 +76,17 @@ export function CheckoutPage() {
           )}
         </div>
       ) : (
-        <CheckoutForm order={order} />
+        <CheckoutForm order={order} settings={settings.data.data} />
       )}
     </>
   )
 }
 
-function CheckoutForm({ order }: { order: Order }) {
+function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettings }) {
   const can = useCan()
   const client = useQueryClient()
   const navigate = useNavigate()
-  const [discount, setDiscount] = useState('0')
-  const [applied, setApplied] = useState('0')
+  const adjustments = useSaleAdjustments()
   const [cashId, setCashId] = useState('')
   const [received, setReceived] = useState('')
   const [paymentAmount, setPaymentAmount] = useState<string | null>(null)
@@ -96,12 +96,9 @@ function CheckoutForm({ order }: { order: Order }) {
   const method = chosenMethod ?? methods.data?.data[0]
   const isCash = method?.kind === 'cash'
   const quote = useQuery({
-    queryKey: ['sale-quote', order.id, applied],
+    queryKey: ['sale-quote', order.id, adjustments.params],
     queryFn: ({ signal }) =>
-      api<{ data: SaleQuote }>(
-        `orders/${order.id}/quote?discount_amount=${encodeURIComponent(applied)}`,
-        { signal },
-      ),
+      api<{ data: SaleQuote }>(`orders/${order.id}/quote?${adjustments.params}`, { signal }),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
@@ -131,9 +128,6 @@ function CheckoutForm({ order }: { order: Order }) {
     )
     if (can('sales.view')) navigate(`/ventas/${sale.id}`)
   })
-  const normalizedDiscount = discount.replace(',', '.')
-  const discountValid = /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedDiscount)
-  const discountChanged = normalizedDiscount !== applied
   const normalizedReceived = received.replace(',', '.')
   const normalizedPayment = (
     paymentAmount ??
@@ -162,7 +156,7 @@ function CheckoutForm({ order }: { order: Order }) {
       settings_revision: quote.data.data.settings_revision,
       cash_session_id: selected.id,
       cash_revision: selected.revision,
-      discount_amount: applied,
+      ...adjustments.payload,
       discount_reason: new FormData(event.currentTarget).get('discount_reason') || null,
       payment_method_id: method.id,
       method_revision: method.revision,
@@ -211,37 +205,12 @@ function CheckoutForm({ order }: { order: Order }) {
               </Field>
             </>
           )}
-          {can('sales.discount') && (
-            <>
-              <Field label="Descuento en dinero">
-                <input
-                  value={discount}
-                  onChange={(event) => setDiscount(event.target.value)}
-                  inputMode="decimal"
-                  required
-                  pattern="[0-9]+([.,][0-9]{1,2})?"
-                />
-              </Field>
-              <button
-                type="button"
-                className="button secondary"
-                disabled={!discountValid || quote.isFetching}
-                onClick={() => setApplied(normalizedDiscount)}
-              >
-                Actualizar total
-              </button>
-              {discountChanged && (
-                <p className="muted small">
-                  Actualiza el total para aplicar este descuento antes de cobrar.
-                </p>
-              )}
-              {moneyUnits(applied) > 0n && (
-                <Field label="Motivo del descuento">
-                  <input name="discount_reason" required minLength={3} maxLength={200} />
-                </Field>
-              )}
-            </>
-          )}
+          <SaleAdjustments
+            state={adjustments}
+            canDiscount={can('sales.discount')}
+            canTip={settings.tip_enabled && can('sales.tips')}
+            fetching={quote.isFetching}
+          />
           <Field label="Caja para recibir el cobro">
             <select
               value={selected?.id ?? ''}
@@ -292,6 +261,8 @@ function CheckoutForm({ order }: { order: Order }) {
             className="button secondary"
             onClick={() => {
               operation.reset()
+              adjustments.reset()
+              void client.invalidateQueries({ queryKey: ['sales-settings'] })
               void quote.refetch()
               void cash.refetch()
               setChosenMethod(null)
@@ -317,7 +288,7 @@ function CheckoutForm({ order }: { order: Order }) {
               quote.isError ||
               quote.isFetching ||
               !selected ||
-              discountChanged ||
+              !adjustments.ready ||
               !method ||
               !paymentValid ||
               methods.isError ||

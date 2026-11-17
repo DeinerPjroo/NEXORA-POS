@@ -7,10 +7,11 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | CONT-01 | COMPLETED | Documentos de continuidad, protocolo permanente y pruebas SQL sin DROP DATABASE; 82/591 en SQLite y MariaDB, esquema aislado conservado | Ninguna |
 | 2.1-A | COMPLETED | Métodos configurables y cobro/devolución manual no efectivo. Backend 90/684 SQLite/MariaDB y 10 Playwright; migración aplicada, build/formato y capturas verificados | Ventas 0.5 |
 | 2.1-B | COMPLETED | Abonos/mixtos, saldo e historial, devolución de importes realmente cobrados. Migración 000007 aplicada; 100/808 SQLite/MariaDB, 11 Playwright, build/formato y capturas correctos | 2.1-A |
-| 2.1-C | IN_PROGRESS | Propinas y descuento porcentual con snapshots/redondeo, permisos y pruebas; configuración explícita para propinas, sin tasas legales automáticas | 2.1-B |
-| 2.1-D | PENDING | Devoluciones parciales y división de cuentas con asignaciones y límites contra sobrepago/sobredevolución | 2.1-B/C |
+| 2.1-C | COMPLETED | Porcentaje y propinas voluntarias con configuración/snapshot/consentimiento; migración 000008 aplicada, 108/891 SQLite/MariaDB, 12 Playwright y build/formato correctos | 2.1-B |
+| 2.1-D1 | IN_PROGRESS | Devoluciones parciales por pago: sumas limitadas a cobro remanente, revisión/idempotencia, transacción/auditoría, historial y efectivo correcto; no crear deuda por devolver | 2.1-B/C |
+| 2.1-D2 | PENDING | División de una cuenta en partes iguales antes del primer pago, asignación de pagos/saldos por parte y límites contra sobrepago; sin duplicar ventas | 2.1-D1 |
 | 2.1-E | PENDING | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores | Catálogo y cálculo versionado |
-| 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D |
+| 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |

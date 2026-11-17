@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.7.0** incorpora **abonos y pagos mixtos**, saldo pendiente, historial por pago y devolución de los cobros efectivamente registrados. Reutiliza ventas, métodos manuales, pedidos y caja existentes. Solo efectivo modifica el saldo de caja; los pagos manuales no equivalen a confirmación bancaria. El cálculo de impuesto adicional requiere confirmación de la empresa, sin asignación de tasa legal. Mesas, propinas, cuentas divididas, pasarelas, cocina, inventario y facturación siguen pendientes.
+La entrega **0.8.0** agrega **descuento porcentual y propinas voluntarias**, con configuración/consentimiento explícitos y snapshots históricos. Conserva abonos, pagos mixtos, saldo, métodos manuales, pedidos y caja. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. El cálculo adicional se confirma por empresa, sin asignación de régimen/tasa legal. Mesas, devoluciones parciales, cuentas divididas, pasarelas, cocina, inventario y facturación siguen pendientes.
 
 ## Entorno y requisitos
 
@@ -115,6 +115,8 @@ En **Ventas** puedes consultar/imprimir el recibo interno y registrar una **devo
 
 En un recibo **Abonado**, **Agregar pagos** permite preparar un lote de uno o varios métodos y confirmar juntos. El servidor comprueba saldo/revisión y rechaza sobrepagos; solo los componentes de efectivo cambian la caja. **Devolución total** devuelve cada pago por su método y cancela el saldo nunca cobrado, sin devolver dinero no recibido. Recibos anteriores, pagos y total original se conservan. Reglas y ejemplo de cierre en [PAYMENTS.md](docs/PAYMENTS.md).
 
+Al cobrar puedes elegir descuento fijo o porcentual, con motivo y permiso sales.discount. Las propinas empiezan deshabilitadas: habilítalas y confirma el tratamiento de base en Configurar ventas. Su importe es opcional y exige sales.tips y confirmación de que el cliente lo aceptó voluntariamente; no se agregan automáticamente. Los ajustes quedan fijados desde el primer pago y se muestran en el recibo. Reglas, ejemplo y límites en [ADJUSTMENTS.md](docs/ADJUSTMENTS.md).
+
 ## Correo, seguridad y producción
 
 El modo local `MAIL_MAILER=log` escribe el enlace de recuperación en `backend/storage/logs/laravel.log`; **no envía correos**. Para entrega real configura SMTP y comprueba el transporte. No publiques logs ni archivos `.env`.
@@ -132,6 +134,7 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [Reglas de caja y pedidos](docs/OPERATIONS.md)
 - [Venta, cálculo y devolución en efectivo](docs/SALES.md)
 - [Abonos y pagos mixtos](docs/PAYMENTS.md)
+- [Descuentos y propinas voluntarias](docs/ADJUSTMENTS.md)
 - [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
 - [Tareas](docs/TASKS.md), [estado estructurado](docs/PROJECT_STATE.json), [continuidad](docs/HANDOFF.md) y [decisiones](docs/DECISIONS.md)
 
