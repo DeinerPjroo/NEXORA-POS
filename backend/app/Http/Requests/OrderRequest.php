@@ -9,7 +9,10 @@ use Illuminate\Validation\Rule;
 
 final class OrderRequest extends FormRequest
 {
-    public function authorize(): bool { return $this->user()->hasPermission('orders.manage'); }
+    public function authorize(): bool
+    {
+        return $this->user()->hasPermission('orders.manage') && $this->user()->hasPermission('catalog.view');
+    }
 
     public function rules(): array
     {

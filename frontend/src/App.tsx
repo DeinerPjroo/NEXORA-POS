@@ -11,6 +11,11 @@ import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
 import { ProductDetailPage } from './features/catalog/ProductDetailPage'
+import { CashPage } from './features/cash/CashPage'
+import { CashSessionPage } from './features/cash/CashSessionPage'
+import { OrdersPage } from './features/orders/OrdersPage'
+import { OrderDetailPage } from './features/orders/OrderDetailPage'
+import { OrderComposer } from './features/orders/OrderComposer'
 
 export default function App() {
   return (
@@ -21,6 +26,46 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/caja"
+          element={
+            <PermissionBoundary permission="cash.view">
+              <CashPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/caja/sesiones/:sessionId"
+          element={
+            <PermissionBoundary permission="cash.view">
+              <CashSessionPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/pedidos"
+          element={
+            <PermissionBoundary permission="orders.view">
+              <OrdersPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/pedidos/nuevo"
+          element={
+            <PermissionBoundary permission="orders.manage">
+              <OrderComposer />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/pedidos/:orderId"
+          element={
+            <PermissionBoundary permission="orders.view">
+              <OrderDetailPage />
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/productos/:productId"
           element={

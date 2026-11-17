@@ -4,6 +4,7 @@
 @import './styles/studio.css';
 @import './styles/catalog.css';
 @import './styles/product-detail.css';
+@import './styles/operations.css';
 
 :root {
   font-family:

@@ -8,6 +8,8 @@ use App\Http\Requests\CompanyRequest;
 use App\Http\Requests\ThemeRequest;
 use App\Models\AuditLog;
 use App\Models\Branch;
+use App\Models\CashSession;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -55,7 +57,7 @@ final class WorkspaceController extends Controller
 
         return DB::transaction(function () use ($request) {
             $company = Tenant::whereKey($request->user()->tenant_id)->lockForUpdate()->firstOrFail();
-            if ($company->currency !== $request->validated('currency') && (Product::exists() || \App\Models\CashSession::exists() || \App\Models\Order::exists())) {
+            if ($company->currency !== $request->validated('currency') && (Product::exists() || CashSession::exists() || Order::exists())) {
                 throw ValidationException::withMessages(['currency' => 'La moneda no se puede cambiar cuando existen productos, sesiones de caja o pedidos.']);
             }
             $company->update($request->validated());

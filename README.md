@@ -2,11 +2,11 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.3.0** amplía el catálogo con **fotografías privadas y variantes de productos**. También funcionan registro empresarial, sesiones, recuperación de contraseña, sucursales, roles y permisos, resumen del espacio, configuración regional e identidad visual versionada. El frontend consume la API real. Punto de venta, caja, cocina, inventario, suscripciones y el editor avanzado siguen pendientes.
+La entrega **0.4.0** incorpora **apertura y cierre de caja, movimientos manuales y pedidos con estados de preparación**. También funcionan catálogo con fotografías/variantes, registro empresarial, sesiones, recuperación de contraseña, sucursales, roles, configuración regional e identidad visual versionada. El frontend consume la API real. Ventas, cobros, impuestos, mesas, cocina en tiempo real, inventario y suscripciones siguen pendientes. Un pedido entregado no registra un pago.
 
 ## Entorno y requisitos
 
-Verificado el 17 de noviembre de 2026 en Windows: PHP **8.3.31**, Composer **2.8.9**, Node **24.10.0**, npm **11.6.1**. PHP tiene PDO MySQL, PDO SQLite, mbstring, OpenSSL, cURL, fileinfo, XML y ZIP. Framework instalado: Laravel **13.43.0**, Sanctum **4.5.0**, React **19.3.1**, Vite **8.3.8**, Tailwind **4.3.5**. Las versiones exactas están en los archivos lock.
+Verificado el 17 de noviembre de 2026 en Windows: PHP **8.3.31**, Composer **2.8.9**, Node **24.10.0**, npm **11.6.1**. PHP tiene PDO MySQL, PDO SQLite, BCMath, GD, mbstring, OpenSSL, cURL, fileinfo, XML y ZIP. Framework instalado: Laravel **13.43.0**, Sanctum **4.5.0**, React **19.3.1**, Vite **8.3.8**, Tailwind **4.3.5**. Las versiones exactas están en los archivos lock.
 
 La conexión configurada en `backend/.env` ya funciona con **MariaDB 10.4.32 de XAMPP** en `127.0.0.1:3306`, usando el driver mysql de PDO. Las migraciones están aplicadas y la suite backend pasó también en una base temporal de ese servidor. Esto verifica MariaDB; la validación específica de MySQL 8 para despliegue continúa pendiente. Durante el trabajo se realizó un arranque normal de MariaDB al detectarlo detenido; no se repararon archivos de datos ni se modificaron otros proyectos.
 
@@ -95,6 +95,14 @@ npm run test:e2e
 
 Playwright levanta sus propios servidores en **8011 y 5199**, usa exclusivamente `backend/database/e2e.sqlite` y fotografías en `.runtime/e2e-catalog`, sin modificar `.env`. Mantiene registros de prueba entre ejecuciones y genera correos únicos; un prefijo de caché por ejecución evita acumular los límites de intentos entre corridas. No reutiliza servidores ajenos ni ejecuta `migrate:fresh`. Las capturas de `docs/screenshots/` corresponden a este entorno de prueba, no a un restaurante real.
 
+## Caja y pedidos
+
+En **Caja** elige sucursal, abre la caja principal con su base y registra ingresos/egresos manuales con motivo. Cierra indicando el efectivo contado; quedan guardados el esperado y la diferencia firmada. Cada sucursal tiene una caja principal; puedes crear más con permiso cash.manage. Las sesiones cerradas y movimientos se conservan.
+
+En **Pedidos → Nuevo pedido**, agrega productos, elige una presentación cuando tengan variantes y registra cantidades enteras, notas y referencia. El flujo permite pendiente → preparación → listo → entregado y cancelación con motivo antes de entregar. El servidor valida precios/revisiones y calcula importes usando **BCMath**; un cambio de catálogo no modifica pedidos anteriores.
+
+Los permisos cash.view/manage/movements y orders.view/manage/cancel se configuran en Roles y permisos; tomar pedidos también requiere catalog.view. La migración concede las capacidades nuevas automáticamente solo a propietarios existentes. Los pedidos no aumentan la caja ni generan facturas. Ante una respuesta perdida, mantén abierto el formulario y usa **Reintentar envío** para consultar la misma operación sin duplicarla; no hay cola offline ni persistencia del formulario al recargar. Consulta las [reglas operativas](docs/OPERATIONS.md).
+
 ## Correo, seguridad y producción
 
 El modo local `MAIL_MAILER=log` escribe el enlace de recuperación en `backend/storage/logs/laravel.log`; **no envía correos**. Para entrega real configura SMTP y comprueba el transporte. No publiques logs ni archivos `.env`.
@@ -109,6 +117,7 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [DDL para MySQL Workbench](docs/database/initial-schema.mysql.sql)
 - [Sistema de diseño](docs/DESIGN_SYSTEM.md)
 - [Contrato API](docs/API.md)
+- [Reglas de caja y pedidos](docs/OPERATIONS.md)
 - [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
 
 Las carpetas `mobile/` y `desktop/` reservan productos futuros; todavía no contienen aplicaciones.

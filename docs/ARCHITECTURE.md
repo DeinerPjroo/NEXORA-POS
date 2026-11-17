@@ -90,6 +90,18 @@ Variantes: servicio SaveVariant bloquea empresa y producto, verifica moneda y pr
 
 Los editores capturan moneda/revisión al abrirse; no toman una revisión nueva automáticamente por refetch mientras mantienen campos antiguos. La selección de fotografía también fija su revisión. Las colisiones devuelven 409 y requieren revisar datos antes de volver a guardar.
 
+## Caja y pedidos implementados en 0.4
+
+Los servicios CashOperations, CreateOrder y ChangeOrderState ejecutan comandos bajo IdempotentOperation: validación/autorización, transacción y bloqueo de empresa, comprobación de clave y hash canónico de payload, operación, auditoría y registro idempotente. Se bloquean además los recursos afectados. El bloqueo por empresa limita capacidad; medir antes de optimizar la granularidad. Las claves se retienen sin vencimiento automático y su replay vuelve a autorizar y devuelve el recurso actual.
+
+Cada caja tiene active_session_id con FK compuesta a una sesión de esa misma caja. Apertura, movimientos y cierre son atómicos. La revisión de sesión protege un conteo basado en datos antiguos. CashMovement, OrderItem, OrderEvent e IdempotencyRecord rechazan actualización/borrado por modelo; no existen rutas para modificar su historia. Las restricciones y servicios no autorizan SQL directo de clientes.
+
+El servidor usa BCMath y cadenas DECIMAL(19,4), comprueba límites y nunca calcula dinero mediante float. El cierre admite diferencia negativa; egresos no superan el esperado. Pedidos guardan snapshots y exigen variante cuando exista, producto/categoría disponibles, revisión y precio esperados. Cantidades actuales enteras de 1 a 999; cantidades fraccionarias de inventario quedan para su dominio. Una entrega no genera ingreso de caja. Moneda inmutable después de productos, sesiones o pedidos.
+
+La UI retiene UUID y payload exactos mientras un formulario incierto permanece montado. El usuario reintenta explícitamente sin modificar campos; cerrar o recargar puede perder el formulario. No hay almacenamiento persistente, sincronización ni tiempo real. Permisos operativos abarcan sucursales del tenant; asignación granular de empleados posterior. Véanse reglas y límites en [OPERATIONS.md](OPERATIONS.md).
+
+Las pruebas en SQLite son funcionales: su afinidad NUMERIC puede redondear importes extremos. MariaDB/MySQL con DECIMAL es la referencia de persistencia y la suite SQL temporal verifica los límites; no se declara SQLite un motor financiero offline preparado.
+
 ## Offline y dispositivos futuros
 
 Cliente local SQLite y cola de comandos con UUID/ULID, `tenant_id`, sucursal, dispositivo, revisión y clave idempotente. Sincronización con acknowledgements, reintentos exponenciales y dead-letter. Pedidos: comandos de dominio; inventario y pagos: reconciliación con servidor, sin reemplazar saldos con «última escritura gana». Conflictos de precio/stock/caja necesitan resolución visible. No cachear respuestas privadas globalmente ni prometer pagos offline de proveedores que no los soportan. La web actual muestra desconexión y exige acceso al servidor; no tiene service worker ni cola offline.

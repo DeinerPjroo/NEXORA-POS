@@ -19,6 +19,8 @@ final class CreateOrder
     public function execute(User $actor, array $data): Order
     {
         Gate::authorize('orders.manage');
+        Gate::authorize('catalog.view');
+
         return app(IdempotentOperation::class)->run($actor, 'order.create', $data, Order::class, function ($data) use ($actor) {
             $branch = Branch::whereKey($data['branch_id'])->lockForUpdate()->firstOrFail();
             abort_unless($branch->is_active, 409, 'La sucursal está inactiva.');
@@ -50,6 +52,7 @@ final class CreateOrder
             $order->items()->createMany($items);
             OrderEvent::create(['order_id' => $order->id, 'actor_id' => $actor->id, 'from_status' => null, 'to_status' => 'open', 'created_at' => now()]);
             Audit::record('order.created', 'Se registró un pedido sin cobro.', $actor, ['order_id' => $order->id]);
+
             return $order;
         });
     }

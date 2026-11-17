@@ -129,7 +129,9 @@ return new class extends Migration
             $table->unique(['tenant_id', 'key']);
             $table->foreign(['tenant_id', 'actor_id'])->references(['tenant_id', 'id'])->on('users')->restrictOnDelete();
         });
-        if (DB::connection()->pretending()) return;
+        if (DB::connection()->pretending()) {
+            return;
+        }
         DB::table('branches')->orderBy('id')->chunkById(200, function ($branches) {
             foreach ($branches as $branch) {
                 DB::table('cash_registers')->insert(['tenant_id' => $branch->tenant_id, 'branch_id' => $branch->id, 'name' => 'Caja principal', 'code' => 'PRINCIPAL', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
@@ -143,14 +145,18 @@ return new class extends Migration
             DB::table('permissions')->updateOrInsert(['key' => $key], ['name' => $name, 'group' => $group]);
             $permissionId = DB::table('permissions')->where('key', $key)->value('id');
             DB::table('roles')->where('is_owner', true)->orderBy('id')->chunkById(200, function ($roles) use ($permissionId) {
-                foreach ($roles as $role) DB::table('role_permission')->insertOrIgnore(['tenant_id' => $role->tenant_id, 'role_id' => $role->id, 'permission_id' => $permissionId]);
+                foreach ($roles as $role) {
+                    DB::table('role_permission')->insertOrIgnore(['tenant_id' => $role->tenant_id, 'role_id' => $role->id, 'permission_id' => $permissionId]);
+                }
             });
         }
     }
 
     public function down(): void
     {
-        foreach (['idempotency_records', 'order_events', 'order_items', 'orders', 'cash_movements'] as $name) Schema::dropIfExists($name);
+        foreach (['idempotency_records', 'order_events', 'order_items', 'orders', 'cash_movements'] as $name) {
+            Schema::dropIfExists($name);
+        }
         Schema::table('product_variants', fn (Blueprint $table) => $table->dropUnique('variants_product_identity'));
         Schema::table('cash_registers', fn (Blueprint $table) => $table->dropForeign('cash_register_active_session_fk'));
         Schema::dropIfExists('cash_sessions');

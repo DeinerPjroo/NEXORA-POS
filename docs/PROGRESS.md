@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.3.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, fotografías privadas y variantes. Todavía no se declara lista para producción.
+Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.4.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, fotografías, variantes, caja manual y pedidos de preparación. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -27,26 +27,32 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.3.
 - Variantes paginadas con nombre, SKU/barcode, precio/costo y disponibilidad propios, relación tenant/producto protegida y desactivación sin borrado.
 - Un espacio de SKU y otro de barcode compartidos entre productos y variantes en el servidor; escritura serializada por empresa y restricciones propias por tabla.
 - Toda mutación de variante o fotografía incrementa la revisión del producto. Formularios y selección de archivo conservan la revisión original ante refetch en segundo plano.
+- Caja por sucursal: caja principal creada automáticamente y cajas adicionales, apertura única, ingresos/egresos manuales con motivo, cierre con conteo y diferencia firmada. Sesiones y movimientos preservados.
+- Pedidos con catálogo y selección obligatoria de variante cuando exista, cantidades enteras y notas; snapshots de nombre/SKU/precio y subtotal recalculado en servidor con BCMath.
+- Estados pendiente → preparación → listo → entregado, cancelación motivada antes de entrega y eventos históricos. Cambios con revisión y permisos propios; sin pago ni factura.
+- UUID idempotente para cada comando operativo, bloqueo transaccional, auditoría y FKs compuestas. Reintentar tras perder una respuesta no repite la operación.
+- Pantallas adaptables de caja, historial, arqueo, toma y detalle de pedidos. El formulario conserva el envío incierto en memoria mientras permanece abierto; no es una cola offline.
+- La moneda queda bloqueada también cuando existen sesiones de caja o pedidos, aunque no haya productos.
 
 ## Verificaciones realizadas
 
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | Suite SQLite en memoria: identidad y catálogo, permisos, precisión, filtros, referencias entre empresas y conflictos |
-| `php scripts/test-mysql.php` | 49 pruebas y 299 aserciones aprobadas en MariaDB 10.4.32 en una base nueva temporal; eliminada al finalizar, sin ejecutar pruebas sobre la base de trabajo |
+| `php artisan test` | 68 pruebas y 416 aserciones aprobadas en SQLite en memoria: identidad, catálogo, caja/pedidos, permisos, precisión, referencias entre empresas, idempotencia y conflictos |
+| `php scripts/test-mysql.php` | 68 pruebas y 416 aserciones aprobadas en MariaDB 10.4.32 en una base nueva temporal; eliminada al finalizar, sin ejecutar pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 7 pruebas Playwright aprobadas: 6 recorridos Chromium (incluidas fotos, variantes, móvil y conflicto entre pestañas) y una comprobación de formato monetario preciso |
+| `npm run test:e2e` | 9 pruebas: 7 recorridos Chromium y 2 comprobaciones de dinero/borrador. Incluye fotos, variantes, móvil, conflicto entre pestañas, respuesta perdida al abrir caja, movimientos/arqueo, preparación/entrega y cancelación motivada de un pedido con variante |
 | Capturas | Revisadas en escritorio y móvil; guardadas en docs/screenshots con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
-| `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones iniciales y catálogo aplicadas |
+| `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, variantes y caja/pedidos aplicadas |
 
-Las pruebas SQLite y las pruebas reales en MariaDB se complementan. La validación específica de MySQL 8 aún está pendiente. Playwright usa una base SQLite separada, fotografías en .runtime/e2e-catalog y un prefijo de caché nuevo por ejecución, con servidores 8011/5199 sin alterar `.env`. El correo de desarrollo usa transporte log: se comprueba la notificación y el broker, no una entrega SMTP externa.
+Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMERIC no garantiza precisión en los extremos de DECIMAL(19,4); MariaDB es la referencia monetaria. La validación específica de MySQL 8 aún está pendiente. Playwright usa una base SQLite separada, fotografías en .runtime/e2e-catalog y un prefijo de caché nuevo por ejecución, con servidores 8011/5199 sin alterar `.env`. El correo de desarrollo usa transporte log: se comprueba la notificación y el broker, no una entrega SMTP externa.
 
 ## Pendiente para cerrar los cimientos
 
@@ -57,6 +63,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. La validaci�
 
 ## Fuera del alcance implementado
 
-No existen todavía POS de venta, mesas, pedidos, pagos, caja, KDS/Reverb, inventarios/recetas, compras, alta de empleados, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración ni landing comercial. En catálogo siguen pendientes galerías múltiples, subcategorías, grupos de modificadores, combos, impuestos de venta y precios por sucursal/canal. Tampoco editor avanzado drag-and-drop, widgets, documentos, automatizaciones, importación/exportación de layouts, aplicaciones móvil/escritorio, sincronización offline, dispositivos físicos o integración DIAN.
+No existen todavía POS de venta/cobro, mesas, pagos, impuestos/redondeo comercial, KDS/Reverb, inventarios/recetas, compras, alta de empleados o asignación por sucursal, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración ni landing comercial. Caja solo contempla efectivo manual, y pedidos solo preparación/entrega. En catálogo siguen pendientes galerías múltiples, subcategorías, grupos de modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado drag-and-drop, widgets, documentos, automatizaciones, importación/exportación de layouts, aplicaciones móvil/escritorio, sincronización offline, dispositivos físicos o integración DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

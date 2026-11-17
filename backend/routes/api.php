@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OperationsController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\RoleController;
@@ -21,6 +24,19 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/sessions', [AuthController::class, 'sessions']);
         Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
+        Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::get('cash/registers', [CashController::class, 'registers']);
+        Route::post('cash/registers', [CashController::class, 'storeRegister'])->name('cash.registers.store');
+        Route::post('cash/registers/{cashRegister}/open', [CashController::class, 'open'])->name('cash.sessions.open');
+        Route::get('cash/sessions', [CashController::class, 'sessions']);
+        Route::get('cash/sessions/{cashSession}', [CashController::class, 'show']);
+        Route::get('cash/sessions/{cashSession}/movements', [CashController::class, 'movements']);
+        Route::post('cash/sessions/{cashSession}/movements', [CashController::class, 'move'])->name('cash.movements.store');
+        Route::post('cash/sessions/{cashSession}/close', [CashController::class, 'close'])->name('cash.sessions.close');
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::post('orders', [OrderController::class, 'store']);
+        Route::post('orders/{order}/status', [OrderController::class, 'changeState']);
         Route::get('workspace/team', [WorkspaceController::class, 'team']);
         Route::get('workspace/company', [WorkspaceController::class, 'settings']);
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);

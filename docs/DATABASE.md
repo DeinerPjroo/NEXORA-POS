@@ -21,6 +21,13 @@ erDiagram
     TENANTS ||--o{ PRODUCTS : posee
     CATEGORIES ||--o{ PRODUCTS : agrupa
     PRODUCTS ||--o{ PRODUCT_VARIANTS : presenta
+    BRANCHES ||--o{ CASH_REGISTERS : dispone
+    CASH_REGISTERS ||--o{ CASH_SESSIONS : conserva
+    CASH_SESSIONS ||--o{ CASH_MOVEMENTS : registra
+    BRANCHES ||--o{ ORDERS : recibe
+    ORDERS ||--|{ ORDER_ITEMS : contiene
+    ORDERS ||--|{ ORDER_EVENTS : conserva
+    TENANTS ||--o{ IDEMPOTENCY_RECORDS : deduplica
 ```
 
 | Tabla | Propósito y restricciones |
@@ -34,6 +41,13 @@ erDiagram
 | categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id). |
 | products | Categoría con FK compuesta, SKU y barcode únicos por empresa (barcode nullable), precio/costo DECIMAL(19,4), estado, disponibilidad y revisión. |
 | product_variants | FK compuesta (tenant_id,product_id) al producto; SKU y barcode únicos por empresa, nombre único por producto, precio/costo DECIMAL(19,4), estados y timestamps. |
+| cash_registers | Sucursal con FK compuesta, código único por sucursal y active_session_id que referencia una sesión de esa misma caja mediante FK (tenant_id,id,active_session_id). |
+| cash_sessions | Sucursal/caja/actores con referencias compuestas, moneda, importes DECIMAL(19,4), revisión, estado y fechas de apertura/cierre. Diferencia firmada nullable hasta cerrar. |
+| cash_movements | Sesión/actor con FKs compuestas, tipo ingreso/egreso, importe positivo, motivo y fecha. Append-only por modelo y sin rutas de edición/borrado. |
+| orders | UUID público, sucursal/actor, canal, referencia/notas, moneda, subtotal DECIMAL(19,4), estado/revisión y fechas. Sin vínculo a pago o caja todavía. |
+| order_items | Pedido/producto/variante con FKs compuestas (incluye tenant/producto/variante), nombres/SKU/precio históricos, cantidad entera y subtotal/notas. Append-only. |
+| order_events | Pedido/actor, estado anterior/nuevo, motivo y fecha; append-only. |
+| idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
 | workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
 | theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
 | audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |
@@ -55,20 +69,20 @@ Infraestructura `sessions.user_id` sigue el esquema Laravel con índice, sin FK:
 
 El script es para modelado en una base vacía. Para ejecutar Nexora, usar `php artisan migrate --seed`; importar el DDL manualmente no crea el historial de migraciones y provocaría colisiones al migrar. El exportador usa la gramática oficial MySQL de Laravel en modo pretend; **no equivale a una ejecución validada en MySQL**. La importación visual en Workbench queda pendiente de comprobar en su aplicación.
 
-## Catálogo implementado y resto de Fase 2 previsto
+## Catálogo y operación implementados; resto de Fase 2 previsto
 
-Ya existen categories, products y product_variants con las restricciones descritas arriba. products incluye image_path e image_mime nullable para una fotografía privada. Los bytes viven en storage/app/catalog por empresa/producto, sin enlaces públicos. Subcategorías, galerías de varias imágenes y los demás dominios siguientes **son diseño pendiente**. Sus tablas operativas llevarán tenant_id, índices de empresa y FKs compuestas.
+Ya existen categories, products, product_variants, cash_registers, cash_sessions, cash_movements, orders, order_items, order_events e idempotency_records con las restricciones descritas arriba. products incluye image_path e image_mime nullable para una fotografía privada. Los bytes viven en storage/app/catalog por empresa/producto, sin enlaces públicos. Las ampliaciones siguientes **son diseño pendiente**. Sus tablas operativas llevarán tenant_id, índices de empresa y FKs compuestas.
 
 Los SKU y barcode tienen índices únicos por tabla/empresa. La unicidad adicional entre productos y variantes se asegura en servicios mediante comprobaciones bajo el mismo bloqueo de fila de empresa; no existe una restricción SQL que cruce ambas tablas. No realizar escrituras directas de códigos evitando estos servicios. Las variantes no tienen una revisión independiente: toda modificación incrementa products.revision dentro de la transacción.
 
 - Catálogo: categories con parent_id del mismo tenant; products N:1 categoría; product_variants N:1 producto; product_images; branch_prices único por variante/sucursal/canal; product_modifiers y modifier_options.
 - Salones: dining_rooms N:1 sucursal; dining_tables N:1 salón, nombre, forma, capacidad, posición/tamaño/rotación; floor_plan_versions JSON validado para decoración y geometría; table_groups/table_group_members para uniones temporales.
-- Pedidos: orders N:1 sucursal y cliente opcional, canal, UUID e idempotencia; order_tables N:M mesas; order_items con snapshot del producto/variante/precio/impuesto y notas; order_item_modifiers; order_status_history; order_transfers para movimientos auditados.
-- Caja: cash_registers N:1 sucursal; cash_sessions N:1 caja/operador, apertura/cierre; cash_movements con tipo y referencia; payment_methods configurables; expenses con autorización.
+- Pedidos: ampliar orders con cliente enlazado; order_tables N:M mesas; snapshots de impuestos en detalle, order_item_modifiers y order_transfers para movimientos auditados. El historial básico ya existe como order_events.
+- Caja: ampliar movimientos con referencias a pagos reales; payment_methods configurables, expenses con autorización y conciliación. Caja/sesiones y movimientos manuales ya existen.
 - Venta: sales N:1 pedido, número único por tenant/serie/sucursal; sale_items snapshots; payments N:1 venta/método; payment_allocations para pagos parciales o distribuidos; refunds/refund_items compensatorios; invoice_series, invoices e invoice_lines separados del recibo de pedido.
 - Clientes y reservas: customers; customer_addresses; reservations y reservation_tables; dirección de venta como snapshot.
 
-Dinero `DECIMAL(19,4)` y cantidades `DECIMAL(19,6)`; no floats. Reglas de redondeo definidas antes de pagos. Índices compuestos `(tenant_id,branch_id,created_at)`, estados y claves de idempotencia. Ninguna anulación elimina una venta o pago histórico. Estado de caja bloqueado al confirmar movimientos, sumas controladas en transacción.
+Dinero `DECIMAL(19,4)` y BCMath; cantidades de pedido actuales enteras, las fracciones de inventario usarán `DECIMAL(19,6)`; no floats financieros. Reglas de redondeo definidas antes de pagos. Índices compuestos `(tenant_id,branch_id,created_at)`, estados y claves de idempotencia. Ninguna anulación eliminará una venta o pago histórico. Estado de caja bloqueado al confirmar movimientos, sumas controladas en transacción. SQLite NUMERIC puede redondear importes extremos; las garantías monetarias se verifican sobre MariaDB y la validación específica de MySQL 8 permanece pendiente.
 
 ## Modelo previsto: gestión avanzada
 

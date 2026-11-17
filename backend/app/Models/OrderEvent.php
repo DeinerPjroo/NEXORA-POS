@@ -2,13 +2,21 @@
 
 namespace App\Models;
 
+use App\Domains\Operations\AppendOnly;
 use App\Domains\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 final class OrderEvent extends Model
 {
+    use AppendOnly;
     use BelongsToTenant;
+
     public $timestamps = false;
+
     protected $guarded = ['id', 'tenant_id'];
-    protected function casts(): array { return ['created_at' => 'datetime']; }
+
+    protected function casts(): array
+    {
+        return ['created_at' => 'datetime'];
+    }
 }

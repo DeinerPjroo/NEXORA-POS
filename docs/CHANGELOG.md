@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## 0.4.0 · 2026-11-17
+
+- Cajas por sucursal, apertura única, movimientos manuales, cierre y arqueo con diferencia firmada. Sin edición o borrado del historial.
+- Pedidos con productos/variantes, precios y nombres históricos, notas, filtros, preparación, entrega y cancelación motivada.
+- Importes calculados con BCMath, límites de DECIMAL, revisión de caja/pedido, auditoría y claves idempotentes por empresa.
+- Reintento del mismo envío ante respuesta perdida; recorrido Chromium comprueba que no duplica aperturas.
+- Permisos operativos, referencias compuestas, caja principal para sucursales nuevas/existentes y bloqueo de moneda desde el primer registro monetario.
+- Migración aplicada en MariaDB; 68 pruebas backend y 416 aserciones aprobadas tanto en SQLite como en un esquema temporal MariaDB.
+- Pedidos separados de ventas/pagos: entregar no registra ingresos, impuestos, recibo ni factura. Reglas en OPERATIONS.md.
+
 ## 0.3.0 · 2026-11-17
 
 - Ficha de producto con fotografía privada, vista previa, sustitución y retirada.

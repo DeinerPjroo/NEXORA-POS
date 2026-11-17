@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity;
 
+use App\Domains\Cash\DefaultRegister;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Permission;
@@ -43,7 +44,7 @@ final class RegisterCompany
                 $user->role_id = $roles['Propietario']->id;
                 $user->save();
                 $branch = Branch::create(['name' => $data['branch_name'], 'code' => 'PRINCIPAL']);
-                \App\Domains\Cash\DefaultRegister::create($branch);
+                DefaultRegister::create($branch);
                 $theme = config('nexora.theme');
                 WorkspaceSetting::create(['revision' => 1, 'theme' => $theme]);
                 ThemeVersion::create(['version' => 1, 'schema_version' => 1, 'theme' => $theme, 'created_at' => now()]);

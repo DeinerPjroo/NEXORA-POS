@@ -104,7 +104,55 @@ Cada variante requiere name (máximo 80), sku (máximo 40), sale_price como cade
 
 Crear/editar variantes o cambiar/retirar imagen incrementa la revisión del producto. Esto evita que un formulario anterior sobrescriba cambios realizados desde otra pestaña. No se envía revision de variante: el control pertenece al producto. Las variantes se archivan con is_active=false; no hay DELETE ni traslado a otro producto.
 
-La respuesta de producto ahora incluye image_url (nullable), variants_count y available_variants_count. sellable exige producto/categoría activos y disponibilidad manual; si existen variantes, además requiere al menos una activa y disponible. El precio base se presenta como referencia cuando hay variantes. Todavía no existe una API de venta o pedido; su futura implementación deberá exigir selección de variante y usar su precio.
+La respuesta de producto ahora incluye image_url (nullable), variants_count y available_variants_count. sellable exige producto/categoría activos y disponibilidad manual; si existen variantes, además requiere al menos una activa y disponible. El precio base se presenta como referencia cuando hay variantes. Crear pedidos exige selección de variante disponible y usa su precio. La API de venta/pago sigue pendiente.
+
+## Caja y pedidos desde 0.4.0
+
+Todos los POST siguientes requieren **idempotency_key**, UUID nuevo por intención. Conservar exactamente clave y payload si se pierde la respuesta. Misma empresa/usuario/acción/contenido devuelve el recurso existente en su estado actual; un uso incompatible devuelve 409. Los permisos se vuelven a comprobar. No reenviar con otra clave un comando cuyo resultado es incierto. tenant_id está prohibido; el contexto procede de la sesión.
+
+| Método / ruta | Permiso | Entrada / respuesta |
+| --- | --- | --- |
+| GET operations/context | Alguno de cash.view/manage/movements u orders.view/manage | branches (id, name, is_active) de la empresa y currency; no envuelto en data |
+| GET cash/registers | cash.view | data + meta, cajas con current_session nullable; branch_id/page/per_page |
+| POST cash/registers | cash.manage | branch_id, name (80), code (20, A-Z/0-9/_/-); caja bajo data, 201 |
+| POST cash/registers/{cashRegister}/open | cash.manage | opening_amount como cadena no negativa y currency; sesión bajo data, 201 |
+| GET cash/sessions | cash.view | data + meta; branch_id, status=open/closed, page/per_page |
+| GET cash/sessions/{cashSession} | cash.view | Sesión bajo data con importes, revisión y fechas |
+| GET cash/sessions/{cashSession}/movements | cash.view | data + meta, orden descendente; page/per_page |
+| POST cash/sessions/{cashSession}/movements | cash.movements | revision, type=income/expense, amount positivo como cadena, reason (3–300); movimiento bajo data, 201 |
+| POST cash/sessions/{cashSession}/close | cash.manage | revision, counted_amount no negativo como cadena, closing_note opcional (500); sesión cerrada bajo data |
+| GET orders | orders.view | data + meta; branch_id, status, page/per_page |
+| GET orders/{order} | orders.view | data incluye líneas históricas y eventos |
+| POST orders | orders.manage + catalog.view | Pedido descrito abajo; 201 bajo data |
+| POST orders/{order}/status | orders.manage u orders.cancel para cancelar | revision, status y reason obligatorio al cancelar (3–300); pedido actualizado bajo data |
+
+Paginación: 20 por defecto, máximo 50. Los IDs enlazados a otra empresa responden 404 en rutas o se rechazan en validación. No hay DELETE ni edición de movimientos, cierres o líneas de pedido. Las sucursales nuevas y existentes reciben caja principal; solo puede abrirse una sesión por caja activa/sucursal activa. Un egreso no puede superar el esperado. Cerrar fija counted_amount, expected_amount y difference (conteo − esperado, admite negativo). La moneda empresarial ya no cambia si hay productos, sesiones de caja o pedidos.
+
+Pedido mínimo (reemplaza IDs, UUID y revisión con valores actuales):
+
+```json
+{
+  "idempotency_key": "9fc3ad57-6c33-4f2e-9557-21a63c7c646a",
+  "branch_id": 1,
+  "currency": "COP",
+  "channel": "takeaway",
+  "reference": "Recoge Ana",
+  "customer_name": "Ana",
+  "notes": "Empacar por separado",
+  "items": [{
+    "product_id": 1,
+    "variant_id": null,
+    "quantity": 2,
+    "product_revision": 1,
+    "expected_unit_price": "18500.1250",
+    "notes": "Sin cebolla"
+  }]
+}
+```
+
+channel admite dine_in/takeaway, sin asignación a mesas todavía. reference máximo 80, customer_name 100 y notes general 1000. De 1 a 100 líneas, quantity entera 1–999 y notas por línea de hasta 300. Si el producto tiene variantes, variant_id es obligatorio y debe corresponder a una disponible de ese producto. Todos deben estar activos/disponibles, incluida categoría y sucursal. Precio/revisión obsoletos devuelven 409; el servidor calcula unit_price, line_subtotal y subtotal mediante BCMath, sin aceptar subtotal o status del cliente. Guarda nombres/SKU/precios como snapshots.
+
+Estados: open → preparing → ready → delivered. Se permite cancelled desde open/preparing/ready con orders.cancel y motivo. Sin reversión ni cancelación de entregados. Los cambios requieren revisión actual y agregan un evento; nunca borran historia. Un pedido entregado no genera ingresos de caja, cobros, impuestos ni factura. Consultar [reglas operativas](OPERATIONS.md).
 
 ## Referencia de errores
 
@@ -113,7 +161,7 @@ La respuesta de producto ahora incluye image_url (nullable), variants_count y av
 | 401 | Falta sesión válida |
 | 403 | Permiso insuficiente, rol protegido, cuenta/empresa suspendida |
 | 404 | Recurso inexistente o de otra empresa |
-| 409 | Revisión visual obsoleta |
+| 409 | Revisión/precio/moneda obsoletos, transición incompatible o clave idempotente reutilizada con otro contenido |
 | 419 | Protección CSRF no satisfecha |
 | 422 | Validación; errors contiene mensajes por campo |
 | 429 | Límite de intentos |

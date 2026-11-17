@@ -23,3 +23,6 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Catálogo: dinero como cadenas decimales, costos protegidos por catalog.costs, revisión obligatoria en PUT. No cambiar moneda si existen productos ni aceptar contexto monetario obsoleto.
 - Fotografías privadas en disco catalog: no generar enlaces públicos, aceptar solo JPEG/PNG/WebP acotados y recodificar con GD. Mutaciones de imagen/variante incrementan revisión del producto; conservar la revisión original al abrir formularios.
 - SKU y barcode: comprobar disponibilidad en productos y variantes bajo bloqueo de empresa. Las variantes se archivan; nunca se transfieren de producto/empresa.
+- Operación: usar BCMath y cadenas decimales; apertura/movimiento/cierre y pedidos requieren UUID idempotente, revisión cuando corresponde y auditoría transaccional. Historial append-only.
+- Un pedido entregado no equivale a venta ni pago y no modifica caja. Exigir variante disponible cuando exista; copiar precio/nombre/SKU y recalcular subtotal en servidor.
+- No cambiar moneda empresarial si existen productos, sesiones de caja o pedidos. Conservar clave y payload exactos ante respuesta incierta mientras el formulario permanezca abierto.

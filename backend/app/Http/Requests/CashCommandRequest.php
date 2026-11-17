@@ -16,12 +16,15 @@ final class CashCommandRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->routeIs('cash.registers.store')) $this->merge(['code' => strtoupper(trim((string) $this->input('code')))]);
+        if ($this->routeIs('cash.registers.store')) {
+            $this->merge(['code' => strtoupper(trim((string) $this->input('code')))]);
+        }
     }
 
     public function rules(): array
     {
         $common = ['idempotency_key' => ['required', 'uuid'], 'tenant_id' => ['prohibited']];
+
         return $common + match (true) {
             $this->routeIs('cash.registers.store') => [
                 'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', app(TenantContext::class)->id())],

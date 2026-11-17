@@ -14,6 +14,7 @@ final class ChangeOrderState
     public function execute(User $actor, Order $order, array $data): Order
     {
         Gate::authorize($data['status'] === 'cancelled' ? 'orders.cancel' : 'orders.manage');
+
         return app(IdempotentOperation::class)->run($actor, 'order.state.'.$order->id, $data, Order::class, function ($data) use ($actor, $order) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             abort_if($order->revision !== (int) $data['revision'], 409, 'El pedido cambió. Actualiza su estado antes de continuar.');
@@ -26,6 +27,7 @@ final class ChangeOrderState
             $order->save();
             OrderEvent::create(['order_id' => $order->id, 'actor_id' => $actor->id, 'from_status' => $from, 'to_status' => $order->status, 'reason' => $data['reason'] ?? null, 'created_at' => now()]);
             Audit::record('order.status.changed', 'Se actualizó el estado de un pedido.', $actor, ['order_id' => $order->id, 'from' => $from, 'to' => $order->status]);
+
             return $order;
         });
     }
