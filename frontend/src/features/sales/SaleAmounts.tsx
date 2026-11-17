@@ -1,7 +1,11 @@
 import { formatMoney } from '../../lib/money'
 import type { SaleQuote } from './types'
 
-export function SaleAmounts({ amounts }: { amounts: Omit<SaleQuote, 'order_revision'> }) {
+export function SaleAmounts({
+  amounts,
+}: {
+  amounts: Omit<SaleQuote, 'order_revision' | 'accounts_preview'>
+}) {
   const money = (value: string) => formatMoney(value, amounts.currency)
   return (
     <dl className="sale-amounts">

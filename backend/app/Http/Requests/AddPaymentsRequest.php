@@ -16,7 +16,8 @@ final class AddPaymentsRequest extends FormRequest
     {
         return ['idempotency_key' => ['required', 'uuid'], 'sale_revision' => ['required', 'integer', 'min:1'],
             'expected_balance' => ['required', ...SaleTotals::cashRules()], 'cash_session_id' => ['required', 'integer', 'min:1'], 'cash_revision' => ['required', 'integer', 'min:1'],
-            'payments' => ['required', 'array', 'list', 'min:1', 'max:20'], 'payments.*' => ['required', 'array:payment_method_id,method_revision,amount,received_amount,reference'],
+            'payments' => ['required', 'array', 'list', 'min:1', 'max:20'], 'payments.*' => ['required', 'array:payment_method_id,method_revision,amount,received_amount,reference,account_id'],
+            'payments.*.account_id' => ['sometimes', 'integer', 'min:1'], 'split_count' => ['prohibited'], 'account_number' => ['prohibited'],
             'payments.*.payment_method_id' => ['required', 'integer', 'min:1'], 'payments.*.method_revision' => ['required', 'integer', 'min:1'],
             'payments.*.amount' => ['required', ...SaleTotals::cashRules()], 'payments.*.received_amount' => ['required', ...SaleTotals::cashRules()],
             'payments.*.reference' => ['nullable', 'string', 'max:120'], 'tenant_id' => ['prohibited'], 'provenance' => ['prohibited'], 'total' => ['prohibited'],

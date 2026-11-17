@@ -50,6 +50,11 @@ final class Sale extends Model
         return $this->hasMany(SaleRefund::class)->orderBy('id');
     }
 
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(SaleAccount::class)->orderBy('number');
+    }
+
     public function refund(): HasOne
     {
         return $this->hasOne(SaleRefund::class)->orderBy('id');

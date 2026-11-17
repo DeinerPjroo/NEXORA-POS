@@ -9,8 +9,10 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-B | COMPLETED | Abonos/mixtos, saldo e historial, devolución de importes realmente cobrados. Migración 000007 aplicada; 100/808 SQLite/MariaDB, 11 Playwright, build/formato y capturas correctos | 2.1-A |
 | 2.1-C | COMPLETED | Porcentaje y propinas voluntarias con configuración/snapshot/consentimiento; migración 000008 aplicada, 108/891 SQLite/MariaDB, 12 Playwright y build/formato correctos | 2.1-B |
 | 2.1-D1 | COMPLETED | Devoluciones parciales conectadas, límites acumulados y cierre de remanentes. Migración 000009 aplicada; 122/1097 SQLite/MariaDB, 13 Playwright, build/formato y capturas correctos | 2.1-B/C |
-| 2.1-D2 | IN_PROGRESS | División de una cuenta en partes iguales antes del primer pago, asignación de pagos/saldos por parte y límites contra sobrepago; sin duplicar ventas | 2.1-D1 |
+| 2.1-D2 | COMPLETED | División en partes iguales, FK/asignaciones/saldos y límites por parte/globales. Migración 000010 aplicada; 136/1260 SQLite/MariaDB, 14 Playwright y build/formato/capturas correctos | 2.1-D1 |
 | 2.1-E | PENDING | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores | Catálogo y cálculo versionado |
+| 2.1-E1 | IN_PROGRESS | Impuesto incluido global explícito: extraer base/redondeo, total sin adición doble, propina según tratamiento confirmado y versión de cálculo; conservar modos anteriores | 2.1-D2 |
+| 2.1-E2 | PENDING | Perfiles de varios impuestos por producto, asignación/configuración, snapshots en pedidos y cálculo/recibo por líneas sin cambiar historia; desglosar si es necesario | 2.1-E1 y catálogo |
 | 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
@@ -43,3 +45,9 @@ Ninguna fila agregada representa una fase completada. Antes de iniciar cada bloq
 - Devoluciones enlazadas al payment conservan su parte y la regla de 0.9: no crear deuda nueva. Cierre completo cancela saldos no cobrados y compensa solo remanentes.
 - UI con selección de parte, importes/saldos e historial en recibo, reintento exacto y revisión. Sin división por productos ni múltiples documentos fiscales en este incremento.
 - Verificar centavos, límites acumulados, pertenencia/FK, atomicidad, idempotencia, pagos mixtos, devoluciones y compatibilidad sin división en SQLite/MariaDB y Chromium antes de publicar.
+
+## Criterios previstos 2.1-E1
+
+Modo global inclusive explícito, sin asignar tasa legal: el subtotal/descuento conserva el precio final del catálogo y el impuesto se extrae, sin añadirlo otra vez. Sobre el importe participante G, base = round_half_up(G × 100 / (100 + tasa), 2); impuesto = G − base. Total = subtotal redondeado − descuento + propina. Si la propina participa, su importe aceptado ya contiene ese impuesto; si no, se extrae solo del importe de productos. Cadenas/BCMath con precisión suficiente, versión 2 para este cálculo y versión 1 para historial/modos anteriores.
+
+Probar mitades/centavos y extremos, descuento fijo/porcentual, tratamiento de propina, revisión/configuración, snapshots anteriores, abonos/división/devoluciones y efectivo real. Impuestos múltiples por producto siguen siendo E2; no anunciar esa capacidad con E1.

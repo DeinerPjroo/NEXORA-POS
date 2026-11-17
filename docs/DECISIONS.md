@@ -1,5 +1,13 @@
 # Decisiones técnicas y operativas
 
+## DEC-007 · Partes iguales sobre una venta (0.10)
+
+La primera división es por importes iguales antes del primer pago, de 2–20 partes con mínimo un centavo. El servidor reparte centavos sobrantes a las primeras y mantiene exactamente el total confirmado. Son asignaciones internas del total, sin repartir bases tributarias, productos o propinas ni emitir facturas separadas.
+
+sale_accounts conserva número/etiqueta/importe append-only; payments.account_id nullable mantiene compatibilidad sin inventar cuentas en ventas antiguas. FK compuesta y servicios exigen que pertenezca a la misma venta/tenant. Se limita el acumulado por parte y venta bajo el bloqueo/revisión existentes, incluida la suma de varias líneas del mismo lote.
+
+Las devoluciones siguen al pago original y no reabren deuda de la parte. El cierre completo cancela saldos de todas las cuentas, sin devolver lo nunca cobrado. Reasignar/dividir después del primer pago, división por productos, unión de pedidos y cierre individual de partes quedan para incrementos del POS/mesas, conservando esta historia.
+
 ## DEC-001 · Continuación sobre 0.5
 
 Local HEAD y origin/main coinciden con a487f23. Se preservan arquitectura, migraciones publicadas, APIs de efectivo y pruebas. Los incrementos 2.1–6 se desglosan y completan secuencialmente; este catálogo no implica finalización de fases.

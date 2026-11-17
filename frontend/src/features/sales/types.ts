@@ -23,6 +23,7 @@ export type SalesSettings = {
   tip_tax_mode: 'included' | 'excluded' | null
 }
 export type SaleQuote = {
+  accounts_preview: AccountPart[]
   currency: string
   catalog_subtotal: string
   subtotal: string
@@ -41,7 +42,18 @@ export type SaleQuote = {
   tip_amount: string
   tip_tax_mode: 'included' | 'excluded' | 'disabled'
 }
-export type Sale = Omit<SaleQuote, 'order_revision'> & {
+export type AccountPart = { number: number; label: string; amount: string }
+export type SaleAccount = AccountPart & {
+  id: number
+  paid_amount: string
+  refunded_amount: string
+  net_paid_amount: string
+  balance_due: string
+  cancelled_balance: string
+  effective_total: string
+}
+export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
+  accounts: SaleAccount[]
   id: number
   order_id: number
   branch_id: number
@@ -66,6 +78,7 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
   reference?: string | null
   payment?: {
     id: number
+    account_id: number | null
     cash_session_id: number
     amount: string
     refunded_amount: string

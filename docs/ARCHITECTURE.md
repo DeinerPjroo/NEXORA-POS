@@ -1,5 +1,9 @@
 # Arquitectura técnica
 
+## Asignaciones de cuentas (0.10)
+
+SplitAccounts calcula partes iguales en centavos antes del primer pago; sale_accounts es append-only y payments.account_id conserva la asignación con FK tenant/sale/account. No se crean divisiones en ventas previas. RecordPayments limita acumulados por cuenta y globales dentro del bloqueo común, y las compensaciones conservan esa asignación por su payment original. Saldos/netos se derivan con BCMath; una devolución no reabre deuda. La creación de partes comparte transacción, revisión/idempotencia y auditoría del primer cobro. Una venta/recibo, sin reparto de productos o documentos fiscales múltiples; SPLIT_ACCOUNTS.md define contrato y límites.
+
 ## Decisión inicial
 
 Monorepo con **monolito modular Laravel** y SPA React independiente. La separación por dominios evita incorporar microservicios y despliegues distribuidos antes de que exista una necesidad operativa. El mismo núcleo podrá atender POS, Kitchen, Go, Manager, Studio, Cloud, Menu y Delivery.

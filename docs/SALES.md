@@ -1,8 +1,10 @@
-# Venta y devolución con métodos manuales (0.5–0.9)
+# Venta y devolución con métodos manuales (0.5–0.10)
 
 ## Uso
 
 Desde 0.9 hay devoluciones parciales por pago, con límites acumulativos e historial. Devolver no crea nueva deuda; la devolución completa posterior compensa solo remanentes. Reglas y ejemplos en [REFUNDS.md](REFUNDS.md).
+
+Desde 0.10 puede dividirse el total en partes iguales antes del primer pago. Se conserva una venta y se asignan pagos/saldos a cada cuenta, con límites de servidor. Ver [SPLIT_ACCOUNTS.md](SPLIT_ACCOUNTS.md).
 
 Desde 0.7 se permiten abonos y varios pagos por venta. El total original permanece fijo; el recibo muestra pagos aplicados, saldo e historial. Véanse reglas actuales y devolución de cobros de ventas abonadas en [PAYMENTS.md](PAYMENTS.md). Las reglas de cálculo de este documento siguen vigentes.
 
@@ -55,6 +57,6 @@ No se cancela un pedido con venta asociada: una persona autorizada gestiona su d
 
 sales.view consulta ventas/recibos; sales.collect cobra; sales.configure confirma configuración; sales.discount descuenta; sales.refund devuelve. La interfaz de cobro también necesita orders.view para consultar el pedido. No exige cash.movements: un cobro es una acción distinta a un movimiento manual. Las nuevas capacidades se conceden automáticamente solo a propietarios existentes; otros roles se configuran explícitamente.
 
-No hay confirmación electrónica de tarjetas/transferencias, pasarelas, cuentas divididas, reparto/liquidación de propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. Abonos/mixtos, devoluciones parciales por pago y registro voluntario de propina sí existen. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
+No hay confirmación electrónica de tarjetas/transferencias, pasarelas, división por productos/unión de cuentas, reparto/liquidación de propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. División en partes iguales, abonos/mixtos, devoluciones parciales por pago y registro voluntario de propina sí existen. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
 
 Continúan pendientes MySQL 8 específico, CI, carga/concurrencia entre procesos, operación fiscal real, backups/restauración y endurecimiento de producción. MariaDB es la referencia monetaria probada; SQLite solo cubre funcionalidad por sus límites de afinidad NUMERIC.

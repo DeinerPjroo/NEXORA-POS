@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.9.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, descuentos porcentuales, propinas voluntarias y devoluciones parciales por pago. Todavía no se declara lista para producción.
+Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.10.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, descuentos porcentuales, propinas voluntarias, devoluciones parciales por pago y división en partes iguales. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -53,20 +53,22 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.9.
 
 ## Verificaciones realizadas
 
+División 0.10: 136 pruebas/1260 aserciones correctas en SQLite y MariaDB (nexora_test_62107b358ab9bfdb conservada). Suite completa 14 Playwright aprobada en 10.0 minutos, incluido recorrido división→abonos mixtos→devolución parcial→saldar partes→devolución total→cierre. Migración 000010 aplicada, doctor/DDL, Pint/Composer, build/formato y captura móvil correctos.
+
 Continuación autónoma: código local y origin/main contrastados en a487f23, sin cambios locales previos ni avances posteriores. La suite de referencia volvió a pasar en SQLite/MariaDB (82/591); la actual de 0.6 pasó 90/684. Las pruebas SQL conservan cada base aislada; ejecuciones anteriores a esta política utilizaban limpieza. Estado vigente en PROJECT_STATE.json y tareas en TASKS.md.
 
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 122 pruebas y 1097 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones parciales, permisos, precisión, aislamiento, idempotencia, conflictos, rollback y referencias |
-| `php scripts/test-mysql.php` | 122 pruebas y 1097 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_850420c7ee770e3f conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 136 pruebas y 1260 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones parciales, división/asignación de cuentas, permisos, precisión, aislamiento, idempotencia, conflictos, rollback y referencias |
+| `php scripts/test-mysql.php` | 136 pruebas y 1260 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_62107b358ab9bfdb conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 13 aprobadas en 9.2 minutos: 11 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip/porcentaje, snapshot, devoluciones parciales repetidas, pago posterior sin nueva deuda, devolución de remanentes, móvil, impresión y cierre |
+| `npm run test:e2e` | 14 aprobadas en 10.0 minutos: 12 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip/porcentaje, snapshot, devoluciones parciales, deuda conservada, división en tres cuentas/centavos/asignaciones, móvil, impresión y cierre |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -82,6 +84,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, cuentas divididas, liquidación/reparto de propinas, impuestos incluidos o múltiples por producto, devoluciones por producto, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, impuestos incluidos o múltiples por producto, devoluciones por producto, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 0.10.0 · 2026-11-17
+
+- División opcional en 2–20 partes iguales antes del primer pago, cotizada en servidor y con centavos sobrantes a las primeras partes. Ninguna parte cero.
+- Una venta y un recibo, cuentas append-only y pagos asignados con FK tenant/sale/account. Sin modificar ventas anteriores ni reasignar historia.
+- RecordPayments limita acumulados por parte y globales, incluidos lotes mixtos con varias líneas en una misma cuenta.
+- Recibo con importes/pagos/devoluciones/saldos por cuenta, selector de parte en cobro y abonos, y límites del borrador con BigInt.
+- Devoluciones conservan la cuenta mediante el pago original, sin reabrir deuda. El cierre completo compensa remanentes y cancela partes nunca cobradas.
+- Migración 000010 añade sale_accounts y account_id nullable en payments sin reinterpretar registros anteriores. Detalles en SPLIT_ACCOUNTS.md; no divide por productos ni emite varios documentos fiscales.
+
 ## 0.9.0 · 2026-11-17
 
 - Devoluciones parciales por pago original, de 1–20 líneas atómicas, límite acumulado, motivo y referencia no efectiva. Método histórico incluso archivado.

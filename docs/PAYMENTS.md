@@ -2,6 +2,8 @@
 
 Actualización 0.9: devoluciones parciales y remanentes por pago en [REFUNDS.md](REFUNDS.md). Se conserva el total y no se genera deuda nueva por devolver. Una venta partially_refunded con saldo positivo permite agregar pagos.
 
+Actualización 0.10: [SPLIT_ACCOUNTS.md](SPLIT_ACCOUNTS.md) añade partes iguales antes del primer pago. Cada línea se asigna a una cuenta de esa venta y queda limitada a su saldo además del saldo global. Sin división, las asignaciones permanecen null y las API anteriores funcionan igual.
+
 ## Alcance y uso
 
 Se amplía la venta existente, sin duplicar pedidos, recibos ni servicios. El primer cobro puede aplicar el total o un importe menor. Desde el recibo con estado **Abonada**, **Agregar pagos** permite preparar uno o varios métodos y confirmar un lote. La interfaz de seguimiento de abonos requiere sales.view y sales.collect; quien solo tiene permiso de cobro conserva el cobro completo anterior.

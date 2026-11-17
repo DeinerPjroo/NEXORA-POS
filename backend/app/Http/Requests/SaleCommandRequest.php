@@ -23,6 +23,7 @@ final class SaleCommandRequest extends FormRequest
             'sale_revision' => ['sometimes', 'integer', 'min:1'], 'refund_references' => ['sometimes', 'array', 'list'],
             'refund_references.*' => ['array:payment_id,reference'], 'refund_references.*.payment_id' => ['required', 'integer', 'min:1', 'distinct'], 'refund_references.*.reference' => ['required', 'string', 'max:120']] : [
                 'payment_amount' => ['sometimes', ...SaleTotals::cashRules()],
+                'split_count' => ['sometimes', 'integer', 'between:2,20'], 'account_number' => ['required_with:split_count', Rule::prohibitedIf(fn () => ! $this->has('split_count')), 'integer', 'between:1,20'],
                 'payment_method_id' => ['sometimes', 'integer', 'min:1'], 'method_revision' => ['required_with:payment_method_id', 'integer', 'min:1'],
                 'payment_reference' => ['nullable', 'string', 'max:120'],
                 'order_revision' => ['required', 'integer', 'min:1'], 'settings_revision' => ['required', 'integer', 'min:1'],

@@ -26,6 +26,12 @@ export function PaymentHistory({ sale }: { sale: Sale }) {
         payment.method_kind === 'cash' ? (
           <section className="receipt-refund" key={payment.id}>
             <h3>Pago en efectivo · {payment.method_name}</h3>
+            {payment.account_id && (
+              <p>
+                {sale.accounts.find((account) => account.id === payment.account_id)?.label} · Pago #
+                {payment.id}
+              </p>
+            )}
             <dl className="sale-amounts">
               <div>
                 <dt>Importe del pago</dt>
@@ -51,6 +57,12 @@ export function PaymentHistory({ sale }: { sale: Sale }) {
         ) : (
           <section className="receipt-refund" key={payment.id}>
             <h3>Pago manual no efectivo</h3>
+            {payment.account_id && (
+              <p>
+                {sale.accounts.find((account) => account.id === payment.account_id)?.label} · Pago #
+                {payment.id}
+              </p>
+            )}
             <p>
               {payment.method_name} · {payment.reference}
             </p>

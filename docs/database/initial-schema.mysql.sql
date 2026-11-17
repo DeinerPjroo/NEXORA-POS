@@ -367,3 +367,17 @@ alter table `sale_refunds` add index `refunds_payment_lookup`(`tenant_id`, `paym
 
 alter table `sale_refunds` drop index `sale_refunds_tenant_id_payment_id_unique`;
 
+create table `sale_accounts` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `sale_id` bigint unsigned not null, `number` tinyint unsigned not null, `label` varchar(40) not null, `amount` decimal(19, 4) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `sale_accounts` add constraint `sale_accounts_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `sale_accounts` add unique `accounts_sale_identity`(`tenant_id`, `sale_id`, `id`);
+
+alter table `sale_accounts` add unique `accounts_sale_number`(`tenant_id`, `sale_id`, `number`);
+
+alter table `sale_accounts` add constraint `accounts_sale_fk` foreign key (`tenant_id`, `sale_id`) references `sales` (`tenant_id`, `id`) on delete restrict;
+
+alter table `payments` add `account_id` bigint unsigned null;
+
+alter table `payments` add constraint `payments_account_fk` foreign key (`tenant_id`, `sale_id`, `account_id`) references `sale_accounts` (`tenant_id`, `sale_id`, `id`) on delete restrict;
+

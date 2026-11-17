@@ -12,6 +12,7 @@ import type { PaymentMethod, Sale } from './types'
 import { useSalesCash } from './useSalesCash'
 
 type DraftPayment = {
+  account_id?: number
   key: string
   method: PaymentMethod
   amount: string
@@ -28,6 +29,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
   const [amount, setAmount] = useState<string | null>(null)
   const [received, setReceived] = useState('')
   const [reference, setReference] = useState('')
+  const [accountId, setAccountId] = useState<number | null>(null)
   const methods = useDefaultPaymentMethod()
   const method = chosen ?? methods.data?.data[0]
   const cash = useSalesCash(snapshot.branch_id)
@@ -36,13 +38,26 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
     (cashId === '' ? cash.data?.data[0] : undefined)
   const total = lines.reduce((sum, line) => sum + moneyUnits(line.amount), 0n)
   const remaining = moneyUnits(snapshot.balance_due) - total
-  const normalized = (amount ?? unitsToMoney(remaining).slice(0, -2)).replace(',', '.')
+  const accounts = snapshot.accounts
+    .map((account) => ({
+      ...account,
+      remaining:
+        moneyUnits(account.balance_due) -
+        lines
+          .filter((line) => line.account_id === account.id)
+          .reduce((sum, line) => sum + moneyUnits(line.amount), 0n),
+    }))
+    .filter((account) => account.remaining > 0n)
+  const account = accounts.find((item) => item.id === accountId) ?? accounts[0]
+  const limit = account?.remaining ?? remaining
+  const normalized = (amount ?? unitsToMoney(limit).slice(0, -2)).replace(',', '.')
   const tendered = received.replace(',', '.')
   const isCash = method?.kind === 'cash'
   const amountValid =
-    validMoney(normalized) && moneyUnits(normalized) > 0n && moneyUnits(normalized) <= remaining
+    validMoney(normalized) && moneyUnits(normalized) > 0n && moneyUnits(normalized) <= limit
   const ready =
     !!method &&
+    (!snapshot.accounts.length || !!account) &&
     amountValid &&
     (isCash
       ? validMoney(tendered) && moneyUnits(tendered) >= moneyUnits(normalized)
@@ -71,6 +86,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
       ...lines,
       {
         key: crypto.randomUUID(),
+        ...(account ? { account_id: account.id } : {}),
         method,
         amount: normalized,
         received_amount: isCash ? tendered : normalized,
@@ -94,6 +110,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
       cash_session_id: selected.id,
       cash_revision: selected.revision,
       payments: lines.map((line) => ({
+        ...(line.account_id ? { account_id: line.account_id } : {}),
         payment_method_id: line.method.id,
         method_revision: line.method.revision,
         amount: line.amount,
@@ -138,6 +155,11 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
               <div className="payment-draft-line" key={line.key}>
                 <div>
                   <strong>{line.method.name}</strong>
+                  {line.account_id && (
+                    <small>
+                      {snapshot.accounts.find((item) => item.id === line.account_id)?.label}
+                    </small>
+                  )}
                   <small>
                     {line.method.kind === 'cash'
                       ? `Recibido ${formatMoney(line.received_amount, snapshot.currency)} · Cambio ${formatMoney(unitsToMoney(moneyUnits(line.received_amount) - moneyUnits(line.amount)), snapshot.currency)}`
@@ -158,10 +180,30 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
           </div>
           {remaining > 0n && (
             <>
+              {!!snapshot.accounts.length && (
+                <Field label="Cuenta de este pago">
+                  <select
+                    value={account?.id ?? ''}
+                    onChange={(event) => {
+                      setAccountId(Number(event.target.value))
+                      setAmount(null)
+                      setReceived('')
+                      setReference('')
+                    }}
+                  >
+                    {accounts.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label} · Saldo{' '}
+                        {formatMoney(unitsToMoney(item.remaining), snapshot.currency)}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <PaymentMethodField method={method} onPick={setChosen} />
               <Field label="Importe a agregar">
                 <input
-                  value={amount ?? unitsToMoney(remaining).slice(0, -2)}
+                  value={amount ?? unitsToMoney(limit).slice(0, -2)}
                   onChange={(event) => setAmount(event.target.value)}
                   inputMode="decimal"
                 />

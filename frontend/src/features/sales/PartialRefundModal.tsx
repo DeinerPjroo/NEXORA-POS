@@ -160,6 +160,9 @@ export function PartialRefundModal({
                     <option key={p.id} value={p.id}>
                       #{p.id} · {p.method_name} · Disponible{' '}
                       {formatMoney(p.refundable_amount, sale.currency)}
+                      {p.account_id
+                        ? ` · ${sale.accounts.find((item) => item.id === p.account_id)?.label}`
+                        : ''}
                     </option>
                   ))}
                 </select>

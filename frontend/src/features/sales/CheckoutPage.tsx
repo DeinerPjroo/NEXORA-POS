@@ -91,15 +91,19 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
   const [cashId, setCashId] = useState('')
   const [received, setReceived] = useState('')
   const [paymentAmount, setPaymentAmount] = useState<string | null>(null)
+  const [splitCount, setSplitCount] = useState('')
+  const [accountNumber, setAccountNumber] = useState('1')
   const [result, setResult] = useState<Sale | null>(null)
   const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null)
   const methods = useDefaultPaymentMethod()
   const method = chosenMethod ?? methods.data?.data[0]
   const isCash = method?.kind === 'cash'
+  const quoteParams = new URLSearchParams(adjustments.params)
+  if (splitCount) quoteParams.set('split_count', splitCount)
   const quote = useQuery({
-    queryKey: ['sale-quote', order.id, adjustments.params],
+    queryKey: ['sale-quote', order.id, quoteParams.toString()],
     queryFn: ({ signal }) =>
-      api<{ data: SaleQuote }>(`orders/${order.id}/quote?${adjustments.params}`, { signal }),
+      api<{ data: SaleQuote }>(`orders/${order.id}/quote?${quoteParams}`, { signal }),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
@@ -125,16 +129,19 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
     if (can('sales.view')) navigate(`/ventas/${sale.id}`)
   })
   const normalizedReceived = received.replace(',', '.')
-  const normalizedPayment = (
-    paymentAmount ??
-    quote.data?.data.total.replace(/00$/, '') ??
-    '0'
-  ).replace(',', '.')
+  const account = quote.data?.data.accounts_preview.find(
+    (part) => String(part.number) === accountNumber,
+  )
+  const paymentLimit = account?.amount ?? quote.data?.data.total
+  const normalizedPayment = (paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? '0').replace(
+    ',',
+    '.',
+  )
   const paymentValid =
     /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedPayment) &&
     moneyUnits(normalizedPayment) > 0n &&
     !!quote.data &&
-    moneyUnits(normalizedPayment) <= moneyUnits(quote.data.data.total)
+    moneyUnits(normalizedPayment) <= moneyUnits(paymentLimit ?? '0')
   let change: string | null = null
   if (paymentValid && /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedReceived)) {
     const difference = moneyUnits(normalizedReceived) - moneyUnits(normalizedPayment)
@@ -158,6 +165,9 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
       method_revision: method.revision,
       payment_reference: new FormData(event.currentTarget).get('payment_reference') || null,
       payment_amount: normalizedPayment,
+      ...(splitCount
+        ? { split_count: Number(splitCount), account_number: Number(accountNumber) }
+        : {}),
       received_amount: isCash ? normalizedReceived : normalizedPayment,
       expected_total: quote.data.data.total.replace(/00$/, ''),
     })
@@ -177,12 +187,55 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
         <fieldset disabled={operation.locked} className="form-stack">
           <PaymentMethodField method={method} onPick={setChosenMethod} />
           {can('sales.view') && (
+            <>
+              <Field
+                label="Dividir cuenta"
+                hint="Elige las partes antes del primer pago. Se conserva una venta y un recibo."
+              >
+                <select
+                  value={splitCount}
+                  onChange={(event) => {
+                    setSplitCount(event.target.value)
+                    setAccountNumber('1')
+                    setPaymentAmount(null)
+                    setReceived('')
+                  }}
+                >
+                  <option value="">Sin división</option>
+                  {Array.from({ length: 19 }, (_, index) => index + 2).map((count) => (
+                    <option key={count} value={count}>
+                      {count} partes iguales
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              {!!quote.data?.data.accounts_preview.length && (
+                <Field label="Cuenta del primer pago">
+                  <select
+                    value={accountNumber}
+                    onChange={(event) => {
+                      setAccountNumber(event.target.value)
+                      setPaymentAmount(null)
+                      setReceived('')
+                    }}
+                  >
+                    {quote.data.data.accounts_preview.map((part) => (
+                      <option key={part.number} value={part.number}>
+                        {part.label} · {formatMoney(part.amount, order.currency)}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+            </>
+          )}
+          {can('sales.view') && (
             <Field
               label="Importe de este pago"
               hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
             >
               <input
-                value={paymentAmount ?? quote.data?.data.total.replace(/00$/, '') ?? ''}
+                value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
                 onChange={(event) => setPaymentAmount(event.target.value)}
                 inputMode="decimal"
                 required
@@ -303,6 +356,16 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
           <h2>Resumen del cobro</h2>
           <span className="pill neutral">Pedido #{order.id}</span>
         </div>
+        {!!quote.data?.data.accounts_preview.length && (
+          <div className="notice">
+            <span>
+              {quote.data.data.accounts_preview
+                .map((part) => `${part.label}: ${formatMoney(part.amount, order.currency)}`)
+                .join(' · ')}
+              . Los centavos sobrantes se asignan a las primeras cuentas.
+            </span>
+          </div>
+        )}
         {order.items?.map((item) => (
           <div className="checkout-order-line" key={item.id}>
             <span>

@@ -33,6 +33,6 @@ Migración 000009: retira la unicidad tenant/payment_id en sale_refunds y añade
 
 ## Límites
 
-La devolución es de importes aplicados por pago: no selecciona productos ni distribuye impuestos/propinas, no repone existencias y no emite nota fiscal. División en partes iguales es el incremento siguiente. No hay confirmación de proveedor, reversión bancaria automática ni cambios en la preparación del pedido.
+La devolución es de importes aplicados por pago: no selecciona productos ni distribuye impuestos/propinas, no repone existencias y no emite nota fiscal. Desde 0.10, la división en partes iguales conserva la cuenta mediante el payment original; devolver no reabre su deuda. Ver SPLIT_ACCOUNTS.md. No hay confirmación de proveedor, reversión bancaria automática ni cambios en la preparación del pedido.
 
 Las pruebas comprueban devoluciones repetidas, límites acumulados, saldos, cierre posterior del remanente, deuda conservada/cancelada explícitamente, métodos archivados, aislamiento, permisos, líneas estrictas, revisiones, idempotencia, fondos, sesión cerrada y rollback de auditoría. El recorrido Chromium verifica respuesta perdida, UI de límites/referencias, abono posterior, recibo móvil y cierre de caja. Los resultados exactos se registran en PROGRESS/PROJECT_STATE al completar la verificación.

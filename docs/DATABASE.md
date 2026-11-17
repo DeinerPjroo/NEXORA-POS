@@ -31,6 +31,8 @@ erDiagram
     TENANTS ||--|| SALES_SETTINGS : configura
     ORDERS ||--o| SALES : convierte
     SALES ||--|{ PAYMENTS : cobra
+    SALES ||--o{ SALE_ACCOUNTS : divide
+    SALE_ACCOUNTS o|--o{ PAYMENTS : asigna
     SALES ||--o{ SALE_REFUNDS : compensa
     PAYMENTS ||--o{ SALE_REFUNDS : devuelve
     CASH_SESSIONS ||--o{ PAYMENTS : recibe
@@ -60,6 +62,7 @@ erDiagram
 | payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
 | payments | Varios pagos manuales por venta desde 0.7; FK a payment_methods y único (tenant,sale,id) para referencia histórica. Snapshot de método/procedencia/referencia. Sesión obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
 | sale_refunds | Compensaciones parciales/completas por pago; FK (tenant,sale,payment_id), varias filas hasta el importe original desde 0.9. Índices tenant/sale y tenant/payment. Motivo/referencia/actor/sesión; cash_movement_id nullable. Append-only. |
+| sale_accounts | Partes iguales de una venta desde 0.10: número/etiqueta/importe append-only, únicos tenant/sale/id y tenant/sale/number, FK tenant/sale. payments.account_id nullable con FK tenant/sale/account; obligatorio en servicio solo si hay división. Saldos derivados con BCMath, sin columnas editables de saldo. |
 | workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
 | theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
 | audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |
@@ -91,7 +94,7 @@ Los SKU y barcode tienen índices únicos por tabla/empresa. La unicidad adicion
 - Salones: dining_rooms N:1 sucursal; dining_tables N:1 salón, nombre, forma, capacidad, posición/tamaño/rotación; floor_plan_versions JSON validado para decoración y geometría; table_groups/table_group_members para uniones temporales.
 - Pedidos: ampliar orders con cliente enlazado; order_tables N:M mesas; snapshots de impuestos en detalle, order_item_modifiers y order_transfers para movimientos auditados. El historial básico ya existe como order_events.
 - Caja: ampliar conciliación y expenses con autorización. Caja/sesiones, movimientos manuales, métodos configurables y vínculos a pagos ya existen. Los no efectivos no crean movimiento de efectivo.
-- Venta: cuentas divididas/asignaciones por producto aún por definir; detalles conservados en order_items inmutables. Abonos/mixtos admiten varios payments desde 0.7; devoluciones parciales por payment desde 0.9 conservan FK y límites acumulados, sin unicidad por pago. invoice_series, invoices e invoice_lines separados del recibo interno.
+- Venta: división en partes iguales/pagos por cuenta desde 0.10; división por productos y unión/traslado de pedidos pendientes. Detalles conservados en order_items inmutables. Abonos/mixtos admiten varios payments desde 0.7; devoluciones parciales por payment desde 0.9 conservan FK y límites acumulados, sin unicidad por pago. invoice_series, invoices e invoice_lines separados del recibo interno.
 - Clientes y reservas: customers; customer_addresses; reservations y reservation_tables; dirección de venta como snapshot.
 
 Dinero `DECIMAL(19,4)` y BCMath; cantidades de pedido actuales enteras, las fracciones de inventario usarán `DECIMAL(19,6)`; no floats financieros. Venta en efectivo cobra dos decimales half-up, conservando ajuste frente al catálogo; detalles en SALES.md. Índices compuestos `(tenant_id,branch_id,created_at)`, estados y claves de idempotencia. Ninguna devolución elimina una venta o pago histórico. Estado de caja bloqueado al confirmar movimientos, sumas controladas en transacción. SQLite NUMERIC puede redondear importes extremos; las garantías monetarias se verifican sobre MariaDB y la validación específica de MySQL 8 permanece pendiente.
