@@ -30,8 +30,9 @@ erDiagram
     TENANTS ||--o{ IDEMPOTENCY_RECORDS : deduplica
     TENANTS ||--|| SALES_SETTINGS : configura
     ORDERS ||--o| SALES : convierte
-    SALES ||--|| PAYMENTS : cobra
-    SALES ||--o| SALE_REFUNDS : compensa
+    SALES ||--|{ PAYMENTS : cobra
+    SALES ||--o{ SALE_REFUNDS : compensa
+    PAYMENTS ||--o| SALE_REFUNDS : devuelve
     CASH_SESSIONS ||--o{ PAYMENTS : recibe
     CASH_SESSIONS ||--o{ SALE_REFUNDS : entrega
 ```
@@ -55,10 +56,10 @@ erDiagram
 | order_events | Pedido/actor, estado anterior/nuevo, motivo y fecha; append-only. |
 | idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
 | sales_settings | Una fila por empresa, configured inicialmente false, modo/tasa/nombre de impuesto adicional, revisión y próxima secuencia interna. Actualización con bloqueo y confirmación explícita. |
-| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales históricos, importes DECIMAL(19,4), ajuste firmado, impuesto/descuento y estado paid/refunded. Solo el estado se puede actualizar por modelo. |
+| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales históricos e importes DECIMAL(19,4) inmutables. Estado paid/partially_paid/refunded y revision son las únicas mutaciones de negocio por modelo. |
 | payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
-| payments | Un pago manual por venta en 0.6; FK compuesta a payment_methods, snapshot de nombre/tipo/revisión/procedencia/referencia. Sesión operativa obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
-| sale_refunds | Una devolución total por venta, motivo/referencia, actor y sesión con FKs compuestas. cash_movement_id nullable para no efectivo. Usa el método histórico del pago. Append-only. |
+| payments | Varios pagos manuales por venta desde 0.7; FK a payment_methods y único (tenant,sale,id) para referencia histórica. Snapshot de método/procedencia/referencia. Sesión obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
+| sale_refunds | Compensación completa de cada pago al cerrar la venta; FK (tenant,sale,payment_id) y único tenant/payment_id. Motivo/referencia/actor/sesión; cash_movement_id nullable. Append-only. La selección de devoluciones parciales se implementará después. |
 | workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
 | theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
 | audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |
@@ -90,7 +91,7 @@ Los SKU y barcode tienen índices únicos por tabla/empresa. La unicidad adicion
 - Salones: dining_rooms N:1 sucursal; dining_tables N:1 salón, nombre, forma, capacidad, posición/tamaño/rotación; floor_plan_versions JSON validado para decoración y geometría; table_groups/table_group_members para uniones temporales.
 - Pedidos: ampliar orders con cliente enlazado; order_tables N:M mesas; snapshots de impuestos en detalle, order_item_modifiers y order_transfers para movimientos auditados. El historial básico ya existe como order_events.
 - Caja: ampliar conciliación y expenses con autorización. Caja/sesiones, movimientos manuales, métodos configurables y vínculos a pagos ya existen. Los no efectivos no crean movimiento de efectivo.
-- Venta: ampliar la relación actual única pedido/venta a la política de cuentas divididas que se defina; hoy los detalles se conservan en order_items inmutables. Métodos y pagos parciales/mixtos necesitarán migrar la unicidad de payments, payment_allocations y devoluciones parciales con refund_items. invoice_series, invoices e invoice_lines separados del recibo interno.
+- Venta: cuentas divididas/asignaciones por producto aún por definir; detalles conservados en order_items inmutables. Abonos/mixtos ya admiten varios payments desde 0.7. Devoluciones parciales requerirán retirar la unicidad de devolución por pago con límites y asignaciones explícitos. invoice_series, invoices e invoice_lines separados del recibo interno.
 - Clientes y reservas: customers; customer_addresses; reservations y reservation_tables; dirección de venta como snapshot.
 
 Dinero `DECIMAL(19,4)` y BCMath; cantidades de pedido actuales enteras, las fracciones de inventario usarán `DECIMAL(19,6)`; no floats financieros. Venta en efectivo cobra dos decimales half-up, conservando ajuste frente al catálogo; detalles en SALES.md. Índices compuestos `(tenant_id,branch_id,created_at)`, estados y claves de idempotencia. Ninguna devolución elimina una venta o pago histórico. Estado de caja bloqueado al confirmar movimientos, sumas controladas en transacción. SQLite NUMERIC puede redondear importes extremos; las garantías monetarias se verifican sobre MariaDB y la validación específica de MySQL 8 permanece pendiente.

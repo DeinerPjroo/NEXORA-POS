@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domains\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
@@ -17,7 +18,7 @@ final class Sale extends Model
     protected static function booted(): void
     {
         self::updating(function ($sale) {
-            if (array_diff(array_keys($sale->getDirty()), ['status', 'updated_at'])) {
+            if (array_diff(array_keys($sale->getDirty()), ['status', 'revision', 'updated_at'])) {
                 throw new LogicException('Los importes históricos de una venta no se modifican.');
             }
         });
@@ -26,7 +27,7 @@ final class Sale extends Model
 
     protected function casts(): array
     {
-        return array_fill_keys(['catalog_subtotal', 'subtotal', 'rounding_adjustment', 'discount_amount', 'taxable_base', 'tax_rate', 'tax_amount', 'total'], 'decimal:4');
+        return ['revision' => 'integer', ...array_fill_keys(['catalog_subtotal', 'subtotal', 'rounding_adjustment', 'discount_amount', 'taxable_base', 'tax_rate', 'tax_amount', 'total'], 'decimal:4')];
     }
 
     public function order(): BelongsTo
@@ -36,11 +37,21 @@ final class Sale extends Model
 
     public function payment(): HasOne
     {
-        return $this->hasOne(Payment::class);
+        return $this->hasOne(Payment::class)->orderBy('id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->orderBy('id');
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(SaleRefund::class)->orderBy('id');
     }
 
     public function refund(): HasOne
     {
-        return $this->hasOne(SaleRefund::class);
+        return $this->hasOne(SaleRefund::class)->orderBy('id');
     }
 }

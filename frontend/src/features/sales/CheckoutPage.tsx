@@ -89,6 +89,7 @@ function CheckoutForm({ order }: { order: Order }) {
   const [applied, setApplied] = useState('0')
   const [cashId, setCashId] = useState('')
   const [received, setReceived] = useState('')
+  const [paymentAmount, setPaymentAmount] = useState<string | null>(null)
   const [result, setResult] = useState<Sale | null>(null)
   const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null)
   const methods = useDefaultPaymentMethod()
@@ -134,9 +135,19 @@ function CheckoutForm({ order }: { order: Order }) {
   const discountValid = /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedDiscount)
   const discountChanged = normalizedDiscount !== applied
   const normalizedReceived = received.replace(',', '.')
+  const normalizedPayment = (
+    paymentAmount ??
+    quote.data?.data.total.replace(/00$/, '') ??
+    '0'
+  ).replace(',', '.')
+  const paymentValid =
+    /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedPayment) &&
+    moneyUnits(normalizedPayment) > 0n &&
+    !!quote.data &&
+    moneyUnits(normalizedPayment) <= moneyUnits(quote.data.data.total)
   let change: string | null = null
-  if (quote.data && /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedReceived)) {
-    const difference = moneyUnits(normalizedReceived) - moneyUnits(quote.data.data.total)
+  if (paymentValid && /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(normalizedReceived)) {
+    const difference = moneyUnits(normalizedReceived) - moneyUnits(normalizedPayment)
     if (difference >= 0n) change = unitsToMoney(difference)
   }
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -156,7 +167,8 @@ function CheckoutForm({ order }: { order: Order }) {
       payment_method_id: method.id,
       method_revision: method.revision,
       payment_reference: new FormData(event.currentTarget).get('payment_reference') || null,
-      received_amount: isCash ? normalizedReceived : quote.data.data.total.replace(/00$/, ''),
+      payment_amount: normalizedPayment,
+      received_amount: isCash ? normalizedReceived : normalizedPayment,
       expected_total: quote.data.data.total.replace(/00$/, ''),
     })
   }
@@ -174,6 +186,20 @@ function CheckoutForm({ order }: { order: Order }) {
         <OperationNotice uncertain={operation.uncertain} />
         <fieldset disabled={operation.locked} className="form-stack">
           <PaymentMethodField method={method} onPick={setChosenMethod} />
+          {can('sales.view') && (
+            <Field
+              label="Importe de este pago"
+              hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
+            >
+              <input
+                value={paymentAmount ?? quote.data?.data.total.replace(/00$/, '') ?? ''}
+                onChange={(event) => setPaymentAmount(event.target.value)}
+                inputMode="decimal"
+                required
+                pattern="[0-9]+([.,][0-9]{1,2})?"
+              />
+            </Field>
+          )}
           {!isCash && method && (
             <>
               <p className="notice">
@@ -293,6 +319,7 @@ function CheckoutForm({ order }: { order: Order }) {
               !selected ||
               discountChanged ||
               !method ||
+              !paymentValid ||
               methods.isError ||
               (isCash && change === null))
           }

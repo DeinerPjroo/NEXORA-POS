@@ -1,6 +1,8 @@
-# Venta y devolución con métodos manuales (0.5–0.6)
+# Venta y devolución con métodos manuales (0.5–0.7)
 
 ## Uso
+
+Desde 0.7 se permiten abonos y varios pagos por venta. El total original permanece fijo; el recibo muestra pagos aplicados, saldo e historial. Véanse reglas actuales y devolución de cobros de ventas abonadas en [PAYMENTS.md](PAYMENTS.md). Las reglas de cálculo de este documento siguen vigentes.
 
 1. En **Ventas → Configurar ventas**, confirma el cálculo. La instalación comienza sin configurar y bloquea los cobros hasta esta confirmación.
 2. Elige **sin impuesto adicional automático** o un **porcentaje adicional sobre la base** con nombre/tasa definidos por la empresa. No se asigna un régimen ni una tasa legal automáticamente. Los precios del catálogo se interpretan como base; los impuestos incluidos y múltiples por producto no están soportados.
@@ -37,11 +39,11 @@ Cotizar no registra un cobro. Al confirmar se verifican las revisiones de pedido
 
 Un UUID idempotente identifica cada cobro/devolución. Si se pierde la respuesta, el formulario congela sus datos y reintenta el payload exacto. Una repetición compatible devuelve la venta actual sin repetir ingresos o egresos. La unicidad tenant/pedido bloquea un segundo cobro incluso con un UUID diferente. Las claves permanecen en memoria mientras el formulario está abierto; no hay cola offline ni recuperación persistente al recargar.
 
-La venta conserva nombre comercial, sucursal/dirección, importes, tasa/modo y revisión de configuración. Sus líneas proceden de order_items inmutables. Cambiar empresa, catálogo o reglas no modifica un recibo anterior. Los pagos, devoluciones y movimientos son append-only por modelo; no hay rutas de borrado/edición. El estado de venta solo cambia a devuelta mediante la compensación.
+La venta conserva nombre comercial, sucursal/dirección, importes, tasa/modo y revisión de configuración. Sus líneas proceden de order_items inmutables. Cambiar empresa, catálogo o reglas no modifica un recibo anterior. Pagos, devoluciones y movimientos son append-only. El estado y revisión de venta evolucionan al agregar pagos o cerrar mediante compensación; los importes originales no cambian.
 
 ## Devolución total
 
-Desde un recibo cobrado, **Devolución total** requiere sales.refund, motivo y sesión abierta de la misma sucursal/moneda. Puede ser una sesión posterior. Usa el método histórico: en efectivo exige fondos y registra egreso; no efectivo exige refund_reference y no modifica el efectivo. Una única devolución del total original cambia la venta a devuelta, conservando pago y movimiento originales cuando existan. El reintento no repite el registro ni la salida de dinero.
+Desde un recibo cobrado o abonado, **Devolución total** requiere sales.refund, motivo y sesión abierta de la misma sucursal/moneda. Puede ser una sesión posterior. Compensa cada pago por su método histórico y solo devuelve los importes aplicados; el saldo nunca cobrado se cancela por separado. Efectivo exige fondos y registra egreso, no efectivo exige referencia y no modifica caja. Conserva pagos/movimientos originales y el reintento no duplica salidas. Detalles en PAYMENTS.md.
 
 No se cancela un pedido con venta asociada: una persona autorizada gestiona su devolución desde el recibo. Devolver no cambia el estado de preparación, no repone inventario y no permite volver a cobrar ese mismo pedido. Este incremento no incluye devoluciones parciales, cambio de productos, notas fiscales ni anulaciones de documentos tributarios.
 
@@ -49,6 +51,6 @@ No se cancela un pedido con venta asociada: una persona autorizada gestiona su d
 
 sales.view consulta ventas/recibos; sales.collect cobra; sales.configure confirma configuración; sales.discount descuenta; sales.refund devuelve. La interfaz de cobro también necesita orders.view para consultar el pedido. No exige cash.movements: un cobro es una acción distinta a un movimiento manual. Las nuevas capacidades se conceden automáticamente solo a propietarios existentes; otros roles se configuran explícitamente.
 
-No hay confirmación electrónica de tarjetas/transferencias, pasarelas, pagos parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, inventario, DIAN, impresión ESC/POS ni apertura de cajón. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
+No hay confirmación electrónica de tarjetas/transferencias, pasarelas, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, devoluciones parciales, inventario, DIAN, impresión ESC/POS ni apertura de cajón. Abonos/mixtos manuales sí existen desde 0.7. Los nombres configurables pueden describir medios externos, pero los registros siguen siendo manuales. Impresión del navegador, sin garantía térmica. El sistema no observa físicamente el dinero ni confirma movimientos de bancos.
 
 Continúan pendientes MySQL 8 específico, CI, carga/concurrencia entre procesos, operación fiscal real, backups/restauración y endurecimiento de producción. MariaDB es la referencia monetaria probada; SQLite solo cubre funcionalidad por sus límites de afinidad NUMERIC.

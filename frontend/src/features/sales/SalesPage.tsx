@@ -10,6 +10,7 @@ import { CatalogError, Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import { OperationalBranchPicker, useOperationContext } from '../operations/OperationalBranchPicker'
 import type { Sale } from './types'
+import { saleStates } from './types'
 
 export function SalesPage() {
   const context = useOperationContext()
@@ -74,6 +75,7 @@ export function SalesPage() {
         >
           <option value="">Todos los estados</option>
           <option value="paid">Cobradas</option>
+          <option value="partially_paid">Con saldo pendiente</option>
           <option value="refunded">Devueltas</option>
         </select>
         {can('orders.view') && (
@@ -125,7 +127,7 @@ export function SalesPage() {
                     </td>
                     <td>
                       <span className={`pill ${sale.status === 'paid' ? 'green' : 'neutral'}`}>
-                        {sale.status === 'paid' ? 'Cobrada' : 'Devuelta'}
+                        {saleStates[sale.status]}
                       </span>
                     </td>
                     <td>{formatMoney(sale.total, sale.currency)}</td>

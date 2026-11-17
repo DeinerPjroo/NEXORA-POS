@@ -1,6 +1,8 @@
 import { formatMoney } from '../../lib/money'
 import { useSession } from '../auth/SessionProvider'
 import { SaleAmounts } from './SaleAmounts'
+import { PaymentHistory } from './PaymentHistory'
+import { saleStates } from './types'
 import type { Sale } from './types'
 
 export function SaleReceipt({ sale }: { sale: Sale }) {
@@ -21,14 +23,15 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
         <strong>{sale.receipt_code}</strong>
         <p>{date(sale.created_at)}</p>
         <span className={`pill ${sale.status === 'paid' ? 'green' : 'neutral'}`}>
-          {sale.status === 'paid' ? 'Cobrada' : 'Devuelta'}
+          {saleStates[sale.status]}
         </span>
       </header>
       <div className="receipt-reference">
         <span>Pedido #{sale.order_id}</span>
         {sale.reference && <span>{sale.reference}</span>}
         <span>
-          {sale.currency} · {sale.payment?.method_name ?? 'Efectivo'}
+          {sale.currency} ·{' '}
+          {sale.payments.length > 1 ? 'Varios pagos' : (sale.payment?.method_name ?? 'Efectivo')}
         </span>
       </div>
       <div className="receipt-items">
@@ -52,44 +55,27 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
       {sale.discount_reason && (
         <p className="receipt-discount-note">Motivo del descuento: {sale.discount_reason}</p>
       )}
-      {sale.payment?.method_kind !== 'non_cash' && sale.payment && (
-        <dl className="sale-amounts receipt-cash">
-          <div>
-            <dt>Efectivo recibido</dt>
-            <dd>{formatMoney(sale.payment.received_amount, sale.currency)}</dd>
-          </div>
-          <div>
-            <dt>Cambio entregado</dt>
-            <dd>{formatMoney(sale.payment.change_amount, sale.currency)}</dd>
-          </div>
-          <div>
-            <dt>Ingreso neto en caja</dt>
-            <dd>{formatMoney(sale.payment.amount, sale.currency)}</dd>
-          </div>
-        </dl>
-      )}
-      {sale.payment?.method_kind === 'non_cash' && (
-        <section className="receipt-refund">
-          <h3>Pago manual no efectivo</h3>
-          <p>
-            {sale.payment.method_name} · {sale.payment.reference}
-          </p>
-          <strong>{formatMoney(sale.payment.amount, sale.currency)}</strong>
-          <p>
-            Declarado por el operador. Sin confirmación de banco o pasarela. No modifica el efectivo
-            de caja.
-          </p>
-        </section>
-      )}
-      {sale.refund && (
+      <PaymentHistory sale={sale} />
+      {!!sale.refunds.length && (
         <section className="receipt-refund">
           <h3>Devolución total registrada</h3>
-          <strong>{formatMoney(sale.refund.amount, sale.currency)}</strong>
-          <p>{sale.refund.reason}</p>
-          {sale.refund.reference && <p>Referencia: {sale.refund.reference}</p>}
-          <small>
-            {date(sale.refund.created_at)} · Sesión de caja #{sale.refund.cash_session_id}
-          </small>
+          <strong>{formatMoney(sale.refunded_amount, sale.currency)}</strong>
+          <p>{sale.refunds[0].reason}</p>
+          {sale.refunds.map((refund) => (
+            <div key={refund.id}>
+              <p>
+                {sale.payments.find((payment) => payment.id === refund.payment_id)?.method_name} ·{' '}
+                {formatMoney(refund.amount, sale.currency)}
+              </p>
+              {refund.reference && <p>Referencia: {refund.reference}</p>}
+              <small>
+                {date(refund.created_at)} · Sesión de caja #{refund.cash_session_id}
+              </small>
+            </div>
+          ))}
+          {sale.cancelled_balance !== '0.0000' && (
+            <p>Saldo no cobrado cancelado: {formatMoney(sale.cancelled_balance, sale.currency)}</p>
+          )}
           <p>El pago y la venta originales se conservan.</p>
         </section>
       )}

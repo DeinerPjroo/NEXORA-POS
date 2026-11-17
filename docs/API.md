@@ -209,6 +209,32 @@ El pago conserva payment_method_id, method_name, method_kind, method_revision, p
 
 POST sales/{sale}/refund usa el método histórico aunque esté desactivado/renombrado. Si no efectivo requiere refund_reference (120), conserva sesión/revisión y registra devolución total sin salida de efectivo ni requisito de saldo. En efectivo conserva salida/fondos anteriores. La respuesta refund incluye reference. No se permite seleccionar otro método para transformar una devolución en salida de caja. Abonos/mixtos y conciliación siguen pendientes.
 
+## Abonos y lotes mixtos desde 0.7.0
+
+POST orders/{order}/collect admite **payment_amount** opcional (cadena positiva de dos decimales), menor o igual al total. Al omitirlo conserva el cobro completo anterior. received_amount cubre este pago, no todo el saldo; no efectivo exige recibido igual al pago y referencia. Se crea una sola venta con estado partially_paid si queda saldo, paid si queda saldada. El total original y los impuestos/descuentos no se reescriben.
+
+**POST sales/{sale}/payments**, con sales.collect, agrega un lote atómico de 1–20 líneas. Ejemplo:
+
+```json
+{
+  "idempotency_key": "3471f28b-6971-418c-8305-e6dc432b4fca",
+  "sale_revision": 2,
+  "expected_balance": "60.01",
+  "cash_session_id": 1,
+  "cash_revision": 2,
+  "payments": [
+    {"payment_method_id": 1, "method_revision": 1, "amount": "10.00", "received_amount": "20.00"},
+    {"payment_method_id": 2, "method_revision": 1, "amount": "50.01", "received_amount": "50.01", "reference": "REF-001"}
+  ]
+}
+```
+
+payments debe ser una lista JSON y solo admite las claves mostradas por línea. Importes positivos/cadenas con dos decimales, suma ≤ saldo; no efectivo exacto y con referencia. Revisión de venta/saldo/caja obsoletos devuelven 409; sobrepago/importe inválido 422. Un error de línea o auditoría revierte el lote completo. La misma clave/payload devuelve la venta actual sin duplicar pagos; una venta saldada/devuelta no admite otros lotes nuevos. Caja de igual sucursal/moneda, solo cash crea movimiento de efectivo.
+
+GET sales acepta status=partially_paid además de paid/refunded. Respuestas de venta incluyen revision, paid_amount (suma histórica aplicada), balance_due, refunded_amount y cancelled_balance, todos como cadenas de cuatro decimales. payments y refunds son los historiales completos ordenados por ID; payment y refund conservan el primer objeto como alias compatible para recibos antiguos de un pago. Cada refund incluye payment_id.
+
+POST sales/{sale}/refund devuelve **todos los pagos aplicados** y cancela el saldo nunca cobrado. sale_revision es obligatoria si hay varios pagos o la venta está abonada; la UI la envía siempre. Para cada pago no efectivo, enviar refund_references como lista [{payment_id, reference}], todos pertenecientes a esa venta. refund_reference singular se mantiene para exactamente un pago no efectivo. Cada compensación queda ligada por FK al pago original; la transacción es atómica e idempotente. Total original inmutable; refunded_amount puede ser menor que total si se cerró una venta abonada, y cancelled_balance deja explícita la diferencia no cobrada. No son devoluciones de partes elegidas de un pago/producto: eso sigue pendiente. Reglas en [PAYMENTS.md](PAYMENTS.md).
+
 ## Referencia de errores
 
 | Código | Significado |

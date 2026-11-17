@@ -6,8 +6,8 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | --- | --- | --- | --- |
 | CONT-01 | COMPLETED | Documentos de continuidad, protocolo permanente y pruebas SQL sin DROP DATABASE; 82/591 en SQLite y MariaDB, esquema aislado conservado | Ninguna |
 | 2.1-A | COMPLETED | Métodos configurables y cobro/devolución manual no efectivo. Backend 90/684 SQLite/MariaDB y 10 Playwright; migración aplicada, build/formato y capturas verificados | Ventas 0.5 |
-| 2.1-B | IN_PROGRESS | Abonos parciales y pagos mixtos, saldo pendiente exacto, preservación de ventas/recibos anteriores y reintentos sin duplicados; adaptar devolución a importes realmente cobrados | 2.1-A |
-| 2.1-C | PENDING | Propinas y descuento porcentual con snapshots/redondeo, permisos y pruebas | 2.1-B |
+| 2.1-B | COMPLETED | Abonos/mixtos, saldo e historial, devolución de importes realmente cobrados. Migración 000007 aplicada; 100/808 SQLite/MariaDB, 11 Playwright, build/formato y capturas correctos | 2.1-A |
+| 2.1-C | IN_PROGRESS | Propinas y descuento porcentual con snapshots/redondeo, permisos y pruebas; configuración explícita para propinas, sin tasas legales automáticas | 2.1-B |
 | 2.1-D | PENDING | Devoluciones parciales y división de cuentas con asignaciones y límites contra sobrepago/sobredevolución | 2.1-B/C |
 | 2.1-E | PENDING | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores | Catálogo y cálculo versionado |
 | 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D |

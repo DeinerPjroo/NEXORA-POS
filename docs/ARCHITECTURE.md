@@ -120,6 +120,16 @@ CashLedger centraliza verificación de sesión abierta/sucursal/moneda/revisión
 
 La prueba de navegador crea/usa/archiva un método, comprueba su nombre histórico, registra devolución y cierra caja con el mismo efectivo esperado. Abonos/mixtos y conciliación se incorporarán sobre estas entidades, no con otra plataforma de ventas.
 
+## Abonos y lotes mixtos implementados en 0.7
+
+RecordPayments es el servicio compartido por CollectCash y AddPayments. La primera operación conserva su API y admite payment_amount opcional; las posteriores usan revisión de venta y saldo esperado, sin recalcular precios/impuestos originales. Se verifican suma positiva, saldo y cada método antes/durante un lote transaccional. Un fallo de línea posterior/auditoría revierte todas las escrituras. La revisión de sesión inicial se avanza internamente por línea bajo bloqueo de empresa/venta.
+
+SaleBalance suma cadenas de payments/refunds con BCMath, evitando SUM monetario de SQLite. Sale guarda total histórico inmutable y solo permite estado/revisión/updated_at. Estados partially_paid/paid/refunded, con saldo pendiente y cancelado explícitos. No se confunde dinero entregado antes del cambio con importe aplicado. Se conservan los aliases singulares del primer pago/devolución y se agregan arrays históricos ordenados.
+
+RefundCash compensa todos los pagos originales por sus importes/métodos, exige revisión para ventas abonadas/múltiples y referencia por pago no efectivo. Se enlazan devoluciones con FK tenant/sale/payment y se cierra el saldo nunca cobrado sin devolverlo. Migración 000007 agrega revisión/vínculos y retira unicidades de un solo pago por venta sin modificar importes anteriores. Las compensaciones parciales por selección siguen pendientes.
+
+La UI permite primer abono, lote con uno o varios métodos, saldo e historial, reintento explícito con payload congelado y recibo móvil/impreso. La consulta de ventas es necesaria para el seguimiento de abonos; se conserva el cobro completo para un operador sin sales.view. No hay proveedores externos ni conciliación bancaria. Las listas cargan pagos asociados para calcular saldos exactos; medir tamaño/carga y evolucionar paginación/lecturas agregadas antes de producción.
+
 ## Offline y dispositivos futuros
 
 Cliente local SQLite y cola de comandos con UUID/ULID, `tenant_id`, sucursal, dispositivo, revisión y clave idempotente. Sincronización con acknowledgements, reintentos exponenciales y dead-letter. Pedidos: comandos de dominio; inventario y pagos: reconciliación con servidor, sin reemplazar saldos con «última escritura gana». Conflictos de precio/stock/caja necesitan resolución visible. No cachear respuestas privadas globalmente ni prometer pagos offline de proveedores que no los soportan. La web actual muestra desconexión y exige acceso al servidor; no tiene service worker ni cola offline.

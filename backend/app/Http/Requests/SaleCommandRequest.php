@@ -18,13 +18,16 @@ final class SaleCommandRequest extends FormRequest
         $common = ['idempotency_key' => ['required', 'uuid'], 'cash_session_id' => ['required', 'integer', 'min:1'],
             'cash_revision' => ['required', 'integer', 'min:1'], 'tenant_id' => ['prohibited'], 'total' => ['prohibited'], 'tax_rate' => ['prohibited'], 'provenance' => ['prohibited'], 'provider_confirmed' => ['prohibited']];
 
-        return $common + ($this->routeIs('sales.refund') ? ['reason' => ['required', 'string', 'min:3', 'max:300'], 'refund_reference' => ['nullable', 'string', 'max:120']] : [
-            'payment_method_id' => ['sometimes', 'integer', 'min:1'], 'method_revision' => ['required_with:payment_method_id', 'integer', 'min:1'],
-            'payment_reference' => ['nullable', 'string', 'max:120'],
-            'order_revision' => ['required', 'integer', 'min:1'], 'settings_revision' => ['required', 'integer', 'min:1'],
-            'discount_amount' => ['required', ...SaleTotals::cashRules()],
-            'discount_reason' => [Rule::requiredIf(fn () => is_string($this->input('discount_amount')) && preg_match('/^[0-9]+(?:\.[0-9]{1,2})?$/D', $this->input('discount_amount')) && bccomp($this->input('discount_amount'), '0', 4) > 0), 'nullable', 'string', 'min:3', 'max:200'],
-            'expected_total' => ['required', ...SaleTotals::cashRules()], 'received_amount' => ['required', ...SaleTotals::cashRules()],
-        ]);
+        return $common + ($this->routeIs('sales.refund') ? ['reason' => ['required', 'string', 'min:3', 'max:300'], 'refund_reference' => ['nullable', 'string', 'max:120'],
+            'sale_revision' => ['sometimes', 'integer', 'min:1'], 'refund_references' => ['sometimes', 'array', 'list'],
+            'refund_references.*' => ['array:payment_id,reference'], 'refund_references.*.payment_id' => ['required', 'integer', 'min:1', 'distinct'], 'refund_references.*.reference' => ['required', 'string', 'max:120']] : [
+                'payment_amount' => ['sometimes', ...SaleTotals::cashRules()],
+                'payment_method_id' => ['sometimes', 'integer', 'min:1'], 'method_revision' => ['required_with:payment_method_id', 'integer', 'min:1'],
+                'payment_reference' => ['nullable', 'string', 'max:120'],
+                'order_revision' => ['required', 'integer', 'min:1'], 'settings_revision' => ['required', 'integer', 'min:1'],
+                'discount_amount' => ['required', ...SaleTotals::cashRules()],
+                'discount_reason' => [Rule::requiredIf(fn () => is_string($this->input('discount_amount')) && preg_match('/^[0-9]+(?:\.[0-9]{1,2})?$/D', $this->input('discount_amount')) && bccomp($this->input('discount_amount'), '0', 4) > 0), 'nullable', 'string', 'min:3', 'max:200'],
+                'expected_total' => ['required', ...SaleTotals::cashRules()], 'received_amount' => ['required', ...SaleTotals::cashRules()],
+            ]);
     }
 }

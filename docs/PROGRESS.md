@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.6.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, caja, pedidos y venta/devolución con métodos manuales. Todavía no se declara lista para producción.
+Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.7.0**. Base de Fase 1 operativa en MariaDB; Fase 2 con catálogo, caja, pedidos, abonos y pagos mixtos manuales. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -43,6 +43,10 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.6.
 - Pago manual no efectivo con referencia y total exacto; nombre/tipo/revisión/procedencia históricos, sin movimiento de efectivo. Se conserva la compatibilidad de efectivo sin método explícito.
 - Devolución por método histórico incluso archivado. No efectivo requiere referencia y no altera caja; efectivo conserva salida/fondos. Sin confirmación bancaria ni pasarela.
 - Protocolo autónomo y documentos de continuidad creados. Comparación con a487f23, sin avances posteriores al iniciar. Primer commit de continuidad 942ce39 publicado en origin/main.
+- Abono inicial y lotes de pagos/mixtos sobre una sola venta con total inmutable, saldo exacto BCMath y estado Abonada/Cobrada/Devuelta.
+- Revisión de venta/saldo/caja y métodos; rechazo de sobrepago, escritura atómica del lote y rollback de auditoría. Reintento de lote sin duplicación.
+- Recibos con pagos aplicados/saldo, historial por método/fecha y filtros de ventas abonadas. Vista móvil y formulario de lote verificados.
+- Devolución de todos los cobros por método original, FK a cada pago y cancelación separada del saldo nunca cobrado. Sin selección de devoluciones parciales todavía; reglas en PAYMENTS.md.
 
 ## Verificaciones realizadas
 
@@ -51,15 +55,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 90 pruebas y 684 aserciones aprobadas en SQLite en memoria: identidad, catálogo, caja/pedidos/ventas/métodos, permisos, precisión, aislamiento, idempotencia, conflictos y rollback |
-| `php scripts/test-mysql.php` | 90 pruebas y 684 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_669b0ab734efe31d conservada, sin ejecutar DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 100 pruebas y 808 aserciones aprobadas en SQLite en memoria: identidad, catálogo, caja/pedidos/ventas/métodos/abonos, permisos, precisión, aislamiento, idempotencia, conflictos, rollback y FKs de devolución |
+| `php scripts/test-mysql.php` | 100 pruebas y 808 aserciones aprobadas en MariaDB 10.4.32; base nueva aislada nexora_test_8cd3a7a39e8b9b0a conservada, sin ejecutar DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 10 pruebas aprobadas: 8 recorridos Chromium y 2 comprobaciones de dinero/borrador. Incluye catálogo/móvil/conflictos, caja/pedidos, venta con impuesto/descuento/cambio, impresión, reintentos y método manual creado/usado/archivado/devuelto sin alterar efectivo |
+| `npm run test:e2e` | 11 pruebas aprobadas: 9 recorridos Chromium y 2 comprobaciones de dinero/borrador. Incluye catálogo/móvil/conflictos, caja/pedidos, impuestos/descuento/cambio, impresión, métodos históricos, abono y lote mixto con respuesta perdida, devolución por método y cierre de efectivo |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -75,6 +79,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pagos confirmados por pasarela/parciales/mixtos, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, descuentos porcentuales, devoluciones parciales, conciliación, KDS/Reverb, inventarios/recetas, compras, alta de empleados o asignación por sucursal, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración ni landing comercial. Hay métodos configurables registrados manualmente, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo siguen pendientes galerías múltiples, subcategorías, grupos de modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, importación/exportación de layouts, aplicaciones móvil/escritorio, offline, impresión térmica/hardware o DIAN.
+No existen todavía mesas, pagos confirmados por pasarela, cuentas divididas, propinas, impuestos incluidos o múltiples por producto, descuentos porcentuales, devoluciones parciales por selección, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Hay abonos y pagos mixtos manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, importación/exportación de layouts, móvil/escritorio, offline, impresión térmica/hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

@@ -327,3 +327,25 @@ alter table `sale_refunds` add constraint `sale_refunds_movement_fk` foreign key
 
 alter table `sale_refunds` add `reference` varchar(120) null;
 
+alter table `sales` add `revision` int unsigned not null default '1';
+
+alter table `payments` add unique `payments_tenant_id_id_unique`(`tenant_id`, `id`);
+
+alter table `payments` add unique `payments_sale_identity`(`tenant_id`, `sale_id`, `id`);
+
+alter table `sale_refunds` add `payment_id` bigint unsigned null;
+
+alter table `sale_refunds` modify `payment_id` bigint unsigned not null;
+
+alter table `sale_refunds` add unique `sale_refunds_tenant_id_payment_id_unique`(`tenant_id`, `payment_id`);
+
+alter table `sale_refunds` add constraint `refunds_original_payment_fk` foreign key (`tenant_id`, `sale_id`, `payment_id`) references `payments` (`tenant_id`, `sale_id`, `id`) on delete restrict;
+
+alter table `payments` add index `payments_sale_lookup`(`tenant_id`, `sale_id`);
+
+alter table `sale_refunds` add index `refunds_sale_lookup`(`tenant_id`, `sale_id`);
+
+alter table `payments` drop index `payments_tenant_id_sale_id_unique`;
+
+alter table `sale_refunds` drop index `sale_refunds_tenant_id_sale_id_unique`;
+

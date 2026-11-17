@@ -8,11 +8,12 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
 import type { CashOption, Sale } from './types'
 
-export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void }) {
+export function RefundModal({ sale: initial, onClose }: { sale: Sale; onClose: () => void }) {
+  const [sale] = useState(initial)
   const client = useQueryClient()
   const toast = useToast()
   const [cashId, setCashId] = useState('')
-  const isCash = sale.payment?.method_kind !== 'non_cash'
+  const nonCash = sale.payments.filter((payment) => payment.method_kind === 'non_cash')
   const cash = useQuery({
     queryKey: ['refund-cash', sale.branch_id],
     queryFn: () => api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${sale.branch_id}`),
@@ -45,24 +46,26 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
       return
     }
     if (!selected) return
+    const fields = new FormData(event.currentTarget)
     operation.send({
       cash_session_id: selected.id,
       cash_revision: selected.revision,
-      reason: new FormData(event.currentTarget).get('reason'),
-      refund_reference: new FormData(event.currentTarget).get('refund_reference') || null,
+      reason: fields.get('reason'),
+      sale_revision: sale.revision,
+      refund_references: nonCash.map((payment) => ({
+        payment_id: payment.id,
+        reference: fields.get(`refund_reference_${payment.id}`),
+      })),
     })
   }
   return (
     <Modal title={`Devolver ${sale.receipt_code}`} onClose={onClose}>
       <form className="form-stack" onSubmit={submit}>
         <p>
-          Registrarás una devolución total de{' '}
-          <strong>{formatMoney(sale.total, sale.currency)}</strong> por el método original:{' '}
-          {sale.payment?.method_name ?? 'Efectivo'}.{' '}
-          {isCash
-            ? 'Genera una salida de efectivo.'
-            : 'Registro manual sin salida de efectivo ni confirmación de proveedor.'}{' '}
-          El recibo y pago originales se conservan.
+          Devolverás los <strong>{formatMoney(sale.paid_amount, sale.currency)}</strong> registrados
+          como recibidos, por sus métodos originales. El saldo no cobrado de{' '}
+          {formatMoney(sale.balance_due, sale.currency)} se cancela. Solo los pagos de efectivo
+          generan salida de caja. La venta y los pagos originales se conservan.
         </p>
         <ErrorNotice error={operation.error || cash.error} />
         <OperationNotice uncertain={operation.uncertain} />
@@ -91,11 +94,18 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
           <Field label="Motivo de la devolución">
             <textarea name="reason" minLength={3} maxLength={300} required rows={3} />
           </Field>
-          {!isCash && (
-            <Field label="Referencia de la devolución">
-              <input name="refund_reference" required maxLength={120} />
+          {nonCash.map((payment) => (
+            <Field
+              key={payment.id}
+              label={
+                nonCash.length === 1
+                  ? 'Referencia de la devolución'
+                  : `Referencia de devolución · ${payment.method_name} #${payment.id}`
+              }
+            >
+              <input name={`refund_reference_${payment.id}`} required maxLength={120} />
             </Field>
-          )}
+          ))}
         </fieldset>
         {!operation.uncertain &&
           operation.error instanceof ApiError &&
@@ -106,9 +116,11 @@ export function RefundModal({ sale, onClose }: { sale: Sale; onClose: () => void
               onClick={() => {
                 operation.reset()
                 void cash.refetch()
+                void client.invalidateQueries({ queryKey: ['sale', sale.id] })
+                onClose()
               }}
             >
-              Actualizar cajas disponibles
+              Revisar venta y cajas disponibles
             </button>
           )}
         <div className="form-actions">

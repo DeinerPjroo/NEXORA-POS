@@ -1,4 +1,4 @@
-# Operación de caja y pedidos (0.4–0.5)
+# Operación de caja y pedidos (0.4–0.7)
 
 ## Alcance del incremento
 
@@ -8,7 +8,7 @@ Caja registra efectivo declarado por el usuario: apertura, movimientos manuales,
 
 - Una caja pertenece a una sucursal. Cada sucursal recibe una caja principal y puede tener cajas adicionales.
 - Solo una sesión abierta por caja. Aperturas, movimientos y cierres se realizan bajo bloqueo y transacción con auditoría.
-- Efectivo esperado = apertura + ingresos manuales + cobros netos − egresos manuales − devoluciones. Registrar/entregar pedidos no mueve caja.
+- Efectivo esperado = apertura + ingresos manuales + cobros de efectivo netos − egresos manuales − devoluciones de efectivo. Abonos y lotes mixtos solo mueven sus componentes cash; non_cash no altera el saldo. Registrar/entregar pedidos tampoco mueve caja.
 - Se rechazan egresos superiores al efectivo esperado. Un error se compensa con otro movimiento explicado; no se edita ni borra el anterior.
 - El cierre exige revisión actual, conteo no negativo y guarda diferencia firmada. Una sesión cerrada no recibe nuevos movimientos ni se reabre en este incremento.
 - La preparación del pedido es independiente de la caja. Se crean en sucursales activas, con productos/categorías disponibles y variante válida cuando corresponda. Cobrar exige sesión abierta y confirma una venta; no cambia el estado de preparación.

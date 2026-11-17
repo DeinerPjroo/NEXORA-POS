@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
         Route::get('orders/{order}/quote', [SaleController::class, 'quote'])->name('sales.quote');
         Route::post('orders/{order}/collect', [SaleController::class, 'collect']);
         Route::post('sales/{sale}/refund', [SaleController::class, 'refund'])->name('sales.refund');
+        Route::post('sales/{sale}/payments', [SaleController::class, 'addPayments']);
         Route::get('cash/registers', [CashController::class, 'registers']);
         Route::post('cash/registers', [CashController::class, 'storeRegister'])->name('cash.registers.store');
         Route::post('cash/registers/{cashRegister}/open', [CashController::class, 'open'])->name('cash.sessions.open');

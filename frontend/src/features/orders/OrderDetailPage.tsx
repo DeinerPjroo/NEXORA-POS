@@ -86,7 +86,9 @@ export function OrderDetailPage() {
             {order.sale_id
               ? order.sale_status === 'refunded'
                 ? 'Este pedido tiene una venta con devolución total.'
-                : 'Este pedido tiene una venta cobrada.'
+                : order.sale_status === 'partially_paid'
+                  ? 'Este pedido tiene una venta con saldo pendiente.'
+                  : 'Este pedido tiene una venta cobrada.'
               : 'Pedido sin cobro registrado. No es una factura ni un comprobante de pago.'}
           </p>
           {order.sale_id

@@ -39,7 +39,14 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
   id: number
   order_id: number
   branch_id: number
-  status: 'paid' | 'refunded'
+  status: 'paid' | 'partially_paid' | 'refunded'
+  revision: number
+  paid_amount: string
+  balance_due: string
+  refunded_amount: string
+  cancelled_balance: string
+  payments: SalePayment[]
+  refunds: SaleRefund[]
   business_name: string
   branch_name: string
   branch_address: string | null
@@ -73,3 +80,6 @@ export type Sale = Omit<SaleQuote, 'order_revision'> & {
   } | null
 }
 export type CashOption = { id: number; name: string; revision: number; currency: string }
+export type SalePayment = NonNullable<Sale['payment']>
+export type SaleRefund = NonNullable<Sale['refund']> & { payment_id: number }
+export const saleStates = { paid: 'Cobrada', partially_paid: 'Abonada', refunded: 'Devuelta' }

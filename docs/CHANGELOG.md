@@ -1,5 +1,16 @@
 # Historial de cambios
 
+## 0.7.0 · 2026-11-17
+
+- Abono inicial opcional con total de venta inmutable y saldo exacto calculado con BCMath.
+- Lotes de pagos posteriores/mixtos con revisión de venta/saldo/caja, métodos históricos e idempotencia; sobrepago rechazado.
+- RecordPayments compartido con el cobro completo anterior; error de línea o auditoría revierte todo el lote.
+- Recibos con estados Abonada/Cobrada/Devuelta, importes aplicados/saldo y fechas de cada pago; listas filtradas por saldo pendiente.
+- Devolución de todos los cobros por sus métodos originales, enlace por FK a cada pago, sin devolver saldo nunca cobrado; se registra saldo cancelado aparte.
+- Migración 000007 aplicada en MariaDB sin alterar totales, pagos ni recibos anteriores; aliases singulares compatibles y nuevos historiales múltiples.
+- Pruebas de abonos/mixtos, conflictos, atomicidad, tenant/permisos, referencia ajena y FK contra pagos de otra venta; recorrido E2E con respuesta perdida y cierre de efectivo.
+- Sin propinas, descuento porcentual, selección de devoluciones parciales, cuentas divididas ni confirmaciones de pasarela. Continúa 2.1-C.
+
 ## 0.6.0 · 2026-11-17
 
 - Continuidad contrastada con origin/main a487f23, sin avances locales posteriores. Nuevos TASKS, PROJECT_STATE, HANDOFF y DECISIONS; protocolo permanente de incrementos y publicación autorizada.

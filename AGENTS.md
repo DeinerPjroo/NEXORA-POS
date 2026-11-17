@@ -30,6 +30,7 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 - Cobro en efectivo: movimiento por total neto, registrar recibido/cambio, una venta por pedido y recibo interno correlativo por tenant. Venta/pago/caja/auditoría/secuencia deben confirmar o revertir juntos.
 - Devolución total única: salida compensatoria con motivo, caja abierta de misma sucursal/moneda y fondos suficientes. Conservar venta/pago, impedir cancelar o recobrar pedido vendido. Nunca confundir recibo interno con documento fiscal.
 - Métodos 0.6: cash/non_cash inmutables, nombre/estado con revisión; efectivo principal activo. Copiar método/nombre/tipo/revisión/procedencia/referencia al pago. Solo cash mueve efectivo; non_cash exige referencia e importe exacto, conserva sesión abierta/revisión, no modifica saldo y nunca equivale a confirmación bancaria. La devolución usa el método histórico.
+- Abonos 0.7: varios payments sobre una venta de total inmutable. Usar RecordPayments y SaleBalance con BCMath, bloqueo de venta/empresa, revisión y saldo esperado; lotes atómicos de 1–20 líneas y sin sobrepago. La devolución completa compensa cada payment original, cancela saldo no cobrado por separado y nunca devuelve dinero no aplicado. Consultar PAYMENTS.md antes de ampliar.
 
 ## Protocolo de continuidad autónoma
 

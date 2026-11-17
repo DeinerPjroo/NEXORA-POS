@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.6.0** amplía ventas con **métodos configurables y registro manual de pagos/devoluciones no efectivos**, además del efectivo y cambio existentes. También funcionan caja/arqueo, pedidos, catálogo, identidad y personalización. Los pagos manuales no equivalen a una confirmación bancaria; solo los métodos de efectivo modifican su saldo en caja. El cálculo de impuesto adicional requiere confirmación de la empresa, sin asignación de tasa legal. Mesas, abonos/mixtos, pasarelas, cocina en tiempo real, inventario y facturación siguen pendientes.
+La entrega **0.7.0** incorpora **abonos y pagos mixtos**, saldo pendiente, historial por pago y devolución de los cobros efectivamente registrados. Reutiliza ventas, métodos manuales, pedidos y caja existentes. Solo efectivo modifica el saldo de caja; los pagos manuales no equivalen a confirmación bancaria. El cálculo de impuesto adicional requiere confirmación de la empresa, sin asignación de tasa legal. Mesas, propinas, cuentas divididas, pasarelas, cocina, inventario y facturación siguen pendientes.
 
 ## Entorno y requisitos
 
@@ -107,11 +107,13 @@ Los permisos cash.view/manage/movements y orders.view/manage/cancel se configura
 
 Primero entra en **Ventas → Configurar ventas** y confirma el cálculo: sin impuesto adicional automático o un porcentaje adicional sobre precios base. Se cobra a dos decimales con mitades hacia arriba. No se determina automáticamente el régimen tributario; los precios con impuestos incluidos y varios impuestos por producto no están soportados.
 
-Abre una caja y entra en **Pedidos → detalle → Cobrar pedido**. Aplica descuento fijo autorizado si corresponde, revisa el total y elige método/caja. En efectivo indica el recibido: se guarda el cambio y un ingreso por el total neto. Con método no efectivo introduce la referencia: registra el total exacto sin cambio ni movimiento de efectivo. Cada pedido admite una sola venta, protegida también ante reintentos con otra clave.
+Abre una caja y entra en **Pedidos → detalle → Cobrar pedido**. Aplica descuento fijo autorizado, revisa total y método/caja. Puedes pagar el total o registrar un abono en **Importe de este pago** (requiere consulta de ventas para su seguimiento). Efectivo guarda recibido/cambio e ingreso por importe aplicado; no efectivo exige referencia e importe exacto del pago, sin cambio ni movimiento de efectivo. Cada pedido admite una sola venta con varios pagos, protegidos ante reintentos.
 
 Desde **Ventas → Métodos de pago** puedes crear métodos de efectivo o no efectivos manuales, renombrarlos y desactivarlos con sales.configure. Código/tipo son inmutables y el efectivo principal permanece activo. Los recibos conservan nombre/tipo/referencia originales. Las devoluciones siguen el método histórico, incluso si fue desactivado; las no efectivas requieren referencia y no descuentan caja. Todos son registros del operador, sin confirmación de pasarela.
 
 En **Ventas** puedes consultar/imprimir el recibo interno y registrar una **devolución total** con motivo y caja abierta con fondos suficientes, conservando la operación original. Permisos separados sales.view/collect/configure/discount/refund. No hay cobro electrónico ni factura DIAN; la impresión utiliza el navegador. Detalle de cálculo, devoluciones y límites en [SALES.md](docs/SALES.md).
+
+En un recibo **Abonado**, **Agregar pagos** permite preparar un lote de uno o varios métodos y confirmar juntos. El servidor comprueba saldo/revisión y rechaza sobrepagos; solo los componentes de efectivo cambian la caja. **Devolución total** devuelve cada pago por su método y cancela el saldo nunca cobrado, sin devolver dinero no recibido. Recibos anteriores, pagos y total original se conservan. Reglas y ejemplo de cierre en [PAYMENTS.md](docs/PAYMENTS.md).
 
 ## Correo, seguridad y producción
 
@@ -129,6 +131,7 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [Contrato API](docs/API.md)
 - [Reglas de caja y pedidos](docs/OPERATIONS.md)
 - [Venta, cálculo y devolución en efectivo](docs/SALES.md)
+- [Abonos y pagos mixtos](docs/PAYMENTS.md)
 - [Roadmap](docs/ROADMAP.md), [progreso real](docs/PROGRESS.md) e [historial](docs/CHANGELOG.md)
 - [Tareas](docs/TASKS.md), [estado estructurado](docs/PROJECT_STATE.json), [continuidad](docs/HANDOFF.md) y [decisiones](docs/DECISIONS.md)
 
