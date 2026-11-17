@@ -2,6 +2,7 @@ import { moneyUnits, unitsToMoney } from '../../lib/money'
 import type { Product, Variant } from '../catalog/types'
 
 export type CartLine = {
+  expected_tax_revision?: number
   key: string
   product_id: number
   variant_id: number | null
@@ -21,6 +22,7 @@ export function makeLine(product: Product, variant?: Variant): CartLine {
     variant_name: variant?.name ?? null,
     quantity: 1,
     product_revision: product.revision,
+    ...(product.tax_profile ? { expected_tax_revision: product.tax_profile.revision } : {}),
     expected_unit_price: variant?.sale_price ?? product.sale_price,
     notes: '',
   }

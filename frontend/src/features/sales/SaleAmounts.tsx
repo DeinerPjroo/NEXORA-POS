@@ -32,7 +32,22 @@ export function SaleAmounts({
         </dt>
         <dd>{money(amounts.discount_amount)}</dd>
       </div>
-      {amounts.tax_mode !== 'none' ? (
+      {amounts.tax_mode === 'product' && amounts.tax_breakdown ? (
+        <>
+          <div>
+            <dt>Base de productos y propina participante</dt>
+            <dd>{money(amounts.taxable_base)}</dd>
+          </div>
+          <div>
+            <dt>Impuestos incluidos en precios</dt>
+            <dd>{money(amounts.tax_breakdown.included_tax_amount)}</dd>
+          </div>
+          <div>
+            <dt>Impuestos adicionales por producto</dt>
+            <dd>{money(amounts.tax_breakdown.additional_tax_amount)}</dd>
+          </div>
+        </>
+      ) : amounts.tax_mode !== 'none' ? (
         <>
           <div>
             <dt>

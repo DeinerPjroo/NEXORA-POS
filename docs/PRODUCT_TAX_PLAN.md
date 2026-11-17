@@ -1,6 +1,6 @@
 # 2.1-E2 · Diseño pendiente de impuestos por producto
 
-**PENDING, no implementado.** Revisar este diseño contra código/pruebas antes de editar. E1 solo agrega impuesto incluido global; no marcar E completo con E1. Conservar los modos none/exclusive/inclusive y calculation_version 1/2.
+Diseño implementado/verificado en 0.12; contrato vigente en PRODUCT_TAXES.md y resultados en PROGRESS. Este documento conserva el diseño de referencia. E1 agrega impuesto incluido global; E2 añade perfiles/snapshots/cálculo por líneas conservando los modos none/exclusive/inclusive y calculation_version 1/2.
 
 ## Resultado previsto
 

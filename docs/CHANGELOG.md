@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## 0.12.0 · 2026-11-17
+
+- Perfiles por empresa con 1–5 impuestos paralelos, nombre/tasa/modo explícitos, revisión/archivo y creación idempotente. Sin tasas legales automáticas ni fórmulas arbitrarias.
+- Asignación de producto con FK compuesta; variantes heredan perfil. Snapshot en cada línea de pedido y revisión independiente de perfil al tomarlo. Cambiar/archivar no reinterpreta pedidos registrados.
+- ProductTaxTotals/CentAllocation, versión 3 inmutable: reparto exacto de subtotal/descuento por mayores restos, impuestos adicionales por componente y extracción/distribución de incluidos sin doble adición.
+- Propina participante con perfil de política explícito y snapshot hasta nueva confirmación; consentimiento y permisos preservados. Cero no produce línea de propina.
+- Configuración, página/editor/picker de perfiles, catálogo/pedido y desglose de quote/recibo conectados; abonos/partes/devoluciones preservan el total histórico.
+- Migración 000012 añade perfiles/FK y snapshots JSON sin cambiar importes previos. Activar modo por producto exige resolver pedidos legados sin snapshot; no se adivinan tasas.
+- Fixture CLI acotado al SQLite E2E canónico con guardas, login real y sin desactivar límites de registro existentes. Contrato y ejemplos en PRODUCT_TAXES.md.
+
 ## 0.11.0 · 2026-11-17
 
 - Modo global inclusive explícito: base extraída half-up del importe participante e impuesto por diferencia, sin añadirlo otra vez al total.

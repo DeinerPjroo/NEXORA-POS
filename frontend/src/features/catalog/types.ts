@@ -1,3 +1,5 @@
+import type { TaxProfile } from '../sales/tax-types'
+
 export type CategorySummary = { id: number; name: string; color: string; is_active: boolean }
 export type Category = CategorySummary & {
   description: string | null
@@ -16,6 +18,7 @@ export type Variant = {
   is_available: boolean
 }
 export type Product = {
+  tax_profile?: TaxProfile | null
   id: number
   name: string
   sku: string
@@ -37,6 +40,7 @@ export function productStatus(product: Product) {
   if (!product.is_active) return 'Inactivo'
   if (!product.category.is_active) return 'Categoría inactiva'
   if (!product.is_available) return 'Agotado'
+  if (product.tax_profile && !product.tax_profile.is_active) return 'Perfil de impuestos archivado'
   if (product.variants_count > 0 && product.available_variants_count === 0)
     return 'Variantes no disponibles'
   return 'Disponible'

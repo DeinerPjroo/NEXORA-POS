@@ -1,5 +1,13 @@
 # Decisiones técnicas y operativas
 
+## DEC-009 · Perfiles por producto y centavos (0.12)
+
+Perfiles con 1–5 impuestos paralelos sobre igual base, sin cascadas ni tasas/regímenes predeterminados. Las variantes heredan perfil del producto. Se copian tasas/modo/nombre/revisión al pedido y se exige revisión del perfil incluso si no cambió precio/producto. Se bloquea activar modo por producto mientras existan pedidos legados no resueltos sin snapshot; no se infieren tasas antiguas.
+
+El subtotal global y descuento se distribuyen a líneas por mayores restos y orden estable. Exclusive redondea cada componente y lo añade; inclusive extrae base y reparte centavos del impuesto total por tasas, conservando importe final. Versión 3 con JSON de desglose, sin reescribir versiones anteriores. El perfil de propina participante debe elegirse explícitamente y queda como política confirmada hasta nueva selección; editar el perfil no cambia esa política ni ventas previas.
+
+La suite ya registra 10 empresas por HTTP. Nuevos recorridos usan fixtures ficticios por CLI con guardas estrictas del archivo SQLite E2E y login UI real; se mantienen límites/validaciones de producción y recorridos de registro existentes. Tres guardas negativas verificadas antes de acceso a base: sin marca, otro driver y otra ruta. No se crea endpoint de acceso alternativo.
+
 ## DEC-008 · Impuesto incluido global (0.11)
 
 Se añade como modo explícito, sin cambiar none/exclusive ni asumir tasa/regulación. Descuento sobre subtotal redondeado; base extraída con 18 decimales de cálculo y half-up final. Impuesto por diferencia, conservando cada centavo del importe participante; total = subtotal − descuento + propina. Si la propina participa, su importe aceptado ya contiene el impuesto.

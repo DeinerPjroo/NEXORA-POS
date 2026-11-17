@@ -3,6 +3,7 @@ import { useSession } from '../auth/SessionProvider'
 import { SaleAmounts } from './SaleAmounts'
 import { PaymentHistory } from './PaymentHistory'
 import { SaleAccounts } from './SaleAccounts'
+import { TaxBreakdownDetails } from './TaxBreakdownDetails'
 import { saleStates } from './types'
 import type { Sale } from './types'
 
@@ -53,6 +54,7 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
         ))}
       </div>
       <SaleAmounts amounts={sale} />
+      <TaxBreakdownDetails breakdown={sale.tax_breakdown} currency={sale.currency} />
       {sale.discount_reason && (
         <p className="receipt-discount-note">Motivo del descuento: {sale.discount_reason}</p>
       )}

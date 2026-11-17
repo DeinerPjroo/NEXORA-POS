@@ -15,9 +15,11 @@ final class SalesSettingRequest extends FormRequest
     public function rules(): array
     {
         return ['revision' => ['required', 'integer', 'min:1'], 'confirmed' => ['required', 'accepted'],
-            'tax_mode' => ['required', Rule::in(['none', 'exclusive', 'inclusive'])], 'tax_name' => ['required', 'string', 'max:40'],
+            'tax_mode' => ['required', Rule::in(['none', 'exclusive', 'inclusive', 'product'])], 'tax_name' => ['required', 'string', 'max:40'],
             'tax_rate' => ['required', 'string', 'regex:/^(?:0|[1-9][0-9]{0,2})(?:\.[0-9]{1,4})?$/D', 'numeric', 'between:0,100'],
             'tip_enabled' => ['sometimes', 'boolean'], 'tip_tax_mode' => [Rule::requiredIf(fn () => $this->boolean('tip_enabled')), 'nullable', Rule::in(['included', 'excluded'])],
+            'tip_tax_profile_id' => ['sometimes', 'nullable', 'integer', Rule::exists('tax_profiles', 'id')->where('tenant_id', $this->user()->tenant_id)],
+            'tip_tax_profile_revision' => ['required_with:tip_tax_profile_id', 'integer', 'min:1'],
             'tenant_id' => ['prohibited'], 'next_receipt_number' => ['prohibited']];
     }
 }

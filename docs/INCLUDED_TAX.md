@@ -4,7 +4,7 @@
 
 Ventas → Configurar ventas permite elegir **Impuesto incluido en los precios**, nombre y tasa de 0 a 100 con hasta cuatro decimales. Requiere sales.configure, revisión actual y confirmación. No asigna régimen ni tasa legal. Los modos anteriores none/exclusive conservan su fórmula.
 
-En este modo el precio final del catálogo ya contiene el impuesto. El descuento reduce ese importe antes de extraer la base; el impuesto extraído se muestra en el recibo, sin sumarlo otra vez al total. Esta es una regla global para el cobro; perfiles y varios impuestos por producto siguen pendientes en E2.
+En este modo el precio final del catálogo ya contiene el impuesto. El descuento reduce ese importe antes de extraer la base; el impuesto extraído se muestra en el recibo, sin sumarlo otra vez al total. Esta es una regla global para el cobro. Desde 0.12, PRODUCT_TAXES.md define perfiles/varios impuestos por producto como modo separado, versión 3.
 
 ## Fórmula de cálculo, versión 2
 
@@ -26,7 +26,7 @@ Migración 000011 agrega sales.calculation_version con valor 1 para todas las fi
 
 Cambiar configuración afecta las próximas cotizaciones/cobros aún no confirmados, con revisión de settings y total esperado. No cambia ventas existentes ni sus abonos, cuentas, devoluciones o recibos. Una diferencia de revisión se rechaza aunque el total coincida y solo cambie la distribución entre base/impuesto.
 
-Abonos y partes iguales se aplican al total final. Las devoluciones compensan pagos y mantienen el desglose tributario original; no son notas fiscales ni un reparto de impuesto por devolución. Solo cash mueve efectivo. No hay validación DIAN, impuestos múltiples por producto ni confirmación de proveedores en este incremento.
+Abonos y partes iguales se aplican al total final. Las devoluciones compensan pagos y mantienen el desglose tributario original; no son notas fiscales ni un reparto de impuesto por devolución. Solo cash mueve efectivo. No hay validación DIAN ni confirmación de proveedores. Los impuestos por producto usan su contrato separado desde 0.12.
 
 ## Verificación
 

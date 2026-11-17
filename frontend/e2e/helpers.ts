@@ -1,5 +1,43 @@
 import { expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { spawnSync } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// Preparación de fixtures; las pruebas de registro existentes siguen usando la UI y sus límites.
+export async function fixtureWorkspace(page: Page, companyName: string) {
+  const backend = fileURLToPath(new URL('../../backend/', import.meta.url))
+  const email = `fixture-${crypto.randomUUID()}@example.test`
+  const password = `Fixture-${crypto.randomUUID()}A1`
+  const result = spawnSync('php', [resolve(backend, '../scripts/create-e2e-workspace.php')], {
+    cwd: backend,
+    input: JSON.stringify({ company_name: companyName, email, password }),
+    encoding: 'utf8',
+    windowsHide: true,
+    env: {
+      ...process.env,
+      NEXORA_E2E_FIXTURE: '1',
+      APP_ENV: 'testing',
+      APP_DEBUG: 'false',
+      APP_KEY: `base64:${randomBytes(32).toString('base64')}`,
+      DB_CONNECTION: 'sqlite',
+      DB_DATABASE: resolve(backend, 'database/e2e.sqlite'),
+      DB_URL: '',
+      SESSION_DRIVER: 'array',
+      CACHE_STORE: 'array',
+      MAIL_MAILER: 'array',
+      QUEUE_CONNECTION: 'sync',
+      BCRYPT_ROUNDS: '4',
+    },
+  })
+  expect(result.status, result.stderr || 'No se pudo preparar el fixture E2E aislado.').toBe(0)
+  await page.goto('/ingresar')
+  await page.getByLabel('Correo electrónico', { exact: true }).fill(email)
+  await page.getByLabel('Contraseña', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Entrar a mi espacio', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible()
+}
 
 export async function readApi<T>(page: Page, path: string): Promise<T> {
   const response = await page.request.get(`/api/v1/${path}`, {

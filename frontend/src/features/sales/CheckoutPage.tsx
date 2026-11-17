@@ -17,6 +17,7 @@ import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPick
 import { SaleAdjustments, useSaleAdjustments } from './SaleAdjustments'
 import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 import { useSalesCash } from './useSalesCash'
+import { TaxBreakdownDetails } from './TaxBreakdownDetails'
 
 export function CheckoutPage() {
   const { orderId = '' } = useParams()
@@ -378,7 +379,13 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
         {quote.isPending ? (
           <Loading />
         ) : quote.data && !quote.error ? (
-          <SaleAmounts amounts={quote.data.data} />
+          <>
+            <SaleAmounts amounts={quote.data.data} />
+            <TaxBreakdownDetails
+              breakdown={quote.data.data.tax_breakdown}
+              currency={order.currency}
+            />
+          </>
         ) : (
           <p className="muted">Revisa los datos para calcular el total.</p>
         )}

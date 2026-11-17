@@ -19,6 +19,7 @@ final class SaleResource extends JsonResource
             ...app(SaleBalance::class)->amounts($this->resource),
             'revision' => $this->revision,
             'calculation_version' => $this->calculation_version,
+            'tax_breakdown' => $this->tax_breakdown,
             'accounts' => $this->whenLoaded('accounts', fn () => app(SplitAccounts::class)->balances($this->resource)),
             ...$this->resource->only('discount_type', 'discount_value', 'tip_amount', 'tip_tax_mode', 'tip_confirmed'),
             ...$this->resource->only('id', 'order_id', 'branch_id', 'status', 'currency', 'business_name', 'branch_name', 'branch_address', 'catalog_subtotal', 'subtotal', 'rounding_adjustment', 'discount_amount', 'discount_reason', 'taxable_base', 'tax_mode', 'tax_name', 'tax_rate', 'tax_amount', 'total', 'settings_revision', 'created_at'),

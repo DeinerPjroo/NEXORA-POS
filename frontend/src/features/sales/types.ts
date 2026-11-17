@@ -1,4 +1,5 @@
 import type { OrderItem } from '../operations/types'
+import type { TaxBreakdown, TaxSnapshot } from './tax-types'
 
 export type PaymentMethod = {
   id: number
@@ -13,7 +14,7 @@ export type PaymentMethod = {
 
 export type SalesSettings = {
   configured: boolean
-  tax_mode: 'none' | 'exclusive' | 'inclusive'
+  tax_mode: 'none' | 'exclusive' | 'inclusive' | 'product'
   tax_name: string
   tax_rate: string
   revision: number
@@ -21,8 +22,10 @@ export type SalesSettings = {
   decimal_places: number
   tip_enabled: boolean
   tip_tax_mode: 'included' | 'excluded' | null
+  tip_tax_snapshot: TaxSnapshot | null
 }
 export type SaleQuote = {
+  tax_breakdown: TaxBreakdown | null
   calculation_version: number
   accounts_preview: AccountPart[]
   currency: string
@@ -31,7 +34,7 @@ export type SaleQuote = {
   rounding_adjustment: string
   discount_amount: string
   taxable_base: string
-  tax_mode: 'none' | 'exclusive' | 'inclusive'
+  tax_mode: 'none' | 'exclusive' | 'inclusive' | 'product'
   tax_name: string
   tax_rate: string
   tax_amount: string

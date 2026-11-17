@@ -33,6 +33,7 @@ export type CashMovement = {
 }
 export type OrderStatus = 'open' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 export type OrderItem = {
+  tax_snapshot?: import('../sales/tax-types').TaxSnapshot | null
   id: number
   product_id: number
   variant_id: number | null

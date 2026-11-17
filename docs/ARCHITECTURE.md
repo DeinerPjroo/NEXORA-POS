@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Perfiles y cálculo por producto (0.12)
+
+TaxProfile/SaveTaxProfile gestionan tasas paralelas con revisión/auditoría e idempotencia al crear, bajo bloqueo de empresa. Product mantiene FK tenant/profile y CreateOrder copia snapshot validando expected_tax_revision además de producto/precio. OrderItem sigue append-only; perfil archivado impide pedidos futuros sin alterar snapshots previos. No se inventan impuestos en pedidos legados sin snapshot.
+
+ProductTaxTotals consume solo snapshots y genera versión 3/tax_breakdown inmutable. CentAllocation distribuye centavos por mayores restos, pesos/cocientes/restos BCMath y desempate estable. Se separan incluidos/adicionales y no se añade de nuevo lo incluido. Política de propina participante usa perfil/snapshot explícito de SalesSetting hasta reconfigurar. Frontend expone perfiles/picker/asignación y desglose de quote/recibo. PRODUCT_TAXES.md define el contrato; modos/versiones 1/2 conservados.
+
 ## Cálculo incluido versionado (0.11)
 
 IncludedTax recibe importe participante en centavos/tasa validada, divide con BCMath/18 decimales y redondea base half-up una vez. El impuesto es la diferencia frente al importe participante y el total no vuelve a añadirlo. SaleTotals mantiene none/exclusive en versión 1 e inclusive en versión 2, incluyendo tratamiento explícito de propina. sales.calculation_version es inmutable; migración 000011 solo agrega versión 1 a filas previas. No reinterpretar sus importes ni asumir que esto implementa varios impuestos por producto; INCLUDED_TAX.md define el contrato.

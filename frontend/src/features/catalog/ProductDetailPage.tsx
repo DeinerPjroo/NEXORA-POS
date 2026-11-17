@@ -12,6 +12,7 @@ import { ProductImagePanel } from './ProductImagePanel'
 import { VariantsPanel } from './VariantsPanel'
 import { productStatus } from './types'
 import type { Product } from './types'
+import { taxSummary } from '../sales/tax-types'
 
 export function ProductDetailPage() {
   const { productId = '' } = useParams()
@@ -115,6 +116,18 @@ export function ProductDetailPage() {
         </section>
       </div>
       <VariantsPanel product={product} />
+      <section className="panel receipt-refund">
+        <h2>Perfil de impuestos del producto</h2>
+        <p>
+          {product.tax_profile
+            ? `${product.tax_profile.name} · ${taxSummary(product.tax_profile)}`
+            : 'Sin perfil de impuestos asignado.'}
+        </p>
+        <p className="muted small">
+          El cálculo depende del modo confirmado en Ventas. Los pedidos guardan el perfil y las
+          variantes lo heredan del producto.
+        </p>
+      </section>
       {editing && (
         <ProductEditor
           product={product}

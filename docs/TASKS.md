@@ -10,10 +10,12 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-C | COMPLETED | Porcentaje y propinas voluntarias con configuración/snapshot/consentimiento; migración 000008 aplicada, 108/891 SQLite/MariaDB, 12 Playwright y build/formato correctos | 2.1-B |
 | 2.1-D1 | COMPLETED | Devoluciones parciales conectadas, límites acumulados y cierre de remanentes. Migración 000009 aplicada; 122/1097 SQLite/MariaDB, 13 Playwright, build/formato y capturas correctos | 2.1-B/C |
 | 2.1-D2 | COMPLETED | División en partes iguales, FK/asignaciones/saldos y límites por parte/globales. Migración 000010 aplicada; 136/1260 SQLite/MariaDB, 14 Playwright y build/formato/capturas correctos | 2.1-D1 |
-| 2.1-E | IN_PROGRESS | Impuestos incluidos y múltiples por producto sin reinterpretar ventas anteriores; E1 global completado, E2 por producto aún pendiente | Catálogo y cálculo versionado |
+| 2.1-E | COMPLETED | Impuestos incluidos globales y varios por producto, snapshots/versiones y sin reinterpretar ventas anteriores; E1/E2 verificados | Catálogo y cálculo versionado |
 | 2.1-E1 | COMPLETED | Impuesto incluido global conectado/versionado, sin doble adición y propina explícita. Migración 000011 aplicada; 144/1357 SQLite/MariaDB, 14 Playwright y build/formato/captura correctos | 2.1-D2 |
-| 2.1-E2 | IN_PROGRESS | Perfiles de varios impuestos por producto, asignación/configuración, snapshots en pedidos y cálculo/recibo por líneas sin cambiar historia; análisis en PRODUCT_TAX_PLAN.md, aún sin código | 2.1-E1 y catálogo |
-| 2.1-F | PENDING | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
+| 2.1-E2 | COMPLETED | Perfiles/asignación/snapshots y cálculo por líneas, versión 3/propina/centavos. Migración 000012 aplicada; 158/1526 SQLite/MariaDB, 15 Playwright, build/formato/captura y guardas correctos | 2.1-E1 y catálogo |
+| 2.1-F | IN_PROGRESS | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
+| 2.1-F1 | IN_PROGRESS | Historial paginado por pago, filtros de sucursal/fecha/tipo/referencia y netos/devoluciones exactos; enlaces a recibo y resumen explícito de página/moneda | 2.1-E2 |
+| 2.1-F2 | PENDING | Revisión manual de pagos no efectivos, permiso independiente e historial append-only/idempotente; importe observado y referencia, estado invalidado si cambia la revisión financiera | 2.1-F1 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |
@@ -51,3 +53,9 @@ Ninguna fila agregada representa una fase completada. Antes de iniciar cada bloq
 Modo global inclusive explícito, sin asignar tasa legal: el subtotal/descuento conserva el precio final del catálogo y el impuesto se extrae, sin añadirlo otra vez. Sobre el importe participante G, base = round_half_up(G × 100 / (100 + tasa), 2); impuesto = G − base. Total = subtotal redondeado − descuento + propina. Si la propina participa, su importe aceptado ya contiene ese impuesto; si no, se extrae solo del importe de productos. Cadenas/BCMath con precisión suficiente, versión 2 para este cálculo y versión 1 para historial/modos anteriores.
 
 Probar mitades/centavos y extremos, descuento fijo/porcentual, tratamiento de propina, revisión/configuración, snapshots anteriores, abonos/división/devoluciones y efectivo real. Impuestos múltiples por producto siguen siendo E2; no anunciar esa capacidad con E1.
+
+## Criterios previstos 2.1-F
+
+F1 será una consulta útil de pagos aplicados con devoluciones y neto, sin duplicar totales de venta al haber varios pagos. Filtros tenant/sucursal, fechas interpretadas en zona de empresa, tipo de método histórico y referencia escapada; paginación real y resumen de la página por moneda con BCMath. sales.view y sin filtrar saldos de caja a roles que no los consultan. No llamar ingreso/ganancia definitiva al neto de pagos.
+
+F2 añadirá declaraciones de revisión humana de no efectivos, nunca aprobación de banco/pasarela. Permiso sales.reconcile (propietarios existentes), revisión de venta y de revisión manual, UUID y auditoría/transacción. Registro append-only con importe observado/referencia/estado (revisado manualmente, diferencia, pendiente), sin mutar Payment/Sale/caja. Si cambia revisión de venta por pago/devolución, mostrar que necesita nueva revisión; no conservar una conciliación aparentemente actual sobre datos cambiados. Desglosar antes de implementar y probar conflictos/rollback/tenant además del flujo UI.

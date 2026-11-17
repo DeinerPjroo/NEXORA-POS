@@ -19,6 +19,8 @@ erDiagram
     USERS ||--o{ SESSIONS : inicia
     TENANTS ||--o{ CATEGORIES : organiza
     TENANTS ||--o{ PRODUCTS : posee
+    TENANTS ||--o{ TAX_PROFILES : configura
+    TAX_PROFILES o|--o{ PRODUCTS : asigna
     CATEGORIES ||--o{ PRODUCTS : agrupa
     PRODUCTS ||--o{ PRODUCT_VARIANTS : presenta
     BRANCHES ||--o{ CASH_REGISTERS : dispone
@@ -58,11 +60,12 @@ erDiagram
 | order_events | Pedido/actor, estado anterior/nuevo, motivo y fecha; append-only. |
 | idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
 | sales_settings | Una fila por empresa, configured inicialmente false, impuesto adicional, revisión y secuencia. tip_enabled false y tip_tax_mode nullable hasta confirmación explícita included/excluded sobre su base. |
-| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales e importes DECIMAL(19,4) inmutables. Incluye discount_type/value/amount y tip_amount/tip_tax_mode/tip_confirmed desde 0.8. calculation_version=1 para historia/modos originales, 2 para impuesto incluido desde 0.11. Solo estado/revisión mutables. |
+| sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales e importes DECIMAL(19,4) inmutables. Incluye ajustes/propina, calculation_version 1 (original), 2 (incluido global) o 3 (por producto) y tax_breakdown JSON inmutable. Solo estado/revisión mutables. |
 | payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
 | payments | Varios pagos manuales por venta desde 0.7; FK a payment_methods y único (tenant,sale,id) para referencia histórica. Snapshot de método/procedencia/referencia. Sesión obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
 | sale_refunds | Compensaciones parciales/completas por pago; FK (tenant,sale,payment_id), varias filas hasta el importe original desde 0.9. Índices tenant/sale y tenant/payment. Motivo/referencia/actor/sesión; cash_movement_id nullable. Append-only. |
 | sale_accounts | Partes iguales de una venta desde 0.10: número/etiqueta/importe append-only, únicos tenant/sale/id y tenant/sale/number, FK tenant/sale. payments.account_id nullable con FK tenant/sale/account; obligatorio en servicio solo si hay división. Saldos derivados con BCMath, sin columnas editables de saldo. |
+| tax_profiles | Nombre único por empresa, price_mode inclusive/exclusive, 1–5 rates JSON validados, is_active/revision y único tenant/id. Products.tax_profile_id nullable con FK tenant/profile. Sin borrado. Order_items.tax_snapshot copia perfil/tasas/revisión al crear pedido; Sales_settings.tip_tax_snapshot conserva política explícita de propina. JSONs no aceptados del cliente que cobra. |
 | workspace_settings | Una fila por empresa, revisión entera, JSON de tema publicado. |
 | theme_versions | Único `(tenant_id,version)`, schema_version y snapshot del tema, fecha. |
 | audit_logs | Actor opcional, acción, descripción, IP, metadata y fecha. Índice `(tenant_id,created_at)`. |

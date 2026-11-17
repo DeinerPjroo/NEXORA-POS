@@ -27,7 +27,7 @@ final class Sale extends Model
 
     protected function casts(): array
     {
-        return ['revision' => 'integer', 'calculation_version' => 'integer', 'tip_confirmed' => 'boolean', ...array_fill_keys(['catalog_subtotal', 'subtotal', 'rounding_adjustment', 'discount_amount', 'discount_value', 'tip_amount', 'taxable_base', 'tax_rate', 'tax_amount', 'total'], 'decimal:4')];
+        return ['tax_breakdown' => 'array', 'revision' => 'integer', 'calculation_version' => 'integer', 'tip_confirmed' => 'boolean', ...array_fill_keys(['catalog_subtotal', 'subtotal', 'rounding_adjustment', 'discount_amount', 'discount_value', 'tip_amount', 'taxable_base', 'tax_rate', 'tax_amount', 'total'], 'decimal:4')];
     }
 
     public function order(): BelongsTo

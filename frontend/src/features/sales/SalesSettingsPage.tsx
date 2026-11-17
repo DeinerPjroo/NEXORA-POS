@@ -7,6 +7,9 @@ import { api } from '../../lib/api'
 import { ErrorNotice, Field, Loading, PageTitle, Submit, useToast } from '../../components/ui'
 import { CatalogError } from '../catalog/catalog-ui'
 import type { SalesSettings } from './types'
+import { TaxProfilePicker } from './TaxProfilePicker'
+import { snapshotChoice } from './tax-types'
+import type { TaxChoice } from './tax-types'
 
 export function SalesSettingsPage() {
   const query = useQuery({
@@ -25,6 +28,11 @@ export function SalesSettingsPage() {
         eyebrow="UN CÁLCULO EXPLÍCITO"
         title="Configuración de ventas"
         description="Confirma cómo se calcularán los nuevos cobros. Los recibos anteriores conservan sus importes."
+        action={
+          <Link className="button secondary" to="/ventas/impuestos">
+            Perfiles de impuestos
+          </Link>
+        }
       />
       <SettingsForm key={query.data.data.revision} initial={query.data.data} />
     </>
@@ -37,6 +45,9 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
   const [revision] = useState(initial.revision)
   const [tips, setTips] = useState(initial.tip_enabled)
   const [tipMode, setTipMode] = useState(initial.tip_tax_mode ?? '')
+  const [tipProfile, setTipProfile] = useState<TaxChoice | null>(() =>
+    snapshotChoice(initial.tip_tax_snapshot),
+  )
   const client = useQueryClient()
   const toast = useToast()
   const mutation = useMutation({
@@ -53,10 +64,16 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
       revision,
       confirmed: fields.get('confirmed') === 'on',
       tax_mode: mode,
-      tax_name: fields.get('tax_name'),
+      tax_name: mode === 'product' ? 'Impuestos por producto' : fields.get('tax_name'),
       tax_rate: rate.replace(',', '.'),
       tip_enabled: tips,
       tip_tax_mode: tipMode || null,
+      ...(mode === 'product' && tips && tipMode === 'included'
+        ? {
+            tip_tax_profile_id: tipProfile?.id ?? null,
+            ...(tipProfile ? { tip_tax_profile_revision: tipProfile.revision } : {}),
+          }
+        : {}),
     })
   }
   return (
@@ -78,38 +95,47 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
             onChange={(event) => {
               const next = event.target.value as SalesSettings['tax_mode']
               setMode(next)
-              if (next === 'none') setRate('0')
+              if (next === 'none' || next === 'product') setRate('0')
             }}
           >
             <option value="none">Sin impuesto adicional automático</option>
             <option value="exclusive">Porcentaje adicional sobre la base</option>
             <option value="inclusive">Impuesto incluido en los precios</option>
+            <option value="product">Perfiles de impuestos por producto</option>
           </select>
         </Field>
         <p className="muted small">
-          {mode === 'inclusive'
-            ? 'Se extrae la base y el impuesto del precio final; no se vuelve a sumar al total. '
-            : 'Los precios del catálogo se tratan como base. '}
+          {mode === 'product'
+            ? 'Se usan los perfiles conservados en cada pedido. Los productos sin perfil no agregan impuestos por producto. Revisa el desglose antes de cobrar. '
+            : mode === 'inclusive'
+              ? 'Se extrae la base y el impuesto del precio final; no se vuelve a sumar al total. '
+              : 'Los precios del catálogo se tratan como base. '}
           Elige el cálculo que corresponda a tu negocio; esta configuración no determina su régimen
-          tributario. Varios impuestos por producto requieren una ampliación posterior.
+          tributario.
         </p>
-        <Field label="Nombre del impuesto">
-          <input name="tax_name" defaultValue={initial.tax_name} required maxLength={40} />
-        </Field>
-        <Field label={mode === 'inclusive' ? 'Tasa incluida (%)' : 'Tasa adicional (%)'}>
-          <input
-            value={rate}
-            onChange={(event) => setRate(event.target.value)}
-            disabled={mode === 'none'}
-            inputMode="decimal"
-            required
-            pattern="[0-9]+([.,][0-9]{1,4})?"
-          />
-        </Field>
+        {mode !== 'product' && (
+          <Field label="Nombre del impuesto">
+            <input name="tax_name" defaultValue={initial.tax_name} required maxLength={40} />
+          </Field>
+        )}
+        {mode !== 'product' && (
+          <Field label={mode === 'inclusive' ? 'Tasa incluida (%)' : 'Tasa adicional (%)'}>
+            <input
+              value={rate}
+              onChange={(event) => setRate(event.target.value)}
+              disabled={mode === 'none'}
+              inputMode="decimal"
+              required
+              pattern="[0-9]+([.,][0-9]{1,4})?"
+            />
+          </Field>
+        )}
         <div className="notice">
-          {mode === 'inclusive'
-            ? 'Después del descuento se extrae la base, redondeada a dos decimales con mitades hacia arriba. El impuesto es la diferencia respecto al importe participante, conservando el precio final.'
-            : 'Redondeo comercial a dos decimales, con mitades hacia arriba. Primero se redondea el subtotal, después se resta el descuento y se calcula el impuesto adicional sobre esa base.'}
+          {mode === 'product'
+            ? 'Subtotal y descuento se distribuyen en centavos por proporción y mayores restos. Los impuestos incluidos se extraen; solo los adicionales se suman al precio. Las tasas paralelas usan la misma base.'
+            : mode === 'inclusive'
+              ? 'Después del descuento se extrae la base, redondeada a dos decimales con mitades hacia arriba. El impuesto es la diferencia respecto al importe participante, conservando el precio final.'
+              : 'Redondeo comercial a dos decimales, con mitades hacia arriba. Primero se redondea el subtotal, después se resta el descuento y se calcula el impuesto adicional sobre esa base.'}
         </div>
         <label className="check-line">
           <input
@@ -138,13 +164,28 @@ function SettingsForm({ initial }: { initial: SalesSettings }) {
               'Si participa, el impuesto se extrae del importe de propina aceptado; no se añade otro cobro.'}
           </p>
         )}
+        {tips && tipMode === 'included' && mode === 'product' && (
+          <div className="field">
+            <span className="field-label">Perfil de impuestos para la propina</span>
+            <TaxProfilePicker value={tipProfile} onChange={setTipProfile} allowNone={false} />
+            <small className="muted">
+              Las tasas de la propina quedan confirmadas hasta guardar una nueva selección. No se
+              infieren de los productos.
+            </small>
+          </div>
+        )}
         <label className="check-line">
           <input name="confirmed" type="checkbox" required />
           Confirmo esta configuración para los próximos cobros.
         </label>
       </fieldset>
       <div className="form-actions">
-        <Submit pending={mutation.isPending}>Confirmar configuración</Submit>
+        <Submit
+          pending={mutation.isPending}
+          disabled={mode === 'product' && tips && tipMode === 'included' && !tipProfile}
+        >
+          Confirmar configuración
+        </Submit>
       </div>
     </form>
   )

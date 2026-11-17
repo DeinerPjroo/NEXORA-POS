@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
+use App\Http\Controllers\TaxProfileController;
 use App\Http\Controllers\VariantController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,9 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('operations/context', [OperationsController::class, 'context']);
         Route::get('payment-methods', [PaymentMethodController::class, 'index']);
+        Route::get('tax-profiles', [TaxProfileController::class, 'index']);
+        Route::post('tax-profiles', [TaxProfileController::class, 'store']);
+        Route::put('tax-profiles/{taxProfile}', [TaxProfileController::class, 'update']);
         Route::post('payment-methods', [PaymentMethodController::class, 'store']);
         Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update']);
         Route::get('sales/settings', [SalesSettingController::class, 'show']);

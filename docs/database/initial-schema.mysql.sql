@@ -383,3 +383,21 @@ alter table `payments` add constraint `payments_account_fk` foreign key (`tenant
 
 alter table `sales` add `calculation_version` smallint unsigned not null default '1';
 
+create table `tax_profiles` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `name` varchar(60) not null, `price_mode` varchar(20) not null, `rates` json not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `tax_profiles` add constraint `tax_profiles_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `tax_profiles` add unique `tax_profiles_tenant_id_id_unique`(`tenant_id`, `id`);
+
+alter table `tax_profiles` add unique `tax_profiles_tenant_id_name_unique`(`tenant_id`, `name`);
+
+alter table `products` add `tax_profile_id` bigint unsigned null;
+
+alter table `products` add constraint `products_tax_profile_fk` foreign key (`tenant_id`, `tax_profile_id`) references `tax_profiles` (`tenant_id`, `id`) on delete restrict;
+
+alter table `order_items` add `tax_snapshot` json null;
+
+alter table `sales_settings` add `tip_tax_snapshot` json null;
+
+alter table `sales` add `tax_breakdown` json null;
+

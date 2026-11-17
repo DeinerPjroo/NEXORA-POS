@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.11.0** agrega **impuesto incluido global**, extraído del precio final sin sumarlo dos veces y con cálculo versionado. Conserva partes iguales, devoluciones parciales, abonos/mixtos, descuentos y propinas voluntarias. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. La empresa confirma modo/tasa, sin asignación de régimen legal. Varios impuestos por producto, mesas, división por productos/unión de cuentas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [INCLUDED_TAX.md](docs/INCLUDED_TAX.md).
+La entrega **0.12.0** agrega **perfiles de varios impuestos por producto**, snapshots de tasas en pedidos y desglose incluido/adicional por línea. Conserva los modos globales, partes iguales, devoluciones parciales, abonos/mixtos, descuentos y propinas voluntarias. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. La empresa confirma perfiles/modo/tasas y tratamiento de propina, sin asignación de régimen legal. Conciliación manual, mesas, división por productos/unión de cuentas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PRODUCT_TAXES.md](docs/PRODUCT_TAXES.md).
 
 ## Entorno y requisitos
 

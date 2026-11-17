@@ -67,6 +67,14 @@ export function OrderDetailPage() {
                     {item.sku} · {formatMoney(item.unit_price, order.currency)} por unidad
                   </small>
                   {item.notes && <p>{item.notes}</p>}
+                  {item.tax_snapshot?.name && (
+                    <small>
+                      Perfil conservado: {item.tax_snapshot.name} ·{' '}
+                      {item.tax_snapshot.rates
+                        .map((rate) => `${rate.name} ${rate.rate.replace(/\.?0+$/, '') || '0'} %`)
+                        .join(' + ')}
+                    </small>
+                  )}
                 </div>
                 <b>{formatMoney(item.line_subtotal, order.currency)}</b>
               </div>

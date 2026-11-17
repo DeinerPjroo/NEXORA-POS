@@ -44,6 +44,9 @@ export function SalesPage() {
         action={
           can('sales.configure') && (
             <div className="operation-actions">
+              <Link className="button secondary" to="/ventas/impuestos">
+                Perfiles de impuestos
+              </Link>
               <Link className="button secondary" to="/ventas/metodos">
                 Métodos de pago
               </Link>

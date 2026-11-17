@@ -46,26 +46,33 @@ final class SaleTotals
             }
         }
         $tipMode = $settings->tip_enabled ? $settings->tip_tax_mode : 'disabled';
+        if ($settings->tax_mode === 'product' && $tipMode === 'included' && ! $settings->tip_tax_snapshot) {
+            throw ValidationException::withMessages(['tip_amount' => 'Confirma un perfil explícito de impuestos para las propinas participantes.']);
+        }
+        $productTaxes = $settings->tax_mode === 'product' ? app(ProductTaxTotals::class)->calculate($order, $subtotal, $discount, $tip, $tipMode === 'included' ? $settings->tip_tax_snapshot : null) : null;
         $base = Money::bounded(bcadd($goodsAmount, $tipMode === 'included' ? $tip : '0', 4));
-        if ($settings->tax_mode === 'inclusive') {
+        if ($productTaxes) {
+            $base = $productTaxes['base'];
+            $tax = $productTaxes['tax'];
+        } elseif ($settings->tax_mode === 'inclusive') {
             $included = IncludedTax::extract($base, $settings->tax_rate);
             $base = $included['base'];
             $tax = $included['tax'];
         } else {
             $tax = $settings->tax_mode === 'exclusive' ? self::round(bcdiv(bcmul($base, $settings->tax_rate, 8), '100', 8)) : '0.0000';
         }
-        $total = Money::bounded(bcadd(bcadd($goodsAmount, $tip, 4), $settings->tax_mode === 'exclusive' ? $tax : '0', 4));
+        $total = $productTaxes ? $productTaxes['total'] : Money::bounded(bcadd(bcadd($goodsAmount, $tip, 4), $settings->tax_mode === 'exclusive' ? $tax : '0', 4));
         if (bccomp($total, '0', 4) <= 0) {
             throw ValidationException::withMessages(['discount_amount' => 'El total debe ser mayor que cero para registrar un cobro.']);
         }
 
         return [
-            'calculation_version' => $settings->tax_mode === 'inclusive' ? 2 : 1,
+            'calculation_version' => $productTaxes ? 3 : ($settings->tax_mode === 'inclusive' ? 2 : 1), 'tax_breakdown' => $productTaxes['breakdown'] ?? null,
             'currency' => $order->currency, 'catalog_subtotal' => $order->subtotal, 'subtotal' => $subtotal,
             'rounding_adjustment' => bcsub($subtotal, $order->subtotal, 4),
             'discount_amount' => Money::normalize($discount), 'taxable_base' => $base,
             'discount_type' => $discountType, 'discount_value' => Money::normalize($value), 'tip_amount' => $tip, 'tip_tax_mode' => $tipMode,
-            'tax_mode' => $settings->tax_mode, 'tax_name' => $settings->tax_name, 'tax_rate' => $settings->tax_rate,
+            'tax_mode' => $settings->tax_mode, 'tax_name' => $productTaxes ? 'Impuestos por producto' : $settings->tax_name, 'tax_rate' => $productTaxes ? '0.0000' : $settings->tax_rate,
             'tax_amount' => $tax, 'total' => $total, 'settings_revision' => $settings->revision,
         ];
     }

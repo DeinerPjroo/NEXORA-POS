@@ -15,7 +15,7 @@ final class ProductController extends Controller
     public function index(CatalogFiltersRequest $request)
     {
         $data = $request->validated();
-        $query = Product::with('category')->withCatalogCounts()
+        $query = Product::with('category', 'taxProfile')->withCatalogCounts()
             ->when($data['search'] ?? null, function ($query, $search) {
                 $pattern = CatalogSearch::pattern($search);
                 $query->where(fn ($q) => $q->whereRaw("name LIKE ? ESCAPE '!'", [$pattern])->orWhereRaw("sku LIKE ? ESCAPE '!'", [$pattern])->orWhereRaw("barcode LIKE ? ESCAPE '!'", [$pattern]));
@@ -50,6 +50,6 @@ final class ProductController extends Controller
 
     private function hydrate(Product $product): Product
     {
-        return $product->load('category')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true)]);
+        return $product->load('category', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true)]);
     }
 }

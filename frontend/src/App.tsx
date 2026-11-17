@@ -21,6 +21,7 @@ import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { CheckoutPage } from './features/sales/CheckoutPage'
 import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
+import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 
 export default function App() {
   return (
@@ -31,6 +32,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/ventas/impuestos"
+          element={
+            <PermissionBoundary permission="sales.configure">
+              <TaxProfilesPage />
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/ventas/metodos"
           element={

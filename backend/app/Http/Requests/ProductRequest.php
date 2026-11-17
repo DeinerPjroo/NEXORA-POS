@@ -31,6 +31,8 @@ final class ProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:40', 'regex:/^[A-Z0-9_-]+$/D', Rule::unique('products', 'sku')->where('tenant_id', $tenantId)->ignore($this->route('product')?->id)],
             'barcode' => ['nullable', 'string', 'max:64', 'regex:/^[0-9A-Za-z_-]+$/D', Rule::unique('products', 'barcode')->where('tenant_id', $tenantId)->ignore($this->route('product')?->id)],
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('tenant_id', $tenantId)],
+            'tax_profile_id' => ['sometimes', 'nullable', 'integer', Rule::exists('tax_profiles', 'id')->where('tenant_id', $tenantId)],
+            'tax_profile_revision' => ['required_with:tax_profile_id', 'integer', 'min:1'],
             'description' => ['nullable', 'string', 'max:1000'],
             'currency' => ['required', Rule::in(['COP', 'USD', 'EUR'])],
             'sale_price' => ['required', ...$money],

@@ -15,6 +15,6 @@ final class OrderItem extends Model
 
     protected function casts(): array
     {
-        return ['quantity' => 'integer', 'unit_price' => 'decimal:4', 'line_subtotal' => 'decimal:4'];
+        return ['tax_snapshot' => 'array', 'quantity' => 'integer', 'unit_price' => 'decimal:4', 'line_subtotal' => 'decimal:4'];
     }
 }

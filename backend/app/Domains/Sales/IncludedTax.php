@@ -4,7 +4,7 @@ namespace App\Domains\Sales;
 
 final class IncludedTax
 {
-    // Importe participante ya redondeado a centavos y tasa validada de 0–100.
+    // Importe participante en centavos; tasa validada global o suma de hasta 5 tasas.
     // Redondear base una vez y obtener impuesto por diferencia conserva el precio final.
     public static function extract(string $gross, string $rate): array
     {
