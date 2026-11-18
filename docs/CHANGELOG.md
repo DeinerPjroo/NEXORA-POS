@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.16.0 · 2026-11-18
+
+- Grupos propios de producto con mínimos/máximos, adicionales decimales y exclusiones sin recargo; configuración/archivo paginados, UUID, revisión de producto y auditoría atómicos.
+- Límites de grupos/opciones activos con conservación de archivados y bloqueo de configuraciones obligatorias imposibles. Bindings/FK tenant/product/group y permisos catalog existentes.
+- Selección tras presentación, sin opciones automáticas, y claves canónicas para conservar preparaciones distintas en carrito. Precio final por unidad y cantidad con BigInt/BCMath.
+- Snapshots de precio base/grupos/opciones en pedido y recibo/impresión, heredando impuestos del producto. Renombrar/cambiar precios/archivar no altera pedidos previos ni su replay, abonos, cuentas o devoluciones.
+- Migración 000016 incremental y MODIFIERS.md. Carga diferida de historial y panel de producto tras aviso real de tamaño de bundle; no añade paquetes.
+
 ## 0.15.0 · 2026-11-18
 
 - Categorías principales/subcategorías con FK compuesta, revisión de padre y bloqueo por empresa; impedir ciclos/tercer nivel o transformar en hija una raíz con subcategorías.

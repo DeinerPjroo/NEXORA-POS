@@ -1,6 +1,6 @@
 # Modificadores · criterios del incremento 2.2-B
 
-Plan de implementación posterior a 0.15; no funcionalidad publicada. Referencias: REQUIREMENTS 6.3/6.6, CATALOG_ADVANCED_PLAN, Product/Variant/CreateOrder y fórmulas versionadas de ventas.
+Diseño de referencia del incremento implementado en 0.16. El contrato vigente y sus límites están en [MODIFIERS.md](MODIFIERS.md). Referencias: REQUIREMENTS 6.3/6.6, CATALOG_ADVANCED_PLAN, Product/Variant/CreateOrder y fórmulas versionadas de ventas.
 
 ## Alcance funcional
 

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell, PermissionBoundary } from './components/AppShell'
 import { AuthPage } from './features/auth/AuthPage'
@@ -22,7 +23,13 @@ import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { CheckoutPage } from './features/sales/CheckoutPage'
 import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
-import { PaymentHistoryPage } from './features/sales/PaymentHistoryPage'
+import { Loading } from './components/ui'
+
+const PaymentHistoryPage = lazy(() =>
+  import('./features/sales/PaymentHistoryPage').then((module) => ({
+    default: module.PaymentHistoryPage,
+  })),
+)
 
 export default function App() {
   return (
@@ -37,7 +44,9 @@ export default function App() {
           path="/ventas/historial"
           element={
             <PermissionBoundary permission="sales.view">
-              <PaymentHistoryPage />
+              <Suspense fallback={<Loading />}>
+                <PaymentHistoryPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />

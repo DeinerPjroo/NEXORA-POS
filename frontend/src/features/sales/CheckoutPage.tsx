@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ModifierDetails } from '../orders/ModifierDetails'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -370,10 +371,15 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
         )}
         {order.items?.map((item) => (
           <div className="checkout-order-line" key={item.id}>
-            <span>
+            <div>
               {item.quantity}× {item.product_name}
               {item.variant_name && ` · ${item.variant_name}`}
-            </span>
+              <ModifierDetails
+                groups={item.modifiers_snapshot}
+                basePrice={item.base_unit_price}
+                currency={order.currency}
+              />
+            </div>
             <strong>{formatMoney(item.line_subtotal, order.currency)}</strong>
           </div>
         ))}

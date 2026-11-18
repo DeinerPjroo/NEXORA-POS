@@ -1,5 +1,13 @@
 # Decisiones técnicas y operativas
 
+## DEC-013 · Opciones por unidad y snapshot de preparación (0.16)
+
+Cada grupo pertenece a un producto y se aplica a sus variantes; tipo addon/exclusion estable. Las exclusiones son instrucciones de preparación con importe cero, no descuentos, reembolsos ni movimientos de inventario. Configuración activa limitada a 8 grupos/20 opciones, conservando archivados y páginas administrativas. Revisiones de grupo/producto y auditoría dentro de UUID transaccional; producto incrementa revisión ante cualquier cambio para invalidar carritos.
+
+Una opción se elige una vez por unidad; cantidades de producto multiplican el precio unitario completo. Preparaciones diferentes tienen claves canónicas distintas en carrito. El servidor valida grupos/opciones por línea, no un distinct global que rechace dos líneas con el mismo grupo. Precio base + adicionales BCMath y límites monetarios, con snapshots en OrderItem; el cálculo tributario recibe el subtotal completo y las opciones heredan el perfil del producto. No recotizar al cobrar/reintentar pedidos anteriores.
+
+La consulta activa tiene límite real de configuración; las lecturas administrativas conservan historial paginado. Una advertencia de bundle 510.01 kB justificó lazy de historial (503.30 restante) y panel de producto (492.97 principal), sin elevar el umbral de Vite ni agregar dependencias.
+
 ## DEC-012 · Subcategorías con dos niveles (0.15)
 
 Se añade padre nullable sobre categories existentes y se conservan unicidad de nombres por empresa, revisiones y productos asignados. Dos niveles explícitos permiten prevenir ciclos y consultar ancestro directo sin introducir recursión no requerida. Una raíz con hijos no puede convertirse en hija hasta reasignarlos; una hija sí puede volver a raíz. Elegir padre requiere revisión; omitir parent_id conserva la relación para clientes anteriores.

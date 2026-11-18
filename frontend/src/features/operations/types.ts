@@ -33,6 +33,8 @@ export type CashMovement = {
 }
 export type OrderStatus = 'open' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 export type OrderItem = {
+  base_unit_price?: string | null
+  modifiers_snapshot?: import('../catalog/modifier-types').ModifierSnapshot[] | null
   tax_snapshot?: import('../sales/tax-types').TaxSnapshot | null
   id: number
   product_id: number

@@ -1,5 +1,12 @@
 import { moneyUnits, unitsToMoney } from '../../lib/money'
 import type { Product, Variant } from '../catalog/types'
+import type { ModifierSelection, ModifierSnapshot } from '../catalog/modifier-types'
+
+export type CartConfiguration = {
+  selections: ModifierSelection[]
+  snapshot: ModifierSnapshot[]
+  unitPrice: string
+}
 
 export type CartLine = {
   expected_tax_revision?: number
@@ -12,10 +19,26 @@ export type CartLine = {
   product_revision: number
   expected_unit_price: string
   notes: string
+  modifiers?: ModifierSelection[]
+  modifier_labels?: ModifierSnapshot[]
 }
-export function makeLine(product: Product, variant?: Variant): CartLine {
+export function makeLine(
+  product: Product,
+  variant?: Variant,
+  configuration?: CartConfiguration,
+): CartLine {
+  const signature =
+    configuration?.selections
+      .filter((selection) => selection.option_ids.length)
+      .slice()
+      .sort((a, b) => a.group_id - b.group_id)
+      .map(
+        (selection) =>
+          `${selection.group_id}=${[...selection.option_ids].sort((a, b) => a - b).join(',')}`,
+      )
+      .join('|') ?? ''
   return {
-    key: `${product.id}:${variant?.id ?? ''}`,
+    key: `${product.id}:${variant?.id ?? ''}${signature ? `:${signature}` : ''}`,
     product_id: product.id,
     variant_id: variant?.id ?? null,
     product_name: product.name,
@@ -23,7 +46,10 @@ export function makeLine(product: Product, variant?: Variant): CartLine {
     quantity: 1,
     product_revision: product.revision,
     ...(product.tax_profile ? { expected_tax_revision: product.tax_profile.revision } : {}),
-    expected_unit_price: variant?.sale_price ?? product.sale_price,
+    expected_unit_price: configuration?.unitPrice ?? variant?.sale_price ?? product.sale_price,
+    ...(configuration
+      ? { modifiers: configuration.selections, modifier_labels: configuration.snapshot }
+      : {}),
     notes: '',
   }
 }

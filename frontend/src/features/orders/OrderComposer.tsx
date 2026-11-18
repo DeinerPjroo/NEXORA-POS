@@ -26,8 +26,10 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
 import type { Order } from '../operations/types'
 import { VariantOrderPicker } from './VariantOrderPicker'
+import { ModifierOrderPicker } from './ModifierOrderPicker'
+import { ModifierDetails } from './ModifierDetails'
 import { cartSubtotal, makeLine } from './cart'
-import type { CartLine } from './cart'
+import type { CartLine, CartConfiguration } from './cart'
 
 export function OrderComposer() {
   const context = useOperationContext()
@@ -38,6 +40,9 @@ export function OrderComposer() {
   const [category, setCategory] = useState<CategorySummary | null>(null)
   const [page, setPage] = useState(1)
   const [picking, setPicking] = useState<Product | null>(null)
+  const [customizing, setCustomizing] = useState<{ product: Product; variant?: Variant } | null>(
+    null,
+  )
   const [cart, setCart] = useState<CartLine[]>([])
   const can = useCan()
   const navigate = useNavigate()
@@ -67,9 +72,14 @@ export function OrderComposer() {
       setCart([])
     }
   })
-  function add(product: Product, variant?: Variant) {
+  function configure(product: Product, variant?: Variant) {
+    setPicking(null)
+    if (product.modifier_groups_count) setCustomizing({ product, variant })
+    else add(product, variant)
+  }
+  function add(product: Product, variant?: Variant, configuration?: CartConfiguration) {
     if (operation.locked) return
-    const line = makeLine(product, variant)
+    const line = makeLine(product, variant, configuration)
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
       return existing
@@ -79,6 +89,7 @@ export function OrderComposer() {
         : [...previous, line]
     })
     setPicking(null)
+    setCustomizing(null)
   }
   function quantity(key: string, value: number) {
     if (!operation.locked)
@@ -97,7 +108,13 @@ export function OrderComposer() {
       branch_id: selected,
       currency,
       items: cart.map(
-        ({ key: _key, product_name: _name, variant_name: _variant, ...line }) => line,
+        ({
+          key: _key,
+          product_name: _name,
+          variant_name: _variant,
+          modifier_labels: _labels,
+          ...line
+        }) => line,
       ),
     })
   }
@@ -172,7 +189,7 @@ export function OrderComposer() {
                       key={product.id}
                       disabled={!product.sellable || operation.locked}
                       onClick={() =>
-                        product.variants_count > 0 ? setPicking(product) : add(product)
+                        product.variants_count > 0 ? setPicking(product) : configure(product)
                       }
                       aria-label={`Agregar ${product.name}`}
                     >
@@ -192,7 +209,9 @@ export function OrderComposer() {
                       <span>
                         {product.variants_count
                           ? 'Elegir presentación'
-                          : formatMoney(product.sale_price, currency)}
+                          : product.modifier_groups_count
+                            ? 'Personalizar opciones'
+                            : formatMoney(product.sale_price, currency)}
                         <Plus size={16} />
                       </span>
                     </button>
@@ -229,6 +248,7 @@ export function OrderComposer() {
                     <div>
                       <strong>{line.product_name}</strong>
                       {line.variant_name && <small>{line.variant_name}</small>}
+                      <ModifierDetails groups={line.modifier_labels} currency={currency} />
                     </div>
                     <button
                       type="button"
@@ -353,8 +373,21 @@ export function OrderComposer() {
         <VariantOrderPicker
           product={picking}
           currency={currency}
-          onPick={(variant) => add(picking, variant)}
+          onPick={(variant) => configure(picking, variant)}
           onClose={() => setPicking(null)}
+        />
+      )}
+      {customizing && (
+        <ModifierOrderPicker
+          product={customizing.product}
+          variant={customizing.variant}
+          currency={currency}
+          onPick={(configuration) => add(customizing.product, customizing.variant, configuration)}
+          onClose={() => setCustomizing(null)}
+          onRefresh={() => {
+            void products.refetch()
+            setCustomizing(null)
+          }}
         />
       )}
     </>

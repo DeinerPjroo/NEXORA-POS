@@ -24,6 +24,8 @@ erDiagram
     TAX_PROFILES o|--o{ PRODUCTS : asigna
     CATEGORIES ||--o{ PRODUCTS : agrupa
     PRODUCTS ||--o{ PRODUCT_VARIANTS : presenta
+    PRODUCTS ||--o{ PRODUCT_MODIFIER_GROUPS : configura
+    PRODUCT_MODIFIER_GROUPS ||--o{ PRODUCT_MODIFIER_OPTIONS : ofrece
     BRANCHES ||--o{ CASH_REGISTERS : dispone
     CASH_REGISTERS ||--o{ CASH_SESSIONS : conserva
     CASH_SESSIONS ||--o{ CASH_MOVEMENTS : registra
@@ -55,11 +57,13 @@ erDiagram
 | categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id); parent_id nullable con FK tenant/parent e índice tenant/parent/name desde 0.15. Dos niveles validados bajo bloqueo de empresa; disponibilidad efectiva derivada, sin cascadas de flags. |
 | products | Categoría con FK compuesta, SKU y barcode únicos por empresa (barcode nullable), precio/costo DECIMAL(19,4), estado, disponibilidad y revisión. |
 | product_variants | FK compuesta (tenant_id,product_id) al producto; SKU y barcode únicos por empresa, nombre único por producto, precio/costo DECIMAL(19,4), estados y timestamps. |
+| product_modifier_groups | Producto con FK tenant/product, nombre único por producto y tipo addon/exclusion estable; mínimo/máximo/estado/posición/revisión. Único tenant/product/id para referencias de opción; límite activo validado bajo bloqueo. |
+| product_modifier_options | FK tenant/product/group al grupo correcto, nombre único por grupo y precio adicional DECIMAL(19,4), estado/posición. Archivo sin borrado y límite activo; cambios avanzan revisión de grupo/producto. |
 | cash_registers | Sucursal con FK compuesta, código único por sucursal y active_session_id que referencia una sesión de esa misma caja mediante FK (tenant_id,id,active_session_id). |
 | cash_sessions | Sucursal/caja/actores con referencias compuestas, moneda, importes DECIMAL(19,4), revisión, estado y fechas de apertura/cierre. Diferencia firmada nullable hasta cerrar. |
 | cash_movements | Sesión/actor con FKs compuestas, tipo ingreso/egreso, importe positivo, motivo y fecha. Append-only por modelo y sin rutas de edición/borrado. |
 | orders | UUID público, sucursal/actor, canal, referencia/notas, moneda, subtotal DECIMAL(19,4), estado/revisión y fechas. Sin vínculo a pago o caja todavía. |
-| order_items | Pedido/producto/variante con FKs compuestas (incluye tenant/producto/variante), nombres/SKU/precio históricos, cantidad entera y subtotal/notas. Append-only. |
+| order_items | Pedido/producto/variante con FKs compuestas (incluye tenant/producto/variante), nombres/SKU/precio históricos, cantidad entera y subtotal/notas. tax_snapshot JSON; base_unit_price/modifiers_snapshot nullable desde 0.16, sin reinterpretar historia. Precio unitario/subtotal finales incluyen adicionales. Append-only. |
 | order_events | Pedido/actor, estado anterior/nuevo, motivo y fecha; append-only. |
 | idempotency_records | Clave UUID única por tenant, actor, acción, hash canónico de payload y recurso creado. Append-only, sin expiración automática. |
 | sales_settings | Una fila por empresa, configured inicialmente false, impuesto adicional, revisión y secuencia. tip_enabled false y tip_tax_mode nullable hasta confirmación explícita included/excluded sobre su base. |

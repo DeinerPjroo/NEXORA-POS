@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { ModifierDetails } from './ModifierDetails'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock3, Plus, ShoppingBag } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -67,6 +68,11 @@ export function OrderDetailPage() {
                     {item.sku} · {formatMoney(item.unit_price, order.currency)} por unidad
                   </small>
                   {item.notes && <p>{item.notes}</p>}
+                  <ModifierDetails
+                    groups={item.modifiers_snapshot}
+                    basePrice={item.base_unit_price}
+                    currency={order.currency}
+                  />
                   {item.tax_snapshot?.name && (
                     <small>
                       Perfil conservado: {item.tax_snapshot.name} ·{' '}

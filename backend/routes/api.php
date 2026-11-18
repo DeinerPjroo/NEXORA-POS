@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentReviewController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductModifierController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
@@ -84,6 +85,13 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/modifier-configuration', [ProductModifierController::class, 'configuration']);
+            Route::get('products/{product}/modifier-groups', [ProductModifierController::class, 'groups']);
+            Route::post('products/{product}/modifier-groups', [ProductModifierController::class, 'storeGroup']);
+            Route::put('products/{product}/modifier-groups/{modifierGroup}', [ProductModifierController::class, 'updateGroup']);
+            Route::get('products/{product}/modifier-groups/{modifierGroup}/options', [ProductModifierController::class, 'options']);
+            Route::post('products/{product}/modifier-groups/{modifierGroup}/options', [ProductModifierController::class, 'storeOption']);
+            Route::put('products/{product}/modifier-groups/{modifierGroup}/options/{option}', [ProductModifierController::class, 'updateOption']);
             Route::get('products/{product}/variants', [VariantController::class, 'index']);
             Route::post('products/{product}/variants', [VariantController::class, 'store']);
             Route::put('products/{product}/variants/{variant}', [VariantController::class, 'update']);

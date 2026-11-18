@@ -50,6 +50,6 @@ final class ProductController extends Controller
 
     private function hydrate(Product $product): Product
     {
-        return $product->load('category.parent', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true)]);
+        return $product->load('category.parent', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);
     }
 }

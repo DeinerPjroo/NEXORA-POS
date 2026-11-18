@@ -409,3 +409,125 @@
   cursor: not-allowed;
   opacity: 0.65;
 }
+.product-modifiers-panel {
+  padding: 26px;
+  margin-top: 24px;
+}
+.modifier-group-list {
+  display: grid;
+  gap: 16px;
+}
+.modifier-group-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+.modifier-group-heading,
+.modifier-group-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.modifier-group-actions {
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+.modifier-group-heading h3 {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.modifier-options-list {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.modifier-option-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.modifier-option-row > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modifier-option-row small {
+  display: block;
+  margin-top: 4px;
+}
+.modifier-option-row b {
+  overflow-wrap: anywhere;
+}
+.modifier-draft-options {
+  display: grid;
+  gap: 14px;
+}
+.modifier-draft-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+@media (max-width: 600px) {
+  .product-modifiers-panel {
+    padding: 18px;
+  }
+  .product-modifiers-panel > .panel-heading {
+    flex-wrap: wrap;
+  }
+  .modifier-draft-option {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.modifier-choice-group {
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 12px;
+  min-width: 0;
+}
+.modifier-choice-group legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+.modifier-choice-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.modifier-choice-option input {
+  width: 17px;
+  min-height: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  accent-color: var(--primary);
+}
+.modifier-choice-option span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modifier-choice-option b {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.modifier-details {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.modifier-details small {
+  display: block;
+}

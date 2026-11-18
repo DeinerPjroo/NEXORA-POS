@@ -48,6 +48,7 @@ export type Product = {
   image_url: string | null
   variants_count: number
   available_variants_count: number
+  modifier_groups_count: number
   revision: number
 }
 export function productStatus(product: Product) {

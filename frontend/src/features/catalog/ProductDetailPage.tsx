@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Tag } from 'lucide-react'
@@ -13,6 +13,10 @@ import { VariantsPanel } from './VariantsPanel'
 import { categoryPath, productStatus } from './types'
 import type { Product } from './types'
 import { taxSummary } from '../sales/tax-types'
+
+const ProductModifiersPanel = lazy(() =>
+  import('./ProductModifiersPanel').then((module) => ({ default: module.ProductModifiersPanel })),
+)
 
 export function ProductDetailPage() {
   const { productId = '' } = useParams()
@@ -116,6 +120,9 @@ export function ProductDetailPage() {
         </section>
       </div>
       <VariantsPanel product={product} />
+      <Suspense fallback={<Loading />}>
+        <ProductModifiersPanel product={product} />
+      </Suspense>
       <section className="panel receipt-refund">
         <h2>Perfil de impuestos del producto</h2>
         <p>

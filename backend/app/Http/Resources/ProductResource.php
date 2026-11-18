@@ -20,6 +20,7 @@ final class ProductResource extends JsonResource
             'is_active' => $this->is_active, 'is_available' => $this->is_available,
             'sellable' => $this->is_active && $this->is_available && (bool) $this->category?->isEffectivelyActive() && (! $this->tax_profile_id || $this->taxProfile?->is_active) && (! $this->variants_count || $this->available_variants_count > 0),
             'variants_count' => $this->variants_count ?? 0,
+            'modifier_groups_count' => $this->modifier_groups_count ?? 0,
             'available_variants_count' => $this->available_variants_count ?? 0,
             'image_url' => $this->image_path ? '/api/v1/products/'.$this->id.'/image?version='.substr(hash('sha256', $this->image_path), 0, 16) : null,
             'revision' => $this->revision, 'updated_at' => $this->updated_at,

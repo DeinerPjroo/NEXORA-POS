@@ -2,11 +2,15 @@ import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api, ApiError } from '../../lib/api'
 
-export function useOperation<T>(path: string, onSuccess: (result: T) => void | Promise<void>) {
+export function useOperation<T>(
+  path: string,
+  onSuccess: (result: T) => void | Promise<void>,
+  method: 'POST' | 'PUT' = 'POST',
+) {
   const [key, setKey] = useState(() => crypto.randomUUID())
   const last = useRef<Record<string, unknown> | null>(null)
   const mutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api<{ data: T }>(path, { method: 'POST', body }),
+    mutationFn: (body: Record<string, unknown>) => api<{ data: T }>(path, { method, body }),
     onSuccess: async (result) => {
       await onSuccess(result.data)
       last.current = null

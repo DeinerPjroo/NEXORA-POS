@@ -425,3 +425,29 @@ alter table `categories` add constraint `categories_parent_fk` foreign key (`ten
 
 alter table `categories` add index `categories_tenant_id_parent_id_name_index`(`tenant_id`, `parent_id`, `name`);
 
+create table `product_modifier_groups` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `name` varchar(80) not null, `kind` varchar(20) not null, `min_select` tinyint unsigned not null, `max_select` tinyint unsigned not null, `is_active` tinyint(1) not null default '1', `position` smallint unsigned not null default '0', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_modifier_groups` add constraint `product_modifier_groups_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_modifier_groups` add unique `modifier_groups_product_identity`(`tenant_id`, `product_id`, `id`);
+
+alter table `product_modifier_groups` add unique `modifier_groups_product_name`(`tenant_id`, `product_id`, `name`);
+
+alter table `product_modifier_groups` add index `modifier_groups_menu_idx`(`tenant_id`, `product_id`, `is_active`, `position`);
+
+alter table `product_modifier_groups` add constraint `modifier_groups_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+create table `product_modifier_options` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `modifier_group_id` bigint unsigned not null, `name` varchar(80) not null, `extra_price` decimal(19, 4) not null, `is_active` tinyint(1) not null default '1', `position` smallint unsigned not null default '0', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_modifier_options` add constraint `product_modifier_options_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_modifier_options` add unique `modifier_options_group_name`(`tenant_id`, `modifier_group_id`, `name`);
+
+alter table `product_modifier_options` add index `modifier_options_menu_idx`(`tenant_id`, `modifier_group_id`, `is_active`, `position`);
+
+alter table `product_modifier_options` add constraint `modifier_options_group_fk` foreign key (`tenant_id`, `product_id`, `modifier_group_id`) references `product_modifier_groups` (`tenant_id`, `product_id`, `id`) on delete restrict;
+
+alter table `order_items` add `base_unit_price` decimal(19, 4) null;
+
+alter table `order_items` add `modifiers_snapshot` json null;
+

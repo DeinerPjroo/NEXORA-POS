@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.15.0** agrega **subcategorías** con selección de principal, filtros y disponibilidad heredada integrada en productos/pedidos. Conserva la revisión manual de pagos no efectivos, historial/netos, impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Modificadores, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [SUBCATEGORIES.md](docs/SUBCATEGORIES.md) y [PAYMENT_REVIEWS.md](docs/PAYMENT_REVIEWS.md).
+La entrega **0.16.0** agrega **adicionales y exclusiones** configurables, selección por presentación, precio exacto y snapshots en pedido/recibo. Conserva subcategorías, revisión manual e historial de pagos, impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Precios por contexto, horarios, combos/promociones, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [MODIFIERS.md](docs/MODIFIERS.md), [SUBCATEGORIES.md](docs/SUBCATEGORIES.md) y [PAYMENT_REVIEWS.md](docs/PAYMENT_REVIEWS.md).
 
 ## Entorno y requisitos
 

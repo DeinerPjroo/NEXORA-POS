@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Modificadores de preparación y precio (0.16)
+
+SaveModifierGroup/Option usan IdempotentOperation, Policy antes de replay, ModifierProductContext y Product.revision como revisión global de configuración. Group.revision incluye cambios de opciones. Configuración activa acotada (8/20), archivados paginados y FK tenant/product/group, sin modelos compartidos que puedan cambiar otros productos.
+
+OrderModifiers valida selección por línea y resuelve base + adicionales antes del expected_unit_price y subtotal de CreateOrder. Snapshot append-only en OrderItem, precio final de línea y tributación heredada por ProductTaxTotals sin nueva fórmula. UI canónica separa preparaciones; ModifierDetails consume solo snapshots en pedido/cobro/recibo. MODIFIERS.md define contrato y límites. Historial y panel administrativo cargan mediante lazy/Suspense para mantener chunks acotados tras aviso observado.
+
 ## Jerarquía acotada de catálogo (0.15)
 
 CategoryHierarchy valida dos niveles dentro del bloqueo de empresa compartido por SaveCatalogRecord y CreateOrder. Category::isEffectivelyActive centraliza herencia para consulta y toma de pedidos; ProductResource y el comando usan la misma regla. Padre con FK compuesta y revisión elegida, sin cascadas de estado ni reinterpretar snapshots anteriores. SUBCATEGORIES.md define API, filtros y límites.

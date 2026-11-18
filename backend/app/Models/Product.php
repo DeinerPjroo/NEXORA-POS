@@ -36,8 +36,13 @@ final class Product extends Model
         return $this->belongsTo(TaxProfile::class);
     }
 
+    public function modifierGroups(): HasMany
+    {
+        return $this->hasMany(ProductModifierGroup::class);
+    }
+
     public function scopeWithCatalogCounts(Builder $query): void
     {
-        $query->withCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true)]);
+        $query->withCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);
     }
 }
