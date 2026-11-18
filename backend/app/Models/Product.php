@@ -12,7 +12,7 @@ final class Product extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['category_id', 'tax_profile_id', 'name', 'sku', 'barcode', 'description', 'sale_price', 'cost_price', 'is_active', 'is_available'];
+    protected $fillable = ['kind', 'category_id', 'tax_profile_id', 'name', 'sku', 'barcode', 'description', 'sale_price', 'cost_price', 'is_active', 'is_available'];
 
     protected $hidden = ['cost_price', 'image_path', 'image_mime'];
 
@@ -49,6 +49,11 @@ final class Product extends Model
     public function availabilityWindows(): HasMany
     {
         return $this->hasMany(ProductAvailabilityWindow::class);
+    }
+
+    public function comboComponents(): HasMany
+    {
+        return $this->hasMany(ProductComboComponent::class);
     }
 
     public function scopeWithCatalogCounts(Builder $query): void

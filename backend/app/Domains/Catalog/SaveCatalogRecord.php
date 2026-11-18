@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 final class SaveCatalogRecord
 {
@@ -23,6 +24,9 @@ final class SaveCatalogRecord
                 CatalogIdentifiers::assertAvailable($data['sku'], $data['barcode'] ?? $record->barcode, $record->exists ? $record->id : null);
             }
             $existing = $record->exists;
+            if ($existing && $record instanceof Product && array_key_exists('kind', $data)) {
+                throw ValidationException::withMessages(['kind' => 'El tipo de producto se conserva desde su creación.']);
+            }
             if ($existing) {
                 $record = $record->newQuery()->lockForUpdate()->findOrFail($record->id);
                 Gate::authorize('update', $record);
@@ -30,6 +34,9 @@ final class SaveCatalogRecord
                 $record->revision++;
             }
             if ($record instanceof Product && isset($data['tax_profile_id'])) {
+                if (($record->kind ?? $data['kind'] ?? 'regular') === 'combo') {
+                    throw ValidationException::withMessages(['tax_profile_id' => 'Los impuestos del combo proceden de sus componentes.']);
+                }
                 $profile = TaxProfile::whereKey($data['tax_profile_id'])->lockForUpdate()->firstOrFail();
                 abort_unless($profile->is_active && $profile->revision === (int) $data['tax_profile_revision'], 409, 'El perfil de impuestos cambió o está archivado. Revisa la selección.');
             }

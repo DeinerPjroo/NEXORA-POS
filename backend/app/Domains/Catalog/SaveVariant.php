@@ -19,6 +19,7 @@ final class SaveVariant
             $company = Tenant::whereKey($actor->tenant_id)->lockForUpdate()->firstOrFail();
             $product = Product::whereKey($product->id)->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $product);
+            abort_if($product->kind === 'combo', 422, 'Configura las presentaciones desde los componentes del combo.');
             abort_if($company->currency !== $data['currency'], 409, 'La moneda cambió. Recarga el espacio antes de guardar precios.');
             abort_if($product->revision !== (int) $data['product_revision'], 409, 'El producto cambió en otra sesión. Actualiza la ficha antes de guardar.');
             if ($variant) {

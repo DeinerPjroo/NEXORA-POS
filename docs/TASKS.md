@@ -21,9 +21,9 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.2-B | COMPLETED | Grupos/opciones, selector/precio/snapshots y recibo conectados; migración 000016 aplicada, 197/2102 SQLite/MariaDB, 19 Playwright (14.7 min), recorrido UI ampliado, build/formato y capturas correctos; MODIFIERS.md | 2.2-A |
 | 2.2-C1 | COMPLETED | Reglas/menú/preview/revisión de carrito/snapshots conectados. Migración 000017/DDL, 208/2286 SQLite/MariaDB y 20 Playwright en 16.9 minutos aprobados, build/formato/doctor/capturas correctos; CONTEXT_PRICES.md | 2.2-B |
 | 2.2-C2 | COMPLETED | API/UI/reloj/zona/vigencia/guardia de zona y snapshots conectados. Migración 000018/DDL, 222/2475 SQLite/MariaDB, 21 Playwright en 22.4 minutos y recorrido final C2 en 2.4 minutos aprobados. Build/formato/doctor/capturas correctos; AVAILABILITY_SCHEDULES.md | 2.2-C1 |
-| 2.2-D | IN_PROGRESS | Combos con composición/selección, asignación explícita de precio/impuestos y snapshots; diseño/desglose D1/D2 en COMBOS_PLAN.md, sin código todavía | 2.2-C2 |
-| 2.2-D1 | IN_PROGRESS | Diseño de composición fija/presentaciones y preparaciones; precio contextual de raíz, reparto explícito y líneas facturables de componentes, cabecera histórica sin doble cobro. Esquema/implementación pendientes | 2.2-C2 |
-| 2.2-D2 | PENDING | Grupos acotados de alternativas permitidas, selección mínima/máxima y snapshots; completar 2.2-D después de verificar ambos | 2.2-D1 |
+| 2.2-D | IN_PROGRESS | D1 completado; D2 en diseño de alternativas/grupos. No cerrar este padre hasta verificar ambos; COMBOS_PLAN.md y COMBO_CHOICES_PLAN.md | 2.2-C2 |
+| 2.2-D1 | COMPLETED | Composición/API/UI/carrito/preview/reparto/snapshots/recibo conectados. Migración 000019/DDL, 232/2652 SQLite/MariaDB y 22 Playwright en 20.7 minutos aprobados; build/formato/doctor/capturas correctos. FIXED_COMBOS.md | 2.2-C2 |
+| 2.2-D2 | IN_PROGRESS | Diseño en COMBO_CHOICES_PLAN.md: grupos/alternativas, mínimos/máximos, DTO explícito y snapshots conservando D1; todavía sin código | 2.2-D1 |
 | 2.2-E | PENDING | Promociones acotadas, prioridad/compatibilidad, cálculo/snapshot/autorización | 2.2-D |
 | 2.2-F | PENDING | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad | 2.2-E |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |

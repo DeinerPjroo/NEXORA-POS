@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ModifierDetails } from './ModifierDetails'
 import { PriceDetails } from './PriceDetails'
 import { AvailabilityDetails } from './AvailabilityDetails'
+import { SavedCombos } from './SavedCombos'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock3, Plus, ShoppingBag } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -60,35 +61,38 @@ export function OrderDetailPage() {
             </p>
           )}
           <div className="order-item-list">
-            {order.items?.map((item) => (
-              <div className="saved-order-item" key={item.id}>
-                <span className="saved-item-quantity">{item.quantity}×</span>
-                <div>
-                  <strong>{item.product_name}</strong>
-                  {item.variant_name && <span>{item.variant_name}</span>}
-                  <small>
-                    {item.sku} · {formatMoney(item.unit_price, order.currency)} por unidad
-                  </small>
-                  {item.notes && <p>{item.notes}</p>}
-                  <PriceDetails context={item.price_snapshot} currency={order.currency} />
-                  <AvailabilityDetails context={item.availability_snapshot} />
-                  <ModifierDetails
-                    groups={item.modifiers_snapshot}
-                    basePrice={item.base_unit_price}
-                    currency={order.currency}
-                  />
-                  {item.tax_snapshot?.name && (
+            <SavedCombos combos={order.combos} items={order.items} currency={order.currency} />
+            {order.items
+              ?.filter((item) => !item.order_combo_id)
+              .map((item) => (
+                <div className="saved-order-item" key={item.id}>
+                  <span className="saved-item-quantity">{item.quantity}×</span>
+                  <div>
+                    <strong>{item.product_name}</strong>
+                    {item.variant_name && <span>{item.variant_name}</span>}
                     <small>
-                      Perfil conservado: {item.tax_snapshot.name} ·{' '}
-                      {item.tax_snapshot.rates
-                        .map((rate) => `${rate.name} ${rate.rate.replace(/\.?0+$/, '') || '0'} %`)
-                        .join(' + ')}
+                      {item.sku} · {formatMoney(item.unit_price, order.currency)} por unidad
                     </small>
-                  )}
+                    {item.notes && <p>{item.notes}</p>}
+                    <PriceDetails context={item.price_snapshot} currency={order.currency} />
+                    <AvailabilityDetails context={item.availability_snapshot} />
+                    <ModifierDetails
+                      groups={item.modifiers_snapshot}
+                      basePrice={item.base_unit_price}
+                      currency={order.currency}
+                    />
+                    {item.tax_snapshot?.name && (
+                      <small>
+                        Perfil conservado: {item.tax_snapshot.name} ·{' '}
+                        {item.tax_snapshot.rates
+                          .map((rate) => `${rate.name} ${rate.rate.replace(/\.?0+$/, '') || '0'} %`)
+                          .join(' + ')}
+                      </small>
+                    )}
+                  </div>
+                  <b>{formatMoney(item.line_subtotal, order.currency)}</b>
                 </div>
-                <b>{formatMoney(item.line_subtotal, order.currency)}</b>
-              </div>
-            ))}
+              ))}
           </div>
           {order.notes && (
             <div className="saved-order-note">

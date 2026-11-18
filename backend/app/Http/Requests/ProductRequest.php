@@ -27,6 +27,7 @@ final class ProductRequest extends FormRequest
         $money = ['string', 'regex:/^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,4})?$/D'];
 
         return [
+            'kind' => [$this->isMethod('POST') ? 'sometimes' : 'prohibited', Rule::in(['regular', 'combo'])],
             'name' => ['required', 'string', 'max:150'],
             'sku' => ['required', 'string', 'max:40', 'regex:/^[A-Z0-9_-]+$/D', Rule::unique('products', 'sku')->where('tenant_id', $tenantId)->ignore($this->route('product')?->id)],
             'barcode' => ['nullable', 'string', 'max:64', 'regex:/^[0-9A-Za-z_-]+$/D', Rule::unique('products', 'barcode')->where('tenant_id', $tenantId)->ignore($this->route('product')?->id)],

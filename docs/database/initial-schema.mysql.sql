@@ -477,3 +477,35 @@ alter table `product_availability_windows` add index `availability_windows_activ
 
 alter table `order_items` add `availability_snapshot` json null;
 
+alter table `products` add `kind` varchar(12) not null default 'regular';
+
+alter table `products` add `combo_allocation_mode` varchar(20) null;
+
+create table `product_combo_components` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `component_product_id` bigint unsigned not null, `component_variant_id` bigint unsigned null, `units` tinyint unsigned not null default '1', `position` smallint unsigned not null default '0', `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_combo_components` add constraint `product_combo_components_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_combo_components` add index `combo_components_active_index`(`tenant_id`, `product_id`, `is_active`);
+
+alter table `product_combo_components` add constraint `combo_components_root_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_combo_components` add constraint `combo_components_product_fk` foreign key (`tenant_id`, `component_product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_combo_components` add constraint `combo_components_variant_fk` foreign key (`tenant_id`, `component_product_id`, `component_variant_id`) references `product_variants` (`tenant_id`, `product_id`, `id`) on delete restrict;
+
+create table `order_combos` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `product_id` bigint unsigned not null, `product_name` varchar(150) not null, `sku` varchar(40) not null, `quantity` int unsigned not null, `unit_price` decimal(19, 4) not null, `line_subtotal` decimal(19, 4) not null, `notes` varchar(300) null, `snapshot` json not null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `order_combos` add constraint `order_combos_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `order_combos` add unique `order_combos_order_identity`(`tenant_id`, `order_id`, `id`);
+
+alter table `order_combos` add constraint `order_combos_order_fk` foreign key (`tenant_id`, `order_id`) references `orders` (`tenant_id`, `id`) on delete restrict;
+
+alter table `order_combos` add constraint `order_combos_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `order_items` add `order_combo_id` bigint unsigned null;
+
+alter table `order_items` add `combo_position` tinyint unsigned null;
+
+alter table `order_items` add constraint `order_items_combo_fk` foreign key (`tenant_id`, `order_id`, `order_combo_id`) references `order_combos` (`tenant_id`, `order_id`, `id`) on delete restrict;
+

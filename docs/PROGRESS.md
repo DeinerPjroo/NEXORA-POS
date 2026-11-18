@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.18.0** verificada. Fase 2 con catálogo/subcategorías/modificadores/precios contextuales/horarios, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
+Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.19.0** verificada. Fase 2 con catálogo/subcategorías/modificadores/precios contextuales/horarios/combos fijos, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -60,7 +60,11 @@ Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.18
 - Precios por sucursal/canal de producto/presentación con prioridad explícita, base separada y snapshots. Preview compartido con registro estricto y revisión del carrito conservando cantidades/notas/opciones; reintento incierto mantiene cuerpo y contexto originales. CONTEXT_PRICES.md.
 - Ventanas semanales de disponibilidad heredadas por presentaciones, zona empresarial y vigencia del inicio, cruce de medianoche y archivo paginado. Comprobación real en preview/registro y snapshot histórico en pedido/cobro/recibo; un cierre no reinterpreta pedidos guardados. Formularios detectan zona obsoleta. AVAILABILITY_SCHEDULES.md.
 
+- Combos fijos con tipo estable, política de reparto explícita y preparación por unidad, partes exactas a cuatro decimales y perfiles de componentes. Cabecera histórica agrupada sin duplicar filas facturables, revisión de carrito y replay/cobro/devolución conservados. FIXED_COMBOS.md; alternativas por grupos pendientes.
+
 ## Verificaciones realizadas
+
+Combos fijos 0.19: 232 pruebas/2652 aserciones SQLite/MariaDB correctas; nexora_test_89138c797a2eab69 conservada junto a intermedia nexora_test_894aa259f5cc3a6b (229/2615). Suite completa de 22 Playwright aprobada en 20.7 minutos, incluido nuevo recorrido de composición UI, presentación/unidades/preparaciones, UUID exacto, cambio de canal, snapshot/replay tras archivo y cobro/recibo móvil con impuestos incluidos/adicionales. Migración 000019 aplicada, DDL/Pint/Composer/doctor/build/TypeScript/Prettier y capturas correctos. Principal 489.13 kB/gzip 138.19; panel 10.73 y configurador 3.91 kB, sin aviso. Protocolo de verificación optimizado incorporado a AGENTS.
 
 Horarios 0.18: 222 pruebas/2475 aserciones SQLite y MariaDB correctas; esquema final nexora_test_33d1dfbc81b8ea36 conservado junto a los intermedios 5c1f38d30adbbf2e (220/2450) y 35a6f4251e6a3c52 (221/2464), todos con prefijo nexora_test_. Suite completa de 21 Playwright aprobada en 22.4 minutos y recorrido final de horarios aprobado en 2.4 minutos tras añadir expected_timezone y ajustar el encuadre administrativo. Casos de medianoche/vigencia/DST, concurrencia de zona/UUID, archivo/límites/FK/permisos/rollback, cierre tras preview, preparación conservada, snapshot/replay/cobro/devolución y estado correcto tras mutaciones de fotografía. Migración 000018 aplicada, DDL/Pint/Composer/doctor/build/TypeScript/Prettier correctos y capturas finales revisadas. Principal 484.31 kB/gzip 137.01; panel de horarios 9.72 kB, sin aviso de chunk.
 
@@ -85,15 +89,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 222 pruebas y 2475 aserciones aprobadas en SQLite: identidad/catálogo/subcategorías/modificadores/precios/horarios/preview/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial/revisión humana, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
-| `php scripts/test-mysql.php` | 222 pruebas y 2475 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_33d1dfbc81b8ea36 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 232 pruebas y 2652 aserciones aprobadas en SQLite: identidad/catálogo/subcategorías/modificadores/precios/horarios/combos/preview/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial/revisión humana, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
+| `php scripts/test-mysql.php` | 232 pruebas y 2652 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_89138c797a2eab69 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 21 aprobadas en 22.4 minutos: 19 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/subcategorías/modificadores/precios/horarios/preview/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/revisión manual, devoluciones, cuentas/centavos, móvil, impresión y cierre. Recorrido final de horarios también aprobado en 2.4 minutos |
+| `npm run test:e2e` | 22 aprobadas en 20.7 minutos: 20 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/subcategorías/modificadores/precios/horarios/combos/preview/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, snapshots, historial/revisión manual, devoluciones, cuentas/centavos, móvil, impresión y cierre |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -109,6 +113,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan galerías y combos/promociones; subcategorías operan desde 0.15, modificadores desde 0.16, precios por contexto desde 0.17 y horarios desde 0.18. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan grupos de alternativas de combos, promociones y galerías; subcategorías operan desde 0.15, modificadores desde 0.16, precios por contexto desde 0.17 horarios desde 0.18 y combos fijos desde 0.19. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

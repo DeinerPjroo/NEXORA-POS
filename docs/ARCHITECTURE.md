@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Combos fijos y posiciones facturables (0.19)
+
+Product.kind conserva identidad regular/combo. SaveCombo administra reparto y componentes bajo IdempotentOperation/ModifierProductContext, revisiones y auditoría; componentes fijos solo regulares, presentación explícita y máximo20 unidades activas. CatalogEligibility carga relaciones acotadas y disponibilidad de raíz/componentes con instante común; ProductResource combina sellable y protege costos de la composición.
+
+OrderCatalog comparte validación de productos individuales/componentes y realiza preflight de expansión<=100 antes de cargar productos/modificadores completos. OrderComboPlan reparte base contextual de raíz con CentAllocation en escala10000 y suma opciones a sus posiciones; valida referencias/unidades/perfiles/revisiones/precio final. OrderPlan/PreviewOrder comparten plan; CreateOrder persiste cabeceras append-only y posiciones/eventos/auditoría/UUID en la transacción existente. Solo order_items alimenta ProductTaxTotals/SaleTotals, conservando fórmulas y versiones. OrderCombo no añade otra fila financiera; FK tenant/order/header protege agrupación histórica. UI lazy administra/configura, claves canónicas separan preparaciones y revisión de contexto incluye partes/perfiles. SavedCombos consume snapshots y excluye las posiciones agrupadas de listas sueltas. FIXED_COMBOS.md define contrato; D2 sigue pendiente.
+
 ## Ventanas de disponibilidad (0.18)
 
 SaveAvailability usa IdempotentOperation/ModifierProductContext y Gate antes del replay para política y ventanas, con revisiones/auditoría atómicas. AvailabilitySchedule evalúa ventanas activas por lote, instante común y zona de empresa. ProductController hidrata availability_context y ProductResource combina sellable sin cambiar flags/filtros manuales. OrderPlan comprueba la misma evaluación y guarda availability_snapshot; consultas/cobro/devoluciones de historia no la ejecutan otra vez. La migración 000018 agrega bandera, ventanas con FK tenant/product y JSON nullable sin reinterpretar pedidos legados. Panel lazy y DTO explícitos, motivo en menú, revisión de conflictos sin borrar borrador y comprobación histórica en recibo. AVAILABILITY_SCHEDULES.md detalla reloj/DST/vigencia y límites.

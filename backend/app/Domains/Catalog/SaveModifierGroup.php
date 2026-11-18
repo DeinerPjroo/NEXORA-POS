@@ -22,6 +22,7 @@ final class SaveModifierGroup
 
         return app(IdempotentOperation::class)->run($actor, $action, $data, ProductModifierGroup::class, function ($data) use ($actor, $product, $group) {
             $product = app(ModifierProductContext::class)->lock($actor, $product, $data);
+            abort_if($product->kind === 'combo', 422, 'Los adicionales se eligen desde los componentes del combo.');
             $existing = $group !== null;
             $group = $existing ? $product->modifierGroups()->lockForUpdate()->findOrFail($group->id) : new ProductModifierGroup;
             if ($product->modifierGroups()->where('name', $data['name'])->when($existing, fn ($q) => $q->where('id', '<>', $group->id))->exists()) {

@@ -79,6 +79,7 @@ export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
   discount_reason: string | null
   created_at: string
   items?: OrderItem[]
+  combos?: import('../operations/types').OrderCombo[]
   reference?: string | null
   payment?: {
     id: number

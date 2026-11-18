@@ -24,6 +24,11 @@ final class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function combos(): HasMany
+    {
+        return $this->hasMany(OrderCombo::class);
+    }
+
     public function sale(): HasOne
     {
         return $this->hasOne(Sale::class);

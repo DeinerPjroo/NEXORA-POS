@@ -3,6 +3,7 @@ import { formatMoney } from '../../lib/money'
 import { channelLabels } from '../catalog/context-price-types'
 import { cartSubtotal } from './cart'
 import { ModifierDetails } from './ModifierDetails'
+import { CartComboDetails } from './CartComboDetails'
 import { taxSummary } from '../sales/tax-types'
 import type { CartReview } from './useCartPricing'
 
@@ -40,6 +41,7 @@ export function PriceReviewModal({
             <div className="form-grid">
               <div>
                 <small>Opciones anteriores</small>
+                <CartComboDetails line={review.before[index]} currency={currency} />
                 <ModifierDetails
                   groups={review.before[index].modifier_labels}
                   currency={currency}
@@ -47,6 +49,7 @@ export function PriceReviewModal({
               </div>
               <div>
                 <small>Opciones actuales</small>
+                <CartComboDetails line={line} currency={currency} />
                 <ModifierDetails groups={line.modifier_labels} currency={currency} />
               </div>
             </div>

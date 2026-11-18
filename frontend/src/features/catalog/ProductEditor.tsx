@@ -17,6 +17,7 @@ export function ProductEditor({
   onClose: () => void
 }) {
   const [category, setCategory] = useState<CategorySummary | null>(product?.category ?? null)
+  const [kind, setKind] = useState<Product['kind']>(product?.kind ?? 'regular')
   const [taxProfile, setTaxProfile] = useState<TaxChoice | null>(product?.tax_profile ?? null)
   const [validation, setValidation] = useState<Error | null>(null)
   const can = useCan()
@@ -51,6 +52,7 @@ export function ProductEditor({
     if (can('catalog.costs')) data.cost_price = String(data.cost_price).replace(',', '.')
     mutation.mutate({
       ...data,
+      ...(!product ? { kind } : {}),
       category_id: category.id,
       tax_profile_id: taxProfile?.id ?? null,
       ...(taxProfile ? { tax_profile_revision: taxProfile.revision } : {}),
@@ -68,6 +70,20 @@ export function ProductEditor({
     >
       <form className="form-stack" onSubmit={submit}>
         <ErrorNotice error={validation ?? mutation.error} />
+        {!product && (
+          <Field label="Tipo de producto">
+            <select
+              value={kind}
+              onChange={(event) => {
+                setKind(event.target.value as Product['kind'])
+                setTaxProfile(null)
+              }}
+            >
+              <option value="regular">Producto individual</option>
+              <option value="combo">Combo de composición fija</option>
+            </select>
+          </Field>
+        )}
         <Field label="Nombre del producto">
           <input
             name="name"
@@ -120,7 +136,14 @@ export function ProductEditor({
         </Field>
         <div className="field">
           <span className="field-label">Perfil de impuestos del producto</span>
-          <TaxProfilePicker value={taxProfile} onChange={setTaxProfile} />
+          {kind === 'combo' ? (
+            <p className="muted small">
+              Los impuestos y adicionales proceden de sus componentes. Configura la composición y el
+              reparto desde la ficha después de crearlo.
+            </p>
+          ) : (
+            <TaxProfilePicker value={taxProfile} onChange={setTaxProfile} />
+          )}
           <small className="muted">
             Se conserva en pedidos nuevos; las variantes heredan este perfil. Se aplica al elegir
             cálculo por producto en Ventas.

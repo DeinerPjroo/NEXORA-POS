@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 0.19.0 · 2026-11-18
+
+- Combos de composición fija con tipo de producto estable, componentes/presentaciones/unidades/archivo paginado y reparto de precio explícito equal/proportional. UUID/revisiones/moneda y auditoría atómicos, sin anidación.
+- Preparación por unidad y preview de asignaciones/perfiles, base contextual y adicionales separados; carrito canónico conserva notas y revisa partes al cambiar contexto.
+- Cabecera histórica append-only y posiciones facturables con reparto exacto a cuatro decimales, FK tenant/order/header y preflight de expansión. ProductTaxTotals/SaleTotals mantienen fórmulas/versiones anteriores.
+- Pedido/checkout/recibo agrupan cabecera una vez desde snapshots; replay/cobro/devolución conservan composición e importes tras cambiar catálogo. Migración000019 y FIXED_COMBOS.md. Alternativas por grupos permanecen en D2.
+
 ## 0.18.0 · 2026-11-18
 
 - Horarios semanales por producto heredados por presentaciones, política deshabilitada inicialmente y ventanas con archivo/paginación, revisiones/UUID y auditoría atómica. Límite de 28 activas.

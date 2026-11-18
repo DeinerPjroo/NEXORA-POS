@@ -17,6 +17,9 @@ import { taxSummary } from '../sales/tax-types'
 const ProductModifiersPanel = lazy(() =>
   import('./ProductModifiersPanel').then((module) => ({ default: module.ProductModifiersPanel })),
 )
+const ComboPanel = lazy(() =>
+  import('./ComboPanel').then((module) => ({ default: module.ComboPanel })),
+)
 const ContextPricesPanel = lazy(() =>
   import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
 )
@@ -125,7 +128,13 @@ export function ProductDetailPage() {
           </p>
         </section>
       </div>
-      <VariantsPanel product={product} />
+      {product.kind === 'combo' ? (
+        <Suspense fallback={<Loading />}>
+          <ComboPanel product={product} />
+        </Suspense>
+      ) : (
+        <VariantsPanel product={product} />
+      )}
       <Suspense fallback={<Loading />}>
         <AvailabilityPanel product={product} />
       </Suspense>
@@ -133,14 +142,16 @@ export function ProductDetailPage() {
         <ContextPricesPanel product={product} />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <ProductModifiersPanel product={product} />
+        {product.kind !== 'combo' && <ProductModifiersPanel product={product} />}
       </Suspense>
       <section className="panel receipt-refund">
         <h2>Perfil de impuestos del producto</h2>
         <p>
-          {product.tax_profile
-            ? `${product.tax_profile.name} · ${taxSummary(product.tax_profile)}`
-            : 'Sin perfil de impuestos asignado.'}
+          {product.kind === 'combo'
+            ? 'El combo utiliza los perfiles tributarios de sus componentes.'
+            : product.tax_profile
+              ? `${product.tax_profile.name} · ${taxSummary(product.tax_profile)}`
+              : 'Sin perfil de impuestos asignado.'}
         </p>
         <p className="muted small">
           El cálculo depende del modo confirmado en Ventas. Los pedidos guardan el perfil y las

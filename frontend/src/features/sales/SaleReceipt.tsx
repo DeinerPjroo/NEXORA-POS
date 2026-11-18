@@ -2,6 +2,7 @@ import { formatMoney } from '../../lib/money'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { PriceDetails } from '../orders/PriceDetails'
 import { AvailabilityDetails } from '../orders/AvailabilityDetails'
+import { SavedCombos } from '../orders/SavedCombos'
 import { useSession } from '../auth/SessionProvider'
 import { SaleAmounts } from './SaleAmounts'
 import { PaymentHistory } from './PaymentHistory'
@@ -40,28 +41,31 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
         </span>
       </div>
       <div className="receipt-items">
-        {sale.items?.map((item) => (
-          <div className="checkout-order-line" key={item.id}>
-            <div>
-              <strong>
-                {item.quantity}× {item.product_name}
-              </strong>
-              {item.variant_name && <span>{item.variant_name}</span>}
-              <small>
-                {item.sku} · {formatMoney(item.unit_price, sale.currency)} / unidad
-              </small>
-              {item.notes && <p>{item.notes}</p>}
-              <PriceDetails context={item.price_snapshot} currency={sale.currency} />
-              <AvailabilityDetails context={item.availability_snapshot} />
-              <ModifierDetails
-                groups={item.modifiers_snapshot}
-                basePrice={item.base_unit_price}
-                currency={sale.currency}
-              />
+        <SavedCombos combos={sale.combos} items={sale.items} currency={sale.currency} />
+        {sale.items
+          ?.filter((item) => !item.order_combo_id)
+          .map((item) => (
+            <div className="checkout-order-line" key={item.id}>
+              <div>
+                <strong>
+                  {item.quantity}× {item.product_name}
+                </strong>
+                {item.variant_name && <span>{item.variant_name}</span>}
+                <small>
+                  {item.sku} · {formatMoney(item.unit_price, sale.currency)} / unidad
+                </small>
+                {item.notes && <p>{item.notes}</p>}
+                <PriceDetails context={item.price_snapshot} currency={sale.currency} />
+                <AvailabilityDetails context={item.availability_snapshot} />
+                <ModifierDetails
+                  groups={item.modifiers_snapshot}
+                  basePrice={item.base_unit_price}
+                  currency={sale.currency}
+                />
+              </div>
+              <b>{formatMoney(item.line_subtotal, sale.currency)}</b>
             </div>
-            <b>{formatMoney(item.line_subtotal, sale.currency)}</b>
-          </div>
-        ))}
+          ))}
       </div>
       <SaleAmounts amounts={sale} />
       <TaxBreakdownDetails breakdown={sale.tax_breakdown} currency={sale.currency} />

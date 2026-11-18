@@ -33,9 +33,13 @@ import type { CartLine, CartConfiguration } from './cart'
 import type { OrderChannel } from '../catalog/context-price-types'
 import { useCartPricing } from './useCartPricing'
 import { PriceDetails } from './PriceDetails'
+import { CartComboDetails } from './CartComboDetails'
 
 const PriceReviewModal = lazy(() =>
   import('./PriceReviewModal').then((module) => ({ default: module.PriceReviewModal })),
+)
+const ComboOrderPicker = lazy(() =>
+  import('./ComboOrderPicker').then((module) => ({ default: module.ComboOrderPicker })),
 )
 
 export function OrderComposer() {
@@ -48,6 +52,7 @@ export function OrderComposer() {
   const [category, setCategory] = useState<CategorySummary | null>(null)
   const [page, setPage] = useState(1)
   const [picking, setPicking] = useState<Product | null>(null)
+  const [bundling, setBundling] = useState<Product | null>(null)
   const [customizing, setCustomizing] = useState<{ product: Product; variant?: Variant } | null>(
     null,
   )
@@ -106,6 +111,10 @@ export function OrderComposer() {
   function add(product: Product, variant?: Variant, configuration?: CartConfiguration) {
     if (locked) return
     const line = makeLine(product, variant, configuration)
+    addLine(line)
+  }
+  function addLine(line: CartLine) {
+    if (locked) return
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
       return existing
@@ -116,6 +125,7 @@ export function OrderComposer() {
     })
     setPicking(null)
     setCustomizing(null)
+    setBundling(null)
   }
   function quantity(key: string, value: number) {
     if (!locked)
@@ -208,7 +218,11 @@ export function OrderComposer() {
                       key={product.id}
                       disabled={!product.sellable || locked || products.isFetching}
                       onClick={() =>
-                        product.variants_count > 0 ? setPicking(product) : configure(product)
+                        product.kind === 'combo'
+                          ? setBundling(product)
+                          : product.variants_count > 0
+                            ? setPicking(product)
+                            : configure(product)
                       }
                       aria-label={`Agregar ${product.name}`}
                     >
@@ -221,18 +235,22 @@ export function OrderComposer() {
                       </span>
                       <strong>{product.name}</strong>
                       <small>
-                        {product.availability_context?.allowed === false
-                          ? `${product.availability_context.reason} · ${product.availability_context.timezone}`
-                          : product.variants_count
-                            ? `${product.available_variants_count} presentaciones disponibles`
-                            : categoryPath(product.category)}
+                        {product.kind === 'combo' && product.combo_context?.reason
+                          ? product.combo_context.reason
+                          : product.availability_context?.allowed === false
+                            ? `${product.availability_context.reason} · ${product.availability_context.timezone}`
+                            : product.variants_count
+                              ? `${product.available_variants_count} presentaciones disponibles`
+                              : categoryPath(product.category)}
                       </small>
                       <span>
-                        {product.variants_count
-                          ? 'Elegir presentación'
-                          : product.modifier_groups_count
-                            ? 'Personalizar opciones'
-                            : formatMoney(contextualPrice(product), currency)}
+                        {product.kind === 'combo'
+                          ? 'Configurar combo'
+                          : product.variants_count
+                            ? 'Elegir presentación'
+                            : product.modifier_groups_count
+                              ? 'Personalizar opciones'
+                              : formatMoney(contextualPrice(product), currency)}
                         <Plus size={16} />
                       </span>
                     </button>
@@ -274,6 +292,7 @@ export function OrderComposer() {
                       <strong>{line.product_name}</strong>
                       {line.variant_name && <small>{line.variant_name}</small>}
                       <ModifierDetails groups={line.modifier_labels} currency={currency} />
+                      <CartComboDetails line={line} currency={currency} />
                       <PriceDetails context={line.price_context} currency={currency} />
                     </div>
                     <button
@@ -419,6 +438,22 @@ export function OrderComposer() {
             void products.refetch()
           }}
         />
+      )}
+      {bundling && selected && (
+        <Suspense fallback={<Loading />}>
+          <ComboOrderPicker
+            product={bundling}
+            branchId={selected}
+            channel={channel}
+            currency={currency}
+            onPick={addLine}
+            onClose={() => setBundling(null)}
+            onRefresh={() => {
+              setBundling(null)
+              void products.refetch()
+            }}
+          />
+        </Suspense>
       )}
       {customizing && (
         <ModifierOrderPicker

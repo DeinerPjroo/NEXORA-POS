@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-016 · Precio de combo repartido en posiciones históricas (0.19)
+
+La raíz es Product de tipo combo estable y no reemplaza perfiles de sus componentes. El operador elige reparto equal/proportional explícito; bases de referencia contextuales son pesos para proporcional y adicionales se suman a la parte del componente. Reparto a cuatro decimales, mayores restos con orden estable, sin política alternativa automática cuando todos los pesos son cero. No interpretar la diferencia frente a precios individuales como descuento financiero.
+
+Una unidad repetida se representa por posición facturable, con quantity igual a cantidad de combos, evitando unit_price aproximado que no multiplique exactamente. Cabecera append-only copia identidad/contexto/política/asignaciones; no se suma al subtotal. ProductTaxTotals conserva versión3 sobre esas posiciones; no cambia fórmula por agruparlas. Snapshot de referencia se distingue de base asignada. Se valida expansión antes de cargar todo el catálogo y se exige disponibilidad/revisiones de raíz y componentes bajo el mismo Tenant lock/instante; replay y cobro no recotizan. Compatibilidad con posiciones legadas null y sin combos anidados. FIXED_COMBOS.md; alternativas/grupos corresponden a D2.
+
 ## DEC-015 · Ventanas locales y comprobación de disponibilidad (0.18)
 
 El producto habilita un horario heredado por presentaciones/preparaciones; inicialmente deshabilitado. Habilitado sin ventanas activas queda cerrado. Hasta 28 ventanas activas y archivadas paginadas; solapes se unen. Días ISO y minutos, inicio incluyente/final excluyente, cruce de medianoche explícito y vigencia aplicada al día local de inicio. Hora de pared en la zona actual de empresa: ambas ocurrencias de una hora repetida tienen igual elegibilidad; no se inventa una hora inexistente. Un día local puede durar 23/25 horas transcurridas.

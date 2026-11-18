@@ -13,6 +13,7 @@ export function ModifierOrderPicker({
   product,
   variant,
   currency,
+  basePriceOverride,
   onPick,
   onClose,
   onRefresh,
@@ -20,6 +21,7 @@ export function ModifierOrderPicker({
   product: Product
   variant?: Variant
   currency: string
+  basePriceOverride?: string
   onPick: (configuration: CartConfiguration) => void
   onClose: () => void
   onRefresh: () => void
@@ -37,7 +39,7 @@ export function ModifierOrderPicker({
     staleTime: Infinity,
   })
   const groups = query.data?.data ?? []
-  const basePrice = contextualPrice(product, variant)
+  const basePrice = basePriceOverride ?? contextualPrice(product, variant)
   const extra = groups.reduce(
     (sum, group) =>
       sum +
@@ -92,7 +94,10 @@ export function ModifierOrderPicker({
       ) : (
         <div className="form-stack">
           <p className="muted small">
-            Elige las opciones por unidad. Los adicionales se suman al precio base de{' '}
+            Elige las opciones por unidad.{' '}
+            {basePriceOverride !== undefined
+              ? 'Los adicionales se sumarán a la parte asignada del combo. Base provisional: '
+              : 'Los adicionales se suman al precio base de '}
             {formatMoney(basePrice, currency)}.
           </p>
           {!current && (

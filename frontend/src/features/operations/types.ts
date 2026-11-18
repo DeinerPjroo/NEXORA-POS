@@ -32,7 +32,26 @@ export type CashMovement = {
   created_at: string
 }
 export type OrderStatus = 'open' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+export type OrderCombo = {
+  id: number
+  product_id: number
+  product_name: string
+  sku: string
+  quantity: number
+  unit_price: string
+  line_subtotal: string
+  notes: string | null
+  snapshot: {
+    version: number
+    allocation_mode: import('../catalog/combo-types').ComboMode
+    base_unit_price: string
+    price_context: import('../catalog/context-price-types').PriceContext
+    availability_context: import('../catalog/availability-types').AvailabilityContext
+  }
+}
 export type OrderItem = {
+  order_combo_id?: number | null
+  combo_position?: number | null
   availability_snapshot?: import('../catalog/availability-types').AvailabilityContext | null
   price_snapshot?: import('../catalog/context-price-types').PriceContext | null
   base_unit_price?: string | null
@@ -57,6 +76,7 @@ export type OrderEvent = {
   created_at: string
 }
 export type Order = {
+  combos?: OrderCombo[]
   id: number
   public_id: string
   branch_id: number

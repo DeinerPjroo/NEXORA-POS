@@ -5,6 +5,8 @@ export const channelLabels = {
   dine_in: 'En el restaurante',
 }
 export type PriceContext = {
+  usage?: 'combo_reference'
+  allocated_amount?: string
   version: number
   source: 'rule' | 'product' | 'variant'
   rule_id: number | null

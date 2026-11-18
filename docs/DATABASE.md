@@ -1,5 +1,9 @@
 # Base de datos
 
+## Composición fija de combos (0.19)
+
+Migración 000019: products.kind regular predeterminado y combo_allocation_mode nullable; product_combo_components con FK tenant/root y tenant/component/variant, unidades/orden/archivo/revisión; order_combos append-only con cabecera y snapshot estructural versión1. order_items.order_combo_id/combo_position nullable y FK tenant/order/header. Las posiciones son las filas financieras y la cabecera conserva agrupación/asignaciones sin duplicar subtotal. Historia anterior mantiene vínculos null. Descenso rechazado; esquema/contrato en FIXED_COMBOS.md, DDL generado y migración comprobada en SQLite/MariaDB.
+
 ## Disponibilidad semanal (0.18)
 
 Migración 000018: products.availability_schedule_enabled boolean false y product_availability_windows con tenant/product, nombre, día ISO, inicio/final HH:mm, día siguiente, fechas de vigencia, estado/revisión y timestamps. FK tenant/product y índice de lectura por producto/estado. order_items.availability_snapshot JSON nullable conserva comprobación UTC/zona/revisión/ventanas. Líneas anteriores quedan null y no hay descenso destructivo. SQLite/MariaDB verificadas, sin DROP DATABASE; AVAILABILITY_SCHEDULES.md.

@@ -1,6 +1,6 @@
 # Combos · diseño del incremento 2.2-D
 
-Diseño posterior a horarios 0.18; no capacidad implementada. Requisitos: composición/selección, precio e impuestos explícitos y snapshots, sin simular recetas/inventario. Antes de modificar cálculo, conservar la regresión de precios/horarios, adicionales, impuestos, cuentas/abonos/devoluciones.
+Diseño original posterior a horarios 0.18. D1 de composición fija implementado y verificado como 0.19, contrato en FIXED_COMBOS.md; D2 de alternativas sigue pendiente y su diseño está en COMBO_CHOICES_PLAN.md. Composición/selección, precio e impuestos explícitos y snapshots, sin simular recetas/inventario. Conservar la regresión de precios/horarios, adicionales, impuestos, cuentas/abonos/devoluciones.
 
 ## División de trabajo
 

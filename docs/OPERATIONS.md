@@ -1,5 +1,9 @@
 # Operación de caja y pedidos (0.4–0.7)
 
+## Composición fija desde 0.19
+
+Un combo exige preparar/revisar sus unidades antes de agregar al carrito. La base de raíz se reparte explícitamente y los adicionales se suman a cada componente. Todos deben estar disponibles al previsualizar/registrar. Precio/perfiles/asignación se conservan en cabecera y posiciones históricas, que son las únicas filas facturables. Cambio de contexto revisa partes y perfiles además del total; incertidumbre conserva UUID/cuerpo. Pedido/checkout/recibo muestran cabecera una vez con composición, y cobrar/devolver no consulta configuración vigente. FIXED_COMBOS.md; grupos de alternativas todavía pendientes.
+
 ## Disponibilidad temporal desde 0.18
 
 Un producto puede limitar pedidos nuevos a ventanas semanales en zona empresarial, heredadas por sus variantes. Menú muestra el estado consultado y el servidor comprueba de nuevo la hora al previsualizar/registrar. Un cierre rechaza todo el pedido nuevo sin borrar el carrito; prepararlo, entregarlo, cobrarlo o devolverlo después de registrado conserva su comprobación histórica. No hay reserva de disponibilidad por añadir al carrito. AVAILABILITY_SCHEDULES.md documenta medianoche/vigencia/DST y snapshots.

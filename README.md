@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.18.0** agrega **horarios de disponibilidad** por producto, heredados por presentaciones, con zona empresarial, medianoche y vigencia explícitas. Los pedidos nuevos comprueban la hora real; pedidos y recibos conservan su comprobación histórica. Conserva precios por sucursal/canal, revisión de carrito, adicionales/exclusiones, subcategorías, impuestos, cuentas, devoluciones parciales, abonos/mixtos, propinas e historial/revisión manual de pagos. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Combos/promociones, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [AVAILABILITY_SCHEDULES.md](docs/AVAILABILITY_SCHEDULES.md), [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md) y [MODIFIERS.md](docs/MODIFIERS.md).
+La entrega **0.19.0** agrega **combos de composición fija**, presentaciones y preparaciones por unidad, reparto explícito de precio y composición histórica en pedido/recibo. Conserva precios por sucursal/canal, horarios, impuestos, cuentas, devoluciones, abonos/mixtos, propinas e historial/revisión manual de pagos. Las alternativas por grupos, promociones, galerías, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [FIXED_COMBOS.md](docs/FIXED_COMBOS.md), [AVAILABILITY_SCHEDULES.md](docs/AVAILABILITY_SCHEDULES.md) y [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md).
 
 ## Entorno y requisitos
 
@@ -143,3 +143,5 @@ El proyecto sigue en desarrollo. Antes de producción: validar MySQL, completar 
 - [Tareas](docs/TASKS.md), [estado estructurado](docs/PROJECT_STATE.json), [continuidad](docs/HANDOFF.md) y [decisiones](docs/DECISIONS.md)
 
 Las carpetas `mobile/` y `desktop/` reservan productos futuros; todavía no contienen aplicaciones.
+
+Combos fijos: crea un producto de tipo **Combo de composición fija**, abre su ficha y elige **Configurar reparto** y **Nuevo componente**. Al tomar el pedido, prepara cada unidad y revisa sus importes/perfiles antes de agregarlo. Las partes forman el precio del combo y conservan su historia al cobrar o devolver.

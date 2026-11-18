@@ -20,11 +20,17 @@ export type CartReview = {
   target: CartContext
 }
 
-function visibleConfiguration(line: CartLine) {
+function visibleConfiguration(line: CartLine): string {
   return JSON.stringify({
     price: line.expected_unit_price,
     product: line.product_name,
     variant: line.variant_name,
+    allocation_mode: line.allocation_mode,
+    components: line.components?.map((part) => ({
+      component_id: part.component_id,
+      unit_index: part.unit_index,
+      configuration: visibleConfiguration({ ...part, key: '', quantity: 1 }),
+    })),
     tax: line.tax_snapshot ?? null,
     groups: (line.modifier_labels ?? [])
       .map(({ group_id, group_name, kind, options }) => ({
@@ -64,6 +70,18 @@ export function useCartPricing({
         ...line,
         key: lines[index].key,
         notes: lines[index].notes,
+        ...(line.components
+          ? {
+              components: line.components.map((part) => ({
+                ...part,
+                notes:
+                  lines[index].components?.find(
+                    (old) =>
+                      old.component_id === part.component_id && old.unit_index === part.unit_index,
+                  )?.notes ?? part.notes,
+              })),
+            }
+          : {}),
       }))
       if (
         lines.some(

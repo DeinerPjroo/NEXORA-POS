@@ -20,7 +20,17 @@ final class CreateOrder
         return app(IdempotentOperation::class)->run($actor, 'order.create', $data, Order::class, function ($data) use ($actor) {
             $plan = app(OrderPlan::class)->build($actor, $data);
             $order = Order::create(['public_id' => (string) Str::uuid(), 'branch_id' => $plan['branch']->id, 'created_by' => $actor->id, 'currency' => $data['currency'], 'channel' => $data['channel'], 'reference' => $data['reference'] ?? null, 'customer_name' => $data['customer_name'] ?? null, 'notes' => $data['notes'] ?? null, 'subtotal' => $plan['subtotal'], 'status' => 'open', 'revision' => 1]);
-            $order->items()->createMany($plan['items']);
+            $combos = [];
+            foreach ($plan['combos'] as $header) {
+                $combos[] = $order->combos()->create($header)->id;
+            }
+            foreach ($plan['items'] as $item) {
+                if (array_key_exists('_combo_index', $item)) {
+                    $item['order_combo_id'] = $combos[$item['_combo_index']];
+                    unset($item['_combo_index']);
+                }
+                $order->items()->create($item);
+            }
             OrderEvent::create(['order_id' => $order->id, 'actor_id' => $actor->id, 'from_status' => null, 'to_status' => 'open', 'created_at' => now()]);
             Audit::record('order.created', 'Se registró un pedido sin cobro.', $actor, ['order_id' => $order->id]);
 

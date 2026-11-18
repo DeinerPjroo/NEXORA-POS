@@ -531,3 +531,26 @@
 .modifier-details small {
   display: block;
 }
+.combo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.combo-composition,
+.saved-combo {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.combo-component-line {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0 10px 12px;
+  border-left: 2px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.saved-combo {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}

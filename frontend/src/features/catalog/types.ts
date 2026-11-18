@@ -35,6 +35,9 @@ export type Variant = {
   is_available: boolean
 }
 export type Product = {
+  kind?: 'regular' | 'combo'
+  combo_allocation_mode?: import('./combo-types').ComboMode | null
+  combo_context?: { ready: boolean; reason: string | null; expanded_units: number }
   availability_schedule_enabled?: boolean
   availability_context?: AvailabilityContext
   price_context?: PriceContext | null
@@ -66,6 +69,8 @@ export function productStatus(product: Product) {
   if (product.variants_count > 0 && product.available_variants_count === 0)
     return 'Variantes no disponibles'
   if (product.availability_context?.allowed === false) return 'Fuera de horario'
+  if (product.kind === 'combo' && !product.combo_context?.ready)
+    return product.combo_context?.reason ?? 'Combo por configurar'
   return 'Disponible'
 }
 export type CatalogPage<T> = {

@@ -15,6 +15,7 @@ final class CatalogFiltersRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'kind' => ['sometimes', Rule::in(['regular', 'combo'])],
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
             'category_id' => ['sometimes', 'integer', 'min:1'],
             'branch_id' => ['nullable', 'required_with:channel', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $this->user()->tenant_id)],

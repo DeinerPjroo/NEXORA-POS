@@ -10,6 +10,9 @@ export type CartConfiguration = {
 }
 
 export type CartLine = {
+  kind?: 'regular' | 'combo'
+  allocation_mode?: import('../catalog/combo-types').ComboMode
+  components?: CartComponent[]
   expected_tax_revision?: number | null
   tax_snapshot?: import('../sales/tax-types').TaxSnapshot
   price_context?: PriceContext | null
@@ -24,6 +27,24 @@ export type CartLine = {
   notes: string
   modifiers?: ModifierSelection[]
   modifier_labels?: ModifierSnapshot[]
+}
+export type CartComponent = Omit<CartLine, 'key' | 'quantity' | 'kind' | 'components'> & {
+  component_id: number
+  unit_index: number
+  base_unit_price?: string
+}
+export function makeComboLine(line: Omit<CartLine, 'key'>): CartLine {
+  const signature = (line.components ?? [])
+    .map((part) => [
+      part.component_id,
+      part.unit_index,
+      part.notes,
+      (part.modifiers ?? [])
+        .map((group) => [group.group_id, [...group.option_ids].sort((a, b) => a - b)])
+        .sort((a, b) => Number(a[0]) - Number(b[0])),
+    ])
+    .sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1]))
+  return { ...line, kind: 'combo', key: `combo:${line.product_id}:${JSON.stringify(signature)}` }
 }
 export function makeLine(
   product: Product,
@@ -77,6 +98,25 @@ export function serializeCart(lines: CartLine[], expectations: boolean) {
     quantity: line.quantity,
     notes: line.notes,
     ...(line.modifiers ? { modifiers: line.modifiers } : {}),
+    ...(line.kind === 'combo'
+      ? {
+          kind: 'combo',
+          components: (line.components ?? []).map((part) => ({
+            component_id: part.component_id,
+            unit_index: part.unit_index,
+            notes: part.notes,
+            modifiers: part.modifiers ?? [],
+            ...(expectations
+              ? {
+                  product_revision: part.product_revision,
+                  ...(part.expected_tax_revision != null
+                    ? { expected_tax_revision: part.expected_tax_revision }
+                    : {}),
+                }
+              : {}),
+          })),
+        }
+      : {}),
     ...(expectations
       ? {
           product_revision: line.product_revision,

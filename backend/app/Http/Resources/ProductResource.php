@@ -10,6 +10,9 @@ final class ProductResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'kind' => $this->kind,
+            'combo_allocation_mode' => $this->combo_allocation_mode,
+            'combo_context' => $this->when(array_key_exists('combo_context', $this->resource->getAttributes()), fn () => $this->resource->getAttribute('combo_context')),
             'id' => $this->id, 'name' => $this->name, 'sku' => $this->sku,
             'barcode' => $this->barcode, 'description' => $this->description,
             'category_id' => $this->category_id,
@@ -21,7 +24,7 @@ final class ProductResource extends JsonResource
             'is_active' => $this->is_active, 'is_available' => $this->is_available,
             'availability_schedule_enabled' => $this->availability_schedule_enabled,
             'availability_context' => $this->when(array_key_exists('availability_context', $this->resource->getAttributes()), fn () => $this->resource->getAttribute('availability_context')),
-            'sellable' => $this->is_active && $this->is_available && (bool) $this->category?->isEffectivelyActive() && (! $this->tax_profile_id || $this->taxProfile?->is_active) && (! $this->variants_count || $this->available_variants_count > 0) && ($this->resource->getAttribute('availability_context')['allowed'] ?? true),
+            'sellable' => $this->is_active && $this->is_available && (bool) $this->category?->isEffectivelyActive() && (! $this->tax_profile_id || $this->taxProfile?->is_active) && (! $this->variants_count || $this->available_variants_count > 0) && ($this->resource->getAttribute('availability_context')['allowed'] ?? true) && ($this->kind !== 'combo' || ($this->resource->getAttribute('combo_context')['ready'] ?? false)),
             'variants_count' => $this->variants_count ?? 0,
             'modifier_groups_count' => $this->modifier_groups_count ?? 0,
             'available_variants_count' => $this->available_variants_count ?? 0,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { PriceDetails } from '../orders/PriceDetails'
 import { AvailabilityDetails } from '../orders/AvailabilityDetails'
+import { SavedCombos } from '../orders/SavedCombos'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -371,22 +372,25 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
             </span>
           </div>
         )}
-        {order.items?.map((item) => (
-          <div className="checkout-order-line" key={item.id}>
-            <div>
-              {item.quantity}× {item.product_name}
-              {item.variant_name && ` · ${item.variant_name}`}
-              <PriceDetails context={item.price_snapshot} currency={order.currency} />
-              <AvailabilityDetails context={item.availability_snapshot} />
-              <ModifierDetails
-                groups={item.modifiers_snapshot}
-                basePrice={item.base_unit_price}
-                currency={order.currency}
-              />
+        <SavedCombos combos={order.combos} items={order.items} currency={order.currency} />
+        {order.items
+          ?.filter((item) => !item.order_combo_id)
+          .map((item) => (
+            <div className="checkout-order-line" key={item.id}>
+              <div>
+                {item.quantity}× {item.product_name}
+                {item.variant_name && ` · ${item.variant_name}`}
+                <PriceDetails context={item.price_snapshot} currency={order.currency} />
+                <AvailabilityDetails context={item.availability_snapshot} />
+                <ModifierDetails
+                  groups={item.modifiers_snapshot}
+                  basePrice={item.base_unit_price}
+                  currency={order.currency}
+                />
+              </div>
+              <strong>{formatMoney(item.line_subtotal, order.currency)}</strong>
             </div>
-            <strong>{formatMoney(item.line_subtotal, order.currency)}</strong>
-          </div>
-        ))}
+          ))}
         {quote.isPending ? (
           <Loading />
         ) : quote.data && !quote.error ? (

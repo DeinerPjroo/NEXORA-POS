@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentHistoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentReviewController;
 use App\Http\Controllers\ProductAvailabilityController;
+use App\Http\Controllers\ProductComboController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductModifierController;
@@ -88,6 +89,11 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/combo-components', [ProductComboController::class, 'index']);
+            Route::post('products/{product}/combo-components', [ProductComboController::class, 'store']);
+            Route::put('products/{product}/combo-components/{comboComponent}', [ProductComboController::class, 'update']);
+            Route::put('products/{product}/combo-settings', [ProductComboController::class, 'settings']);
+            Route::get('products/{product}/combo-configuration', [ProductComboController::class, 'configuration']);
             Route::get('products/{product}/availability-windows', [ProductAvailabilityController::class, 'index']);
             Route::post('products/{product}/availability-windows', [ProductAvailabilityController::class, 'store']);
             Route::put('products/{product}/availability-windows/{availabilityWindow}', [ProductAvailabilityController::class, 'update']);

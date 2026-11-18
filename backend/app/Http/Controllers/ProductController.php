@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Domains\Catalog\AvailabilitySchedule;
+use App\Domains\Catalog\CatalogEligibility;
 use App\Domains\Catalog\CatalogPriceContext;
 use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Catalog\CatalogSearch;
@@ -20,6 +20,7 @@ final class ProductController extends Controller
     {
         $data = $request->validated();
         $query = Product::with('category.parent', 'taxProfile')->withCatalogCounts()
+            ->when($data['kind'] ?? null, fn ($query, $kind) => $query->where('kind', $kind))
             ->when($data['search'] ?? null, function ($query, $search) {
                 $pattern = CatalogSearch::pattern($search);
                 $query->where(fn ($q) => $q->whereRaw("name LIKE ? ESCAPE '!'", [$pattern])->orWhereRaw("sku LIKE ? ESCAPE '!'", [$pattern])->orWhereRaw("barcode LIKE ? ESCAPE '!'", [$pattern]));
@@ -29,7 +30,7 @@ final class ProductController extends Controller
             ->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('is_available', $availability === 'available'));
 
         $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
-        app(AvailabilitySchedule::class)->decorate($page->getCollection(), $request->user()->tenant()->value('timezone'));
+        app(CatalogEligibility::class)->decorate($page->getCollection(), $request->user()->tenant()->value('timezone'));
         $context = app(CatalogPriceContext::class)->from($data);
         if ($context) {
             $resolver = app(CatalogPriceResolver::class);
@@ -66,7 +67,7 @@ final class ProductController extends Controller
     private function hydrate(Product $product): Product
     {
         $product->load('category.parent', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);
-        app(AvailabilitySchedule::class)->decorate(new Collection([$product]), request()->user()->tenant()->value('timezone'));
+        app(CatalogEligibility::class)->decorate(new Collection([$product]), request()->user()->tenant()->value('timezone'));
 
         return $product;
     }
