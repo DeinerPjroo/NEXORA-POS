@@ -19,8 +19,8 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.2 | IN_PROGRESS | Catálogo avanzado subdividido en A/B/C1/C2/D/E/F; criterios y dependencias en CATALOG_ADVANCED_PLAN.md | 2.1, catálogo actual |
 | 2.2-A | COMPLETED | Subcategorías conectadas, padre/FK/revisión y disponibilidad heredada; migración 000015 aplicada, 182/1913 SQLite/MariaDB, 18 Playwright (11.5 min), build/formato y capturas correctos | 2.1-F2 |
 | 2.2-B | COMPLETED | Grupos/opciones, selector/precio/snapshots y recibo conectados; migración 000016 aplicada, 197/2102 SQLite/MariaDB, 19 Playwright (14.7 min), recorrido UI ampliado, build/formato y capturas correctos; MODIFIERS.md | 2.2-A |
-| 2.2-C1 | IN_PROGRESS | Precios explícitos por sucursal/canal, precedencia y snapshots de contexto; criterios/preview en CONTEXT_PRICES_PLAN.md | 2.2-B |
-| 2.2-C2 | PENDING | Horarios/zonas/vigencia y comprobación al pedir, sin reinterpretar historial | 2.2-C1 |
+| 2.2-C1 | COMPLETED | Reglas/menú/preview/revisión de carrito/snapshots conectados. Migración 000017/DDL, 208/2286 SQLite/MariaDB y 20 Playwright en 16.9 minutos aprobados, build/formato/doctor/capturas correctos; CONTEXT_PRICES.md | 2.2-B |
+| 2.2-C2 | IN_PROGRESS | Diseño/aceptación en AVAILABILITY_SCHEDULES_PLAN.md; horarios/zonas/vigencia y comprobación al pedir, sin reinterpretar historial. Todavía sin código | 2.2-C1 |
 | 2.2-D | PENDING | Combos con composición/selección, asignación de precio e impuestos y snapshots | 2.2-C2 |
 | 2.2-E | PENDING | Promociones acotadas, prioridad/compatibilidad, cálculo/snapshot/autorización | 2.2-D |
 | 2.2-F | PENDING | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad | 2.2-E |

@@ -1,5 +1,9 @@
 # Base de datos
 
+## Precios por sucursal/canal (0.17)
+
+Migración 000017: product_context_prices con tenant/product/variant/branch, canal all/takeaway/dine_in, amount DECIMAL(19,4), estado/revisión y marcas de tiempo. FK tenant/product/variant y tenant/branch; variant_scope/branch_scope STORED COALESCE(id,0) y unique compuesto evitan duplicados con null. Índices/scopes comprobados en SQLite 3.51.3 y MariaDB 10.4.32. order_items.price_snapshot JSON nullable conserva fuente/regla/revisión/importe/contexto, sin modificar líneas anteriores. Descenso rechazado para preservar historia; contrato en CONTEXT_PRICES.md.
+
 ## Modelo inicial implementado
 
 La fuente ejecutable son las migraciones de `backend/database/migrations`. El [DDL MySQL](database/initial-schema.mysql.sql) se genera desde ellas con `php scripts/export-schema.php`, sin conectarse al servidor ni leer sus datos. No es un archivo `.mwb`; MySQL Workbench permite importarlo para construir y guardar el modelo EER.

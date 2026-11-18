@@ -6,24 +6,32 @@ import { formatMoney } from '../../lib/money'
 import { Loading, Modal } from '../../components/ui'
 import { CatalogError, Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage, Product, Variant } from '../catalog/types'
+import type { OrderChannel } from '../catalog/context-price-types'
+import { contextualPrice } from './cart'
 
 export function VariantOrderPicker({
   product,
   currency,
+  branchId,
+  channel,
   onPick,
   onClose,
+  onRefresh,
 }: {
   product: Product
   currency: string
+  branchId: number
+  channel: OrderChannel
   onPick: (variant: Variant) => void
   onClose: () => void
+  onRefresh: () => void
 }) {
   const [page, setPage] = useState(1)
   const query = useQuery({
-    queryKey: ['variants', 'order-picker', product.id, page],
+    queryKey: ['variants', 'order-picker', product.id, page, branchId, channel],
     queryFn: ({ signal }) =>
-      api<CatalogPage<Variant>>(
-        `products/${product.id}/variants?status=active&availability=available&page=${page}&per_page=10`,
+      api<CatalogPage<Variant> & { product_revision: number }>(
+        `products/${product.id}/variants?status=active&availability=available&page=${page}&per_page=10&branch_id=${branchId}&channel=${channel}`,
         { signal },
       ),
   })
@@ -37,11 +45,20 @@ export function VariantOrderPicker({
         </div>
       ) : (
         <>
+          {query.data.product_revision !== product.revision && (
+            <p className="notice">
+              El producto cambió.{' '}
+              <button type="button" className="text-button" onClick={onRefresh}>
+                Actualizar catálogo
+              </button>
+            </p>
+          )}
           <div className="order-variant-options">
             {query.data.data.map((variant) => (
               <button
                 key={variant.id}
                 className="order-variant-option"
+                disabled={query.data.product_revision !== product.revision}
                 onClick={() => onPick(variant)}
               >
                 <Layers3 size={19} />
@@ -49,7 +66,7 @@ export function VariantOrderPicker({
                   <strong>{variant.name}</strong>
                   <small>{variant.sku}</small>
                 </span>
-                <b>{formatMoney(variant.sale_price, currency)}</b>
+                <b>{formatMoney(contextualPrice(product, variant), currency)}</b>
                 <Check size={17} />
               </button>
             ))}

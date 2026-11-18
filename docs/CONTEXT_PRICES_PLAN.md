@@ -1,6 +1,6 @@
 # Precios por sucursal/canal · criterios 2.2-C1
 
-Diseño posterior a modificadores 0.16; no capacidad publicada. Mantener sale_price base de producto/variante, moneda de empresa, BCMath y snapshots. No cambiar precios de pedidos ya registrados ni requerir una pasarela.
+Diseño original posterior a modificadores 0.16, ejecutado y verificado como 0.17. Contrato vigente en CONTEXT_PRICES.md y resultados en PROGRESS/HANDOFF. Mantener sale_price base de producto/variante, moneda de empresa, BCMath y snapshots. No cambiar precios de pedidos ya registrados ni requerir una pasarela.
 
 ## Regla explícita y precedencia
 

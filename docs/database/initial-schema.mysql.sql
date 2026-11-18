@@ -451,3 +451,17 @@ alter table `order_items` add `base_unit_price` decimal(19, 4) null;
 
 alter table `order_items` add `modifiers_snapshot` json null;
 
+create table `product_context_prices` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `variant_id` bigint unsigned null, `branch_id` bigint unsigned null, `channel` varchar(20) not null, `amount` decimal(19, 4) not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `variant_scope` bigint unsigned as (coalesce(variant_id, 0)) stored, `branch_scope` bigint unsigned as (coalesce(branch_id, 0)) stored, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_context_prices` add constraint `product_context_prices_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_context_prices` add unique `context_prices_scope_unique`(`tenant_id`, `product_id`, `variant_scope`, `branch_scope`, `channel`);
+
+alter table `product_context_prices` add constraint `context_prices_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_context_prices` add constraint `context_prices_variant_fk` foreign key (`tenant_id`, `product_id`, `variant_id`) references `product_variants` (`tenant_id`, `product_id`, `id`) on delete restrict;
+
+alter table `product_context_prices` add constraint `context_prices_branch_fk` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `order_items` add `price_snapshot` json null;
+

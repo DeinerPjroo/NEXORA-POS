@@ -1,4 +1,5 @@
 import type { TaxProfile } from '../sales/tax-types'
+import type { PriceContext } from './context-price-types'
 
 type CategoryBase = {
   id: number
@@ -21,6 +22,7 @@ export function categoryPath(category: CategorySummary): string {
   return category.parent ? `${category.parent.name} / ${category.name}` : category.name
 }
 export type Variant = {
+  price_context?: PriceContext | null
   id: number
   product_id: number
   name: string
@@ -32,6 +34,7 @@ export type Variant = {
   is_available: boolean
 }
 export type Product = {
+  price_context?: PriceContext | null
   tax_profile?: TaxProfile | null
   id: number
   name: string

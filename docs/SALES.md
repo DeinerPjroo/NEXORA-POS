@@ -2,6 +2,8 @@
 
 ## Uso
 
+Desde 0.17, el recibo conserva el origen del precio por sucursal/canal elegido al registrar cada línea. Cobrar, abonar, dividir o devolver usa el importe histórico y sus adicionales/impuestos; editar o archivar reglas del catálogo no cambia ventas ni pedidos previos. Véase [CONTEXT_PRICES.md](CONTEXT_PRICES.md).
+
 Desde 0.9 hay devoluciones parciales por pago, con límites acumulativos e historial. Devolver no crea nueva deuda; la devolución completa posterior compensa solo remanentes. Reglas y ejemplos en [REFUNDS.md](REFUNDS.md).
 
 Desde 0.10 puede dividirse el total en partes iguales antes del primer pago. Se conserva una venta y se asignan pagos/saldos a cada cuenta, con límites de servidor. Ver [SPLIT_ACCOUNTS.md](SPLIT_ACCOUNTS.md).

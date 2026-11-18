@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Catalog\CatalogPriceContext;
+use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Catalog\CatalogSearch;
 use App\Domains\Catalog\SaveVariant;
 use App\Http\Requests\CatalogFiltersRequest;
@@ -23,7 +25,17 @@ final class VariantController extends Controller
             ->when($data['status'] ?? null, fn ($q, $state) => $q->where('is_active', $state === 'active'))
             ->when($data['availability'] ?? null, fn ($q, $state) => $q->where('is_available', $state === 'available'));
 
-        return VariantResource::collection($query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20))
+        $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
+        $context = app(CatalogPriceContext::class)->from($data);
+        if ($context) {
+            $resolver = app(CatalogPriceResolver::class);
+            $rules = $resolver->candidates([$product->id], $page->getCollection()->modelKeys(), $context['branch']->id, $context['channel']);
+            foreach ($page as $variant) {
+                $variant->setAttribute('price_context', $resolver->resolve($product, $variant, $context['branch'], $context['channel'], $rules));
+            }
+        }
+
+        return VariantResource::collection($page)
             ->additional(['product_revision' => $product->revision]);
     }
 

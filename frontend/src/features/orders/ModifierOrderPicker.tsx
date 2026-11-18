@@ -7,6 +7,7 @@ import { CatalogError } from '../catalog/catalog-ui'
 import type { Product, Variant } from '../catalog/types'
 import type { ModifierGroup } from '../catalog/modifier-types'
 import type { CartConfiguration } from './cart'
+import { contextualPrice } from './cart'
 
 export function ModifierOrderPicker({
   product,
@@ -36,7 +37,7 @@ export function ModifierOrderPicker({
     staleTime: Infinity,
   })
   const groups = query.data?.data ?? []
-  const basePrice = variant?.sale_price ?? product.sale_price
+  const basePrice = contextualPrice(product, variant)
   const extra = groups.reduce(
     (sum, group) =>
       sum +

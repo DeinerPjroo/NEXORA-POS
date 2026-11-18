@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.17.0 · 2026-11-18
+
+- Precios explícitos por sucursal/canal de producto o presentación, precedencia determinista y precio base separado. Reglas paginadas, identidad estable, archivo, revisiones, UUID y auditoría atómicos.
+- Migración 000017 con scopes STORED para unicidad real de contextos null y FK tenant/product/variant/branch; metadatos acotados de sucursales para lectores del catálogo.
+- Menú, presentación y adicionales resuelven el mismo contexto. OrderPlan comparte validación/cálculo entre preview sin escrituras de negocio y registro estricto.
+- Revisión del carrito al cambiar contexto o recuperar un precio obsoleto, con antes/después, cantidades/notas/selecciones conservadas y envío bloqueado mientras se revisa. Respuesta incierta conserva contexto y cuerpo/UUID originales.
+- Snapshot histórico de procedencia en pedido, cobro y recibo; cobrar/abonar/devolver no recotiza reglas vigentes. Compatibilidad de líneas anteriores con snapshot null. Contrato en CONTEXT_PRICES.md; horarios siguen en C2.
+
 ## 0.16.0 · 2026-11-18
 
 - Grupos propios de producto con mínimos/máximos, adicionales decimales y exclusiones sin recargo; configuración/archivo paginados, UUID, revisión de producto y auditoría atómicos.

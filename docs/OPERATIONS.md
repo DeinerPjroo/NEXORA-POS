@@ -1,5 +1,9 @@
 # Operación de caja y pedidos (0.4–0.7)
 
+## Precios contextuales desde 0.17
+
+El menú y las presentaciones usan sucursal/canal elegidos. Cambiar contexto con carrito consulta orders/preview sin registrar el pedido; diferencias visibles se revisan antes de aplicar y conservan cantidades, notas y opciones. El registro vuelve a exigir revisiones/precio actuales. Envío incierto conserva contexto y payload exactos; pedidos previos y cobro usan sus snapshots, sin recotización. Véase CONTEXT_PRICES.md; horarios todavía corresponden a C2.
+
 ## Alcance del incremento
 
 Caja registra efectivo declarado por el usuario: apertura, movimientos manuales, cobros/devoluciones desde 0.5, conteo de cierre y diferencia. Los pedidos registran preparación/entrega y subtotal de catálogo. **Entregar un pedido no lo cobra.** La venta se confirma en una acción separada, con recibo interno. No se conectan bancos, hardware ni DIAN. Véase [SALES.md](SALES.md).

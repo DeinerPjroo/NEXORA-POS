@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Domains\Orders\ChangeOrderState;
 use App\Domains\Orders\CreateOrder;
+use App\Domains\Orders\PreviewOrder;
 use App\Http\Requests\OperationFiltersRequest;
+use App\Http\Requests\OrderPreviewRequest;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderStateRequest;
 use App\Http\Resources\OrderResource;
@@ -32,6 +34,11 @@ final class OrderController extends Controller
     public function store(OrderRequest $request, CreateOrder $service)
     {
         return (new OrderResource($service->execute($request->user(), $request->validated())->load('branch', 'items', 'events', 'sale')))->response()->setStatusCode(201);
+    }
+
+    public function preview(OrderPreviewRequest $request, PreviewOrder $service)
+    {
+        return response()->json(['data' => $service->execute($request->user(), $request->validated())]);
     }
 
     public function changeState(OrderStateRequest $request, Order $order, ChangeOrderState $service)

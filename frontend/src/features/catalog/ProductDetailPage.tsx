@@ -17,6 +17,9 @@ import { taxSummary } from '../sales/tax-types'
 const ProductModifiersPanel = lazy(() =>
   import('./ProductModifiersPanel').then((module) => ({ default: module.ProductModifiersPanel })),
 )
+const ContextPricesPanel = lazy(() =>
+  import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
+)
 
 export function ProductDetailPage() {
   const { productId = '' } = useParams()
@@ -120,6 +123,9 @@ export function ProductDetailPage() {
         </section>
       </div>
       <VariantsPanel product={product} />
+      <Suspense fallback={<Loading />}>
+        <ContextPricesPanel product={product} />
+      </Suspense>
       <Suspense fallback={<Loading />}>
         <ProductModifiersPanel product={product} />
       </Suspense>

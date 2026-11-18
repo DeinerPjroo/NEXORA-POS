@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.16.0** agrega **adicionales y exclusiones** configurables, selección por presentación, precio exacto y snapshots en pedido/recibo. Conserva subcategorías, revisión manual e historial de pagos, impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Precios por contexto, horarios, combos/promociones, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [MODIFIERS.md](docs/MODIFIERS.md), [SUBCATEGORIES.md](docs/SUBCATEGORIES.md) y [PAYMENT_REVIEWS.md](docs/PAYMENT_REVIEWS.md).
+La entrega **0.17.0** agrega **precios por sucursal y canal** de producto/presentación y revisión del carrito conservando cantidades, notas y opciones. Guarda su procedencia en pedido/recibo y mantiene el precio base del catálogo. Conserva adicionales/exclusiones, subcategorías, revisión manual e historial de pagos, impuestos, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Horarios, combos/promociones, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md), [MODIFIERS.md](docs/MODIFIERS.md) y [PAYMENT_REVIEWS.md](docs/PAYMENT_REVIEWS.md).
 
 ## Entorno y requisitos
 
@@ -81,6 +81,8 @@ php scripts/test-mysql.php
 El script crea una base temporal nueva de nombre aleatorio y ejecuta la suite. Necesita permiso CREATE DATABASE. Por la instrucción de continuidad, conserva la base aislada y muestra su nombre al terminar: nunca ejecuta DROP DATABASE ni reutiliza bases anteriores. No utiliza ni limpia tablas de la base de trabajo. Una guarda en TestCase impide ejecutar RefreshDatabase sobre una base SQL distinta de la generada por el script. No ejecutes PHPUnit apuntando manualmente a tu base real. Los esquemas conservados requieren administración posterior y consumen espacio.
 
 Catálogo disponible en `/productos` y `/categorias`: categorías, productos, búsqueda, filtros, paginación, SKU/barcode y precios/costos precisos. Abre **Ver ficha y presentaciones** para subir una fotografía o crear variantes con precio y disponibilidad propios. Los permisos catalog.view/manage/costs se mantienen; otros roles se configuran desde Roles y permisos. El costo requiere permiso separado. El inventario automático sigue pendiente.
+
+En la ficha, **Precios por sucursal y canal** configura reglas de la presentación única; **Ver precios** en cada variante abre sus reglas propias. El precio base se conserva. Al tomar pedido, cambiar sucursal/canal permite revisar los importes antes de aplicarlos, manteniendo notas, cantidades y opciones. Los pedidos anteriores conservan sus precios al cobrar. Contrato y prioridad en [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md).
 
 Fotografías: JPEG, PNG o WebP, hasta 2 MB, entre 32 y 2048 px por lado. PHP necesita **GD con soporte JPEG/PNG/WebP** (verificado en XAMPP). El servidor vuelve a codificar las imágenes y elimina metadatos; no se aceptan SVG ni GIF. Se conservan en `backend/storage/app/catalog`, fuera del directorio público. No ejecutes storage:link para este disco; la API entrega la imagen únicamente a sesiones de su empresa con catalog.view. Incluye ese directorio en backups junto con la base; el disco local requiere un volumen persistente en despliegue.
 

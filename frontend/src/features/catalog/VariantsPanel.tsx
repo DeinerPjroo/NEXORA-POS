@@ -1,17 +1,22 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Layers3, Pencil, Plus } from 'lucide-react'
 import { api } from '../../lib/api'
 import { formatMoney } from '../../lib/money'
-import { Loading } from '../../components/ui'
+import { Loading, Modal } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
 import { CatalogError, Pagination } from './catalog-ui'
 import { VariantEditor } from './VariantEditor'
 import type { CatalogPage, Product, Variant } from './types'
 
+const ContextPricesPanel = lazy(() =>
+  import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
+)
+
 export function VariantsPanel({ product }: { product: Product }) {
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState<Variant | 'new' | null>(null)
+  const [pricing, setPricing] = useState<Variant | null>(null)
   const can = useCan()
   const { session } = useSession()
   const client = useQueryClient()
@@ -60,6 +65,7 @@ export function VariantsPanel({ product }: { product: Product }) {
                     <th>Precio</th>
                     {can('catalog.costs') && <th>Costo de referencia</th>}
                     <th>Estado</th>
+                    <th>Precios por contexto</th>
                     {can('catalog.manage') && (
                       <th>
                         <span className="sr-only">Acciones</span>
@@ -104,6 +110,15 @@ export function VariantsPanel({ product }: { product: Product }) {
                               : 'Agotada'}
                         </span>
                       </td>
+                      <td>
+                        <button
+                          className="text-button"
+                          aria-label={`Precios de ${variant.name}`}
+                          onClick={() => setPricing(variant)}
+                        >
+                          Ver precios
+                        </button>
+                      </td>
                       {can('catalog.manage') && (
                         <td>
                           <button
@@ -143,6 +158,13 @@ export function VariantsPanel({ product }: { product: Product }) {
             void query.refetch()
           }}
         />
+      )}
+      {pricing && (
+        <Modal title={`Precios · ${pricing.name}`} onClose={() => setPricing(null)}>
+          <Suspense fallback={<Loading />}>
+            <ContextPricesPanel product={product} variant={pricing} />
+          </Suspense>
+        </Modal>
       )}
     </section>
   )

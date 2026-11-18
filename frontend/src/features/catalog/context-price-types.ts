@@ -1,0 +1,30 @@
+export type OrderChannel = 'takeaway' | 'dine_in'
+export const channelLabels = {
+  all: 'Todos los canales',
+  takeaway: 'Para llevar',
+  dine_in: 'En el restaurante',
+}
+export type PriceContext = {
+  version: number
+  source: 'rule' | 'product' | 'variant'
+  rule_id: number | null
+  rule_revision: number | null
+  amount: string
+  branch_id: number
+  branch_name: string
+  channel: OrderChannel
+  variant_id: number | null
+  scope_branch_id: number | null
+  scope_channel: 'all' | OrderChannel | null
+}
+export type ContextPrice = {
+  id: number
+  product_id: number
+  variant_id: number | null
+  branch_id: number | null
+  channel: 'all' | OrderChannel
+  amount: string
+  is_active: boolean
+  revision: number
+  branch: { id: number; name: string; is_active: boolean } | null
+}

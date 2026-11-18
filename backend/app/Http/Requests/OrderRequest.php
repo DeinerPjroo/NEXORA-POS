@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Domains\Operations\Money;
 use App\Domains\Tenancy\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,20 +22,7 @@ final class OrderRequest extends FormRequest
             'channel' => ['required', Rule::in(['dine_in', 'takeaway'])],
             'reference' => ['nullable', 'string', 'max:80'], 'customer_name' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'items' => ['required', 'array', 'min:1', 'max:100'],
-            'items.*' => ['required', 'array:product_id,variant_id,quantity,notes,product_revision,expected_unit_price,expected_tax_revision,modifiers'],
-            'items.*.modifiers' => ['sometimes', 'array', 'list', 'max:8'],
-            'items.*.modifiers.*' => ['required', 'array:group_id,option_ids'],
-            'items.*.modifiers.*.group_id' => ['required', 'integer', 'min:1'],
-            'items.*.modifiers.*.option_ids' => ['present', 'array', 'list', 'max:20'],
-            'items.*.modifiers.*.option_ids.*' => ['required', 'integer', 'min:1'],
-            'items.*.expected_tax_revision' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'min:1'],
-            'items.*.variant_id' => ['nullable', 'integer', 'min:1'],
-            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
-            'items.*.product_revision' => ['required', 'integer', 'min:1'],
-            'items.*.expected_unit_price' => ['required', ...Money::rules()],
-            'items.*.notes' => ['nullable', 'string', 'max:300'],
+            ...OrderLineRules::rules(),
             'subtotal' => ['prohibited'], 'status' => ['prohibited'],
         ];
     }

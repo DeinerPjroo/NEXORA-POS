@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -28,14 +28,22 @@ import type { Order } from '../operations/types'
 import { VariantOrderPicker } from './VariantOrderPicker'
 import { ModifierOrderPicker } from './ModifierOrderPicker'
 import { ModifierDetails } from './ModifierDetails'
-import { cartSubtotal, makeLine } from './cart'
+import { cartSubtotal, contextualPrice, makeLine, serializeCart } from './cart'
 import type { CartLine, CartConfiguration } from './cart'
+import type { OrderChannel } from '../catalog/context-price-types'
+import { useCartPricing } from './useCartPricing'
+import { PriceDetails } from './PriceDetails'
+
+const PriceReviewModal = lazy(() =>
+  import('./PriceReviewModal').then((module) => ({ default: module.PriceReviewModal })),
+)
 
 export function OrderComposer() {
   const context = useOperationContext()
   const { session } = useSession()
   const [currency] = useState(session!.company.currency)
   const [branch, setBranch] = useState<number | null>(null)
+  const [channel, setChannel] = useState<OrderChannel>('takeaway')
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<CategorySummary | null>(null)
   const [page, setPage] = useState(1)
@@ -59,10 +67,14 @@ export function OrderComposer() {
   })
   if (text) params.set('search', text)
   if (category) params.set('category_id', String(category.id))
+  if (selected) {
+    params.set('branch_id', String(selected))
+    params.set('channel', channel)
+  }
   const products = useQuery({
     queryKey: ['products', 'order-menu', params.toString()],
     queryFn: ({ signal }) => api<CatalogPage<Product>>(`products?${params}`, { signal }),
-    enabled: can('catalog.view'),
+    enabled: can('catalog.view') && !!selected,
   })
   const operation = useOperation<Order>('orders', async (order) => {
     await client.invalidateQueries({ queryKey: ['orders'] })
@@ -72,13 +84,26 @@ export function OrderComposer() {
       setCart([])
     }
   })
+  const pricing = useCartPricing({
+    cart,
+    currency,
+    locked: operation.locked,
+    onApply: (lines, target) => {
+      setCart(lines)
+      setBranch(target.branchId)
+      setChannel(target.channel)
+      operation.reset()
+      void client.invalidateQueries({ queryKey: ['products', 'order-menu'] })
+    },
+  })
+  const locked = operation.locked || pricing.locked
   function configure(product: Product, variant?: Variant) {
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
     else add(product, variant)
   }
   function add(product: Product, variant?: Variant, configuration?: CartConfiguration) {
-    if (operation.locked) return
+    if (locked) return
     const line = makeLine(product, variant, configuration)
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
@@ -92,7 +117,7 @@ export function OrderComposer() {
     setCustomizing(null)
   }
   function quantity(key: string, value: number) {
-    if (!operation.locked)
+    if (!locked)
       setCart((previous) =>
         previous.map((line) =>
           line.key === key ? { ...line, quantity: Math.max(1, Math.min(999, value)) } : line,
@@ -101,21 +126,14 @@ export function OrderComposer() {
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selected || !cart.length) return
+    if (!selected || !cart.length || pricing.locked) return
     const data = Object.fromEntries(new FormData(event.currentTarget))
     operation.send({
       ...data,
       branch_id: selected,
+      channel,
       currency,
-      items: cart.map(
-        ({
-          key: _key,
-          product_name: _name,
-          variant_name: _variant,
-          modifier_labels: _labels,
-          ...line
-        }) => line,
-      ),
+      items: serializeCart(cart, true),
     })
   }
   if (!can('catalog.view'))
@@ -143,8 +161,8 @@ export function OrderComposer() {
         <OperationalBranchPicker
           branches={activeBranches}
           value={selected}
-          onChange={setBranch}
-          disabled={operation.locked}
+          onChange={(branchId) => pricing.request({ branchId, channel })}
+          disabled={locked}
         />
         <span className="pill neutral">Sin cobro registrado</span>
       </div>
@@ -187,7 +205,7 @@ export function OrderComposer() {
                     <button
                       className="panel order-product"
                       key={product.id}
-                      disabled={!product.sellable || operation.locked}
+                      disabled={!product.sellable || locked || products.isFetching}
                       onClick={() =>
                         product.variants_count > 0 ? setPicking(product) : configure(product)
                       }
@@ -211,7 +229,7 @@ export function OrderComposer() {
                           ? 'Elegir presentación'
                           : product.modifier_groups_count
                             ? 'Personalizar opciones'
-                            : formatMoney(product.sale_price, currency)}
+                            : formatMoney(contextualPrice(product), currency)}
                         <Plus size={16} />
                       </span>
                     </button>
@@ -239,6 +257,10 @@ export function OrderComposer() {
             </span>
           </div>
           <ErrorNotice error={operation.error} />
+          <ErrorNotice error={pricing.error} />
+          {pricing.pending && (
+            <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
+          )}
           <OperationNotice uncertain={operation.uncertain} />
           {cart.length ? (
             <div className="cart-lines">
@@ -249,12 +271,13 @@ export function OrderComposer() {
                       <strong>{line.product_name}</strong>
                       {line.variant_name && <small>{line.variant_name}</small>}
                       <ModifierDetails groups={line.modifier_labels} currency={currency} />
+                      <PriceDetails context={line.price_context} currency={currency} />
                     </div>
                     <button
                       type="button"
                       className="icon-button"
                       aria-label={`Quitar ${line.product_name}`}
-                      disabled={operation.locked}
+                      disabled={locked}
                       onClick={() =>
                         setCart((previous) => previous.filter((item) => item.key !== line.key))
                       }
@@ -267,7 +290,7 @@ export function OrderComposer() {
                       <button
                         type="button"
                         aria-label={`Restar ${line.product_name}`}
-                        disabled={line.quantity <= 1 || operation.locked}
+                        disabled={line.quantity <= 1 || locked}
                         onClick={() => quantity(line.key, line.quantity - 1)}
                       >
                         <Minus size={14} />
@@ -276,7 +299,7 @@ export function OrderComposer() {
                       <button
                         type="button"
                         aria-label={`Sumar ${line.product_name}`}
-                        disabled={line.quantity >= 999 || operation.locked}
+                        disabled={line.quantity >= 999 || locked}
                         onClick={() => quantity(line.key, line.quantity + 1)}
                       >
                         <Plus size={14} />
@@ -288,7 +311,7 @@ export function OrderComposer() {
                     aria-label={`Observación para ${line.product_name}`}
                     placeholder="Observación de preparación…"
                     maxLength={300}
-                    disabled={operation.locked}
+                    disabled={locked}
                     value={line.notes}
                     onChange={(event) =>
                       setCart((previous) =>
@@ -307,9 +330,19 @@ export function OrderComposer() {
               <p>Agrega el primer sabor a este pedido.</p>
             </div>
           )}
-          <fieldset disabled={operation.locked} className="form-stack">
+          <fieldset disabled={locked} className="form-stack">
             <Field label="Tipo de pedido">
-              <select name="channel">
+              <select
+                name="channel"
+                value={channel}
+                onChange={(event) =>
+                  selected &&
+                  pricing.request({
+                    branchId: selected,
+                    channel: event.target.value as OrderChannel,
+                  })
+                }
+              >
                 <option value="takeaway">Para llevar</option>
                 <option value="dine_in">En el restaurante</option>
               </select>
@@ -345,20 +378,21 @@ export function OrderComposer() {
             <button
               type="button"
               className="button secondary"
+              disabled={locked}
               onClick={() => {
-                setCart([])
-                operation.reset()
-                void products.refetch()
+                if (selected) pricing.request({ branchId: selected, channel })
               }}
             >
               <RefreshCw size={15} />
-              Revisar catálogo y empezar de nuevo
+              Revisar precios conservando el pedido
             </button>
           )}
           <button
             className="button primary wide"
             type="submit"
-            disabled={operation.isPending || !cart.length || !selected || conflict}
+            disabled={
+              operation.isPending || pricing.locked || !cart.length || !selected || conflict
+            }
           >
             <Send size={17} />
             {operation.isPending
@@ -369,12 +403,18 @@ export function OrderComposer() {
           </button>
         </form>
       </div>
-      {picking && (
+      {picking && selected && (
         <VariantOrderPicker
           product={picking}
           currency={currency}
+          branchId={selected}
+          channel={channel}
           onPick={(variant) => configure(picking, variant)}
           onClose={() => setPicking(null)}
+          onRefresh={() => {
+            setPicking(null)
+            void products.refetch()
+          }}
         />
       )}
       {customizing && (
@@ -389,6 +429,16 @@ export function OrderComposer() {
             setCustomizing(null)
           }}
         />
+      )}
+      {pricing.review && (
+        <Suspense fallback={<Loading />}>
+          <PriceReviewModal
+            review={pricing.review}
+            currency={currency}
+            onApply={pricing.accept}
+            onCancel={pricing.cancel}
+          />
+        </Suspense>
       )}
     </>
   )

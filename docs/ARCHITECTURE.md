@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Precios contextuales y plan de pedido (0.17)
+
+SaveContextPrice reutiliza el bloqueo de configuración de producto, IdempotentOperation y auditoría. CatalogPriceResolver obtiene candidatas por lote y aplica precedencia estable por entidad/sucursal/canal; CatalogPriceContext valida la pareja de parámetros de lectura. Product/Variant mantienen sale_price separado de price_context. OperationsContext amplía únicamente metadatos propios de sucursales para catalog.view.
+
+OrderPlan centraliza disponibilidad, presentación, impuestos, opciones, precio contextual y subtotales. CreateOrder lo ejecuta con expectativas estrictas dentro del comando idempotente; PreviewOrder lo ejecuta sin expectativas bajo transacción/bloqueo Tenant y no escribe negocio. El preview no reemplaza la cotización financiera de venta. useCartPricing mantiene contexto aplicado y propuesta separados, bloquea cambios mientras consulta/revisa y compara contenido visible, incluido snapshot tributario completo. La UI serializa explícitamente los DTO del comando/preview; las etiquetas y snapshots nunca son autoridad de entrada. PriceDetails reproduce price_snapshot de pedido/venta. Véase CONTEXT_PRICES.md.
+
 ## Modificadores de preparación y precio (0.16)
 
 SaveModifierGroup/Option usan IdempotentOperation, Policy antes de replay, ModifierProductContext y Product.revision como revisión global de configuración. Group.revision incluye cambios de opciones. Configuración activa acotada (8/20), archivados paginados y FK tenant/product/group, sin modelos compartidos que puedan cambiar otros productos.

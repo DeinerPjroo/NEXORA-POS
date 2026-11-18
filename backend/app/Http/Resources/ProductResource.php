@@ -16,6 +16,7 @@ final class ProductResource extends JsonResource
             'tax_profile' => $this->whenLoaded('taxProfile', fn () => $this->taxProfile?->only('id', 'name', 'price_mode', 'rates', 'is_active', 'revision')),
             'category' => $this->whenLoaded('category', fn () => $this->category->summary()),
             'sale_price' => $this->sale_price,
+            'price_context' => $this->when(array_key_exists('price_context', $this->resource->getAttributes()), fn () => $this->resource->getAttribute('price_context')),
             'cost_price' => $this->when($request->user()->hasPermission('catalog.costs'), fn () => $this->cost_price),
             'is_active' => $this->is_active, 'is_available' => $this->is_available,
             'sellable' => $this->is_active && $this->is_available && (bool) $this->category?->isEffectivelyActive() && (! $this->tax_profile_id || $this->taxProfile?->is_active) && (! $this->variants_count || $this->available_variants_count > 0),

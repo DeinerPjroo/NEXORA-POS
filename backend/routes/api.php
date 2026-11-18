@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContextPriceController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
@@ -62,6 +63,7 @@ Route::prefix('v1')->group(function () {
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::post('orders', [OrderController::class, 'store']);
+        Route::post('orders/preview', [OrderController::class, 'preview']);
         Route::post('orders/{order}/status', [OrderController::class, 'changeState']);
         Route::get('workspace/team', [WorkspaceController::class, 'team']);
         Route::get('workspace/company', [WorkspaceController::class, 'settings']);
@@ -85,6 +87,9 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/context-prices', [ContextPriceController::class, 'index']);
+            Route::post('products/{product}/context-prices', [ContextPriceController::class, 'store']);
+            Route::put('products/{product}/context-prices/{contextPrice}', [ContextPriceController::class, 'update']);
             Route::get('products/{product}/modifier-configuration', [ProductModifierController::class, 'configuration']);
             Route::get('products/{product}/modifier-groups', [ProductModifierController::class, 'groups']);
             Route::post('products/{product}/modifier-groups', [ProductModifierController::class, 'storeGroup']);

@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-014 · Contexto explícito y revisión de borrador (0.17)
+
+Cada entidad vendible conserva su precio base y reglas propias: sucursal+canal > sucursal > canal > base. Una regla del padre no sustituye precios de variantes. Identidad estable, archivo/revisión/UUID y scopes generados STORED para unicidad real con IDs null, comprobados en SQLite y MariaDB. La consulta contextual devuelve un atributo separado y nunca sobreescribe sale_price del editor.
+
+OrderPlan comparte validaciones/cálculo entre preview sin escrituras de negocio y registro estricto bajo bloqueo Tenant. El carrito no cambia contexto hasta resolver el preview; diferencias de precio/contenido/perfil tributario requieren aceptación visible, conservando cantidades/notas/selecciones. El envío incierto mantiene contexto y UUID/cuerpo original. PriceSnapshot documenta la procedencia histórica, sin recotizar al cobrar o devolver ni reconstruir procedencias de líneas anteriores. Horarios se implementan separadamente en C2. Contrato en CONTEXT_PRICES.md.
+
 ## DEC-013 · Opciones por unidad y snapshot de preparación (0.16)
 
 Cada grupo pertenece a un producto y se aplica a sus variantes; tipo addon/exclusion estable. Las exclusiones son instrucciones de preparación con importe cero, no descuentos, reembolsos ni movimientos de inventario. Configuración activa limitada a 8 grupos/20 opciones, conservando archivados y páginas administrativas. Revisiones de grupo/producto y auditoría dentro de UUID transaccional; producto incrementa revisión ante cualquier cambio para invalidar carritos.

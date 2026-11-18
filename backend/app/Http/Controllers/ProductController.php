@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Catalog\CatalogPriceContext;
+use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Catalog\CatalogSearch;
 use App\Domains\Catalog\SaveCatalogRecord;
 use App\Http\Requests\CatalogFiltersRequest;
@@ -24,7 +26,17 @@ final class ProductController extends Controller
             ->when($data['status'] ?? null, fn ($query, $status) => $query->where('is_active', $status === 'active'))
             ->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('is_available', $availability === 'available'));
 
-        return ProductResource::collection($query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20));
+        $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
+        $context = app(CatalogPriceContext::class)->from($data);
+        if ($context) {
+            $resolver = app(CatalogPriceResolver::class);
+            $rules = $resolver->candidates($page->getCollection()->modelKeys(), [], $context['branch']->id, $context['channel']);
+            foreach ($page as $product) {
+                $product->setAttribute('price_context', $product->variants_count ? null : $resolver->resolve($product, null, $context['branch'], $context['channel'], $rules));
+            }
+        }
+
+        return ProductResource::collection($page);
     }
 
     public function show(Product $product)
