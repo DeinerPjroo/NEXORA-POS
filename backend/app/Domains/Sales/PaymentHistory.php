@@ -12,10 +12,13 @@ final class PaymentHistory
 {
     public function page(User $actor, array $data): array
     {
-        $query = Payment::with(['sale:id,tenant_id,branch_id,branch_name,receipt_number,currency,status,revision', 'account:id,tenant_id,label', 'refunds:id,tenant_id,payment_id,amount'])
+        $query = Payment::with(['sale:id,tenant_id,branch_id,branch_name,receipt_number,currency,status,revision', 'account:id,tenant_id,label', 'refunds:id,tenant_id,payment_id,amount', 'latestReview'])
             ->when($data['branch_id'] ?? null, fn ($q, $id) => $q->where('branch_id', $id))
             ->when($data['method_kind'] ?? null, fn ($q, $kind) => $q->where('method_kind', $kind))
             ->when($data['reference'] ?? null, fn ($q, $value) => $q->whereRaw("reference LIKE ? ESCAPE '!'", [CatalogSearch::pattern($value)]));
+        if (! empty($data['review_status'])) {
+            app(PaymentReviewState::class)->filter($query, $data['review_status']);
+        }
         // Los timestamps SQL siguen la zona de aplicación existente, no asumir UTC.
         $timezone = $actor->tenant->timezone;
         foreach (['from', 'to'] as $bound) {

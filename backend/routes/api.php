@@ -8,6 +8,7 @@ use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PaymentReviewController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\RoleController;
@@ -38,6 +39,8 @@ Route::prefix('v1')->group(function () {
         Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update']);
         Route::get('sales/settings', [SalesSettingController::class, 'show']);
         Route::get('finance/payments', [PaymentHistoryController::class, 'index']);
+        Route::get('finance/payments/{payment}/reviews', [PaymentReviewController::class, 'index']);
+        Route::post('finance/payments/{payment}/reviews', [PaymentReviewController::class, 'store']);
         Route::put('sales/settings', [SalesSettingController::class, 'update']);
         Route::get('sales/cash-context', [SaleController::class, 'cashContext']);
         Route::get('sales', [SaleController::class, 'index']);

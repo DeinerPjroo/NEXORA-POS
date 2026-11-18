@@ -37,6 +37,8 @@ erDiagram
     SALE_ACCOUNTS o|--o{ PAYMENTS : asigna
     SALES ||--o{ SALE_REFUNDS : compensa
     PAYMENTS ||--o{ SALE_REFUNDS : devuelve
+    PAYMENTS ||--o{ PAYMENT_REVIEWS : revisa
+    USERS ||--o{ PAYMENT_REVIEWS : declara
     CASH_SESSIONS ||--o{ PAYMENTS : recibe
     CASH_SESSIONS ||--o{ SALE_REFUNDS : entrega
 ```
@@ -63,6 +65,7 @@ erDiagram
 | sales | Únicos tenant/order y tenant/receipt_number; FK tenant/branch/order, actor, datos comerciales e importes DECIMAL(19,4) inmutables. Incluye ajustes/propina, calculation_version 1 (original), 2 (incluido global) o 3 (por producto) y tax_breakdown JSON inmutable. Solo estado/revisión mutables. |
 | payment_methods | Código/nombre únicos por tenant, tipo cash/non_cash estable, estado/revisión y efectivo principal protegido; sin borrado. |
 | payments | Varios pagos manuales por venta desde 0.7; FK a payment_methods y único (tenant,sale,id) para referencia histórica. Snapshot de método/procedencia/referencia. Sesión obligatoria; cash_movement_id nullable para no efectivo. Append-only. |
+| payment_reviews | Declaraciones humanas append-only con versión única tenant/payment/version; FK tenant/sale/payment, tenant/branch/sale y tenant/actor. Neto esperado/observado/diferencia firmada DECIMAL(19,4), revisión financiera y snapshots de actor/moneda/referencia/motivo. No modifica importes operativos. |
 | sale_refunds | Compensaciones parciales/completas por pago; FK (tenant,sale,payment_id), varias filas hasta el importe original desde 0.9. Índices tenant/sale y tenant/payment. Motivo/referencia/actor/sesión; cash_movement_id nullable. Append-only. |
 | sale_accounts | Partes iguales de una venta desde 0.10: número/etiqueta/importe append-only, únicos tenant/sale/id y tenant/sale/number, FK tenant/sale. payments.account_id nullable con FK tenant/sale/account; obligatorio en servicio solo si hay división. Saldos derivados con BCMath, sin columnas editables de saldo. |
 | tax_profiles | Nombre único por empresa, price_mode inclusive/exclusive, 1–5 rates JSON validados, is_active/revision y único tenant/id. Products.tax_profile_id nullable con FK tenant/profile. Sin borrado. Order_items.tax_snapshot copia perfil/tasas/revisión al crear pedido; Sales_settings.tip_tax_snapshot conserva política explícita de propina. JSONs no aceptados del cliente que cobra. |

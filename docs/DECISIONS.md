@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-011 · Declaraciones humanas separadas (0.14)
+
+Conciliar manualmente registra una declaración del operador, sin alterar el pago ni simular respuesta de proveedor. Requiere importe observado escrito por la persona, referencia, confirmación y permiso independiente; diferencia/pending exigen motivo. Historial append-only con versión por pago, revisión financiera/neto observado y auditoría en la misma transacción idempotente.
+
+Toda revisión financiera posterior de la venta invalida conservadoramente matched/difference, incluso si cambia otro pago de esa venta. Se muestra stale hasta una nueva declaración explícita; el UUID antiguo devuelve su declaración histórica, nunca una confirmación sobre el nuevo neto. No incrementar Sale.revision por revisión manual, porque no cambia la operación financiera. Efectivo mantiene arqueo en caja; este comando acepta solo no efectivo. No implica integración bancaria ni comisiones/netos de liquidación del proveedor.
+
 ## DEC-010 · Historial por pago y resumen acotado (0.13)
 
 El historial muestra una fila por pago, con devoluciones acumuladas actuales. Fecha filtra registro del pago y no recalcula compensaciones históricas al cierre del rango; la UI lo explica. El resumen suma solo la página actual y agrupa moneda, sin duplicar total de una venta abonada ni presentarlo como ganancias o flujo bancario del período.

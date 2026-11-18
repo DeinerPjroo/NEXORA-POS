@@ -7,48 +7,20 @@ import { formatMoney } from '../../lib/money'
 import { ErrorNotice, Field, Loading, PageTitle } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
 import { CatalogError, Pagination } from '../catalog/catalog-ui'
-import type { CatalogPage } from '../catalog/types'
 import { useOperationContext } from '../operations/OperationalBranchPicker'
 import { saleStates } from './types'
-import type { Sale } from './types'
+import type { HistoryPage, PaymentEntry } from './payment-history-types'
+import { reviewStates } from './payment-history-types'
+import { ManualReviewModal, PaymentReviewsModal } from './PaymentReviewModals'
 
-type Entry = {
-  id: number
-  sale_id: number
-  branch_id: number
-  branch_name: string
-  account_label: string | null
-  cash_session_id: number
-  method_name: string
-  method_kind: 'cash' | 'non_cash'
-  provenance: 'operator'
-  reference: string | null
-  applied_amount: string
-  refunded_amount: string
-  net_paid_amount: string
-  refunds_count: number
-  currency: string
-  receipt_code: string
-  sale_status: Sale['status']
-  sale_revision: number
-  received_amount: string
-  change_amount: string
-  created_at: string
-}
-type Summary = {
-  currency: string
-  count: number
-  applied_amount: string
-  refunded_amount: string
-  net_paid_amount: string
-}
-type HistoryPage = CatalogPage<Entry> & { summary: Summary[]; timezone: string }
-const emptyFilters = { branch: '', kind: '', reference: '', from: '', to: '' }
+const emptyFilters = { branch: '', kind: '', reference: '', from: '', to: '', review: '' }
 
 export function PaymentHistoryPage() {
   const [draft, setDraft] = useState(emptyFilters)
   const [filters, setFilters] = useState(emptyFilters)
   const [page, setPage] = useState(1)
+  const [reviewing, setReviewing] = useState<PaymentEntry | null>(null)
+  const [history, setHistory] = useState<PaymentEntry | null>(null)
   const context = useOperationContext()
   const { session } = useSession()
   const can = useCan()
@@ -59,6 +31,7 @@ export function PaymentHistoryPage() {
     reference: filters.reference,
     from: filters.from,
     to: filters.to,
+    review_status: filters.review,
   }))
     if (value) params.set(key, value)
   const query = useQuery({
@@ -138,6 +111,19 @@ export function PaymentHistoryPage() {
               onChange={(event) => setDraft({ ...draft, reference: event.target.value })}
             />
           </Field>
+          <Field label="Estado de revisión manual">
+            <select
+              value={draft.review}
+              onChange={(event) => setDraft({ ...draft, review: event.target.value })}
+            >
+              <option value="">Todos los estados</option>
+              {(['pending', 'matched', 'difference', 'stale'] as const).map((status) => (
+                <option value={status} key={status}>
+                  {reviewStates[status]}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
         <p className="muted small">
           Fechas de registro del pago en {timezone}. Las devoluciones corresponden al acumulado
@@ -214,6 +200,7 @@ export function PaymentHistoryPage() {
                     <th>Aplicado</th>
                     <th>Devuelto acumulado</th>
                     <th>Neto</th>
+                    <th>Revisión manual</th>
                     <th>Consultar</th>
                   </tr>
                 </thead>
@@ -270,6 +257,39 @@ export function PaymentHistoryPage() {
                         <strong>{formatMoney(entry.net_paid_amount, entry.currency)}</strong>
                       </td>
                       <td>
+                        <span className={`payment-review-state ${entry.review_status}`}>
+                          {reviewStates[entry.review_status]}
+                        </span>
+                        {entry.latest_review && (
+                          <small className="sale-order-id">
+                            {entry.latest_review.actor_name} ·{' '}
+                            {date(entry.latest_review.created_at)}
+                          </small>
+                        )}
+                        {entry.method_kind === 'non_cash' && (
+                          <div className="payment-review-actions">
+                            {!!entry.review_revision && (
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => setHistory(entry)}
+                              >
+                                Ver revisiones
+                              </button>
+                            )}
+                            {can('sales.reconcile') && (
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => setReviewing(entry)}
+                              >
+                                Registrar revisión
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td>
                         <Link className="text-button" to={`/ventas/${entry.sale_id}`}>
                           Ver recibo
                         </Link>
@@ -285,6 +305,10 @@ export function PaymentHistoryPage() {
             <Pagination meta={query.data.meta} onPage={setPage} pending={query.isFetching} />
           </section>
         </>
+      )}
+      {reviewing && <ManualReviewModal entry={reviewing} onClose={() => setReviewing(null)} />}
+      {history && (
+        <PaymentReviewsModal entry={history} timezone={timezone} onClose={() => setHistory(null)} />
       )}
     </>
   )

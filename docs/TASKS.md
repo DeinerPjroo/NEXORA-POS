@@ -13,10 +13,17 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-E | COMPLETED | Impuestos incluidos globales y varios por producto, snapshots/versiones y sin reinterpretar ventas anteriores; E1/E2 verificados | Catálogo y cálculo versionado |
 | 2.1-E1 | COMPLETED | Impuesto incluido global conectado/versionado, sin doble adición y propina explícita. Migración 000011 aplicada; 144/1357 SQLite/MariaDB, 14 Playwright y build/formato/captura correctos | 2.1-D2 |
 | 2.1-E2 | COMPLETED | Perfiles/asignación/snapshots y cálculo por líneas, versión 3/propina/centavos. Migración 000012 aplicada; 158/1526 SQLite/MariaDB, 15 Playwright, build/formato/captura y guardas correctos | 2.1-E1 y catálogo |
-| 2.1-F | IN_PROGRESS | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
+| 2.1-F | COMPLETED | Historial de pagos y revisión humana no efectiva conectados; estados nunca equivalentes a confirmación de proveedor. F1/F2 verificados | 2.1-B/D1/D2 |
 | 2.1-F1 | COMPLETED | Historial conectado, filtros/zonas/netos y resumen de página/moneda; migración 000013 aplicada, 165/1645 SQLite/MariaDB, 16 Playwright (13.2 min), build/formato y capturas correctos | 2.1-E2 |
-| 2.1-F2 | IN_PROGRESS | Revisión manual de pagos no efectivos, permiso independiente e historial append-only/idempotente; importe observado y referencia, estado invalidado si cambia la revisión financiera | 2.1-F1 |
-| 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
+| 2.1-F2 | COMPLETED | Revisión manual conectada, permiso/historial/versiones/obsolescencia; migración 000014 aplicada, 175/1818 SQLite/MariaDB, 17 Playwright (10.4 min), build/formato y capturas correctos | 2.1-F1 |
+| 2.2 | IN_PROGRESS | Catálogo avanzado subdividido en A/B/C1/C2/D/E/F; criterios y dependencias en CATALOG_ADVANCED_PLAN.md | 2.1, catálogo actual |
+| 2.2-A | IN_PROGRESS | Subcategorías de dos niveles, padre/FK/revisión, filtros/selectores y disponibilidad heredada integrada en pedidos; criterios en CATALOG_ADVANCED_PLAN.md | 2.1-F2 |
+| 2.2-B | PENDING | Grupos/opciones de modificadores, adicionales/exclusiones y snapshots/precios por línea | 2.2-A |
+| 2.2-C1 | PENDING | Precios explícitos por sucursal/canal, precedencia y snapshots de contexto | 2.2-B |
+| 2.2-C2 | PENDING | Horarios/zonas/vigencia y comprobación al pedir, sin reinterpretar historial | 2.2-C1 |
+| 2.2-D | PENDING | Combos con composición/selección, asignación de precio e impuestos y snapshots | 2.2-C2 |
+| 2.2-E | PENDING | Promociones acotadas, prioridad/compatibilidad, cálculo/snapshot/autorización | 2.2-D |
+| 2.2-F | PENDING | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad | 2.2-E |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |
 | 2.5 | PENDING | Dashboard comercial real por fecha/sucursal, sin ganancias definitivas; E2E apertura→pedido→cobro→cierre | 2.1–2.4 |
@@ -39,7 +46,7 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 
 Ninguna fila agregada representa una fase completada. Antes de iniciar cada bloque grande, desglosar criterios e implementar un incremento funcional a la vez.
 
-## Criterios del siguiente incremento 2.1-D2
+## Criterios históricos 2.1-D2 (completado)
 
 - División opcional en 2–20 partes iguales elegida antes del primer pago. Total global inmutable; repartir centavos sobrantes a las primeras partes de forma determinista. Rechazar partes de importe cero.
 - Conservar una venta y un recibo interno. Partes append-only con tenant/sale, número e importe; payments se asignan por FK compuesta a una parte de esa venta. No reasignar historia ni dividir ventas anteriores.
@@ -48,14 +55,22 @@ Ninguna fila agregada representa una fase completada. Antes de iniciar cada bloq
 - UI con selección de parte, importes/saldos e historial en recibo, reintento exacto y revisión. Sin división por productos ni múltiples documentos fiscales en este incremento.
 - Verificar centavos, límites acumulados, pertenencia/FK, atomicidad, idempotencia, pagos mixtos, devoluciones y compatibilidad sin división en SQLite/MariaDB y Chromium antes de publicar.
 
-## Criterios previstos 2.1-E1
+## Criterios históricos 2.1-E1 (completado)
 
 Modo global inclusive explícito, sin asignar tasa legal: el subtotal/descuento conserva el precio final del catálogo y el impuesto se extrae, sin añadirlo otra vez. Sobre el importe participante G, base = round_half_up(G × 100 / (100 + tasa), 2); impuesto = G − base. Total = subtotal redondeado − descuento + propina. Si la propina participa, su importe aceptado ya contiene ese impuesto; si no, se extrae solo del importe de productos. Cadenas/BCMath con precisión suficiente, versión 2 para este cálculo y versión 1 para historial/modos anteriores.
 
 Probar mitades/centavos y extremos, descuento fijo/porcentual, tratamiento de propina, revisión/configuración, snapshots anteriores, abonos/división/devoluciones y efectivo real. Impuestos múltiples por producto siguen siendo E2; no anunciar esa capacidad con E1.
 
-## Criterios previstos 2.1-F
+## Criterios 2.1-F
 
 F1 será una consulta útil de pagos aplicados con devoluciones y neto, sin duplicar totales de venta al haber varios pagos. Filtros tenant/sucursal, fechas interpretadas en zona de empresa, tipo de método histórico y referencia escapada; paginación real y resumen de la página por moneda con BCMath. sales.view y sin filtrar saldos de caja a roles que no los consultan. No llamar ingreso/ganancia definitiva al neto de pagos.
 
 F2 añadirá declaraciones de revisión humana de no efectivos, nunca aprobación de banco/pasarela. Permiso sales.reconcile (propietarios existentes), revisión de venta y de revisión manual, UUID y auditoría/transacción. Registro append-only con importe observado/referencia/estado (revisado manualmente, diferencia, pendiente), sin mutar Payment/Sale/caja. Si cambia revisión de venta por pago/devolución, mostrar que necesita nueva revisión; no conservar una conciliación aparentemente actual sobre datos cambiados. Desglosar antes de implementar y probar conflictos/rollback/tenant además del flujo UI.
+
+### Aceptación F2
+
+- Migración incremental con historial payment_reviews y FK tenant/sale/payment, actor y sucursal. Versiones correlativas por pago; sin edición/borrado ni cambio de importes financieros.
+- POST idempotente con sales.reconcile antes del replay, revisión de venta/manual y neto esperado. Rechazar cash, contexto ajeno y neto/revisiones obsoletos. Revisado exige observado igual al neto; diferencia exige distinto; pendiente requiere motivo. Referencia para estados con importe y declaración humana explícita.
+- Auditoría y revisión en una transacción; conservar UUID/payload exactos tras respuesta incierta. Diferencia firmada con BCMath, incluido neto cero. Cambios financieros posteriores muestran revisión obsoleta; nunca confirmación de banco/proveedor.
+- GET paginado con sales.view y consulta de estado en historial de pagos; filtros de estado en servidor. UI con importe observado sin autocompletar, referencia, motivo, consentimiento y consulta de declaraciones anteriores. Lectores sin permiso de conciliación no pueden escribir.
+- Probar aislamiento/FK/permisos, validación/precisión, conflictos, append-only, rollback, reintento e invalidación tras devolución en SQLite/MariaDB y Chromium. Verificar formato/build/móvil y documentar antes de commit/push.

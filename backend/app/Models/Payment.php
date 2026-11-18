@@ -7,6 +7,7 @@ use App\Domains\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class Payment extends Model
 {
@@ -35,5 +36,15 @@ final class Payment extends Model
     public function refunds(): HasMany
     {
         return $this->hasMany(SaleRefund::class)->orderBy('id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(PaymentReview::class);
+    }
+
+    public function latestReview(): HasOne
+    {
+        return $this->hasOne(PaymentReview::class)->latestOfMany();
     }
 }

@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.13.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial de pagos. Todavía no se declara lista para producción.
+Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.14.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -54,8 +54,11 @@ Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.13
 - Impuesto incluido global explícito: IncludedTax extrae base half-up e impuesto por diferencia, sin doble adición. Fórmula versión 2 inmutable y modos/historia anteriores versión 1, con propina participante explícita. INCLUDED_TAX.md.
 - Perfiles de impuestos paralelos por producto, revisión/archivo/asignación y snapshots en pedidos con control de revisión independiente. Centavos por mayores restos, versión 3/desglose inmutable, propina participante con perfil confirmado explícito. PRODUCT_TAXES.md.
 - Historial por pago con filtros/paginación, devoluciones acumuladas actuales y netos BCMath por página/moneda; fechas de empresa convertidas a zona SQL existente, sin duplicar ventas ni filtrar saldos de caja a lectores. PAYMENT_HISTORY.md.
+- Revisión humana no efectiva con permiso independiente, observado/referencia, diferencias firmadas y declaraciones append-only. Estado obsoleto si cambia revisión de venta; UUID antiguo no confirma datos nuevos. PAYMENT_REVIEWS.md.
 
 ## Verificaciones realizadas
+
+Revisión manual 0.14: 175/1818 SQLite/MariaDB correctos, nexora_test_d5020cb6b079dcf8 conservada. Suite completa 17 Playwright aprobada (10.4 min). Migración 000014 aplicada, doctor/DDL/Pint/Composer/build/TypeScript/Prettier y capturas finales correctos. Referencia/observado sin autocompletar, reintento exacto y obsolescencia por devolución verificados.
 
 Historial 0.13: 165/1645 SQLite/MariaDB correctos, nexora_test_dc7e6176f39abc91 conservada. Suite completa 16 Playwright aprobada (13.2 min), incluido historial con 14 pagos/páginas/referencias/devolución/móvil. Migración 000013 aplicada, doctor/DDL/Pint/Composer y build/TypeScript/Prettier correctos. Capturas finales de escritorio y móvil revisadas.
 
@@ -70,15 +73,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 165 pruebas y 1645 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
-| `php scripts/test-mysql.php` | 165 pruebas y 1645 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_dc7e6176f39abc91 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 175 pruebas y 1818 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial/revisión humana, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
+| `php scripts/test-mysql.php` | 175 pruebas y 1818 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_d5020cb6b079dcf8 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 16 aprobadas en 13.2 minutos: 14 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/filtros/páginas, devoluciones, cuentas/centavos, móvil, impresión y cierre |
+| `npm run test:e2e` | 17 aprobadas en 10.4 minutos: 15 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/filtros/páginas, revisión manual/replay/obsolescencia, devoluciones, cuentas/centavos, móvil, impresión y cierre |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -94,6 +97,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales, no confirmaciones bancarias. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan galerías, subcategorías, modificadores, combos y precios por sucursal/canal. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

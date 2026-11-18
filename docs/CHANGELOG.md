@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.14.0 · 2026-11-18
+
+- Revisión humana no efectiva con estados revisado, diferencia y pendiente, importe observado, referencia/motivo y confirmación explícita del operador.
+- Historial append-only versionado por pago, FK tenant/sale/payment/actor/sucursal y auditoría atómica; no cambia pagos, ventas, devoluciones o caja.
+- Permiso sales.reconcile, UUID/reintento exacto y revisión de venta/manual/neto. Una devolución o un nuevo pago deja obsoletas las declaraciones anteriores sin borrarlas; el replay antiguo no confirma datos nuevos.
+- Diferencia firmada BCMath y revisión de neto cero; método histórico aunque esté archivado. GET paginado con sales.view y filtros de estado en servidor.
+- Formularios e historial conectados a /ventas/historial; migración 000014 y contrato PAYMENT_REVIEWS.md. No se afirma confirmación de banco o pasarela.
+
 ## 0.13.0 · 2026-11-18
 
 - Historial paginado por pago con método/referencia/sucursal/cuenta históricos, compensaciones acumuladas y neto exacto, sin repetir el total de venta por abono.

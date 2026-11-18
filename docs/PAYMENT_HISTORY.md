@@ -1,4 +1,4 @@
-# Historial de pagos (0.13, en verificación)
+# Historial de pagos (0.13; ampliado en 0.14)
 
 ## Uso y alcance
 
@@ -27,6 +27,6 @@ Migración 000013 añade índices de consulta por empresa/fecha/id y empresa/suc
 
 ## Verificación y continuación
 
-165 pruebas/1645 aserciones SQLite/MariaDB correctas, esquema nexora_test_dc7e6176f39abc91 conservado. Chromium específico aprobó 14 pagos/paginación, resumen de página, caracteres literales de referencia, método archivado, vacío por fecha futura, recibo/devolución y netos actualizados/móvil. Suite completa 16 en curso; resultados finales en PROGRESS/PROJECT_STATE.
+0.13 verificada: 165 pruebas/1645 aserciones SQLite/MariaDB correctas, esquema nexora_test_dc7e6176f39abc91 conservado. Suite completa 16 Playwright aprobada (13.2 min), incluidos 14 pagos/paginación, resumen de página, caracteres literales de referencia, método archivado, vacío por fecha futura, recibo/devolución y netos actualizados/móvil.
 
-La revisión/conciliación manual de no efectivos será F2: permiso e historial independientes, importe observado/referencia y estados declarados por una persona. Este historial todavía no afirma que un pago haya sido conciliado o confirmado por un banco/pasarela.
+0.14 añade revisión humana de no efectivos, permiso e historial independientes e importe observado/referencia. review_status filtra estados antes de paginar; review_revision/latest_review informan la última declaración. Contrato en [PAYMENT_REVIEWS.md](PAYMENT_REVIEWS.md). La revisión humana nunca afirma confirmación de un banco/pasarela.

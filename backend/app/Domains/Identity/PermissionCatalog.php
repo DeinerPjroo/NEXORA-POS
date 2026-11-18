@@ -33,6 +33,7 @@ final class PermissionCatalog
         'sales.discount' => ['Aplicar descuentos', 'Ventas'],
         'sales.refund' => ['Registrar devoluciones parciales y totales', 'Ventas'],
         'sales.tips' => ['Registrar propinas voluntarias', 'Ventas'],
+        'sales.reconcile' => ['Revisar pagos no efectivos manualmente', 'Ventas'],
     ];
 
     public static function seed(): void

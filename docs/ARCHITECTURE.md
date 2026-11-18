@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Revisión humana versionada (0.14)
+
+ReviewPayment serializa por empresa/venta dentro de IdempotentOperation. Compara sale_revision, última versión de revisión y neto esperado; PaymentReview conserva una declaración append-only y auditoría, sin cambiar Payment/Sale/CashSession. sales.reconcile se autoriza antes del replay y sales.view permite consultar las declaraciones paginadas.
+
+PaymentReviewState deriva estado actual desde la última declaración y revisión financiera de venta. Una declaración matched/difference de otra revisión es stale; pendiente sigue pendiente. Filtros sobre latestReview se ejecutan en SQL y respetan tenant; no son filtros sobre una página ya limitada. PAYMENT_REVIEWS.md especifica importes, fuente manual y límites.
+
 ## Consulta de pagos y acumulados (0.13)
 
 PaymentHistory filtra/pagina relaciones de consulta sale/account/refunds; PaymentBalance deriva aplicado/devuelto/neto por payment con BCMath. Resource expone datos históricos y resumen de página/moneda con sales.view, sin saldo de caja ni escrituras. Índices nuevos empresa/fecha/id y empresa/sucursal/fecha/id no alteran filas.

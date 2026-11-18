@@ -405,3 +405,17 @@ alter table `payments` add index `payments_history_company_idx`(`tenant_id`, `cr
 
 alter table `payments` add index `payments_history_branch_idx`(`tenant_id`, `branch_id`, `created_at`, `id`);
 
+create table `payment_reviews` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `sale_id` bigint unsigned not null, `payment_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `actor_name` varchar(120) not null, `version` int unsigned not null, `sale_revision` int unsigned not null, `currency` char(3) not null, `status` varchar(20) not null, `expected_net_amount` decimal(19, 4) not null, `observed_amount` decimal(19, 4) null, `difference_amount` decimal(19, 4) null, `reference` varchar(120) null, `notes` varchar(300) null, `review_confirmed` tinyint(1) not null, `provenance` varchar(30) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `payment_reviews` add constraint `payment_reviews_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `payment_reviews` add unique `payment_reviews_tenant_id_payment_id_version_unique`(`tenant_id`, `payment_id`, `version`);
+
+alter table `payment_reviews` add index `payment_reviews_tenant_id_payment_id_id_index`(`tenant_id`, `payment_id`, `id`);
+
+alter table `payment_reviews` add constraint `payment_reviews_payment_fk` foreign key (`tenant_id`, `sale_id`, `payment_id`) references `payments` (`tenant_id`, `sale_id`, `id`) on delete restrict;
+
+alter table `payment_reviews` add constraint `payment_reviews_sale_fk` foreign key (`tenant_id`, `branch_id`, `sale_id`) references `sales` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `payment_reviews` add constraint `payment_reviews_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

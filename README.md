@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.13.0** agrega **historial paginado de pagos**, filtros por sucursal/fecha/tipo/referencia y netos con devoluciones acumuladas. El resumen corresponde a la página visible y moneda. Conserva impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; los no efectivos siguen siendo registros manuales. Revisión/conciliación manual, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PAYMENT_HISTORY.md](docs/PAYMENT_HISTORY.md).
+La entrega **0.14.0** agrega **revisión manual de pagos no efectivos** con importe observado, referencia, diferencias firmadas e historial de declaraciones. La revisión requiere un permiso independiente y se muestra obsoleta si cambia la venta. Conserva filtros/netos de pagos, impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; la revisión humana no confirma operaciones bancarias. Mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PAYMENT_REVIEWS.md](docs/PAYMENT_REVIEWS.md) y [PAYMENT_HISTORY.md](docs/PAYMENT_HISTORY.md).
 
 ## Entorno y requisitos
 

@@ -40,6 +40,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Revisión 0.14: ReviewPayment crea PaymentReview append-only con sales.reconcile antes del replay, UUID, revisión de venta/manual/neto y auditoría transaccional. Solo non_cash; diferencia observada − neto BCMath, declaración humana explícita, sin cambiar venta/pago/caja. PaymentReviewState deriva stale tras cambios financieros de venta; UUID antiguo no revalida nuevos datos. PAYMENT_REVIEWS.md define estados y alcance; no anunciar confirmación de banco/pasarela.
+
 - Autorización vigente: avanzar secuencialmente por todos los incrementos pendientes hasta una primera versión integral. No preguntar al terminar cada módulo. Conservar avances locales y remotos; no reiniciar fases ni duplicar dominios.
 - Antes de retomar: leer README, REQUIREMENTS, ARCHITECTURE, ROADMAP, PROGRESS, CHANGELOG, DATABASE, OPERATIONS, SALES y los documentos TASKS, PROJECT_STATE, HANDOFF y DECISIONS. Revisar código, migraciones, pruebas, git status e historial y comparar con origin sin sobrescribir trabajo.
 - Por incremento: criterios de aceptación y dependencias, implementación conectada, migración incremental, pruebas y correcciones, verificación de regresiones, documentación, commit descriptivo y push normal al repositorio autorizado https://github.com/DeinerPjroo/NEXORA-POS. Nunca force push ni subir .env/credenciales/tokens/datos reales.
