@@ -9,12 +9,23 @@ export function CartComboDetails({ line, currency }: { line: CartLine; currency:
   return (
     <div className="combo-composition">
       {line.allocation_mode && <small className="muted">{comboModes[line.allocation_mode]}</small>}
+      {line.groups?.map((group) => (
+        <small key={group.id}>
+          {group.name}: {group.selected_component_ids.length} alternativas elegidas (
+          {group.min_select}–{group.max_select}).
+        </small>
+      ))}
       {line.components?.map((part, index) => (
         <div className="combo-component-line" key={`${part.component_id}:${part.unit_index}`}>
           <strong>
             {index + 1}. {part.product_name}
             {part.variant_name ? ` · ${part.variant_name}` : ''}
           </strong>
+          {line.groups
+            ?.filter((group) => group.selected_component_ids.includes(part.component_id))
+            .map((group) => (
+              <small key={group.id}>Alternativa de {group.name}</small>
+            ))}
           <small>
             Parte por unidad de combo: {formatMoney(part.expected_unit_price, currency)}.
           </small>

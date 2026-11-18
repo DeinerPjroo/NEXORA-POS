@@ -1,5 +1,9 @@
 # Operación de caja y pedidos (0.4–0.7)
 
+## Alternativas de combo desde 0.20
+
+Al tomar un combo, elegir explícitamente alternativas dentro del mínimo/máximo de cada grupo y preparar cada unidad. Una alternativa incluye todas sus unidades; contador total hasta20 por combo/100 posiciones en pedido. Opciones no disponibles muestran motivo, no se sustituyen. Revisión de sucursal/canal conserva identidades/notas/cantidad y exige corregir selecciones inválidas. Snapshotv2 conserva nombres/límites/elección de grupos y partes facturables; pedidos anteriores y replay/cobro no recotizan al archivar grupo/opción. Contrato COMBO_CHOICES.md y verificación final en PROJECT_STATE/HANDOFF.
+
 ## Composición fija desde 0.19
 
 Un combo exige preparar/revisar sus unidades antes de agregar al carrito. La base de raíz se reparte explícitamente y los adicionales se suman a cada componente. Todos deben estar disponibles al previsualizar/registrar. Precio/perfiles/asignación se conservan en cabecera y posiciones históricas, que son las únicas filas facturables. Cambio de contexto revisa partes y perfiles además del total; incertidumbre conserva UUID/cuerpo. Pedido/checkout/recibo muestran cabecera una vez con composición, y cobrar/devolver no consulta configuración vigente. FIXED_COMBOS.md; grupos de alternativas todavía pendientes.

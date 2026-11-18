@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.20.0 · 2026-11-18
+
+- Grupos propios de combo con mínimos/máximos de alternativas, archivo paginado y límites8 grupos/20 alternativas activas; pertenencia estable de componentes y FK tenant/root/group. Revisiones/UUID/moneda/Gate/auditoría bajo Tenant lock, capacidad mínima y rollback.
+- Selección explícita versionada2, fijos completos y alternativas/unidades únicas con límites20 por combo/100 por pedido antes de cargar catálogo completo. Disponibilidad de elecciones sin sustituir opciones cerradas; hojas no elegidas no afectan reparto/precio/impuestos.
+- Ficha/selector/preparaciones/revisión/carrito/pedido/recibo conectados. Snapshot estructural2 conserva grupos/elección; fijos0.19 siguen contrato/snapshot1 y fórmulas financieras anteriores. Reintentos conservan cuerpo y resultado tras archivar grupos.
+- 242 pruebas/2885 aserciones SQLite y MariaDB, esquema nexora_test_34164beced348cd5 conservado; 23 Playwright completas aprobadas en 18.3 minutos. Migración000020/DDL/doctor/build/TypeScript/Pint/Prettier y revisión visual correctos. Pruebas dirigidas durante desarrollo y una regresión completa final, reutilizando auditorías de dependencias0.19 al no cambiar paquetes.
+- Padre2.2-D completado con D1/D2. Siguiente2.2-E definido en PROMOTIONS_PLAN.md, sin anunciar promociones implementadas.
+
 ## 0.19.0 · 2026-11-18
 
 - Combos de composición fija con tipo de producto estable, componentes/presentaciones/unidades/archivo paginado y reparto de precio explícito equal/proportional. UUID/revisiones/moneda y auditoría atómicos, sin anidación.

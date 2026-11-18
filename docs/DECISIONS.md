@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-017 · Alternativas explícitas y selección acotada (0.20)
+
+Extender product_combo_components con pertenencia nullable/estable a product_combo_groups, conservando fijos y contrato0.19. Hasta8 grupos/20 alternativas activas; mínimos de alternativas y límites de unidades son conceptos diferentes. SaveComboGroup/ComboBounds comprueban capacidad mínima bajo Tenant lock y SaveCombo avanza revisión de grupo/raíz al cambiar una alternativa. Archivar grupos conserva flags de alternativas e historia. FK tenant/root/group protege pertenencia.
+
+Raíces con grupos activos exigen selection_version2 para impedir que clientes anteriores los interpreten como componentes fijos. ComboSelection comprueba fijos completos, min/max, alternativas únicas y unidades completas antes de cargas completas del catálogo; OrderCatalog solo carga hojas elegidas. Menú admite opciones cerradas no elegidas si existe una composición válida y nunca sustituye automáticamente. Orden estable de fijos/grupos/alternativas/unidades; reparto monetario y fórmulas tributarias existentes conservados. Snapshot estructural2 copia grupos y elecciones; D1 sigue snapshot1. La cabecera y grupos no son otras filas financieras. COMBO_CHOICES.md define contrato.
+
 ## DEC-016 · Precio de combo repartido en posiciones históricas (0.19)
 
 La raíz es Product de tipo combo estable y no reemplaza perfiles de sus componentes. El operador elige reparto equal/proportional explícito; bases de referencia contextuales son pesos para proporcional y adicionales se suman a la parte del componente. Reparto a cuatro decimales, mayores restos con orden estable, sin política alternativa automática cuando todos los pesos son cero. No interpretar la diferencia frente a precios individuales como descuento financiero.

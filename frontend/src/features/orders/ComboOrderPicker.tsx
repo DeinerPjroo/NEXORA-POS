@@ -34,6 +34,7 @@ export function ComboOrderPicker({
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [customizing, setCustomizing] = useState<number | null>(null)
   const [review, setReview] = useState<CartLine | null>(null)
+  const [alternatives, setAlternatives] = useState<number[]>([])
   const query = useQuery({
     queryKey: ['combo-configuration', product.id, branchId, channel, instance],
     queryFn: ({ signal }) =>
@@ -44,13 +45,15 @@ export function ComboOrderPicker({
     gcTime: 0,
     staleTime: Infinity,
   })
-  const slots = (query.data?.data ?? []).flatMap((component) =>
-    Array.from({ length: component.units }, (_, unit_index) => ({
-      component,
-      unit_index,
-      key: `${component.id}:${unit_index}`,
-    })),
-  )
+  const slots = (query.data?.data ?? [])
+    .filter((component) => component.combo_group_id === null || alternatives.includes(component.id))
+    .flatMap((component) =>
+      Array.from({ length: component.units }, (_, unit_index) => ({
+        component,
+        unit_index,
+        key: `${component.id}:${unit_index}`,
+      })),
+    )
   const mutation = useMutation({
     mutationFn: () =>
       api<{ data: { items: Omit<CartLine, 'key'>[] } }>('orders/preview', {
@@ -62,6 +65,7 @@ export function ComboOrderPicker({
           items: [
             {
               kind: 'combo',
+              selection_version: query.data?.selection_version,
               product_id: product.id,
               quantity: 1,
               notes: '',
@@ -88,6 +92,15 @@ export function ComboOrderPicker({
   const ready =
     current &&
     query.data?.combo_context.ready &&
+    slots.length > 0 &&
+    slots.length <= 20 &&
+    query.data.groups.every((group) => {
+      const count = query.data.data.filter(
+        (part) => part.combo_group_id === group.id && alternatives.includes(part.id),
+      ).length
+      return count >= group.min_select && count <= group.max_select
+    }) &&
+    slots.every((slot) => slot.component.selection_context?.allowed !== false) &&
     slots.every((slot) => !slot.component.product?.modifier_groups_count || !!selected[slot.key])
   const slot = customizing !== null ? slots[customizing] : null
   return (
@@ -112,8 +125,52 @@ export function ComboOrderPicker({
           {!review ? (
             <>
               <fieldset disabled={mutation.isPending || !current} className="form-stack">
+                {query.data.groups.map((group) => {
+                  const options = query.data.data.filter((part) => part.combo_group_id === group.id)
+                  const count = options.filter((part) => alternatives.includes(part.id)).length
+                  return (
+                    <section
+                      className="form-stack"
+                      key={group.id}
+                      aria-label={`Alternativas de ${group.name}`}
+                    >
+                      <strong>{group.name}</strong>
+                      <p className="muted small">
+                        Elegir {group.min_select}–{group.max_select} alternativas · {count}{' '}
+                        elegidas. Cada alternativa incluye todas sus unidades.
+                      </p>
+                      {options.map((part) => (
+                        <label className="checkbox-line" key={part.id}>
+                          <input
+                            type="checkbox"
+                            checked={alternatives.includes(part.id)}
+                            disabled={
+                              part.selection_context?.allowed === false ||
+                              (!alternatives.includes(part.id) && count >= group.max_select)
+                            }
+                            onChange={(event) =>
+                              setAlternatives(
+                                event.target.checked
+                                  ? [...alternatives, part.id]
+                                  : alternatives.filter((id) => id !== part.id),
+                              )
+                            }
+                          />
+                          <span>
+                            {part.product?.name}
+                            {part.variant ? ` · ${part.variant.name}` : ''} · {part.units} unidades
+                            {part.selection_context?.reason
+                              ? ` · ${part.selection_context.reason}`
+                              : ''}
+                          </span>
+                        </label>
+                      ))}
+                    </section>
+                  )
+                })}
+                <p aria-live="polite">{slots.length} de 20 unidades elegidas por combo.</p>
                 {slots.map((slot, index) => (
-                  <div className="cart-line" key={slot.key}>
+                  <div className="cart-line combo-composition" key={slot.key}>
                     <strong>
                       {index + 1}. {slot.component.product?.name}
                       {slot.component.variant ? ` · ${slot.component.variant.name}` : ''}

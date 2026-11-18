@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\ProductComboComponent;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 
 final class SaveCombo
 {
@@ -51,14 +50,18 @@ final class SaveCombo
                 $component->product_id = $product->id;
                 $component->component_product_id = $leaf->id;
                 $component->component_variant_id = $variantId;
+                $component->combo_group_id = $data['combo_group_id'] ?? null;
             }
-            $units = $product->comboComponents()->where('is_active', true)->when($existing, fn ($q) => $q->whereKeyNot($component->id))->get()->sum('units');
-            if ($data['is_active'] && $units + (int) $data['units'] > 20) {
-                throw ValidationException::withMessages(['units' => 'Un combo admite hasta 20 unidades de componentes activos. Archiva o reduce otro componente.']);
-            }
+            $group = $component->combo_group_id ? $product->comboGroups()->lockForUpdate()->findOrFail($component->combo_group_id) : null;
+            abort_if($group && $data['is_active'] && $product->comboComponents()->where('combo_group_id', $group->id)->where('is_active', true)->when($existing, fn ($q) => $q->whereKeyNot($component->id))->count() >= 20, 422, 'El grupo admite hasta 20 alternativas activas.');
             $component->fill(array_intersect_key($data, array_flip($component->getFillable())));
             $component->revision = $existing ? $component->revision + 1 : 1;
             $component->save();
+            ComboBounds::assert($product);
+            if ($group) {
+                $group->revision++;
+                $group->save();
+            }
             $product->revision++;
             $product->save();
             Audit::record('catalog.combo.component.'.($existing ? 'updated' : 'created'), 'Se guardó un componente del combo.', $actor, ['product_id' => $product->id, 'component_id' => $component->id, 'revision' => $component->revision, 'product_revision' => $product->revision]);

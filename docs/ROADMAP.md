@@ -17,7 +17,7 @@ No hay fechas comerciales comprometidas. Cada etapa depende de pruebas e integri
 2. Añadir CI y validación específica de MySQL 8; mantener pruebas SQL aisladas con scripts/test-mysql.php.
 3. Completar endurecimiento de identidad: verificación de correo, auditoría de autorización denegada, MFA/PIN y bloqueo según prioridad de operación.
 4. Historial de pagos 0.13 y revisión humana no efectiva 0.14 verificados. Continúa catálogo avanzado 2.2, subdividido en CATALOG_ADVANCED_PLAN.md, antes de terminal POS/mesas. Abonos/mixtos operan desde 0.7; ajustes desde 0.8, devoluciones desde 0.9, partes iguales desde 0.10, impuesto incluido global desde 0.11 y perfiles por producto desde 0.12. División por productos/unión de cuentas sigue con POS/mesas. Verificar proveedores reales antes de anunciar confirmación electrónica.
-5. Catálogo avanzado: subcategorías 0.15, modificadores 0.16, precios por contexto 0.17, horarios 0.18 y combos fijos D1 0.19 verificados. Siguen alternativas por grupos D2 (COMBO_CHOICES_PLAN.md), promociones/galería, terminal POS y salones/mesas. KDS y actualización en tiempo real se abordan con sus permisos y pruebas de concurrencia.
+5. Catálogo avanzado: subcategorías0.15, modificadores0.16, precios por contexto0.17, horarios0.18, combos fijos D1 0.19 y alternativas D2 0.20 verificados. Sigue promociones2.2-E (PROMOTIONS_PLAN.md), galería, terminal POS y salones/mesas. KDS y actualización en tiempo real se abordan con sus permisos y pruebas de concurrencia.
 
 ## Dependencias incorporadas por necesidad
 

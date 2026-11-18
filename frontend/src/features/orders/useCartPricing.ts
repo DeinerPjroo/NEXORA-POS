@@ -26,6 +26,7 @@ function visibleConfiguration(line: CartLine): string {
     product: line.product_name,
     variant: line.variant_name,
     allocation_mode: line.allocation_mode,
+    combo_groups: line.groups,
     components: line.components?.map((part) => ({
       component_id: part.component_id,
       unit_index: part.unit_index,

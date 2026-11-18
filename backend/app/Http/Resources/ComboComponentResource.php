@@ -9,7 +9,8 @@ final class ComboComponentResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return [...$this->resource->only('id', 'product_id', 'component_product_id', 'component_variant_id', 'units', 'position', 'is_active', 'revision'),
+        return [...$this->resource->only('id', 'product_id', 'combo_group_id', 'component_product_id', 'component_variant_id', 'units', 'position', 'is_active', 'revision'),
+            'selection_context' => $this->when($this->resource->getAttribute('selection_context') !== null, fn () => $this->resource->getAttribute('selection_context')),
             'product' => $this->whenLoaded('componentProduct', fn () => new ProductResource($this->componentProduct)),
             'variant' => $this->whenLoaded('componentVariant', fn () => $this->componentVariant ? new VariantResource($this->componentVariant) : null)];
     }

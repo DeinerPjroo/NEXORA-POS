@@ -29,6 +29,12 @@ export function SavedCombos({
             {comboModes[combo.snapshot.allocation_mode]}
           </small>
           {combo.notes && <p>{combo.notes}</p>}
+          {combo.snapshot.groups?.map((group) => (
+            <p className="muted small" key={group.id}>
+              {group.name}: {group.selected_component_ids.length} alternativas elegidas (
+              {group.min_select}–{group.max_select}).
+            </p>
+          ))}
           <PriceDetails context={combo.snapshot.price_context} currency={currency} />
           <AvailabilityDetails context={combo.snapshot.availability_context} />
           <p className="muted small">Partes asignadas del precio del combo:</p>
@@ -41,6 +47,17 @@ export function SavedCombos({
                   {item.quantity}× {item.product_name}
                   {item.variant_name ? ` · ${item.variant_name}` : ''}
                 </strong>
+                {combo.snapshot.groups
+                  ?.filter((group) =>
+                    combo.snapshot.components?.some(
+                      (part) =>
+                        part.position === item.combo_position &&
+                        group.selected_component_ids.includes(part.component_id),
+                    ),
+                  )
+                  .map((group) => (
+                    <small key={group.id}>Alternativa de {group.name}</small>
+                  ))}
                 <small>
                   {formatMoney(item.unit_price, currency)} por unidad · Parte total:{' '}
                   {formatMoney(item.line_subtotal, currency)}.

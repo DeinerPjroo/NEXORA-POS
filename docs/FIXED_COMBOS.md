@@ -1,5 +1,7 @@
 # Combos de composición fija · 0.19
 
+Este contrato conserva D1. Desde0.20, COMBO_CHOICES.md extiende componentes con grupo nullable y selección de alternativas; raíces sin grupos mantienen este contrato y snapshotv1. El padre2.2-D se completó al verificar D2.
+
 Un combo es un Product de tipo estable `combo`, elegido al crear. Los anteriores conservan `regular`. Comparte categoría/fotografía, precio base, reglas por sucursal/canal y horarios. Sus componentes son productos individuales con presentación fija opcional y preparación elegida por unidad. No tiene variantes, adicionales ni perfil tributario propios: esos datos pertenecen a sus componentes. No hay combos anidados, recetas ni movimientos de inventario.
 
 ## Configurar
@@ -54,4 +56,4 @@ Pedido/checkout/recibo agrupan desde cabeceras y posiciones históricas, mostran
 
 ## Estado de verificación
 
-Suites completas finales: 232 pruebas/2652 aserciones en SQLite y MariaDB, incluida seguridad/tenant/FK/costos/revisiones/UUID/rollback/integridad financiera; esquema nexora_test_89138c797a2eab69 conservado. Regresión completa de 22 Playwright aprobada en 20.7 minutos; recorrido dedicado inicial 1.7 minutos. La UI verifica crear/configurar/preparar unidades, revisar contexto conservando notas/cantidad y snapshot/replay/cobro tras archivo de componentes. Build/formato/doctor/DDL y capturas escritorio/móvil correctos; resultados en PROGRESS/HANDOFF. D2 (alternativas/grupos) sigue pendiente; 2.2-D no está completo con D1.
+Suites completas finales: 232 pruebas/2652 aserciones en SQLite y MariaDB, incluida seguridad/tenant/FK/costos/revisiones/UUID/rollback/integridad financiera; esquema nexora_test_89138c797a2eab69 conservado. Regresión completa de 22 Playwright aprobada en 20.7 minutos; recorrido dedicado inicial 1.7 minutos. La UI verifica crear/configurar/preparar unidades, revisar contexto conservando notas/cantidad y snapshot/replay/cobro tras archivo de componentes. Build/formato/doctor/DDL y capturas escritorio/móvil correctos; resultados en PROGRESS/HANDOFF. D2 se verificó después como 0.20 (COMBO_CHOICES.md), completando el padre 2.2-D.

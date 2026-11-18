@@ -56,6 +56,11 @@ final class Product extends Model
         return $this->hasMany(ProductComboComponent::class);
     }
 
+    public function comboGroups(): HasMany
+    {
+        return $this->hasMany(ProductComboGroup::class);
+    }
+
     public function scopeWithCatalogCounts(Builder $query): void
     {
         $query->withCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);

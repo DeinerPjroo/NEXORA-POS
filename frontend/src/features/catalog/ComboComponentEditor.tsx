@@ -16,8 +16,8 @@ export function useComboWrite<T>(path: string, editing: boolean, close: () => vo
   const toast = useToast()
   const refresh = () =>
     Promise.all(
-      ['product', 'products', 'combo-components', 'combo-configuration'].map((key) =>
-        client.invalidateQueries({ queryKey: [key] }),
+      ['product', 'products', 'combo-components', 'combo-groups', 'combo-configuration'].map(
+        (key) => client.invalidateQueries({ queryKey: [key] }),
       ),
     )
   const operation = useOperation<T>(
@@ -85,10 +85,12 @@ function ComponentVariantPicker({
 export function ComboComponentEditor({
   product,
   component,
+  group,
   onClose,
 }: {
   product: Product
   component: ComboComponent | null
+  group?: { id: number; name: string } | null
   onClose: () => void
 }) {
   const { session } = useSession()
@@ -125,6 +127,7 @@ export function ComboComponentEditor({
             component_product_id: leaf?.id,
             component_product_revision: leaf?.revision,
             component_variant_id: variant?.id ?? null,
+            combo_group_id: group?.id ?? null,
           }),
     })
   }
@@ -137,6 +140,13 @@ export function ComboComponentEditor({
         <ErrorNotice error={operation.error} />
         <OperationNotice uncertain={operation.uncertain} />
         <fieldset disabled={operation.locked} className="form-stack">
+          <p>
+            {group
+              ? `Alternativa de ${group.name}`
+              : component?.combo_group_id
+                ? `Alternativa del grupo #${component.combo_group_id}`
+                : 'Componente fijo obligatorio'}
+          </p>
           {component ? (
             <p>
               {component.product?.name}
@@ -183,8 +193,9 @@ export function ComboComponentEditor({
             <span>Componente activo</span>
           </label>
           <p className="muted small">
-            Hasta 20 unidades activas por combo. Cada unidad permite elegir su preparación al tomar
-            el pedido; los adicionales se cobran aparte de la base repartida.
+            Hasta 20 unidades elegidas por combo. Elegir una alternativa incluye todas sus unidades.
+            Cada unidad permite elegir su preparación al tomar el pedido; los adicionales se cobran
+            aparte de la base repartida.
           </p>
         </fieldset>
         {conflict && (

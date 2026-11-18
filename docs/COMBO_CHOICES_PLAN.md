@@ -1,6 +1,6 @@
 # Alternativas de combo · diseño 2.2-D2
 
-Incremento posterior a combos fijos0.19; todavía no implementado. Mantener D1, OrderCatalog/OrderComboPlan, distribución de base y cabecera/posiciones facturables. No cambiar precios de historia, referencias de componentes ni tipo regular/combo.
+Diseño original posterior a combos fijos0.19. Implementación0.20 verificada; contrato final en COMBO_CHOICES.md y resultados en PROJECT_STATE/HANDOFF. Mantener D1, OrderCatalog/OrderComboPlan, distribución de base y cabecera/posiciones facturables. No cambiar precios de historia, referencias de componentes ni tipo regular/combo.
 
 ## Modelo propuesto y límites
 

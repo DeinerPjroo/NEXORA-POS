@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductComboComponent;
+use App\Models\ProductComboGroup;
 use App\Models\ProductVariant;
 use Illuminate\Support\Collection;
 
@@ -18,6 +19,8 @@ final class OrderCatalog
 
     public Collection $components;
 
+    public Collection $groups;
+
     private Collection $variants;
 
     private Collection $prices;
@@ -26,21 +29,26 @@ final class OrderCatalog
     public function __construct(array $lines, private Branch $branch, private string $channel, string $timezone)
     {
         $ids = collect($lines)->pluck('product_id')->unique();
-        $this->components = ProductComboComponent::whereIn('product_id', $ids)->where('is_active', true)->orderBy('position')->orderBy('id')->get();
+        $this->components = ProductComboComponent::whereIn('product_id', $ids)->enabledComposition()->orderBy('position')->orderBy('id')->get();
+        $this->groups = ProductComboGroup::whereIn('product_id', $ids)->where('is_active', true)->orderBy('position')->orderBy('id')->get();
         $kinds = Product::whereIn('id', $ids)->pluck('kind', 'id');
         $positions = 0;
+        $selected = collect();
         foreach ($lines as $line) {
-            $positions += ($kinds[$line['product_id']] ?? null) === 'combo' ? $this->components->where('product_id', $line['product_id'])->sum('units') : 1;
+            $parts = ($kinds[$line['product_id']] ?? null) === 'combo' ? ComboSelection::components((int) $line['product_id'], $this->components, $this->groups, $line) : collect();
+            $positions += ($kinds[$line['product_id']] ?? null) === 'combo' ? $parts->sum('units') : 1;
+            $selected = $selected->concat($parts);
             abort_if($positions > 100, 422, 'El pedido supera 100 posiciones facturables al expandir sus combos.');
         }
-        $ids = $ids->merge($this->components->pluck('component_product_id'))->unique()->sort()->values();
+        $selected = $selected->unique('id');
+        $ids = $ids->merge($selected->pluck('component_product_id'))->unique()->sort()->values();
         $this->products = Product::with(['taxProfile', 'modifierGroups' => fn ($q) => $q->where('is_active', true), 'modifierGroups.options' => fn ($q) => $q->where('is_active', true)])->withCatalogCounts()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         $categories = Category::with('parent')->whereIn('id', $this->products->pluck('category_id')->unique())->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         foreach ($this->products as $product) {
             $product->setRelation('category', $categories->get($product->category_id));
         }
         app(AvailabilitySchedule::class)->decorate($this->products, $timezone);
-        $variantIds = collect($lines)->pluck('variant_id')->merge($this->components->pluck('component_variant_id'))->filter()->unique()->values()->all();
+        $variantIds = collect($lines)->pluck('variant_id')->merge($selected->pluck('component_variant_id'))->filter()->unique()->values()->all();
         $this->variants = ProductVariant::whereIn('id', $variantIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         $this->prices = app(CatalogPriceResolver::class)->candidates($ids->all(), $variantIds, $branch->id, $channel);
     }

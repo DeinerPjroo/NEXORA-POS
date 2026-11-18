@@ -35,7 +35,7 @@ final class OrderPlan
                 }
                 $preview[] = $plan['preview'];
             } else {
-                abort_if(($line['kind'] ?? 'regular') !== 'regular' || array_key_exists('components', $line), 422, 'Un producto individual no recibe composición de combo.');
+                abort_if(($line['kind'] ?? 'regular') !== 'regular' || array_key_exists('components', $line) || array_key_exists('selection_version', $line), 422, 'Un producto individual no recibe composición de combo.');
                 $plan = $catalog->resolve($product, $line['variant_id'] ?? null, $line, $expectations);
                 $items[] = $plan['item'];
                 $preview[] = $plan['preview'];

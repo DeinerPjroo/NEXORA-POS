@@ -7,8 +7,9 @@ import { useCan, useSession } from '../auth/SessionProvider'
 import { OperationNotice } from '../operations/OperationNotice'
 import { CatalogError, Pagination } from './catalog-ui'
 import { ComboComponentEditor, useComboWrite } from './ComboComponentEditor'
+import { ComboGroupsPanel } from './ComboGroupsPanel'
 import { comboModes } from './combo-types'
-import type { ComboComponent, ComboMode } from './combo-types'
+import type { ComboComponent, ComboMode, ComboGroup } from './combo-types'
 import type { CatalogPage, Product } from './types'
 
 function ComboSettingsEditor({ product, onClose }: { product: Product; onClose: () => void }) {
@@ -85,6 +86,7 @@ export function ComboPanel({ product }: { product: Product }) {
   const [status, setStatus] = useState('')
   const [editing, setEditing] = useState<ComboComponent | 'new' | null>(null)
   const [settings, setSettings] = useState(false)
+  const [alternative, setAlternative] = useState<ComboGroup | null>(null)
   const can = useCan()
   const client = useQueryClient()
   const params = new URLSearchParams({ page: String(page), per_page: '10' })
@@ -97,6 +99,7 @@ export function ComboPanel({ product }: { product: Product }) {
           product_revision: number
           allocation_mode: ComboMode | null
           combo_context: { ready: boolean; reason: string | null; expanded_units: number }
+          groups: ComboGroup[]
         }
       >(`products/${product.id}/combo-components?${params}`, { signal }),
   })
@@ -104,7 +107,7 @@ export function ComboPanel({ product }: { product: Product }) {
   return (
     <section className="panel variants-panel combo-admin">
       <div className="panel-heading">
-        <h2>Composición fija del combo</h2>
+        <h2>Composición del combo</h2>
         {can('catalog.manage') && (
           <div className="combo-actions">
             <button
@@ -117,7 +120,10 @@ export function ComboPanel({ product }: { product: Product }) {
             <button
               className="button primary"
               disabled={!current}
-              onClick={() => setEditing('new')}
+              onClick={() => {
+                setAlternative(null)
+                setEditing('new')
+              }}
             >
               Nuevo componente
             </button>
@@ -126,7 +132,8 @@ export function ComboPanel({ product }: { product: Product }) {
       </div>
       <p className="muted small">
         El precio base se configura en los datos del producto o sus reglas por sucursal/canal. El
-        combo exige que sus componentes estén disponibles; las preparaciones se eligen al tomarlo.
+        combo exige sus componentes fijos y los mínimos de cada grupo. Las alternativas y
+        preparaciones se eligen al tomarlo.
       </p>
       {query.error ? (
         <CatalogError error={query.error} onRetry={() => void query.refetch()} />
@@ -138,7 +145,7 @@ export function ComboPanel({ product }: { product: Product }) {
             {query.data.allocation_mode
               ? comboModes[query.data.allocation_mode]
               : 'Reparto pendiente'}{' '}
-            · {query.data.combo_context.expanded_units} unidades activas
+            · {query.data.combo_context.expanded_units} unidades en la selección mínima disponible
           </p>
           {query.data.combo_context.reason && (
             <p className="notice">{query.data.combo_context.reason}</p>
@@ -188,6 +195,13 @@ export function ComboPanel({ product }: { product: Product }) {
                       <td>
                         <strong>{component.product?.name}</strong>
                         <small>{component.variant?.name ?? 'Presentación única'}</small>
+                        <small>
+                          {component.combo_group_id
+                            ? (query.data.groups.find(
+                                (group) => group.id === component.combo_group_id,
+                              )?.name ?? `Grupo #${component.combo_group_id}`)
+                            : 'Fijo obligatorio'}
+                        </small>
                       </td>
                       <td>{component.units}</td>
                       <td>{component.is_active ? 'Activo' : 'Archivado'}</td>
@@ -214,10 +228,18 @@ export function ComboPanel({ product }: { product: Product }) {
           <Pagination meta={query.data.meta} onPage={setPage} pending={query.isFetching} />
         </>
       )}
+      <ComboGroupsPanel
+        product={product}
+        onAlternative={(group) => {
+          setAlternative(group)
+          setEditing('new')
+        }}
+      />
       {editing && (
         <ComboComponentEditor
           product={product}
           component={editing === 'new' ? null : editing}
+          group={editing === 'new' ? alternative : null}
           onClose={() => setEditing(null)}
         />
       )}

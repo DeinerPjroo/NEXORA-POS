@@ -158,7 +158,9 @@ test('combos fijos: configurar composición, preparar unidades, revisar contexto
     .getByRole('button', { name: 'Guardar componente', exact: true })
     .click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(page.locator('.combo-admin')).toContainText('3 unidades activas')
+  await expect(page.locator('.combo-admin')).toContainText(
+    '3 unidades en la selección mínima disponible',
+  )
   mkdirSync('../docs/screenshots', { recursive: true })
   await page.locator('.combo-admin').screenshot({
     path: '../docs/screenshots/fixed-combo-admin-desktop.png',

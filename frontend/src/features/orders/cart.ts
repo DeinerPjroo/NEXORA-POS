@@ -12,6 +12,8 @@ export type CartConfiguration = {
 export type CartLine = {
   kind?: 'regular' | 'combo'
   allocation_mode?: import('../catalog/combo-types').ComboMode
+  selection_version?: 1 | 2
+  groups?: import('../catalog/combo-types').ComboGroupSnapshot[]
   components?: CartComponent[]
   expected_tax_revision?: number | null
   tax_snapshot?: import('../sales/tax-types').TaxSnapshot
@@ -101,6 +103,7 @@ export function serializeCart(lines: CartLine[], expectations: boolean) {
     ...(line.kind === 'combo'
       ? {
           kind: 'combo',
+          ...(line.selection_version ? { selection_version: line.selection_version } : {}),
           components: (line.components ?? []).map((part) => ({
             component_id: part.component_id,
             unit_index: part.unit_index,

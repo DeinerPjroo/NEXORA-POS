@@ -2,13 +2,13 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-18",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "phase": 2,
   "module": "Catálogo avanzado",
   "status": "IN_PROGRESS",
-  "active_task": "2.2-D2",
-  "last_completed_task": "2.2-D1: combos de composición fija 0.19.0",
-  "next_task": "2.2-E",
+  "active_task": "2.2-E",
+  "last_completed_task": "2.2-D2: grupos de alternativas 0.20.0; padre 2.2-D completo",
+  "next_task": "2.2-F",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -29,8 +29,8 @@
     "assertions": 591,
     "playwright": 10
   },
-  "current_verification": "0.19 verificada: 232 pruebas/2652 aserciones SQLite/MariaDB; suite completa de 22 Playwright aprobada en 20.7 minutos. Migración 000019 aplicada, DDL/Pint/Composer/doctor/build/TypeScript/Prettier y capturas correctos. Principal 489.13 kB/gzip 138.19; panel 10.73 y configurador 3.91 kB, sin aviso. Esquema final nexora_test_89138c797a2eab69 conservado.",
-  "working_verification": "2.2-D2 iniciado en diseño/aceptación en COMBO_CHOICES_PLAN.md; todavía sin código de alternativas. Próxima acción: grupos/alternativas tenant-safe y versión explícita de DTO, límites de selección/unidades y compatibilidad de D1 antes de migración. Sin procesos de pruebas pendientes. Reutilizar verificaciones vigentes y protocolo optimizado de AGENTS.",
+  "current_verification": "0.20 verificada: 242 pruebas/2885 aserciones en SQLite y MariaDB; suite completa de 23 Playwright aprobada en 18.3 minutos. Migración 000020 aplicada, DDL/doctor/Pint/build/TypeScript/Prettier y capturas finales correctos. Principal 489.93 kB/gzip 138.46; panel 15.74 y configurador 5.28 kB, sin aviso. Esquema nexora_test_34164beced348cd5 conservado. Dependencias sin cambios; auditorías 0.19 reutilizadas.",
+  "working_verification": "2.2-D1/D2 completos; 0.20 lista para commit/push normal autorizado. Sin procesos de pruebas pendientes. Promociones 2.2-E en diseño/aceptación en PROMOTIONS_PLAN.md, todavía sin código. Antes de empezar E, confirmar publicación de 0.20; conservar resultados finales y no repetir pruebas sin cambios. Protocolo optimizado de AGENTS vigente.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
     "nexora_test_669b0ab734efe31d",
@@ -56,7 +56,8 @@
     "nexora_test_35a6f4251e6a3c52",
     "nexora_test_33d1dfbc81b8ea36",
     "nexora_test_894aa259f5cc3a6b",
-    "nexora_test_89138c797a2eab69"
+    "nexora_test_89138c797a2eab69",
+    "nexora_test_34164beced348cd5"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

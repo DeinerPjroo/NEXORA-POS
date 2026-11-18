@@ -13,7 +13,8 @@ final class OrderComboPlan
         abort_unless(($line['kind'] ?? null) === 'combo' && empty($line['variant_id']) && empty($line['modifiers']), 422, 'Configura el combo con sus componentes; no se puede registrar como producto individual.');
         abort_unless(in_array($root->combo_allocation_mode, ['equal', 'proportional'], true), 409, 'El combo necesita una política de reparto de precio.');
         $rootPlan = $catalog->resolve($root, null, $line, $expectations, false);
-        $components = $catalog->components->where('product_id', $root->id)->values();
+        $components = ComboSelection::components($root->id, $catalog->components, $catalog->groups, $line);
+        $groups = $catalog->groups->where('product_id', $root->id)->map(fn ($group) => [...$group->only('id', 'name', 'revision', 'min_select', 'max_select', 'position'), 'selected_component_ids' => $components->where('combo_group_id', $group->id)->pluck('id')->values()->all()])->values()->all();
         $units = $components->sum('units');
         abort_unless($units > 0 && $units <= 20 && count($line['components'] ?? []) === $units, 409, 'La composición del combo cambió. Revisa todos sus componentes.');
         $chosen = [];
@@ -59,9 +60,10 @@ final class OrderComboPlan
         }
         abort_if($expectations && bccomp($price, $line['expected_unit_price'], 4) !== 0, 409, 'El precio del combo cambió. Revisa sus componentes y adicionales.');
         $subtotal = Money::bounded(bcmul($price, (string) $line['quantity'], 4));
+        $version = $groups === [] ? 1 : 2;
         $header = ['product_id' => $root->id, 'product_name' => $root->name, 'sku' => $root->sku, 'quantity' => $line['quantity'], 'unit_price' => $price, 'line_subtotal' => $subtotal, 'notes' => $line['notes'] ?? null,
-            'snapshot' => ['version' => 1, 'product_revision' => $root->revision, 'allocation_mode' => $root->combo_allocation_mode, 'base_unit_price' => $base, 'price_context' => $rootPlan['item']['price_snapshot'], 'availability_context' => $rootPlan['item']['availability_snapshot'], 'components' => $composition]];
+            'snapshot' => ['version' => $version, 'product_revision' => $root->revision, 'allocation_mode' => $root->combo_allocation_mode, 'base_unit_price' => $base, 'price_context' => $rootPlan['item']['price_snapshot'], 'availability_context' => $rootPlan['item']['availability_snapshot'], 'components' => $composition, ...($version === 2 ? ['groups' => $groups] : [])]];
 
-        return ['header' => $header, 'items' => $items, 'preview' => [...$rootPlan['preview'], 'kind' => 'combo', 'expected_unit_price' => $price, 'components' => $previews, 'allocation_mode' => $root->combo_allocation_mode]];
+        return ['header' => $header, 'items' => $items, 'preview' => [...$rootPlan['preview'], 'kind' => 'combo', 'selection_version' => $version, 'groups' => $groups, 'expected_unit_price' => $price, 'components' => $previews, 'allocation_mode' => $root->combo_allocation_mode]];
     }
 }

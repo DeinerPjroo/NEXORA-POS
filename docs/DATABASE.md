@@ -1,5 +1,9 @@
 # Base de datos
 
+## Alternativas de combo (0.20)
+
+Migración000020 incremental: product_combo_groups con nombre/min/max/orden/estado/revisión y FK tenant/product; product_combo_components.combo_group_id nullable con FK tenant/root/group. Null conserva componentes fijos anteriores; grupo archivado conserva alternativas sin cambiar sus flags. Cabeceras nuevas con grupos copian snapshot estructural versión2; historia fija versión1 y fórmulas tributarias previas se conservan. Descenso rechazado para preservar historia. Contrato en COMBO_CHOICES.md; resultados finales SQL/migración en PROJECT_STATE/HANDOFF.
+
 ## Composición fija de combos (0.19)
 
 Migración 000019: products.kind regular predeterminado y combo_allocation_mode nullable; product_combo_components con FK tenant/root y tenant/component/variant, unidades/orden/archivo/revisión; order_combos append-only con cabecera y snapshot estructural versión1. order_items.order_combo_id/combo_position nullable y FK tenant/order/header. Las posiciones son las filas financieras y la cabecera conserva agrupación/asignaciones sin duplicar subtotal. Historia anterior mantiene vínculos null. Descenso rechazado; esquema/contrato en FIXED_COMBOS.md, DDL generado y migración comprobada en SQLite/MariaDB.
@@ -37,12 +41,17 @@ erDiagram
     CATEGORIES ||--o{ PRODUCTS : agrupa
     PRODUCTS ||--o{ PRODUCT_VARIANTS : presenta
     PRODUCTS ||--o{ PRODUCT_MODIFIER_GROUPS : configura
+    PRODUCTS ||--o{ PRODUCT_COMBO_GROUPS : configura
+    PRODUCTS ||--o{ PRODUCT_COMBO_COMPONENTS : compone
+    PRODUCT_COMBO_GROUPS o|--o{ PRODUCT_COMBO_COMPONENTS : ofrece
     PRODUCT_MODIFIER_GROUPS ||--o{ PRODUCT_MODIFIER_OPTIONS : ofrece
     BRANCHES ||--o{ CASH_REGISTERS : dispone
     CASH_REGISTERS ||--o{ CASH_SESSIONS : conserva
     CASH_SESSIONS ||--o{ CASH_MOVEMENTS : registra
     BRANCHES ||--o{ ORDERS : recibe
     ORDERS ||--|{ ORDER_ITEMS : contiene
+    ORDERS ||--o{ ORDER_COMBOS : agrupa
+    ORDER_COMBOS o|--|{ ORDER_ITEMS : asigna
     ORDERS ||--|{ ORDER_EVENTS : conserva
     TENANTS ||--o{ IDEMPOTENCY_RECORDS : deduplica
     TENANTS ||--|| SALES_SETTINGS : configura
@@ -69,6 +78,9 @@ erDiagram
 | categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id); parent_id nullable con FK tenant/parent e índice tenant/parent/name desde 0.15. Dos niveles validados bajo bloqueo de empresa; disponibilidad efectiva derivada, sin cascadas de flags. |
 | products | Categoría con FK compuesta, SKU y barcode únicos por empresa (barcode nullable), precio/costo DECIMAL(19,4), estado, disponibilidad y revisión. |
 | product_variants | FK compuesta (tenant_id,product_id) al producto; SKU y barcode únicos por empresa, nombre único por producto, precio/costo DECIMAL(19,4), estados y timestamps. |
+| product_combo_groups | Raíz combo con FK tenant/product y unique tenant/root/id; nombre/mínimo/máximo/orden/estado/revisión. Archivo paginado sin borrar alternativas; límites activos/capacidad mínima en servicio. |
+| product_combo_components | Raíz y hoja/presentación con FK tenant/root y tenant/component/variant; combo_group_id nullable con FK tenant/root/group desde0.20. Identidad estable, units/orden/estado/revisión; null conserva fijos. |
+| order_combos | Cabecera append-only tenant/order/root, cantidad/precio/subtotal/notas/snapshot. Unique tenant/order/id para referencias de posiciones; snapshotv1 fijo y v2 con grupos/elección, sin otra fila financiera. |
 | product_modifier_groups | Producto con FK tenant/product, nombre único por producto y tipo addon/exclusion estable; mínimo/máximo/estado/posición/revisión. Único tenant/product/id para referencias de opción; límite activo validado bajo bloqueo. |
 | product_modifier_options | FK tenant/product/group al grupo correcto, nombre único por grupo y precio adicional DECIMAL(19,4), estado/posición. Archivo sin borrado y límite activo; cambios avanzan revisión de grupo/producto. |
 | cash_registers | Sucursal con FK compuesta, código único por sucursal y active_session_id que referencia una sesión de esa misma caja mediante FK (tenant_id,id,active_session_id). |

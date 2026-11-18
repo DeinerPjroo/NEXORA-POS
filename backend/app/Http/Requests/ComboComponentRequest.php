@@ -20,6 +20,7 @@ final class ComboComponentRequest extends FormRequest
             'revision' => [$create ? 'prohibited' : 'required', 'integer', 'min:1'],
             'component_product_id' => [$create ? 'required' : 'prohibited', 'integer', Rule::exists('products', 'id')->where('tenant_id', $this->user()->tenant_id)],
             'component_product_revision' => [$create ? 'required' : 'prohibited', 'integer', 'min:1'],
+            'combo_group_id' => [$create ? 'sometimes' : 'prohibited', 'nullable', 'integer', Rule::exists('product_combo_groups', 'id')->where('tenant_id', $this->user()->tenant_id)->where('product_id', $this->route('product')->id)],
             'component_variant_id' => [$create ? 'sometimes' : 'prohibited', 'nullable', 'integer', Rule::exists('product_variants', 'id')->where('tenant_id', $this->user()->tenant_id)->where('product_id', $this->input('component_product_id'))],
             'units' => ['required', 'integer', 'between:1,20'], 'position' => ['required', 'integer', 'between:0,999'], 'is_active' => ['required', 'boolean'], 'tenant_id' => ['prohibited'], 'product_id' => ['prohibited']];
     }

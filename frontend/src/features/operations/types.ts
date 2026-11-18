@@ -43,6 +43,8 @@ export type OrderCombo = {
   notes: string | null
   snapshot: {
     version: number
+    groups?: import('../catalog/combo-types').ComboGroupSnapshot[]
+    components?: { component_id: number; position: number }[]
     allocation_mode: import('../catalog/combo-types').ComboMode
     base_unit_price: string
     price_context: import('../catalog/context-price-types').PriceContext

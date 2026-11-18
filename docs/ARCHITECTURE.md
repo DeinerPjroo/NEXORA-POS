@@ -1,5 +1,9 @@
 # Arquitectura técnica
 
+## Grupos de alternativas (0.20)
+
+ProductComboGroup pertenece a raíz combo; ProductComboComponent.combo_group_id nullable conserva fijos. FK tenant/root/group, archivo/revisiones/UUID/auditoría/Gate y límites activos bajo Tenant lock. ComboBounds comprueba capacidad mínima; CatalogEligibility comprueba disponibilidad suficiente con un instante común. ComboSelection exige DTOv2 con grupos y valida unidades antes de cargar catálogo completo; OrderCatalog limita hojas a elecciones efectivas y OrderComboPlan copia snapshot estructural2 sin cambiar aritmética tributaria. UI reutiliza selectores, preparaciones, revisión, cabecera y recibo anteriores; COMBO_CHOICES.md.
+
 ## Combos fijos y posiciones facturables (0.19)
 
 Product.kind conserva identidad regular/combo. SaveCombo administra reparto y componentes bajo IdempotentOperation/ModifierProductContext, revisiones y auditoría; componentes fijos solo regulares, presentación explícita y máximo20 unidades activas. CatalogEligibility carga relaciones acotadas y disponibilidad de raíz/componentes con instante común; ProductResource combina sellable y protege costos de la composición.

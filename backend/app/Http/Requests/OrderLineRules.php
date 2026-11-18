@@ -8,7 +8,7 @@ final class OrderLineRules
 {
     public static function rules(bool $expectations = true): array
     {
-        $keys = 'product_id,variant_id,quantity,notes,modifiers,kind,components'.($expectations ? ',product_revision,expected_unit_price,expected_tax_revision' : '');
+        $keys = 'product_id,variant_id,quantity,notes,modifiers,kind,components,selection_version'.($expectations ? ',product_revision,expected_unit_price,expected_tax_revision' : '');
         $rules = ['items' => ['required', 'array', 'list', 'min:1', 'max:100'], 'items.*' => ['required', 'array:'.$keys],
             'items.*.product_id' => ['required', 'integer', 'min:1'], 'items.*.variant_id' => ['nullable', 'integer', 'min:1'],
             'items.*.quantity' => ['required', 'integer', 'between:1,999'], 'items.*.notes' => ['nullable', 'string', 'max:300'],
@@ -19,7 +19,7 @@ final class OrderLineRules
             $rules += ['items.*.product_revision' => ['required', 'integer', 'min:1'], 'items.*.expected_unit_price' => ['required', ...Money::rules()], 'items.*.expected_tax_revision' => ['sometimes', 'nullable', 'integer', 'min:1']];
         }
 
-        $rules += ['items.*.kind' => ['sometimes', 'in:regular,combo'], 'items.*.components' => ['sometimes', 'array', 'list', 'min:1', 'max:20'],
+        $rules += ['items.*.selection_version' => ['sometimes', 'integer', 'in:1,2'], 'items.*.kind' => ['sometimes', 'in:regular,combo'], 'items.*.components' => ['sometimes', 'array', 'list', 'min:1', 'max:20'],
             'items.*.components.*' => ['required', 'array:component_id,unit_index,notes,modifiers'.($expectations ? ',product_revision,expected_tax_revision' : '')],
             'items.*.components.*.component_id' => ['required', 'integer', 'min:1'], 'items.*.components.*.unit_index' => ['required', 'integer', 'between:0,19'],
             'items.*.components.*.notes' => ['nullable', 'string', 'max:300']];

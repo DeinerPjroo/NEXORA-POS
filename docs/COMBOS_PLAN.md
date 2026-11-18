@@ -1,6 +1,6 @@
 # Combos · diseño del incremento 2.2-D
 
-Diseño original posterior a horarios 0.18. D1 de composición fija implementado y verificado como 0.19, contrato en FIXED_COMBOS.md; D2 de alternativas sigue pendiente y su diseño está en COMBO_CHOICES_PLAN.md. Composición/selección, precio e impuestos explícitos y snapshots, sin simular recetas/inventario. Conservar la regresión de precios/horarios, adicionales, impuestos, cuentas/abonos/devoluciones.
+Diseño original posterior a horarios0.18. D1 de composición fija verificado como0.19 y D2 de alternativas como0.20; contratos en FIXED_COMBOS.md y COMBO_CHOICES.md. Diseño D2 en COMBO_CHOICES_PLAN.md. Padre2.2-D completado tras verificar ambos. Composición/selección, precio e impuestos explícitos y snapshots, sin simular recetas/inventario. Conservar la regresión de precios/horarios, adicionales, impuestos, cuentas/abonos/devoluciones.
 
 ## División de trabajo
 

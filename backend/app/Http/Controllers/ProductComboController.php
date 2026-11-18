@@ -6,12 +6,16 @@ use App\Domains\Catalog\CatalogEligibility;
 use App\Domains\Catalog\CatalogPriceContext;
 use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Catalog\SaveCombo;
+use App\Domains\Catalog\SaveComboGroup;
 use App\Http\Requests\CatalogFiltersRequest;
 use App\Http\Requests\ComboComponentRequest;
+use App\Http\Requests\ComboGroupRequest;
 use App\Http\Requests\ComboSettingsRequest;
 use App\Http\Resources\ComboComponentResource;
+use App\Http\Resources\ComboGroupResource;
 use App\Models\Product;
 use App\Models\ProductComboComponent;
+use App\Models\ProductComboGroup;
 use Illuminate\Database\Eloquent\Collection;
 
 final class ProductComboController extends Controller
@@ -24,7 +28,7 @@ final class ProductComboController extends Controller
         $page = $query->orderBy('position')->orderBy('id')->paginate($request->validated('per_page', 10));
         app(CatalogEligibility::class)->decorate(new Collection([$product]), $request->user()->tenant()->value('timezone'));
 
-        return ComboComponentResource::collection($page)->additional(['product_revision' => $product->revision, 'allocation_mode' => $product->combo_allocation_mode, 'combo_context' => $product->getAttribute('combo_context')]);
+        return ComboComponentResource::collection($page)->additional(['product_revision' => $product->revision, 'allocation_mode' => $product->combo_allocation_mode, 'combo_context' => $product->getAttribute('combo_context'), 'groups' => ComboGroupResource::collection($product->comboGroups)]);
     }
 
     public function configuration(CatalogFiltersRequest $request, Product $product)
@@ -42,6 +46,7 @@ final class ProductComboController extends Controller
         }
 
         return ComboComponentResource::collection($components)->additional(['product_revision' => $product->revision, 'allocation_mode' => $product->combo_allocation_mode,
+            'groups' => ComboGroupResource::collection($product->comboGroups), 'selection_version' => $product->comboGroups->isEmpty() ? 1 : 2,
             'combo_context' => $product->getAttribute('combo_context'), 'price_context' => $resolver->resolve($product, null, $context['branch'], $context['channel'], $rules)]);
     }
 
@@ -50,6 +55,24 @@ final class ProductComboController extends Controller
         $product = $service->settings($request->user(), $product, $request->validated());
 
         return ['data' => ['product_revision' => $product->revision, 'allocation_mode' => $product->combo_allocation_mode]];
+    }
+
+    public function groups(CatalogFiltersRequest $request, Product $product)
+    {
+        abort_unless($product->kind === 'combo', 422, 'Este producto no es un combo.');
+        $query = $product->comboGroups()->when($request->validated('status'), fn ($q, $state) => $q->where('is_active', $state === 'active'));
+
+        return ComboGroupResource::collection($query->orderBy('position')->orderBy('id')->paginate($request->validated('per_page', 10)))->additional(['product_revision' => $product->revision]);
+    }
+
+    public function storeGroup(ComboGroupRequest $request, Product $product, SaveComboGroup $service)
+    {
+        return (new ComboGroupResource($service->execute($request->user(), $product, $request->validated())))->response()->setStatusCode(201);
+    }
+
+    public function updateGroup(ComboGroupRequest $request, Product $product, ProductComboGroup $comboGroup, SaveComboGroup $service)
+    {
+        return new ComboGroupResource($service->execute($request->user(), $product, $request->validated(), $comboGroup));
     }
 
     public function store(ComboComponentRequest $request, Product $product, SaveCombo $service)

@@ -1,5 +1,7 @@
 # Venta y devolución con métodos manuales (0.5–0.12)
 
+Desde0.20, combos con alternativas conservan grupos/elección en snapshot estructural2. Solo las posiciones elegidas son filas financieras y conservan perfil/preparación/asignación; cabecera/grupos no se suman otra vez. Cotización, descuento, partes iguales, pagos y devoluciones usan el pedido histórico incluso si el grupo se renombra/archiva o cierra una hoja. ProductTaxTotals conserva versión3. COMBO_CHOICES.md; resultados finales de regresión en PROJECT_STATE/HANDOFF.
+
 ## Uso
 
 Desde 0.17, el recibo conserva el origen del precio por sucursal/canal elegido al registrar cada línea. Cobrar, abonar, dividir o devolver usa el importe histórico y sus adicionales/impuestos; editar o archivar reglas del catálogo no cambia ventas ni pedidos previos. Véase [CONTEXT_PRICES.md](CONTEXT_PRICES.md).

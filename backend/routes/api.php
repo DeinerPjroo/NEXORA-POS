@@ -89,6 +89,9 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/combo-groups', [ProductComboController::class, 'groups']);
+            Route::post('products/{product}/combo-groups', [ProductComboController::class, 'storeGroup']);
+            Route::put('products/{product}/combo-groups/{comboGroup}', [ProductComboController::class, 'updateGroup']);
             Route::get('products/{product}/combo-components', [ProductComboController::class, 'index']);
             Route::post('products/{product}/combo-components', [ProductComboController::class, 'store']);
             Route::put('products/{product}/combo-components/{comboComponent}', [ProductComboController::class, 'update']);

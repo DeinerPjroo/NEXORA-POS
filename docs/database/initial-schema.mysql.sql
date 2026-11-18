@@ -509,3 +509,15 @@ alter table `order_items` add `combo_position` tinyint unsigned null;
 
 alter table `order_items` add constraint `order_items_combo_fk` foreign key (`tenant_id`, `order_id`, `order_combo_id`) references `order_combos` (`tenant_id`, `order_id`, `id`) on delete restrict;
 
+create table `product_combo_groups` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `name` varchar(80) not null, `min_select` tinyint unsigned not null default '0', `max_select` tinyint unsigned not null default '1', `position` smallint unsigned not null default '0', `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_combo_groups` add constraint `product_combo_groups_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_combo_groups` add unique `combo_groups_root_identity`(`tenant_id`, `product_id`, `id`);
+
+alter table `product_combo_groups` add constraint `combo_groups_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_combo_components` add `combo_group_id` bigint unsigned null;
+
+alter table `product_combo_components` add constraint `combo_components_group_fk` foreign key (`tenant_id`, `product_id`, `combo_group_id`) references `product_combo_groups` (`tenant_id`, `product_id`, `id`) on delete restrict;
+
