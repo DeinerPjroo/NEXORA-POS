@@ -157,6 +157,27 @@
 .sale-account-card h4 {
   margin: 0 0 8px;
 }
+.payment-history-filters,
+.payment-history-summary {
+  padding: 22px;
+}
+.payment-history-summary,
+.payment-history-results {
+  margin-top: 22px;
+}
+.payment-history-summary h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.payment-history-summary h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.payment-history-summary .sale-amounts > div {
+  flex-wrap: wrap;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
 .receipt-footer {
   margin-top: 30px;
   padding-top: 22px;

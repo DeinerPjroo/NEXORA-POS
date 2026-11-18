@@ -42,20 +42,25 @@ export function SalesPage() {
         title="Ventas"
         description="Recibos internos, pagos manuales y devoluciones. Consulta los registros de cada sucursal."
         action={
-          can('sales.configure') && (
-            <div className="operation-actions">
-              <Link className="button secondary" to="/ventas/impuestos">
-                Perfiles de impuestos
-              </Link>
-              <Link className="button secondary" to="/ventas/metodos">
-                Métodos de pago
-              </Link>
-              <Link className="button secondary" to="/ventas/configuracion">
-                <Settings2 size={17} />
-                Configurar ventas
-              </Link>
-            </div>
-          )
+          <div className="operation-actions">
+            <Link className="button secondary" to="/ventas/historial">
+              Historial de pagos
+            </Link>
+            {can('sales.configure') && (
+              <>
+                <Link className="button secondary" to="/ventas/impuestos">
+                  Perfiles de impuestos
+                </Link>
+                <Link className="button secondary" to="/ventas/metodos">
+                  Métodos de pago
+                </Link>
+                <Link className="button secondary" to="/ventas/configuracion">
+                  <Settings2 size={17} />
+                  Configurar ventas
+                </Link>
+              </>
+            )}
+          </div>
         }
       />
       <div className="operation-toolbar">

@@ -401,3 +401,7 @@ alter table `sales_settings` add `tip_tax_snapshot` json null;
 
 alter table `sales` add `tax_breakdown` json null;
 
+alter table `payments` add index `payments_history_company_idx`(`tenant_id`, `created_at`, `id`);
+
+alter table `payments` add index `payments_history_branch_idx`(`tenant_id`, `branch_id`, `created_at`, `id`);
+

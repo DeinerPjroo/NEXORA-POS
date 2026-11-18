@@ -6,6 +6,7 @@ use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentHistoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
@@ -36,6 +37,7 @@ Route::prefix('v1')->group(function () {
         Route::post('payment-methods', [PaymentMethodController::class, 'store']);
         Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update']);
         Route::get('sales/settings', [SalesSettingController::class, 'show']);
+        Route::get('finance/payments', [PaymentHistoryController::class, 'index']);
         Route::put('sales/settings', [SalesSettingController::class, 'update']);
         Route::get('sales/cash-context', [SaleController::class, 'cashContext']);
         Route::get('sales', [SaleController::class, 'index']);

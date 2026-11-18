@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.12.0** agrega **perfiles de varios impuestos por producto**, snapshots de tasas en pedidos y desglose incluido/adicional por línea. Conserva los modos globales, partes iguales, devoluciones parciales, abonos/mixtos, descuentos y propinas voluntarias. Solo efectivo cambia el saldo de caja; no hay confirmación bancaria. La empresa confirma perfiles/modo/tasas y tratamiento de propina, sin asignación de régimen legal. Conciliación manual, mesas, división por productos/unión de cuentas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PRODUCT_TAXES.md](docs/PRODUCT_TAXES.md).
+La entrega **0.13.0** agrega **historial paginado de pagos**, filtros por sucursal/fecha/tipo/referencia y netos con devoluciones acumuladas. El resumen corresponde a la página visible y moneda. Conserva impuestos globales/por producto, cuentas, devoluciones parciales, abonos/mixtos y propinas voluntarias. Solo efectivo cambia caja; los no efectivos siguen siendo registros manuales. Revisión/conciliación manual, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PAYMENT_HISTORY.md](docs/PAYMENT_HISTORY.md).
 
 ## Entorno y requisitos
 

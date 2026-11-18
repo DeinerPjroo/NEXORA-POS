@@ -54,6 +54,7 @@ export function PartialRefundModal({
         'cash-sessions',
         'cash-session',
         'cash-movements',
+        'payment-history',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
     toast('Devolución registrada. El saldo pendiente se conserva.')

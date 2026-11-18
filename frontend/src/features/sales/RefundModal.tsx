@@ -32,6 +32,7 @@ export function RefundModal({ sale: initial, onClose }: { sale: Sale; onClose: (
         'cash-sessions',
         'cash-session',
         'cash-movements',
+        'payment-history',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
     toast('Devolución registrada. La venta original se conserva.')

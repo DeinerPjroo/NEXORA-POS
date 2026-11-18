@@ -74,6 +74,8 @@ erDiagram
 | cache / cache_locks | Caché central y bloqueo; hoy se usa para límites de acceso. |
 | jobs / job_batches / failed_jobs | Infraestructura de colas Laravel; aún sin jobs de negocio. |
 
+Desde 0.13, payments dispone además de índices (tenant,created_at,id) y (tenant,branch,created_at,id) para el historial. Sus acumulados se derivan por payment/refunds con BCMath; no se guardan saldos adicionales ni se usa SUM monetario de SQLite. El resumen es de página/moneda, no de todo un período.
+
 Las FKs `(tenant_id,role_id) → roles(tenant_id,id)` en usuarios y pivot, y `(tenant_id,actor_id) → users(tenant_id,id)` en auditoría evitan referencias entre empresas incluso mediante escritura SQL directa. Todas restringen borrado. El tenant no es mass assignable en los modelos scoped. Fechas se serializan como ISO 8601 para renderizar según zona empresarial. El entorno usa America/Bogota; se debe unificar zona de las conexiones y revisar conversión temporal al desplegar MySQL.
 
 Infraestructura `sessions.user_id` sigue el esquema Laravel con índice, sin FK: las sesiones se revocan explícitamente. No almacena `tenant_id`; la identidad de sesión resuelve la empresa en servidor. No hay borrado lógico todavía porque no se implementaron operaciones de borrado. Sucursales y usuarios tienen estado; los futuros catálogos con referencias históricas podrán usar soft deletes.

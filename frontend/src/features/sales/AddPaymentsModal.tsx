@@ -75,6 +75,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
         'cash-sessions',
         'cash-session',
         'cash-movements',
+        'payment-history',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
     toast('Pagos registrados. El saldo se actualizó.')

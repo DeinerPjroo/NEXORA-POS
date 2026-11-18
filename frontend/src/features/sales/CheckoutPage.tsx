@@ -124,6 +124,7 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
         'cash-sessions',
         'cash-session',
         'cash-movements',
+        'payment-history',
         'checkout-cash',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )

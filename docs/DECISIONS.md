@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-010 · Historial por pago y resumen acotado (0.13)
+
+El historial muestra una fila por pago, con devoluciones acumuladas actuales. Fecha filtra registro del pago y no recalcula compensaciones históricas al cierre del rango; la UI lo explica. El resumen suma solo la página actual y agrupa moneda, sin duplicar total de una venta abonada ni presentarlo como ganancias o flujo bancario del período.
+
+Se conserva zona de aplicación/almacenamiento existente y se convierten límites desde la zona de empresa. No cambiar APP_TIMEZONE ni asumir SQL UTC para consultas; prueba explícita de medianoche y Europe/Madrid. Lectura con sales.view sin exponer esperado de caja; registro manual no equivale a proveedor confirmado. La revisión humana independiente se añade en F2.
+
 ## DEC-009 · Perfiles por producto y centavos (0.12)
 
 Perfiles con 1–5 impuestos paralelos sobre igual base, sin cascadas ni tasas/regímenes predeterminados. Las variantes heredan perfil del producto. Se copian tasas/modo/nombre/revisión al pedido y se exige revisión del perfil incluso si no cambió precio/producto. Se bloquea activar modo por producto mientras existan pedidos legados no resueltos sin snapshot; no se infieren tasas antiguas.

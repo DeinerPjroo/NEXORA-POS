@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Consulta de pagos y acumulados (0.13)
+
+PaymentHistory filtra/pagina relaciones de consulta sale/account/refunds; PaymentBalance deriva aplicado/devuelto/neto por payment con BCMath. Resource expone datos históricos y resumen de página/moneda con sales.view, sin saldo de caja ni escrituras. Índices nuevos empresa/fecha/id y empresa/sucursal/fecha/id no alteran filas.
+
+Las fechas seleccionan el registro del pago en zona de empresa y convierten límites a config(app.timezone), con medianoche siguiente excluida. No asumir timestamps SQL UTC: el predeterminado existente es America/Bogota, aunque Eloquent serializa JSON UTC. Devoluciones acumuladas actuales, no actividad de período; PAYMENT_HISTORY.md define semántica y permisos.
+
 ## Perfiles y cálculo por producto (0.12)
 
 TaxProfile/SaveTaxProfile gestionan tasas paralelas con revisión/auditoría e idempotencia al crear, bajo bloqueo de empresa. Product mantiene FK tenant/profile y CreateOrder copia snapshot validando expected_tax_revision además de producto/precio. OrderItem sigue append-only; perfil archivado impide pedidos futuros sin alterar snapshots previos. No se inventan impuestos en pedidos legados sin snapshot.

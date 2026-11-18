@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 0.13.0 · 2026-11-18
+
+- Historial paginado por pago con método/referencia/sucursal/cuenta históricos, compensaciones acumuladas y neto exacto, sin repetir el total de venta por abono.
+- Filtros tenant/sucursal, fecha de registro del pago, tipo de método y referencia literal; resúmenes solo de página agrupados por moneda.
+- Fechas en zona de empresa convertidas a la zona SQL existente de la aplicación, con siguiente medianoche excluyente. No se reinterpreta almacenamiento como UTC.
+- PaymentBalance/PaymentHistory y recursos de consulta con sales.view; no revelan saldos de caja ni escriben registros financieros. Los comandos de cobro/devolución invalidan la consulta.
+- Pantalla /ventas/historial con carga/errores/vacío, filtros, páginas y enlaces a recibo; sesión enlazada solo con cash.view. Resúmenes BCMath incluso por encima del límite monetario individual.
+- Migración 000013 añade solo índices de consulta. PAYMENT_HISTORY.md aclara acumulados, fechas y alcance; revisión manual no efectiva sigue en F2.
+
 ## 0.12.0 · 2026-11-17
 
 - Perfiles por empresa con 1–5 impuestos paralelos, nombre/tasa/modo explícitos, revisión/archivo y creación idempotente. Sin tasas legales automáticas ni fórmulas arbitrarias.

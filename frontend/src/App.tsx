@@ -22,6 +22,7 @@ import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { CheckoutPage } from './features/sales/CheckoutPage'
 import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
+import { PaymentHistoryPage } from './features/sales/PaymentHistoryPage'
 
 export default function App() {
   return (
@@ -32,6 +33,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/ventas/historial"
+          element={
+            <PermissionBoundary permission="sales.view">
+              <PaymentHistoryPage />
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/ventas/impuestos"
           element={

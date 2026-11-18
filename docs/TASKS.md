@@ -14,8 +14,8 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-E1 | COMPLETED | Impuesto incluido global conectado/versionado, sin doble adición y propina explícita. Migración 000011 aplicada; 144/1357 SQLite/MariaDB, 14 Playwright y build/formato/captura correctos | 2.1-D2 |
 | 2.1-E2 | COMPLETED | Perfiles/asignación/snapshots y cálculo por líneas, versión 3/propina/centavos. Migración 000012 aplicada; 158/1526 SQLite/MariaDB, 15 Playwright, build/formato/captura y guardas correctos | 2.1-E1 y catálogo |
 | 2.1-F | IN_PROGRESS | Conciliación manual e historial financiero; estados nunca equivalentes a confirmación de proveedor | 2.1-B/D1/D2 |
-| 2.1-F1 | IN_PROGRESS | Historial paginado por pago, filtros de sucursal/fecha/tipo/referencia y netos/devoluciones exactos; enlaces a recibo y resumen explícito de página/moneda | 2.1-E2 |
-| 2.1-F2 | PENDING | Revisión manual de pagos no efectivos, permiso independiente e historial append-only/idempotente; importe observado y referencia, estado invalidado si cambia la revisión financiera | 2.1-F1 |
+| 2.1-F1 | COMPLETED | Historial conectado, filtros/zonas/netos y resumen de página/moneda; migración 000013 aplicada, 165/1645 SQLite/MariaDB, 16 Playwright (13.2 min), build/formato y capturas correctos | 2.1-E2 |
+| 2.1-F2 | IN_PROGRESS | Revisión manual de pagos no efectivos, permiso independiente e historial append-only/idempotente; importe observado y referencia, estado invalidado si cambia la revisión financiera | 2.1-F1 |
 | 2.2 | PENDING | Ampliaciones de catálogo: subcategorías, modificadores/adicionales/exclusiones, combos, promociones, galería, precios y horarios; subdividir antes de implementar | 2.1, catálogo actual |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |

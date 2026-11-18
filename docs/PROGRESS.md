@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.12.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, descuentos/propinas, devoluciones parciales, partes iguales e impuestos globales/por producto. Todavía no se declara lista para producción.
+Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.13.0** verificada. Fase 2 con catálogo, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial de pagos. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -53,8 +53,11 @@ Fecha de referencia: **17 de noviembre de 2026**, America/Bogota. Entrega **0.12
 - División en partes iguales antes del primer pago, centavos exactos y asignaciones por FK, saldos/límites por cuenta y globales. Sin crear cuentas artificiales en ventas anteriores; SPLIT_ACCOUNTS.md.
 - Impuesto incluido global explícito: IncludedTax extrae base half-up e impuesto por diferencia, sin doble adición. Fórmula versión 2 inmutable y modos/historia anteriores versión 1, con propina participante explícita. INCLUDED_TAX.md.
 - Perfiles de impuestos paralelos por producto, revisión/archivo/asignación y snapshots en pedidos con control de revisión independiente. Centavos por mayores restos, versión 3/desglose inmutable, propina participante con perfil confirmado explícito. PRODUCT_TAXES.md.
+- Historial por pago con filtros/paginación, devoluciones acumuladas actuales y netos BCMath por página/moneda; fechas de empresa convertidas a zona SQL existente, sin duplicar ventas ni filtrar saldos de caja a lectores. PAYMENT_HISTORY.md.
 
 ## Verificaciones realizadas
+
+Historial 0.13: 165/1645 SQLite/MariaDB correctos, nexora_test_dc7e6176f39abc91 conservada. Suite completa 16 Playwright aprobada (13.2 min), incluido historial con 14 pagos/páginas/referencias/devolución/móvil. Migración 000013 aplicada, doctor/DDL/Pint/Composer y build/TypeScript/Prettier correctos. Capturas finales de escritorio y móvil revisadas.
 
 Impuestos por producto 0.12: 158/1526 SQLite/MariaDB correctos, base nexora_test_1aa1ffc21f55ed9a conservada. Suite completa 15 Playwright aprobada (12.5 min), migración 000012 aplicada, doctor/DDL/build/TypeScript/Prettier/Pint/Composer/captura móvil y tres guardas negativas del fixture correctos.
 
@@ -67,15 +70,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 158 pruebas y 1526 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
-| `php scripts/test-mysql.php` | 158 pruebas y 1526 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_1aa1ffc21f55ed9a conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 165 pruebas y 1645 aserciones aprobadas en SQLite: identidad/catálogo/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
+| `php scripts/test-mysql.php` | 165 pruebas y 1645 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_dc7e6176f39abc91 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 15 aprobadas en 12.5 minutos: 13 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, devoluciones, cuentas/centavos, móvil, impresión y cierre |
+| `npm run test:e2e` | 16 aprobadas en 13.2 minutos: 14 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/filtros/páginas, devoluciones, cuentas/centavos, móvil, impresión y cierre |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
