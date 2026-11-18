@@ -75,6 +75,7 @@ export function OrderComposer() {
     queryKey: ['products', 'order-menu', params.toString()],
     queryFn: ({ signal }) => api<CatalogPage<Product>>(`products?${params}`, { signal }),
     enabled: can('catalog.view') && !!selected,
+    refetchInterval: 30_000,
   })
   const operation = useOperation<Order>('orders', async (order) => {
     await client.invalidateQueries({ queryKey: ['orders'] })
@@ -203,7 +204,7 @@ export function OrderComposer() {
                 <div className="order-menu-grid">
                   {products.data.data.map((product) => (
                     <button
-                      className="panel order-product"
+                      className={`panel order-product${product.availability_context?.allowed === false ? ' schedule-closed' : ''}`}
                       key={product.id}
                       disabled={!product.sellable || locked || products.isFetching}
                       onClick={() =>
@@ -220,9 +221,11 @@ export function OrderComposer() {
                       </span>
                       <strong>{product.name}</strong>
                       <small>
-                        {product.variants_count
-                          ? `${product.available_variants_count} presentaciones disponibles`
-                          : categoryPath(product.category)}
+                        {product.availability_context?.allowed === false
+                          ? `${product.availability_context.reason} · ${product.availability_context.timezone}`
+                          : product.variants_count
+                            ? `${product.available_variants_count} presentaciones disponibles`
+                            : categoryPath(product.category)}
                       </small>
                       <span>
                         {product.variants_count

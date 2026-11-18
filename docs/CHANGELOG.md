@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.18.0 · 2026-11-18
+
+- Horarios semanales por producto heredados por presentaciones, política deshabilitada inicialmente y ventanas con archivo/paginación, revisiones/UUID y auditoría atómica. Límite de 28 activas.
+- Reloj de servidor y zona empresarial, medianoche explícita, vigencia del día inicial, inicio incluido/final excluido y semántica de hora de pared para cambios estacionales.
+- Motivo de cierre en menú y elegibilidad derivada sin cambiar flags manuales. OrderPlan comprueba preview/registro y rechaza pedidos nuevos fuera de horario sin perder preparaciones del carrito.
+- Snapshot histórico de instante/zona/ventanas en pedido/checkout/recibo; replay y cobro/devolución permanecen válidos después del cierre. Migración 000018 incremental y AVAILABILITY_SCHEDULES.md.
+- expected_timezone detecta formularios abiertos antes de cambiar la zona empresarial; identidad del envío incierto conservada. Respuestas de fotografía incluyen elegibilidad del horario y la tabla de variantes identifica su estado manual.
+
 ## 0.17.0 · 2026-11-18
 
 - Precios explícitos por sucursal/canal de producto o presentación, precedencia determinista y precio base separado. Reglas paginadas, identidad estable, archivo, revisiones, UUID y auditoría atómicos.

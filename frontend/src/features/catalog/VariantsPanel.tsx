@@ -64,7 +64,7 @@ export function VariantsPanel({ product }: { product: Product }) {
                     <th>Presentación</th>
                     <th>Precio</th>
                     {can('catalog.costs') && <th>Costo de referencia</th>}
-                    <th>Estado</th>
+                    <th>Estado manual</th>
                     <th>Precios por contexto</th>
                     {can('catalog.manage') && (
                       <th>

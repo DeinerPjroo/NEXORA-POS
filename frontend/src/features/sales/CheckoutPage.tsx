@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { PriceDetails } from '../orders/PriceDetails'
+import { AvailabilityDetails } from '../orders/AvailabilityDetails'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -376,6 +377,7 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
               {item.quantity}× {item.product_name}
               {item.variant_name && ` · ${item.variant_name}`}
               <PriceDetails context={item.price_snapshot} currency={order.currency} />
+              <AvailabilityDetails context={item.availability_snapshot} />
               <ModifierDetails
                 groups={item.modifiers_snapshot}
                 basePrice={item.base_unit_price}

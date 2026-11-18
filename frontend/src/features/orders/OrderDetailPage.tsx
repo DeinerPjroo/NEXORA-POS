@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { ModifierDetails } from './ModifierDetails'
 import { PriceDetails } from './PriceDetails'
+import { AvailabilityDetails } from './AvailabilityDetails'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock3, Plus, ShoppingBag } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -70,6 +71,7 @@ export function OrderDetailPage() {
                   </small>
                   {item.notes && <p>{item.notes}</p>}
                   <PriceDetails context={item.price_snapshot} currency={order.currency} />
+                  <AvailabilityDetails context={item.availability_snapshot} />
                   <ModifierDetails
                     groups={item.modifiers_snapshot}
                     basePrice={item.base_unit_price}

@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.17.0** verificada. Fase 2 con catálogo/subcategorías/modificadores/precios contextuales, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
+Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.18.0** verificada. Fase 2 con catálogo/subcategorías/modificadores/precios contextuales/horarios, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
 
 ## Implementado y probado
 
@@ -58,8 +58,11 @@ Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.17
 - Categorías principales/subcategorías con FK/revisión y disponibilidad efectiva heredada; selectores/rutas/filtros y validación de pedidos conectados. Sin cambiar flags descendientes ni snapshots previos. SUBCATEGORIES.md.
 - Adicionales/exclusiones configurables con límites activos/archivo, selección explícita y precio por unidad, snapshots de preparación en pedido/recibo. Preparaciones distintas separadas en carrito y replay conserva precio original; MODIFIERS.md.
 - Precios por sucursal/canal de producto/presentación con prioridad explícita, base separada y snapshots. Preview compartido con registro estricto y revisión del carrito conservando cantidades/notas/opciones; reintento incierto mantiene cuerpo y contexto originales. CONTEXT_PRICES.md.
+- Ventanas semanales de disponibilidad heredadas por presentaciones, zona empresarial y vigencia del inicio, cruce de medianoche y archivo paginado. Comprobación real en preview/registro y snapshot histórico en pedido/cobro/recibo; un cierre no reinterpreta pedidos guardados. Formularios detectan zona obsoleta. AVAILABILITY_SCHEDULES.md.
 
 ## Verificaciones realizadas
+
+Horarios 0.18: 222 pruebas/2475 aserciones SQLite y MariaDB correctas; esquema final nexora_test_33d1dfbc81b8ea36 conservado junto a los intermedios 5c1f38d30adbbf2e (220/2450) y 35a6f4251e6a3c52 (221/2464), todos con prefijo nexora_test_. Suite completa de 21 Playwright aprobada en 22.4 minutos y recorrido final de horarios aprobado en 2.4 minutos tras añadir expected_timezone y ajustar el encuadre administrativo. Casos de medianoche/vigencia/DST, concurrencia de zona/UUID, archivo/límites/FK/permisos/rollback, cierre tras preview, preparación conservada, snapshot/replay/cobro/devolución y estado correcto tras mutaciones de fotografía. Migración 000018 aplicada, DDL/Pint/Composer/doctor/build/TypeScript/Prettier correctos y capturas finales revisadas. Principal 484.31 kB/gzip 137.01; panel de horarios 9.72 kB, sin aviso de chunk.
 
 Precios contextuales 0.17: 208/2286 SQLite/MariaDB correctos, nexora_test_ecc5ff33045ff4fc conservada (también ejecución intermedia nexora_test_8ce5d1572ba31d9e, 203/2181). Suite completa de 20 Playwright aprobada en 16.9 minutos: configuración/edición/reintento de reglas, dos sucursales/canales, presentación/adicionales, conflicto 409 y revisión conservando preparación, preview sin pedidos, snapshot/replay tras archivo y cobro/recibo móvil. Migración 000017 aplicada, DDL/Pint/Composer/doctor/build/TypeScript/Prettier y capturas finales correctos. Principal 482.29 kB/gzip 136.38, sin aviso de chunk. MariaDB se inició normalmente al hallarse detenida durante el diagnóstico; no se cambiaron credenciales ni datos.
 
@@ -82,15 +85,15 @@ Continuación autónoma: código local y origin/main contrastados en a487f23, si
 | Verificación | Resultado / alcance |
 | --- | --- |
 | PHP y extensiones, Composer, Node, npm y cliente SQL | Inspeccionados antes de instalar |
-| `php artisan test` | 208 pruebas y 2286 aserciones aprobadas en SQLite: identidad/catálogo/subcategorías/modificadores/precios/preview/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial/revisión humana, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
-| `php scripts/test-mysql.php` | 208 pruebas y 2286 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_ecc5ff33045ff4fc conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
+| `php artisan test` | 222 pruebas y 2475 aserciones aprobadas en SQLite: identidad/catálogo/subcategorías/modificadores/precios/horarios/preview/operación, abonos, ajustes/propinas, devoluciones, cuentas, impuestos globales/por producto, historial/revisión humana, snapshots, precisión, tenant/FK/permisos, idempotencia, conflictos y rollback |
+| `php scripts/test-mysql.php` | 222 pruebas y 2475 aserciones aprobadas en MariaDB 10.4.32; base aislada nexora_test_33d1dfbc81b8ea36 conservada, sin DROP DATABASE ni pruebas sobre la base de trabajo |
 | `php vendor/bin/pint --test` | Formato PHP verificado |
 | `composer validate --strict` | Manifiesto válido |
 | `composer audit --locked` | Sin avisos conocidos en el resultado consultado |
 | `npm run check` / `npm run build` | TypeScript y compilación de producción correctos |
 | `npm run format:check` | Formato frontend verificado |
 | `npm audit --omit=dev` | Sin vulnerabilidades conocidas en dependencias de runtime en el resultado consultado |
-| `npm run test:e2e` | 20 aprobadas en 16.9 minutos: 18 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/subcategorías/modificadores/precios contextuales/preview/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/filtros/páginas, revisión manual/replay/obsolescencia, devoluciones, cuentas/centavos, móvil, impresión y cierre |
+| `npm run test:e2e` | 21 aprobadas en 22.4 minutos: 19 recorridos Chromium y 2 comprobaciones monetarias. Incluye identidad/catálogo/subcategorías/modificadores/precios/horarios/preview/operación, abonos/mixtos/reintentos, consentimiento de tip, impuestos globales/por producto, perfiles/asignación/archivado/snapshots, historial/revisión manual, devoluciones, cuentas/centavos, móvil, impresión y cierre. Recorrido final de horarios también aprobado en 2.4 minutos |
 | Capturas | Revisadas en escritorio y móvil; docs/screenshots incluye caja/pedidos, cobro y recibo. internal-receipt.pdf es una salida de impresión con datos de prueba |
 | Exportación DDL | Generada desde migraciones en modo pretend, sin abrir conexión SQL |
 | `php artisan nexora:doctor` sobre configuración SQL actual | Conexión correcta con MariaDB 10.4.32; migraciones de identidad, catálogo, caja/pedidos y ventas aplicadas |
@@ -106,6 +109,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan galerías, horarios y combos/promociones; subcategorías operan desde 0.15, modificadores desde 0.16 y precios por sucursal/canal desde 0.17. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan galerías y combos/promociones; subcategorías operan desde 0.15, modificadores desde 0.16, precios por contexto desde 0.17 y horarios desde 0.18. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

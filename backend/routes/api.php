@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentReviewController;
+use App\Http\Controllers\ProductAvailabilityController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductModifierController;
@@ -87,6 +88,10 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/availability-windows', [ProductAvailabilityController::class, 'index']);
+            Route::post('products/{product}/availability-windows', [ProductAvailabilityController::class, 'store']);
+            Route::put('products/{product}/availability-windows/{availabilityWindow}', [ProductAvailabilityController::class, 'update']);
+            Route::put('products/{product}/availability-policy', [ProductAvailabilityController::class, 'policy']);
             Route::get('products/{product}/context-prices', [ContextPriceController::class, 'index']);
             Route::post('products/{product}/context-prices', [ContextPriceController::class, 'store']);
             Route::put('products/{product}/context-prices/{contextPrice}', [ContextPriceController::class, 'update']);

@@ -1,5 +1,9 @@
 # Base de datos
 
+## Disponibilidad semanal (0.18)
+
+Migración 000018: products.availability_schedule_enabled boolean false y product_availability_windows con tenant/product, nombre, día ISO, inicio/final HH:mm, día siguiente, fechas de vigencia, estado/revisión y timestamps. FK tenant/product y índice de lectura por producto/estado. order_items.availability_snapshot JSON nullable conserva comprobación UTC/zona/revisión/ventanas. Líneas anteriores quedan null y no hay descenso destructivo. SQLite/MariaDB verificadas, sin DROP DATABASE; AVAILABILITY_SCHEDULES.md.
+
 ## Precios por sucursal/canal (0.17)
 
 Migración 000017: product_context_prices con tenant/product/variant/branch, canal all/takeaway/dine_in, amount DECIMAL(19,4), estado/revisión y marcas de tiempo. FK tenant/product/variant y tenant/branch; variant_scope/branch_scope STORED COALESCE(id,0) y unique compuesto evitan duplicados con null. Índices/scopes comprobados en SQLite 3.51.3 y MariaDB 10.4.32. order_items.price_snapshot JSON nullable conserva fuente/regla/revisión/importe/contexto, sin modificar líneas anteriores. Descenso rechazado para preservar historia; contrato en CONTEXT_PRICES.md.

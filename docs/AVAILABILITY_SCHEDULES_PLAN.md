@@ -1,6 +1,6 @@
 # Horarios de disponibilidad · diseño 2.2-C2
 
-Plan del incremento posterior a precios0.17, no capacidad publicada. Fuente: REQUIREMENTS6.6, TASKS2.2-C2 y CATALOG_ADVANCED_PLAN. Reutilizar catálogo, revisiones, archivo, auditoría/UUID y OrderPlan; no requiere proveedor externo ni paquetes nuevos.
+Diseño original posterior a precios 0.17, implementado y verificado como 0.18. Fuente: REQUIREMENTS 6.6, TASKS 2.2-C2 y CATALOG_ADVANCED_PLAN. Contrato vigente en AVAILABILITY_SCHEDULES.md, resultados en PROGRESS/HANDOFF. Reutiliza catálogo, revisiones, archivo, auditoría/UUID y OrderPlan; no requiere proveedor externo ni paquetes nuevos.
 
 ## Comportamiento esperado
 

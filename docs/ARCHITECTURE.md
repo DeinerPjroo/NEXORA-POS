@@ -1,5 +1,11 @@
 # Arquitectura técnica
 
+## Ventanas de disponibilidad (0.18)
+
+SaveAvailability usa IdempotentOperation/ModifierProductContext y Gate antes del replay para política y ventanas, con revisiones/auditoría atómicas. AvailabilitySchedule evalúa ventanas activas por lote, instante común y zona de empresa. ProductController hidrata availability_context y ProductResource combina sellable sin cambiar flags/filtros manuales. OrderPlan comprueba la misma evaluación y guarda availability_snapshot; consultas/cobro/devoluciones de historia no la ejecutan otra vez. La migración 000018 agrega bandera, ventanas con FK tenant/product y JSON nullable sin reinterpretar pedidos legados. Panel lazy y DTO explícitos, motivo en menú, revisión de conflictos sin borrar borrador y comprobación histórica en recibo. AVAILABILITY_SCHEDULES.md detalla reloj/DST/vigencia y límites.
+
+expected_timezone conserva el contexto al abrir formularios y se compara bajo bloqueo Tenant, además de moneda/revisiones, antes de escribir. ProductImageController decora también las respuestas de subir/retirar fotografía para mantener la elegibilidad contextual del recurso.
+
 ## Precios contextuales y plan de pedido (0.17)
 
 SaveContextPrice reutiliza el bloqueo de configuración de producto, IdempotentOperation y auditoría. CatalogPriceResolver obtiene candidatas por lote y aplica precedencia estable por entidad/sucursal/canal; CatalogPriceContext valida la pareja de parámetros de lectura. Product/Variant mantienen sale_price separado de price_context. OperationsContext amplía únicamente metadatos propios de sucursales para catalog.view.

@@ -669,6 +669,9 @@
   margin-top: 4px;
   overflow-wrap: anywhere;
 }
+.order-product.schedule-closed:disabled {
+  opacity: 1;
+}
 @media (max-width: 580px) {
   .price-review-actions {
     flex-direction: column;

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Orders;
 
+use App\Domains\Catalog\AvailabilitySchedule;
 use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Operations\Money;
 use App\Models\Branch;
@@ -19,12 +20,14 @@ final class OrderPlan
         Gate::authorize('catalog.view');
         $branch = Branch::whereKey($data['branch_id'])->lockForUpdate()->firstOrFail();
         abort_unless($branch->is_active, 409, 'La sucursal está inactiva.');
-        abort_if($actor->tenant()->value('currency') !== $data['currency'], 409, 'La moneda cambió. Revisa el catálogo antes de registrar el pedido.');
+        $company = $actor->tenant()->firstOrFail();
+        abort_if($company->currency !== $data['currency'], 409, 'La moneda cambió. Revisa el catálogo antes de registrar el pedido.');
         $ids = collect($data['items'])->pluck('product_id')->unique()->sort()->values();
         $variantIds = collect($data['items'])->pluck('variant_id')->filter()->unique()->values()->all();
         $categoryIds = Product::whereIn('id', $ids)->pluck('category_id')->unique()->sort();
         $categories = Category::with('parent')->whereIn('id', $categoryIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         $products = Product::with(['taxProfile', 'modifierGroups' => fn ($q) => $q->where('is_active', true), 'modifierGroups.options' => fn ($q) => $q->where('is_active', true)])->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        app(AvailabilitySchedule::class)->decorate($products, $company->timezone);
         $resolver = app(CatalogPriceResolver::class);
         $candidates = $resolver->candidates($ids->all(), $variantIds, $branch->id, $data['channel']);
         $items = [];
@@ -33,6 +36,8 @@ final class OrderPlan
         foreach ($data['items'] as $line) {
             $product = $products->get($line['product_id']);
             abort_unless($product && $product->is_active && $product->is_available && $categories->get($product->category_id)?->isEffectivelyActive(), 409, 'Un producto ya no está disponible. Revisa el catálogo.');
+            $availability = $product->getAttribute('availability_context');
+            abort_unless($availability['allowed'], 409, 'Un producto está fuera del horario de disponibilidad ('.$company->timezone.'). Revisa el carrito.');
             abort_if($expectations && $product->revision !== (int) $line['product_revision'], 409, 'El catálogo cambió. Revisa los productos y precios antes de enviar.');
             $profile = $product->taxProfile;
             abort_if($profile && (! $profile->is_active || ($expectations && $profile->revision !== (int) ($line['expected_tax_revision'] ?? 0))), 409, 'El perfil de impuestos del producto cambió. Revisa el catálogo.');
@@ -52,12 +57,12 @@ final class OrderPlan
             $taxSnapshot = $profile?->snapshot() ?? ['profile_id' => null, 'name' => null, 'price_mode' => 'none', 'rates' => [], 'revision' => null];
             $item = ['product_id' => $product->id, 'variant_id' => $variant?->id, 'product_name' => $product->name, 'variant_name' => $variant?->name,
                 'sku' => $variant?->sku ?? $product->sku, 'quantity' => (int) $line['quantity'], 'unit_price' => $price, 'line_subtotal' => $lineSubtotal, 'notes' => $line['notes'] ?? null,
-                'base_unit_price' => $modifiers['base_unit_price'], 'modifiers_snapshot' => $modifiers['snapshot'], 'tax_snapshot' => $taxSnapshot, 'price_snapshot' => $contextPrice];
+                'base_unit_price' => $modifiers['base_unit_price'], 'modifiers_snapshot' => $modifiers['snapshot'], 'tax_snapshot' => $taxSnapshot, 'price_snapshot' => $contextPrice, 'availability_snapshot' => $availability];
             $items[] = $item;
             $preview[] = ['product_id' => $product->id, 'variant_id' => $variant?->id, 'product_name' => $product->name, 'variant_name' => $variant?->name,
                 'quantity' => (int) $line['quantity'], 'product_revision' => $product->revision, 'expected_tax_revision' => $profile?->revision, 'expected_unit_price' => $price,
                 'base_unit_price' => $modifiers['base_unit_price'], 'modifiers' => array_map(fn ($group) => ['group_id' => $group['group_id'], 'option_ids' => array_column($group['options'], 'id')], $modifiers['snapshot']),
-                'modifier_labels' => $modifiers['snapshot'], 'tax_snapshot' => $taxSnapshot, 'price_context' => $contextPrice, 'notes' => $line['notes'] ?? ''];
+                'modifier_labels' => $modifiers['snapshot'], 'tax_snapshot' => $taxSnapshot, 'price_context' => $contextPrice, 'availability_context' => $availability, 'notes' => $line['notes'] ?? ''];
         }
 
         return ['branch' => $branch, 'subtotal' => $subtotal, 'items' => $items, 'preview_items' => $preview];

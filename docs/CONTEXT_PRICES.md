@@ -37,7 +37,7 @@ El conflicto de registro permite revisar precios conservando el pedido. La acept
 
 `order_items.price_snapshot` nullable conserva fuente product/variant/rule, ID/revisión de regla cuando corresponde, importe base, sucursal/nombre y canal elegidos y alcance de la regla. El precio final suma los adicionales y multiplica por cantidad con BCMath; la UI usa BigInt para sus importes. `base_unit_price`, modificadores e impuestos mantienen sus snapshots anteriores.
 
-Pedidos, cobro y recibos muestran el origen histórico. Cobrar, abonar, dividir o devolver usa importes ya guardados y no consulta reglas actuales para recotizarlos. Un UUID registrado devuelve el pedido original aunque después se archiven reglas u opciones. Las líneas anteriores a la migración mantienen snapshot null; no se inventa su procedencia. Horarios corresponden al siguiente incremento C2.
+Pedidos, cobro y recibos muestran el origen histórico. Cobrar, abonar, dividir o devolver usa importes ya guardados y no consulta reglas actuales para recotizarlos. Un UUID registrado devuelve el pedido original aunque después se archiven reglas u opciones. Las líneas anteriores a la migración mantienen snapshot null; no se inventa su procedencia. Horarios se incorporan desde 0.18 según AVAILABILITY_SCHEDULES.md.
 
 ## Verificación
 

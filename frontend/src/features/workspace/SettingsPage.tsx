@@ -110,6 +110,10 @@ export function SettingsPage() {
                 ))}
               </select>
             </Field>
+            <p className="muted small">
+              Cambiar la zona horaria modifica cuándo abren las ventanas de disponibilidad de los
+              productos. Los pedidos guardados conservan la zona y hora comprobadas al registrarlos.
+            </p>
           </fieldset>
           <div className="form-actions">
             <Submit pending={mutation.isPending} disabled={!can('settings.manage')} />

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Catalog\AvailabilitySchedule;
 use App\Domains\Catalog\CatalogPriceContext;
 use App\Domains\Catalog\CatalogPriceResolver;
 use App\Domains\Catalog\CatalogSearch;
@@ -10,6 +11,7 @@ use App\Http\Requests\CatalogFiltersRequest;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 
 final class ProductController extends Controller
@@ -27,6 +29,7 @@ final class ProductController extends Controller
             ->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('is_available', $availability === 'available'));
 
         $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
+        app(AvailabilitySchedule::class)->decorate($page->getCollection(), $request->user()->tenant()->value('timezone'));
         $context = app(CatalogPriceContext::class)->from($data);
         if ($context) {
             $resolver = app(CatalogPriceResolver::class);
@@ -62,6 +65,9 @@ final class ProductController extends Controller
 
     private function hydrate(Product $product): Product
     {
-        return $product->load('category.parent', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);
+        $product->load('category.parent', 'taxProfile')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true), 'modifierGroups as modifier_groups_count' => fn ($q) => $q->where('is_active', true)]);
+        app(AvailabilitySchedule::class)->decorate(new Collection([$product]), request()->user()->tenant()->value('timezone'));
+
+        return $product;
     }
 }

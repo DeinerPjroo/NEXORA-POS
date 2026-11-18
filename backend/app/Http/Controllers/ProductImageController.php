@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Catalog\AvailabilitySchedule;
 use App\Domains\Catalog\SaveProductImage;
 use App\Http\Requests\ProductImageRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,6 +24,7 @@ final class ProductImageController extends Controller
     public function store(ProductImageRequest $request, Product $product, SaveProductImage $service)
     {
         $product = $service->execute($product, $request->user(), $request->integer('revision'), $request->file('image'));
+        app(AvailabilitySchedule::class)->decorate(new Collection([$product]), $request->user()->tenant()->value('timezone'));
 
         return new ProductResource($product->load('category')->loadCount(['variants', 'variants as available_variants_count' => fn ($q) => $q->where('is_active', true)->where('is_available', true)]));
     }

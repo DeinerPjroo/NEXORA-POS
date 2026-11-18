@@ -1,6 +1,7 @@
 import { formatMoney } from '../../lib/money'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { PriceDetails } from '../orders/PriceDetails'
+import { AvailabilityDetails } from '../orders/AvailabilityDetails'
 import { useSession } from '../auth/SessionProvider'
 import { SaleAmounts } from './SaleAmounts'
 import { PaymentHistory } from './PaymentHistory'
@@ -51,6 +52,7 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
               </small>
               {item.notes && <p>{item.notes}</p>}
               <PriceDetails context={item.price_snapshot} currency={sale.currency} />
+              <AvailabilityDetails context={item.availability_snapshot} />
               <ModifierDetails
                 groups={item.modifiers_snapshot}
                 basePrice={item.base_unit_price}

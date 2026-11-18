@@ -28,7 +28,7 @@ final class SaleResource extends JsonResource
             'refund' => $this->whenLoaded('refund', fn () => $this->refund?->only('id', 'cash_session_id', 'amount', 'reason', 'reference', 'created_at')),
             'payments' => $this->whenLoaded('payments', fn () => $this->payments->map($payment)),
             'refunds' => $this->whenLoaded('refunds', fn () => $this->refunds->map(fn ($r) => $r->only('id', 'payment_id', 'cash_session_id', 'amount', 'reason', 'reference', 'created_at'))),
-            'items' => $this->whenLoaded('order', fn () => $this->order->items->map(fn ($item) => $item->only('id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes', 'base_unit_price', 'modifiers_snapshot', 'price_snapshot'))),
+            'items' => $this->whenLoaded('order', fn () => $this->order->items->map(fn ($item) => $item->only('id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes', 'base_unit_price', 'modifiers_snapshot', 'price_snapshot', 'availability_snapshot'))),
             'reference' => $this->whenLoaded('order', fn () => $this->order->reference),
         ];
     }

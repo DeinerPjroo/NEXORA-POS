@@ -18,7 +18,7 @@ final class Product extends Model
 
     protected function casts(): array
     {
-        return ['sale_price' => 'decimal:4', 'cost_price' => 'decimal:4', 'is_active' => 'boolean', 'is_available' => 'boolean', 'revision' => 'integer'];
+        return ['sale_price' => 'decimal:4', 'cost_price' => 'decimal:4', 'is_active' => 'boolean', 'is_available' => 'boolean', 'revision' => 'integer', 'availability_schedule_enabled' => 'boolean'];
     }
 
     public function category(): BelongsTo
@@ -44,6 +44,11 @@ final class Product extends Model
     public function contextPrices(): HasMany
     {
         return $this->hasMany(ProductContextPrice::class);
+    }
+
+    public function availabilityWindows(): HasMany
+    {
+        return $this->hasMany(ProductAvailabilityWindow::class);
     }
 
     public function scopeWithCatalogCounts(Builder $query): void

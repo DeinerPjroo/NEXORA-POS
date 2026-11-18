@@ -1,5 +1,6 @@
 import type { TaxProfile } from '../sales/tax-types'
 import type { PriceContext } from './context-price-types'
+import type { AvailabilityContext } from './availability-types'
 
 type CategoryBase = {
   id: number
@@ -34,6 +35,8 @@ export type Variant = {
   is_available: boolean
 }
 export type Product = {
+  availability_schedule_enabled?: boolean
+  availability_context?: AvailabilityContext
   price_context?: PriceContext | null
   tax_profile?: TaxProfile | null
   id: number
@@ -62,6 +65,7 @@ export function productStatus(product: Product) {
   if (product.tax_profile && !product.tax_profile.is_active) return 'Perfil de impuestos archivado'
   if (product.variants_count > 0 && product.available_variants_count === 0)
     return 'Variantes no disponibles'
+  if (product.availability_context?.allowed === false) return 'Fuera de horario'
   return 'Disponible'
 }
 export type CatalogPage<T> = {

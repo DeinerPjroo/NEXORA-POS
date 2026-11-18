@@ -1,5 +1,13 @@
 # Decisiones técnicas y operativas
 
+## DEC-015 · Ventanas locales y comprobación de disponibilidad (0.18)
+
+El producto habilita un horario heredado por presentaciones/preparaciones; inicialmente deshabilitado. Habilitado sin ventanas activas queda cerrado. Hasta 28 ventanas activas y archivadas paginadas; solapes se unen. Días ISO y minutos, inicio incluyente/final excluyente, cruce de medianoche explícito y vigencia aplicada al día local de inicio. Hora de pared en la zona actual de empresa: ambas ocurrencias de una hora repetida tienen igual elegibilidad; no se inventa una hora inexistente. Un día local puede durar 23/25 horas transcurridas.
+
+AvailabilitySchedule carga ventanas por lote y usa un instante común. Menú/ficha informan el estado consultado; OrderPlan vuelve a exigir disponibilidad al previsualizar/registrar. El preview no reserva horario. Cierre posterior no modifica replay ni preparación/cobro/devolución de pedidos guardados; snapshot nullable conserva instante UTC/zona/revisión/ventanas. Filtros manuales y flags de variantes siguen teniendo su significado anterior; sellable combina restricciones. Los tests Chromium usan siete ventanas de día completo y archivo administrativo, sin reloj especial de producción ni espera del minuto real. Contrato en AVAILABILITY_SCHEDULES.md.
+
+Los formularios capturan expected_timezone al abrir y el servidor lo compara bajo bloqueo Tenant antes de una escritura nueva. Un cambio de zona en otra sesión rechaza el formulario obsoleto; el replay registrado sigue devolviendo su resultado sin reejecutarlo. Las respuestas de mutaciones de fotografía también calculan elegibilidad actual, sin asumir que un horario esté abierto por faltar la evaluación.
+
 ## DEC-014 · Contexto explícito y revisión de borrador (0.17)
 
 Cada entidad vendible conserva su precio base y reglas propias: sucursal+canal > sucursal > canal > base. Una regla del padre no sustituye precios de variantes. Identidad estable, archivo/revisión/UUID y scopes generados STORED para unicidad real con IDs null, comprobados en SQLite y MariaDB. La consulta contextual devuelve un atributo separado y nunca sobreescribe sale_price del editor.

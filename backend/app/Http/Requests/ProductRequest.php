@@ -41,6 +41,7 @@ final class ProductRequest extends FormRequest
             'is_available' => ['required', 'boolean'],
             'revision' => [$this->isMethod('PUT') ? 'required' : 'prohibited', 'integer', 'min:1'],
             'tenant_id' => ['prohibited'],
+            'availability_schedule_enabled' => ['prohibited'],
         ];
     }
 

@@ -465,3 +465,15 @@ alter table `product_context_prices` add constraint `context_prices_branch_fk` f
 
 alter table `order_items` add `price_snapshot` json null;
 
+alter table `products` add `availability_schedule_enabled` tinyint(1) not null default '0';
+
+create table `product_availability_windows` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `name` varchar(80) not null, `weekday` tinyint unsigned not null, `start_time` varchar(5) not null, `end_time` varchar(5) not null, `ends_next_day` tinyint(1) not null default '0', `valid_from` date null, `valid_until` date null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_availability_windows` add constraint `product_availability_windows_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_availability_windows` add constraint `availability_windows_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_availability_windows` add index `availability_windows_active_index`(`tenant_id`, `product_id`, `is_active`);
+
+alter table `order_items` add `availability_snapshot` json null;
+

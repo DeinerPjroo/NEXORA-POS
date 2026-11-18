@@ -1,8 +1,12 @@
 # Operación de caja y pedidos (0.4–0.7)
 
+## Disponibilidad temporal desde 0.18
+
+Un producto puede limitar pedidos nuevos a ventanas semanales en zona empresarial, heredadas por sus variantes. Menú muestra el estado consultado y el servidor comprueba de nuevo la hora al previsualizar/registrar. Un cierre rechaza todo el pedido nuevo sin borrar el carrito; prepararlo, entregarlo, cobrarlo o devolverlo después de registrado conserva su comprobación histórica. No hay reserva de disponibilidad por añadir al carrito. AVAILABILITY_SCHEDULES.md documenta medianoche/vigencia/DST y snapshots.
+
 ## Precios contextuales desde 0.17
 
-El menú y las presentaciones usan sucursal/canal elegidos. Cambiar contexto con carrito consulta orders/preview sin registrar el pedido; diferencias visibles se revisan antes de aplicar y conservan cantidades, notas y opciones. El registro vuelve a exigir revisiones/precio actuales. Envío incierto conserva contexto y payload exactos; pedidos previos y cobro usan sus snapshots, sin recotización. Véase CONTEXT_PRICES.md; horarios todavía corresponden a C2.
+El menú y las presentaciones usan sucursal/canal elegidos. Cambiar contexto con carrito consulta orders/preview sin registrar el pedido; diferencias visibles se revisan antes de aplicar y conservan cantidades, notas y opciones. El registro vuelve a exigir revisiones/precio actuales. Envío incierto conserva contexto y payload exactos; pedidos previos y cobro usan sus snapshots, sin recotización. Véase CONTEXT_PRICES.md.
 
 ## Alcance del incremento
 

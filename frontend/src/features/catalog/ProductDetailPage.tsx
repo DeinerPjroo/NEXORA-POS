@@ -20,6 +20,9 @@ const ProductModifiersPanel = lazy(() =>
 const ContextPricesPanel = lazy(() =>
   import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
 )
+const AvailabilityPanel = lazy(() =>
+  import('./AvailabilityPanel').then((module) => ({ default: module.AvailabilityPanel })),
+)
 
 export function ProductDetailPage() {
   const { productId = '' } = useParams()
@@ -117,12 +120,15 @@ export function ProductDetailPage() {
             </div>
           </dl>
           <p className="muted small">
-            La disponibilidad se configura manualmente. El control automático de ingredientes e
-            inventario se incorporará posteriormente.
+            La disponibilidad combina el estado manual y los horarios configurados. El control
+            automático de ingredientes e inventario se incorporará posteriormente.
           </p>
         </section>
       </div>
       <VariantsPanel product={product} />
+      <Suspense fallback={<Loading />}>
+        <AvailabilityPanel product={product} />
+      </Suspense>
       <Suspense fallback={<Loading />}>
         <ContextPricesPanel product={product} />
       </Suspense>
