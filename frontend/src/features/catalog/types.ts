@@ -1,10 +1,24 @@
 import type { TaxProfile } from '../sales/tax-types'
 
-export type CategorySummary = { id: number; name: string; color: string; is_active: boolean }
+type CategoryBase = {
+  id: number
+  name: string
+  color: string
+  is_active: boolean
+  revision: number
+}
+export type CategorySummary = CategoryBase & {
+  parent_id: number | null
+  parent: CategoryBase | null
+  effective_active: boolean
+}
 export type Category = CategorySummary & {
   description: string | null
   products_count: number
-  revision: number
+  children_count: number
+}
+export function categoryPath(category: CategorySummary): string {
+  return category.parent ? `${category.parent.name} / ${category.name}` : category.name
 }
 export type Variant = {
   id: number
@@ -39,6 +53,7 @@ export type Product = {
 export function productStatus(product: Product) {
   if (!product.is_active) return 'Inactivo'
   if (!product.category.is_active) return 'Categoría inactiva'
+  if (!product.category.effective_active) return 'Categoría principal inactiva'
   if (!product.is_available) return 'Agotado'
   if (product.tax_profile && !product.tax_profile.is_active) return 'Perfil de impuestos archivado'
   if (product.variants_count > 0 && product.available_variants_count === 0)

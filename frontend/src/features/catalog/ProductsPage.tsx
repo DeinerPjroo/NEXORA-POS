@@ -10,7 +10,7 @@ import { ProductEditor } from './ProductEditor'
 import { CategoryPicker } from './CategoryPicker'
 import { CatalogEmpty, CatalogError, Pagination, useDebounce } from './catalog-ui'
 import type { CatalogPage, CategorySummary, Product } from './types'
-import { productStatus } from './types'
+import { categoryPath, productStatus } from './types'
 
 export function ProductsPage() {
   const can = useCan()
@@ -112,6 +112,9 @@ export function ProductsPage() {
           <option value="unavailable">Agotados</option>
         </select>
       </div>
+      {category && !category.parent_id && (
+        <p className="muted small">Esta categoría principal incluye sus subcategorías.</p>
+      )}
       {filtered && (
         <button className="text-button clear-filters" onClick={clearFilters}>
           Limpiar filtros
@@ -149,7 +152,7 @@ export function ProductsPage() {
                   <div className="product-card-body">
                     <span className="product-category">
                       <i style={{ background: product.category.color }} />
-                      {product.category.name}
+                      {categoryPath(product.category)}
                     </span>
                     <h2>{product.name}</h2>
                     <p className="product-description">

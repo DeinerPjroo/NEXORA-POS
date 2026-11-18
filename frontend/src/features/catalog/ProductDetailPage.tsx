@@ -10,7 +10,7 @@ import { CatalogError } from './catalog-ui'
 import { ProductEditor } from './ProductEditor'
 import { ProductImagePanel } from './ProductImagePanel'
 import { VariantsPanel } from './VariantsPanel'
-import { productStatus } from './types'
+import { categoryPath, productStatus } from './types'
 import type { Product } from './types'
 import { taxSummary } from '../sales/tax-types'
 
@@ -67,7 +67,7 @@ export function ProductDetailPage() {
           <span className="product-category detail-category">
             <Tag size={15} />
             <i style={{ background: product.category.color }} />
-            {product.category.name}
+            {categoryPath(product.category)}
           </span>
           <p className="detail-description">
             {product.description ||

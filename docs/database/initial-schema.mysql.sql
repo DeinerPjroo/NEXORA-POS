@@ -419,3 +419,9 @@ alter table `payment_reviews` add constraint `payment_reviews_sale_fk` foreign k
 
 alter table `payment_reviews` add constraint `payment_reviews_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `categories` add `parent_id` bigint unsigned null;
+
+alter table `categories` add constraint `categories_parent_fk` foreign key (`tenant_id`, `parent_id`) references `categories` (`tenant_id`, `id`) on delete restrict;
+
+alter table `categories` add index `categories_tenant_id_parent_id_name_index`(`tenant_id`, `parent_id`, `name`);
+

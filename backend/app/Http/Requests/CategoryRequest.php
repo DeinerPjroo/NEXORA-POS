@@ -23,6 +23,8 @@ final class CategoryRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:500'],
             'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'is_active' => ['required', 'boolean'],
+            'parent_id' => ['sometimes', 'nullable', 'integer', Rule::exists('categories', 'id')->where('tenant_id', app(TenantContext::class)->id())],
+            'parent_revision' => [Rule::requiredIf(fn () => filled($this->input('parent_id'))), 'nullable', 'integer', 'min:1'],
             'revision' => [$this->isMethod('PUT') ? 'required' : 'prohibited', 'integer', 'min:1'],
             'tenant_id' => ['prohibited'],
         ];

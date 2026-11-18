@@ -16,9 +16,9 @@ final class SaveCatalogRecord
     public function execute(array $data, User $actor, Product|Category $record): Product|Category
     {
         return DB::transaction(function () use ($data, $actor, $record) {
+            $company = Tenant::whereKey($actor->tenant_id)->lockForUpdate()->firstOrFail();
             if ($record instanceof Product) {
                 // El cambio de moneda comparte el mismo bloqueo; nunca reinterpretar precios existentes.
-                $company = Tenant::whereKey($actor->tenant_id)->lockForUpdate()->firstOrFail();
                 abort_if($company->currency !== $data['currency'], 409, 'La moneda de la empresa cambió. Recarga el espacio antes de guardar precios.');
                 CatalogIdentifiers::assertAvailable($data['sku'], $data['barcode'] ?? $record->barcode, $record->exists ? $record->id : null);
             }
@@ -33,7 +33,10 @@ final class SaveCatalogRecord
                 $profile = TaxProfile::whereKey($data['tax_profile_id'])->lockForUpdate()->firstOrFail();
                 abort_unless($profile->is_active && $profile->revision === (int) $data['tax_profile_revision'], 409, 'El perfil de impuestos cambió o está archivado. Revisa la selección.');
             }
-            unset($data['revision'], $data['currency'], $data['tax_profile_revision']);
+            if ($record instanceof Category) {
+                app(CategoryHierarchy::class)->validate($record, $data);
+            }
+            unset($data['revision'], $data['currency'], $data['tax_profile_revision'], $data['parent_revision']);
             $record->fill($data)->save();
             $kind = $record instanceof Product ? 'product' : 'category';
             Audit::record('catalog.'.$kind.'.'.($existing ? 'updated' : 'created'), ($kind === 'product' ? 'Producto' : 'Categoría').' «'.$record->name.'» '.($existing ? 'actualizado' : 'creado').'.', $actor, ['id' => $record->id, 'revision' => $record->revision ?? 1]);

@@ -17,8 +17,8 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.1-F1 | COMPLETED | Historial conectado, filtros/zonas/netos y resumen de página/moneda; migración 000013 aplicada, 165/1645 SQLite/MariaDB, 16 Playwright (13.2 min), build/formato y capturas correctos | 2.1-E2 |
 | 2.1-F2 | COMPLETED | Revisión manual conectada, permiso/historial/versiones/obsolescencia; migración 000014 aplicada, 175/1818 SQLite/MariaDB, 17 Playwright (10.4 min), build/formato y capturas correctos | 2.1-F1 |
 | 2.2 | IN_PROGRESS | Catálogo avanzado subdividido en A/B/C1/C2/D/E/F; criterios y dependencias en CATALOG_ADVANCED_PLAN.md | 2.1, catálogo actual |
-| 2.2-A | IN_PROGRESS | Subcategorías de dos niveles, padre/FK/revisión, filtros/selectores y disponibilidad heredada integrada en pedidos; criterios en CATALOG_ADVANCED_PLAN.md | 2.1-F2 |
-| 2.2-B | PENDING | Grupos/opciones de modificadores, adicionales/exclusiones y snapshots/precios por línea | 2.2-A |
+| 2.2-A | COMPLETED | Subcategorías conectadas, padre/FK/revisión y disponibilidad heredada; migración 000015 aplicada, 182/1913 SQLite/MariaDB, 18 Playwright (11.5 min), build/formato y capturas correctos | 2.1-F2 |
+| 2.2-B | IN_PROGRESS | Grupos/opciones de modificadores, adicionales/exclusiones y snapshots/precios por línea; criterios en MODIFIERS_PLAN.md | 2.2-A |
 | 2.2-C1 | PENDING | Precios explícitos por sucursal/canal, precedencia y snapshots de contexto | 2.2-B |
 | 2.2-C2 | PENDING | Horarios/zonas/vigencia y comprobación al pedir, sin reinterpretar historial | 2.2-C1 |
 | 2.2-D | PENDING | Combos con composición/selección, asignación de precio e impuestos y snapshots | 2.2-C2 |

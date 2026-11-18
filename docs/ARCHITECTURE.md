@@ -1,5 +1,9 @@
 # Arquitectura técnica
 
+## Jerarquía acotada de catálogo (0.15)
+
+CategoryHierarchy valida dos niveles dentro del bloqueo de empresa compartido por SaveCatalogRecord y CreateOrder. Category::isEffectivelyActive centraliza herencia para consulta y toma de pedidos; ProductResource y el comando usan la misma regla. Padre con FK compuesta y revisión elegida, sin cascadas de estado ni reinterpretar snapshots anteriores. SUBCATEGORIES.md define API, filtros y límites.
+
 ## Revisión humana versionada (0.14)
 
 ReviewPayment serializa por empresa/venta dentro de IdempotentOperation. Compara sale_revision, última versión de revisión y neto esperado; PaymentReview conserva una declaración append-only y auditoría, sin cambiar Payment/Sale/CashSession. sales.reconcile se autoriza antes del replay y sales.view permite consultar las declaraciones paginadas.

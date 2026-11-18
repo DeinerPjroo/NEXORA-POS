@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 0.15.0 · 2026-11-18
+
+- Categorías principales/subcategorías con FK compuesta, revisión de padre y bloqueo por empresa; impedir ciclos/tercer nivel o transformar en hija una raíz con subcategorías.
+- Selectores de padre paginados con búsqueda, rutas Principal/Subcategoría en catálogo y menú, filtros por nivel/principal e inclusión de hijas al filtrar productos por raíz.
+- Disponibilidad efectiva heredada sin cambiar flags de hijas/productos. Pedidos nuevos verifican padre activo; pedidos anteriores y precios/snapshots se conservan.
+- Recurso de categoría con campos seleccionados y respuestas de creación/edición compatibles. Paginación/cierre/limpiar selección declaran botones auxiliares para formularios con diálogos.
+- Migración 000015 incremental y contrato SUBCATEGORIES.md. No añade jerarquía recursiva arbitraria ni implementa modificadores/combos/promociones.
+
 ## 0.14.0 · 2026-11-18
 
 - Revisión humana no efectiva con estados revisado, diferencia y pendiente, importe observado, referencia/motivo y confirmación explícita del operador.

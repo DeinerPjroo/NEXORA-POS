@@ -393,3 +393,19 @@
     font-size: 21px;
   }
 }
+.catalog-hierarchy-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+.category-choice:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.category-picker-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}

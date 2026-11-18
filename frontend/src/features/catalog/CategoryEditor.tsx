@@ -1,8 +1,10 @@
 import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api, ApiError } from '../../lib/api'
 import { ErrorNotice, Field, Modal, Submit, useToast } from '../../components/ui'
-import type { Category } from './types'
+import type { Category, CategorySummary } from './types'
+import { CategoryPicker } from './CategoryPicker'
 
 export function CategoryEditor({
   category,
@@ -13,6 +15,16 @@ export function CategoryEditor({
 }) {
   const client = useQueryClient()
   const toast = useToast()
+  const [parent, setParent] = useState<CategorySummary | null>(() =>
+    category?.parent
+      ? {
+          ...category.parent,
+          parent_id: null,
+          parent: null,
+          effective_active: category.parent.is_active,
+        }
+      : null,
+  )
   const mutation = useMutation({
     mutationFn: (body: unknown) =>
       api(`categories${category ? `/${category.id}` : ''}`, {
@@ -21,7 +33,7 @@ export function CategoryEditor({
       }),
     onSuccess: async () => {
       await Promise.all(
-        ['categories', 'products', 'overview'].map((key) =>
+        ['categories', 'products', 'product', 'overview'].map((key) =>
           client.invalidateQueries({ queryKey: [key] }),
         ),
       )
@@ -35,6 +47,8 @@ export function CategoryEditor({
     mutation.mutate({
       ...Object.fromEntries(data),
       is_active: data.get('is_active') === 'on',
+      parent_id: parent?.id ?? null,
+      ...(parent ? { parent_revision: parent.revision } : {}),
       ...(category ? { revision: category.revision } : {}),
     })
   }
@@ -56,6 +70,22 @@ export function CategoryEditor({
             placeholder="Ej. Pizzas artesanales"
           />
         </Field>
+        <div className="field">
+          <span className="field-label">Categoría principal (opcional)</span>
+          <CategoryPicker
+            value={parent}
+            onChange={setParent}
+            rootsOnly
+            allowAll
+            excludeId={category?.id}
+            disabled={!!category?.children_count}
+          />
+        </div>
+        <p className="muted small">
+          {category?.children_count
+            ? 'Esta categoría tiene subcategorías. Reasígnalas antes de convertirla en subcategoría.'
+            : 'Organiza tu menú en categorías principales y subcategorías. Una categoría principal inactiva también deshabilita sus subcategorías para nuevos pedidos.'}
+        </p>
         <Field label="Descripción de la categoría">
           <textarea
             name="description"

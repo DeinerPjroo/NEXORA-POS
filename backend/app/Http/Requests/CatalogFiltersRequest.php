@@ -17,6 +17,8 @@ final class CatalogFiltersRequest extends FormRequest
         return [
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
             'category_id' => ['sometimes', 'integer', 'min:1'],
+            'parent_id' => ['sometimes', 'integer', Rule::exists('categories', 'id')->where('tenant_id', $this->user()->tenant_id)],
+            'level' => ['sometimes', Rule::in(['root', 'child'])],
             'status' => ['sometimes', Rule::in(['active', 'inactive'])],
             'availability' => ['sometimes', Rule::in(['available', 'unavailable'])],
             'page' => ['sometimes', 'integer', 'min:1'],

@@ -15,10 +15,14 @@ export function CategoriesPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
+  const [level, setLevel] = useState('')
+  const [parent, setParent] = useState<Category | null>(null)
   const text = useDebounce(search)
   const params = new URLSearchParams({ page: String(page), per_page: '12' })
   if (text) params.set('search', text)
   if (status) params.set('status', status)
+  if (level) params.set('level', level)
+  if (parent) params.set('parent_id', String(parent.id))
   const query = useQuery({
     queryKey: ['categories', 'list', params.toString()],
     queryFn: ({ signal }) => api<CatalogPage<Category>>(`categories?${params}`, { signal }),
@@ -74,7 +78,36 @@ export function CategoriesPage() {
           <option value="active">Activas</option>
           <option value="inactive">Inactivas</option>
         </select>
+        <select
+          aria-label="Nivel de categorías"
+          value={level}
+          onChange={(event) => {
+            setLevel(event.target.value)
+            setParent(null)
+            setPage(1)
+          }}
+        >
+          <option value="">Todos los niveles</option>
+          <option value="root">Principales</option>
+          <option value="child">Subcategorías</option>
+        </select>
       </div>
+      {parent && (
+        <p className="catalog-hierarchy-filter">
+          Subcategorías de <strong>{parent.name}</strong>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              setParent(null)
+              setLevel('')
+              setPage(1)
+            }}
+          >
+            Ver todas las categorías
+          </button>
+        </p>
+      )}
       {query.error ? (
         <CatalogError error={query.error} onRetry={() => void query.refetch()} />
       ) : query.isPending ? (
@@ -92,18 +125,44 @@ export function CategoriesPage() {
                     >
                       <Tags size={24} />
                     </span>
-                    <span className={`pill ${category.is_active ? 'green' : 'neutral'}`}>
-                      {category.is_active ? 'Activa' : 'Inactiva'}
+                    <span className={`pill ${category.effective_active ? 'green' : 'neutral'}`}>
+                      {!category.is_active
+                        ? 'Inactiva'
+                        : category.effective_active
+                          ? 'Activa'
+                          : 'Principal inactiva'}
                     </span>
                   </div>
                   <h2>{category.name}</h2>
+                  <small className="muted">
+                    {category.parent ? `En ${category.parent.name}` : 'Categoría principal'}
+                  </small>
                   <p>
                     {category.description || 'Cada producto cuenta una historia. Agrúpalos aquí.'}
                   </p>
+                  {!!category.children_count && (
+                    <button
+                      type="button"
+                      className="text-button"
+                      aria-label={`Ver subcategorías de ${category.name}`}
+                      onClick={() => {
+                        setParent(category)
+                        setLevel('child')
+                        setSearch('')
+                        setPage(1)
+                      }}
+                    >
+                      {category.children_count}{' '}
+                      {category.children_count === 1 ? 'subcategoría' : 'subcategorías'}
+                    </button>
+                  )}
                   <div className="category-card-footer">
                     <span>
                       <Package size={14} />
-                      {category.products_count} productos
+                      {category.products_count}{' '}
+                      {category.products_count === 1 ? 'producto' : 'productos'}
+                      {!!category.children_count &&
+                        (category.products_count === 1 ? ' directo' : ' directos')}
                     </span>
                     {can('catalog.manage') && (
                       <button
@@ -120,7 +179,7 @@ export function CategoriesPage() {
               ))}
             </div>
           ) : (
-            <CatalogEmpty filtered={Boolean(text || status)} />
+            <CatalogEmpty filtered={Boolean(text || status || level || parent)} />
           )}
           <Pagination meta={query.data.meta} onPage={setPage} pending={query.isFetching} />
         </>

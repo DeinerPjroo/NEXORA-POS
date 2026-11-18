@@ -40,6 +40,7 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Subcategorías 0.15: CategoryHierarchy admite raíz/hija, FK tenant/parent, revisión de padre elegido y bloqueo Tenant compartido con CreateOrder. No ciclos/tercer nivel ni convertir raíz con hijos en hija. Category::isEffectivelyActive deriva estado propio+padre sin mutar descendientes; filtrar productos por raíz incluye hijas y mantiene snapshots previos. SUBCATEGORIES.md define contrato y compatibilidad parent_id omitido/null.
 - Revisión 0.14: ReviewPayment crea PaymentReview append-only con sales.reconcile antes del replay, UUID, revisión de venta/manual/neto y auditoría transaccional. Solo non_cash; diferencia observada − neto BCMath, declaración humana explícita, sin cambiar venta/pago/caja. PaymentReviewState deriva stale tras cambios financieros de venta; UUID antiguo no revalida nuevos datos. PAYMENT_REVIEWS.md define estados y alcance; no anunciar confirmación de banco/pasarela.
 
 - Autorización vigente: avanzar secuencialmente por todos los incrementos pendientes hasta una primera versión integral. No preguntar al terminar cada módulo. Conservar avances locales y remotos; no reiniciar fases ni duplicar dominios.

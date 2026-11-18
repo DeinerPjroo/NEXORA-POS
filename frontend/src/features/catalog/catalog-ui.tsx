@@ -26,6 +26,7 @@ export function Pagination({
       <span>{meta.total ? `${meta.from}–${meta.to} de ${meta.total}` : 'Sin registros'}</span>
       <div>
         <button
+          type="button"
           className="icon-button"
           aria-label="Página anterior"
           disabled={meta.current_page <= 1 || pending}
@@ -37,6 +38,7 @@ export function Pagination({
           Página {meta.current_page} de {meta.last_page}
         </span>
         <button
+          type="button"
           className="icon-button"
           aria-label="Página siguiente"
           disabled={meta.current_page >= meta.last_page || pending}

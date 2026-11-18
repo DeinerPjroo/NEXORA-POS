@@ -67,7 +67,7 @@ test('catálogo: crear, buscar, editar, agotar y conservar al desactivar una cat
   await page.getByLabel('Categoría activa', { exact: true }).uncheck()
   await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
   await expect(page.locator('.category-card').getByText('Inactiva', { exact: true })).toBeVisible()
-  await expect(page.getByText('1 productos', { exact: true })).toBeVisible()
+  await expect(page.getByText('1 producto', { exact: true })).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: 'Abrir menú' }).click()
   await page.getByRole('navigation').getByRole('link', { name: 'Productos', exact: true }).click()

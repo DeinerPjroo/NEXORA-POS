@@ -5,15 +5,22 @@ import { api } from '../../lib/api'
 import { Loading, Modal } from '../../components/ui'
 import { CatalogError, Pagination, useDebounce } from './catalog-ui'
 import type { CatalogPage, Category, CategorySummary } from './types'
+import { categoryPath } from './types'
 
 export function CategoryPicker({
   value,
   onChange,
   allowAll = false,
+  rootsOnly = false,
+  excludeId,
+  disabled = false,
 }: {
   value: CategorySummary | null
   onChange: (category: CategorySummary | null) => void
   allowAll?: boolean
+  rootsOnly?: boolean
+  excludeId?: number
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -21,17 +28,28 @@ export function CategoryPicker({
       <button
         type="button"
         className="category-picker-trigger"
-        aria-label={`Categoría: ${value?.name ?? (allowAll ? 'Todas' : 'Elegir categoría')}`}
+        aria-label={`${rootsOnly ? 'Categoría principal' : 'Categoría'}: ${value ? categoryPath(value) : rootsOnly ? 'Sin principal' : allowAll ? 'Todas' : 'Elegir categoría'}`}
+        disabled={disabled}
         onClick={() => setOpen(true)}
       >
         <Tag size={16} />
-        <span>{value?.name ?? (allowAll ? 'Todas las categorías' : 'Elegir categoría')}</span>
+        <span>
+          {value
+            ? categoryPath(value)
+            : rootsOnly
+              ? 'Sin categoría principal'
+              : allowAll
+                ? 'Todas las categorías'
+                : 'Elegir categoría'}
+        </span>
         <ChevronDown size={15} />
       </button>
       {open && (
         <CategoryChoices
           value={value}
           allowAll={allowAll}
+          rootsOnly={rootsOnly}
+          excludeId={excludeId}
           onClose={() => setOpen(false)}
           onChange={(category) => {
             onChange(category)
@@ -48,25 +66,32 @@ function CategoryChoices({
   onChange,
   allowAll,
   onClose,
+  rootsOnly,
+  excludeId,
 }: {
   value: CategorySummary | null
   onChange: (category: CategorySummary | null) => void
   allowAll: boolean
   onClose: () => void
+  rootsOnly: boolean
+  excludeId?: number
 }) {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const queryText = useDebounce(search)
   const query = useQuery({
-    queryKey: ['categories', 'picker', queryText, page],
+    queryKey: ['categories', 'picker', rootsOnly, queryText, page],
     queryFn: ({ signal }) =>
       api<CatalogPage<Category>>(
-        `categories?${new URLSearchParams({ search: queryText, page: String(page), per_page: '10' })}`,
+        `categories?${new URLSearchParams({ search: queryText, page: String(page), per_page: '10', ...(rootsOnly ? { level: 'root' } : {}) })}`,
         { signal },
       ),
   })
   return (
-    <Modal title="Elige una categoría" onClose={onClose}>
+    <Modal
+      title={rootsOnly ? 'Elige una categoría principal' : 'Elige una categoría'}
+      onClose={onClose}
+    >
       <div className="search-input picker-search">
         <Search size={17} />
         <input
@@ -81,9 +106,9 @@ function CategoryChoices({
         />
       </div>
       {allowAll && (
-        <button className="category-choice" onClick={() => onChange(null)}>
+        <button type="button" className="category-choice" onClick={() => onChange(null)}>
           <Tag size={17} />
-          <span>Todas las categorías</span>
+          <span>{rootsOnly ? 'Sin categoría principal' : 'Todas las categorías'}</span>
           {!value && <Check size={17} />}
         </button>
       )}
@@ -101,11 +126,14 @@ function CategoryChoices({
                 type="button"
                 className="category-choice"
                 key={category.id}
+                disabled={category.id === excludeId}
                 onClick={() => onChange(category)}
               >
                 <i style={{ background: category.color }} />
-                <span>{category.name}</span>
-                {!category.is_active && <small>Inactiva</small>}
+                <span>{categoryPath(category)}</span>
+                {!category.effective_active && (
+                  <small>{category.is_active ? 'Principal inactiva' : 'Inactiva'}</small>
+                )}
                 {value?.id === category.id && <Check size={17} />}
               </button>
             ))}

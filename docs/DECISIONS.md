@@ -1,5 +1,11 @@
 # Decisiones técnicas y operativas
 
+## DEC-012 · Subcategorías con dos niveles (0.15)
+
+Se añade padre nullable sobre categories existentes y se conservan unicidad de nombres por empresa, revisiones y productos asignados. Dos niveles explícitos permiten prevenir ciclos y consultar ancestro directo sin introducir recursión no requerida. Una raíz con hijos no puede convertirse en hija hasta reasignarlos; una hija sí puede volver a raíz. Elegir padre requiere revisión; omitir parent_id conserva la relación para clientes anteriores.
+
+La disponibilidad efectiva se deriva sin mutar flags ni revisiones de descendientes. Guardar categorías comparte bloqueo Tenant con CreateOrder para serializar archivado/reasignaciones y toma de pedidos. El filtro por raíz incluye sus hijas, mientras los conteos de tarjeta son directos y el recurso explica estado propio/efectivo. Los pedidos anteriores permanecen históricos, incluidos sus replays idempotentes.
+
 ## DEC-011 · Declaraciones humanas separadas (0.14)
 
 Conciliar manualmente registra una declaración del operador, sin alterar el pago ni simular respuesta de proveedor. Requiere importe observado escrito por la persona, referencia, confirmación y permiso independiente; diferencia/pending exigen motivo. Historial append-only con versión por pago, revisión financiera/neto observado y auditoría en la misma transacción idempotente.

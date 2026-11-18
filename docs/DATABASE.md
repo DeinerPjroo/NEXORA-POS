@@ -18,6 +18,7 @@ erDiagram
     USERS o|--o{ AUDIT_LOGS : ejecuta
     USERS ||--o{ SESSIONS : inicia
     TENANTS ||--o{ CATEGORIES : organiza
+    CATEGORIES o|--o{ CATEGORIES : subdivide
     TENANTS ||--o{ PRODUCTS : posee
     TENANTS ||--o{ TAX_PROFILES : configura
     TAX_PROFILES o|--o{ PRODUCTS : asigna
@@ -51,7 +52,7 @@ erDiagram
 | permissions | Catálogo global de acciones implementadas, sin tenant; sembrado mediante DatabaseSeeder. |
 | role_permission | Relación N:M con PK `(role_id,permission_id)`, tenant obligatorio y FK compuesta al rol. |
 | branches | Empresa, código único por empresa, datos de contacto, estado activo. No se borran por API. |
-| categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id). |
+| categories | Nombre único por empresa, descripción, color, estado y revisión. Único (tenant_id,id); parent_id nullable con FK tenant/parent e índice tenant/parent/name desde 0.15. Dos niveles validados bajo bloqueo de empresa; disponibilidad efectiva derivada, sin cascadas de flags. |
 | products | Categoría con FK compuesta, SKU y barcode únicos por empresa (barcode nullable), precio/costo DECIMAL(19,4), estado, disponibilidad y revisión. |
 | product_variants | FK compuesta (tenant_id,product_id) al producto; SKU y barcode únicos por empresa, nombre único por producto, precio/costo DECIMAL(19,4), estados y timestamps. |
 | cash_registers | Sucursal con FK compuesta, código único por sucursal y active_session_id que referencia una sesión de esa misma caja mediante FK (tenant_id,id,active_session_id). |

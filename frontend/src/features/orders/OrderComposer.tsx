@@ -20,6 +20,7 @@ import { useCan, useSession } from '../auth/SessionProvider'
 import { CategoryPicker } from '../catalog/CategoryPicker'
 import { CatalogEmpty, CatalogError, Pagination, useDebounce } from '../catalog/catalog-ui'
 import type { CatalogPage, CategorySummary, Product, Variant } from '../catalog/types'
+import { categoryPath } from '../catalog/types'
 import { OperationalBranchPicker, useOperationContext } from '../operations/OperationalBranchPicker'
 import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
@@ -154,6 +155,9 @@ export function OrderComposer() {
               allowAll
             />
           </div>
+          {category && !category.parent_id && (
+            <p className="muted small">Esta categoría principal incluye sus subcategorías.</p>
+          )}
           {products.error ? (
             <CatalogError error={products.error} onRetry={() => void products.refetch()} />
           ) : products.isPending ? (
@@ -183,7 +187,7 @@ export function OrderComposer() {
                       <small>
                         {product.variants_count
                           ? `${product.available_variants_count} presentaciones disponibles`
-                          : product.category.name}
+                          : categoryPath(product.category)}
                       </small>
                       <span>
                         {product.variants_count

@@ -103,10 +103,10 @@ export function ProductEditor({
           <span className="field-label">Categoría</span>
           <CategoryPicker value={category} onChange={setCategory} />
         </div>
-        {category && !category.is_active && (
+        {category && !category.effective_active && (
           <p className="muted small">
-            Esta categoría está inactiva. El producto se conservará sin quedar habilitado para
-            pedidos.
+            Esta categoría o su principal está inactiva. El producto se conservará sin quedar
+            habilitado para pedidos.
           </p>
         )}
         <Field label="Descripción del producto">
