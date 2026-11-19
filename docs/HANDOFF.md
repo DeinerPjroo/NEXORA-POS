@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Mesas: apertura desde mesa elegida ya no muestra casillas/listado; initialTable queda fija y se confirma número de personas/capacidad. La mesa se ocupa completa aunque sobren sillas (regla permanente AGENTS); unión/separación solo mediante editar atención. TypeScript y pos-tables1 aprobados42.0s, comprobando2 personas/4 plazas, exclusión de disponibles y rechazo409 a segunda atención. Sin backend/migraciones. Test histórico de unión adaptado al paso explícito, sin repetir su caso completo.
+
 Mesas digitales: OccupancyPanel digital opcional activado en PosTablesPanel/TerminalTablesPage, botón de mesa completo con símbolo/número, estado y capacidad/personas; búsqueda y filtros con contadores reales, refresh existente, foco/hover y reduced-motion. Permanece dentro de Pedido en curso. Admin conserva vista anterior; sin backend/datos financieros modificados. Build y Chromium pos-tables1 aprobado46.1s (filtros/búsqueda/ocupación/selección/conservación).
 
 Última corrección del usuario: Mesas abre DENTRO de Pedido en curso, reemplazando visualmente su contenido, no un modal sobre comidas. PosTablesPanel hermano del formulario conserva datos sin forms anidados; Volver restaura comanda. Columna pedido ampliada y comidas/teclado estrechados. Build y Chromium pos-tables1 aprobado42.9s (límites de columna, acceso a productos, cantidad/subtotal y asociación real). Cliente/Nota regresan a detalles. Sin nuevas suites generales ni backend.

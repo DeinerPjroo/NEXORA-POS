@@ -71,11 +71,22 @@ test('Mesas: ocupar, unir, separar, asignar mesero, POS, traslado, cobro y liber
   ).data
   await page.goto('/salones/' + room.id)
   await page.getByRole('button', { name: 'Ocupar Mesa 1', exact: true }).click()
+  await expect(page.getByRole('dialog').getByRole('checkbox')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Guardar atención', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Ocupar mesas', exact: true })).toHaveCount(0)
+  const opened = (await readApi<{ data: DiningSession[] }>(page, 'dining-sessions?status=open'))
+    .data[0]
+  await page.goto('/salones/atenciones/' + opened.id)
+  await page.getByRole('button', { name: 'Unir, separar o asignar mesero', exact: true }).click()
   await page.getByRole('checkbox', { name: /Mesa 2/ }).check()
   await page.getByLabel('Personas en la atención', { exact: true }).fill('6')
   await page.getByLabel('Mesero asignado', { exact: true }).selectOption({ label: 'Ana Pérez' })
   await page.getByRole('button', { name: 'Guardar atención', exact: true }).click()
   await expect(page.getByRole('dialog', { name: 'Ocupar mesas', exact: true })).toHaveCount(0)
+  await expect(
+    page.getByRole('dialog', { name: 'Editar atención #' + opened.id, exact: true }),
+  ).toHaveCount(0)
+  await page.goto('/salones/' + room.id)
   await expect(page.getByRole('link', { name: /Ver atención #/ })).toHaveCount(2)
   mkdirSync('../docs/screenshots', { recursive: true })
   await page.locator('.dining-occupancy-grid').screenshot({

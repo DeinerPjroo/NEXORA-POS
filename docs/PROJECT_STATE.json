@@ -4,9 +4,9 @@
   "reference_date": "2026-11-19",
   "version": "0.33.0",
   "phase": 3,
-  "module": "Mesas: panel digital táctil",
+  "module": "Mesas: selección directa y ocupación exclusiva",
   "status": "COMPLETED",
-  "active_task": "DIGITAL-TABLES",
+  "active_task": "SINGLE-TABLE-SEATING",
   "last_completed_task": "1-OPS-A/B/C/D núcleo local; backup/restauración MySQL8.4 CI6/39; verificación de último ajuste en rama antes de integrar",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Mesas digitales en POS y Terminal: botón completo con símbolo/número de mesa, colores y texto Libre/Ocupada, capacidad/personas reales, filtros Todas/Libres/Ocupadas con contadores y búsqueda local. Actualización reutiliza query15s existente; no simula conexión en tiempo real ni estados monetarios/reservas. Admin mantiene presentación anterior. Build/TypeScript y Chromium pos-tables1 aprobado46.1s: filtros, búsqueda, contadores antes/después de ocupar, selección y conservación del pedido/asociación/subtotal. Sin backend, migraciones ni suites completas.",
+  "working_verification": "SessionEditor al abrir mesa elegida fija initialTable, omite lista/casillas y consulta innecesaria de otras mesas; confirma mesa/capacidad y limita personas a su capacidad. Unir/separar se conserva en edición explícita de atención. Backend ya bloquea mesa completa independientemente de sillas libres: sin cambios de servidor. TypeScript y Chromium pos-tables1 aprobado42.0s: sin casillas, mesa elegida,2 personas en4 plazas, no disponible y segundo intento409; conserva pedido y asociación. Prueba histórica de unión actualizada al flujo explícito, sin repetir caso completo. AGENTS registra regla permanente.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

@@ -23,6 +23,7 @@ export function SessionEditor({
   onSaved?: (session: DiningSession) => void
 }) {
   const client = useQueryClient()
+  const fixedTable = session ? undefined : initialTable
   const [page, setPage] = useState(1)
   const [staffPage, setStaffPage] = useState(1)
   const [selected, setSelected] = useState<TableChoice[]>(() =>
@@ -41,6 +42,7 @@ export function SessionEditor({
   )
   const [waiter, setWaiter] = useState(session?.waiter_id ? String(session.waiter_id) : '')
   const choices = useQuery({
+    enabled: !fixedTable,
     queryKey: ['dining-available', branchId, session?.id, page],
     queryFn: ({ signal }) =>
       api<CatalogPage<TableChoice>>(
@@ -81,7 +83,10 @@ export function SessionEditor({
     const data = new FormData(e.currentTarget)
     operation.send({
       ...(session ? { revision: session.revision } : { branch_id: branchId }),
-      tables: selected.map((t) => ({ id: t.id, revision: t.revision })),
+      tables: (fixedTable ? [fixedTable] : selected).map((t) => ({
+        id: t.id,
+        revision: t.revision,
+      })),
       guest_count: Number(data.get('guest_count')),
       waiter_id: waiter ? Number(waiter) : null,
       notes: data.get('notes'),
@@ -104,44 +109,61 @@ export function SessionEditor({
               name="guest_count"
               type="number"
               min={1}
-              max={100}
+              max={fixedTable ? Math.min(100, fixedTable.capacity) : 100}
               required
-              defaultValue={session?.guest_count ?? 2}
+              defaultValue={session?.guest_count ?? Math.min(2, fixedTable?.capacity ?? 2)}
             />
           </Field>
-          <p className="muted">
-            Seleccionadas: {selected.map((t) => t.name).join(', ') || 'ninguna'} · Capacidad{' '}
-            {selected.reduce((sum, t) => sum + t.capacity, 0)}. Marca varias mesas para unirlas;
-            desmárcalas para separarlas.
-          </p>
-          {selected
-            .filter((t) => !choices.data?.data.some((c) => c.id === t.id))
-            .map((t) => (
-              <label className="checkbox-line" key={t.id}>
-                <input
-                  type="checkbox"
-                  checked
-                  onChange={() => setSelected((values) => values.filter((v) => v.id !== t.id))}
+          {fixedTable && (
+            <div className="notice">
+              <strong>Mesa seleccionada: {fixedTable.name}</strong>
+              <p>
+                Capacidad: {fixedTable.capacity} personas. La mesa completa queda ocupada para esta
+                atención, aunque sobren sillas.
+              </p>
+            </div>
+          )}
+          {!fixedTable && (
+            <>
+              <p className="muted">
+                Seleccionadas: {selected.map((t) => t.name).join(', ') || 'ninguna'} · Capacidad{' '}
+                {selected.reduce((sum, t) => sum + t.capacity, 0)}. Marca varias mesas para unirlas;
+                desmárcalas para separarlas.
+              </p>
+              {selected
+                .filter((t) => !choices.data?.data.some((c) => c.id === t.id))
+                .map((t) => (
+                  <label className="checkbox-line" key={t.id}>
+                    <input
+                      type="checkbox"
+                      checked
+                      onChange={() => setSelected((values) => values.filter((v) => v.id !== t.id))}
+                    />
+                    {t.name} · {t.capacity} plazas
+                  </label>
+                ))}
+              {choices.data?.data.map((t) => (
+                <label className="checkbox-line" key={t.id}>
+                  <input
+                    type="checkbox"
+                    checked={selected.some((s) => s.id === t.id)}
+                    onChange={(e) =>
+                      setSelected((values) =>
+                        e.target.checked ? [...values, t] : values.filter((v) => v.id !== t.id),
+                      )
+                    }
+                  />
+                  {t.name} · {t.room_name} · {t.capacity} plazas
+                </label>
+              ))}
+              {choices.data && (
+                <Pagination
+                  meta={choices.data.meta}
+                  onPage={setPage}
+                  pending={choices.isFetching}
                 />
-                {t.name} · {t.capacity} plazas
-              </label>
-            ))}
-          {choices.data?.data.map((t) => (
-            <label className="checkbox-line" key={t.id}>
-              <input
-                type="checkbox"
-                checked={selected.some((s) => s.id === t.id)}
-                onChange={(e) =>
-                  setSelected((values) =>
-                    e.target.checked ? [...values, t] : values.filter((v) => v.id !== t.id),
-                  )
-                }
-              />
-              {t.name} · {t.room_name} · {t.capacity} plazas
-            </label>
-          ))}
-          {choices.data && (
-            <Pagination meta={choices.data.meta} onPage={setPage} pending={choices.isFetching} />
+              )}
+            </>
           )}
           <Field label="Mesero asignado">
             <select value={waiter} onChange={(e) => setWaiter(e.target.value)}>

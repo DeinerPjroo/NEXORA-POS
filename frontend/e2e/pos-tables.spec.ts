@@ -92,6 +92,9 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   await expect(picker.locator('.digital-table-symbol')).toBeVisible()
   await picker.getByRole('button', { name: 'Ocupar Mesa POS', exact: true }).click()
   const opening = page.getByRole('dialog', { name: 'Ocupar mesas', exact: true })
+  await expect(opening.getByRole('checkbox')).toHaveCount(0)
+  await expect(opening.getByText('Mesa seleccionada: Mesa POS', { exact: true })).toBeVisible()
+  await expect(opening.getByLabel('Personas en la atención', { exact: true })).toHaveValue('2')
   await opening.getByRole('button', { name: 'Guardar atención', exact: true }).click()
   await expect(picker).toHaveCount(0)
   await expect(page.locator('.pos-dining-selection')).toContainText('Mesa POS')
@@ -103,11 +106,38 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   )
   await picker.getByRole('button', { name: 'Seleccionar Mesa POS', exact: true }).click()
   await expect(picker).toHaveCount(0)
-  const { data: sessions } = await readApi<{ data: { id: number }[] }>(
-    page,
-    `dining-sessions?status=open&branch_id=${branch}`,
-  )
+  const { data: sessions } = await readApi<{
+    data: {
+      id: number
+      guest_count: number
+      tables: { dining_table_id: number; table_revision: number }[]
+    }[]
+  }>(page, `dining-sessions?status=open&branch_id=${branch}`)
   expect(sessions).toHaveLength(1)
+  expect(sessions[0].guest_count).toBe(2)
+  const selectedTable = sessions[0].tables[0]
+  const available = await readApi<{ data: { id: number }[] }>(
+    page,
+    `dining/available-tables?branch_id=${branch}`,
+  )
+  expect(available.data.some((table) => table.id === selectedTable.dining_table_id)).toBe(false)
+  const conflict = await page.request.post('/api/v1/dining-sessions', {
+    headers: {
+      Origin: 'http://127.0.0.1:5199',
+      'X-XSRF-TOKEN': decodeURIComponent(
+        (await page.context().cookies()).find((cookie) => cookie.name === 'XSRF-TOKEN')!.value,
+      ),
+    },
+    data: {
+      idempotency_key: crypto.randomUUID(),
+      branch_id: branch,
+      tables: [{ id: selectedTable.dining_table_id, revision: selectedTable.table_revision }],
+      guest_count: 2,
+      waiter_id: null,
+      notes: '',
+    },
+  })
+  expect(conflict.status()).toBe(409)
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
   await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
   const orderId = page.url().match(/pedidos\/(\d+)/)![1]

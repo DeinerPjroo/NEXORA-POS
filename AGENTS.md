@@ -4,6 +4,7 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Mesas: al abrir una mesa libre desde Terminal, la mesa elegida queda fijada; no solicitar marcarla de nuevo ni mostrar un listado de otras mesas. El número de personas no implica disponibilidad parcial: una atención ocupa la mesa completa hasta liberarla. Unir/separar es una operación explícita de gestión de atención, nunca sentar grupos ajenos automáticamente en sillas sobrantes.
 - Nexora POS es software profesional de operación de restaurantes, inspirado en flujos RestiPOS/SambaPOS, con identidad propia moderna, compacta, dinámica y personalizable. No diseñar sus pantallas operativas como tienda online, comercio electrónico o carrito de compras.
 - Separar Nexora Admin (configuración, catálogo, empleados, inventario, proveedores, reportes y administración) de Nexora Terminal (cajeros, meseros, cocina y atención). Comparten permisos, servicios y lógica de negocio; no duplicar motores financieros.
 - Terminal aplica a POS, mesas/salones operativos, menú/selección de productos, pedidos activos/para llevar/domicilios, caja rápida, comandas/KDS, cuentas/cobros/métodos/división/traslados. Admin puede conservar su diseño administrativo. El editor de salones es administrativo; la operación de mesas pertenece a Terminal.
