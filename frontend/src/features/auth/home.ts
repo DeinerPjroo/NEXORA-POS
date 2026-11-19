@@ -11,6 +11,7 @@ export function homePath(session: Session): string {
   if (posPermissions.every(can)) return '/pos'
   const sections = [
     ['orders.view', '/pedidos'],
+    ['dining.view', '/salones'],
     ['cash.view', '/caja'],
     ['catalog.view', '/productos'],
     ['sales.view', '/ventas'],

@@ -5,6 +5,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextPriceController;
+use App\Http\Controllers\DiningController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
@@ -37,6 +38,16 @@ Route::prefix('v1')->group(function () {
         Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::scopeBindings()->controller(DiningController::class)->group(function () {
+            Route::get('dining-rooms', 'index');
+            Route::post('dining-rooms', 'store');
+            Route::get('dining-rooms/{diningRoom}', 'show');
+            Route::put('dining-rooms/{diningRoom}', 'update');
+            Route::get('dining-rooms/{diningRoom}/tables', 'tables');
+            Route::post('dining-rooms/{diningRoom}/tables', 'storeTable');
+            Route::put('dining-rooms/{diningRoom}/tables/{diningTable}', 'updateTable');
+            Route::put('dining-rooms/{diningRoom}/layout', 'layout');
+        });
         Route::get('payment-methods', [PaymentMethodController::class, 'index']);
         Route::get('tax-profiles', [TaxProfileController::class, 'index']);
         Route::post('tax-profiles', [TaxProfileController::class, 'store']);

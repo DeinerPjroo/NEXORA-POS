@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-018 · Distribución versionada y separada de ocupación (0.25)
+
+Salón como raíz de revisión: metadatos, mesas y plano serializan con Tenant lock y revisión del salón; el plano exige el conjunto completo de mesas activas. Nombres únicos también en archivo; sucursal y salón de pertenencia estables. FK compuestas tenant/sucursal/salón. Geometría entera acotada y objetos de catálogo permitido, sin código libre ni estados de ocupación inventados. Editor captura revisión/datos al abrir y congela DTO/UUID inciertos. DINING_LAYOUTS.md define límites y contrato; B agrega la operación real sin otra implementación financiera.
+
 ## DEC-017 · Alternativas explícitas y selección acotada (0.20)
 
 Extender product_combo_components con pertenencia nullable/estable a product_combo_groups, conservando fijos y contrato0.19. Hasta8 grupos/20 alternativas activas; mínimos de alternativas y límites de unidades son conceptos diferentes. SaveComboGroup/ComboBounds comprueban capacidad mínima bajo Tenant lock y SaveCombo avanza revisión de grupo/raíz al cambiar una alternativa. Archivar grupos conserva flags de alternativas e historia. FK tenant/root/group protege pertenencia.

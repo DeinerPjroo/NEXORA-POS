@@ -43,6 +43,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Salones0.25 completa2.4-A: DiningRoom raíz de revisión para metadatos/mesas/plano, Tenant lock y UUID antes de auditoría transaccional; Gate antes de replay. FK tenant/sucursal/salón y nombres únicos incluso archivados. Plano exige todas las mesas activas, geometría entera1000×700 y objetos permitidos/schema1. Editor captura snapshot al abrir y conserva DTO/UUID inciertos; no inventar ocupación. DINING_LAYOUTS.md. Seguir2.4-B ocupación/unión/separación/traslado/meseros y C reservas; padre2.4 pendiente.
+
 - POS0.24 completa2.3: homePath selecciona inicio autorizado y retorno sin bucles; login limpia caché de dominio conservando observador de sesión e hidrata perfil una vez. Preferencia sucursal/canal por empresa/usuario en sessionStorage, validada contra sucursales activas y limpiada al logout; no guardar carrito/dinero/tokens. Paneles móviles conservan formulario; F2/F8 solo foco. Reintento incierto precede validación del contexto vivo y mantiene DTO/UUID, incluso tras retirar sucursal; nuevo terminal refresca contexto. POS.md; seguir2.4 según TABLES_PLAN.md.
 
 - POS0.23 (2.3-A): /pos exige catalog.view/orders.view/orders.manage/sales.collect y reutiliza OrderComposer/Checkout/recibo. Caja/configuración visibles, controles táctiles y navegación POS; recibo local sin sales.view no habilita historial. Pedido sigue separado del cobro; comandos/cálculos/UUID/revisiones del backend no se duplican. POS.md. B (inicio por permisos/contexto/ergonomía) pendiente; no cerrar padre2.3 hasta B.

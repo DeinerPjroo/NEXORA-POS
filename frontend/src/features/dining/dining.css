@@ -1,0 +1,93 @@
+.dining-swatch {
+  width: 48px;
+  height: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.dining-filters input,
+.dining-filters select {
+  min-width: 160px;
+  flex: 1;
+}
+.dining-layout {
+  padding: 24px;
+}
+.dining-layout-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dining-layout-heading h2 {
+  margin: 0 0 8px;
+}
+.dining-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 24px;
+}
+.dining-board-wrap {
+  min-width: 0;
+}
+.dining-board {
+  display: block;
+  width: 100%;
+  aspect-ratio: 10 / 7;
+  border: 1px solid #94a3b8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.dining-board g {
+  cursor: grab;
+  touch-action: none;
+}
+.dining-board g:focus {
+  outline: none;
+}
+.dining-board g:focus > rect,
+.dining-board g:focus > ellipse {
+  stroke: #6046e8;
+  stroke-width: 5;
+}
+.dining-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dining-inspector fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.dining-inspector input,
+.dining-inspector select {
+  width: 100%;
+  min-width: 0;
+}
+.dining-layout .form-actions {
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+@media (max-width: 1000px) {
+  .dining-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dining-inspector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .dining-layout {
+    padding: 14px;
+  }
+  .dining-layout-heading {
+    flex-direction: column;
+  }
+  .dining-filters {
+    flex-wrap: wrap;
+  }
+}

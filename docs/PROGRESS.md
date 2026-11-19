@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.24.0** integrado/verificado por impacto; catálogo2.2 y terminal POS2.3 completos. Sigue salones/mesas2.4 según TABLES_PLAN.md. Referencia completa0.20 conservada abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.25.0** integrado/verificado por impacto; catálogo2.2/POS2.3 y configuración/editor2.4-A completos. Sigue ocupación2.4-B; reservas2.4-C pendientes. Referencia completa0.20 conservada abajo; producción aún pendiente.
+
+0.25 dirigida: DiningLayoutTest SQLite7/129; MariaDB persistencia/UUID/revisiones/tenant/FK/rollback5/54 en nexora_test_90a6782dbfaa84e4 conservada. Dependencias de registro/roles4/23. Chromium salones3 en1.3min más lector403 final1/19.8s (UI/arrastre/geometría/persistencia móvil, conflicto y DTO/UUID inciertos exactos, lector); build/TypeScript/Pint/Prettier y capturas del módulo revisados. Migración000023 aplicada y DDL sin conexión exportado. Principal498.48kB/gzip141.07; módulo16.90kB. Sin cambios financieros. Contrato DINING_LAYOUTS.md. Padre2.4 sigue abierto.
 
 0.24: Chromium inicio/contexto/foundation7 en1.8min y POS3 en1.8min; caso final de sucursal retirada/reintento/contexto fresco1 en1.5min. Build/TypeScript/Prettier/capturas correctos, principal497.72kB/gzip140.95. Inicio autorizado, contexto válido por actor, paneles móviles y atajos sin cobro automático; backend financiero sin cambios. POS.md.
 

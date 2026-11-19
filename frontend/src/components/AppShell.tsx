@@ -42,6 +42,7 @@ const navigation = [
   },
   { to: '/inicio', label: 'Vista general', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, permission: 'orders.view' },
+  { to: '/salones', label: 'Salones y mesas', icon: Building2, permission: 'dining.view' },
   { to: '/ventas', label: 'Ventas', icon: ReceiptText, permission: 'sales.view' },
   { to: '/caja', label: 'Caja', icon: Wallet, permission: 'cash.view' },
   { to: '/productos', label: 'Productos', icon: Package, permission: 'catalog.view' },

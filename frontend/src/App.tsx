@@ -27,6 +27,13 @@ import { Loading } from './components/ui'
 import { PosAccess } from './features/pos/PosAccess'
 import { HomeRoute } from './features/auth/HomeRoute'
 
+const RoomsPage = lazy(() =>
+  import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomsPage })),
+)
+const RoomDetailPage = lazy(() =>
+  import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomDetailPage })),
+)
+
 const PaymentHistoryPage = lazy(() =>
   import('./features/sales/PaymentHistoryPage').then((module) => ({
     default: module.PaymentHistoryPage,
@@ -42,6 +49,26 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/salones"
+          element={
+            <PermissionBoundary permission="dining.view">
+              <Suspense fallback={<Loading />}>
+                <RoomsPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/salones/:roomId"
+          element={
+            <PermissionBoundary permission="dining.view">
+              <Suspense fallback={<Loading />}>
+                <RoomDetailPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/pos"
           element={

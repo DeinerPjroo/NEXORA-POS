@@ -547,3 +547,23 @@ alter table `products` add `cover_image_id` bigint unsigned null;
 
 alter table `products` add constraint `products_cover_image_fk` foreign key (`tenant_id`, `id`, `cover_image_id`) references `product_images` (`tenant_id`, `product_id`, `id`) on delete restrict;
 
+create table `dining_rooms` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `name` varchar(80) not null, `color` varchar(7) not null default '#F5F7FB', `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `layout_schema_version` tinyint unsigned not null default '1', `objects` json null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `dining_rooms` add constraint `dining_rooms_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `dining_rooms` add unique `dining_rooms_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `dining_rooms` add unique `dining_rooms_name_unique`(`tenant_id`, `branch_id`, `name`);
+
+alter table `dining_rooms` add constraint `dining_rooms_branch_fk` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+create table `dining_tables` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `dining_room_id` bigint unsigned not null, `name` varchar(50) not null, `shape` varchar(12) not null, `color` varchar(7) not null, `capacity` tinyint unsigned not null, `x` smallint unsigned not null, `y` smallint unsigned not null, `width` smallint unsigned not null, `height` smallint unsigned not null, `rotation` smallint unsigned not null default '0', `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `dining_tables` add constraint `dining_tables_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `dining_tables` add unique `dining_tables_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `dining_tables` add unique `dining_tables_name_unique`(`tenant_id`, `dining_room_id`, `name`);
+
+alter table `dining_tables` add constraint `dining_tables_room_fk` foreign key (`tenant_id`, `branch_id`, `dining_room_id`) references `dining_rooms` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+

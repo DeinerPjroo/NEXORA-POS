@@ -2,13 +2,13 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-19",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "phase": 2,
   "module": "Salones y mesas",
   "status": "IN_PROGRESS",
-  "active_task": "2.4-A",
-  "last_completed_task": "2.3-B: inicio/contexto/ergonomía POS0.24; padre2.3 completo",
-  "next_task": "2.4-B",
+  "active_task": "2.4-B",
+  "last_completed_task": "2.4-A: configuración y editor de salones/mesas0.25",
+  "next_task": "2.4-C",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -29,8 +29,8 @@
     "assertions": 591,
     "playwright": 10
   },
-  "current_verification": "0.24 dirigida: inicio/contexto/foundation7 aprobados1.8min, POS3 aprobados1.8min y caso final sucursal retirada/reintento/contexto fresco1 aprobado1.5min. Preferencia por actor validada contra sucursales activas y limpiada al logout; F2/F8 sin creación automática, paneles móviles y notas conservadas. Build/TypeScript/Prettier y capturas revisados, principal497.72kB/gzip140.95 sin aviso. Backend financiero sin cambios.",
-  "working_verification": "POS2.3 completo; commit/push0.24 autorizado antes de salones2.4-A. Sin procesos pendientes. TABLES_PLAN.md desglosa A editor/configuración, B ocupación/unión/traslado/meseros y C reservas. Siguiente acción: modelo/API/editor tenant/sucursal con geometría versionada y acotada; no simular ocupación antes de B. Protocolo2026-11-19: contexto mínimo/pruebas por impacto, sin reiniciar tareas ni suites generales por rutina.",
+  "current_verification": "0.25 dirigida: DiningLayoutTest SQLite7/129; MariaDB persistencia/UUID/revisiones/tenant/FK/rollback5/54 en nexora_test_90a6782dbfaa84e4 conservada. Dependencias de registro/roles4/23. Chromium salones3 en1.3min más lector403 final1/19.8s (UI/arrastre/geometría/persistencia móvil, conflicto y DTO/UUID inciertos exactos, lector); build/TypeScript/Pint/Prettier y capturas del módulo revisados. Migración000023 aplicada y DDL sin conexión exportado. Principal498.48kB/gzip141.07; módulo16.90kB. Sin cambios financieros.",
+  "working_verification": "2.4-A lista para commit/push; siguiente B ocupación/unión/separación/traslado/meseros e integración POS. C reservas pendiente; padre2.4 permanece IN_PROGRESS. Tenant lock y revisión de salón coordinan metadatos/mesas/plano; edición captura snapshot inicial, no adopta revisiones de refetch. No simular estados ocupados/libres antes de B.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -62,7 +62,8 @@
     "nexora_test_98f7515a550265ba",
     "nexora_test_7bfd53b7faf48ec2",
     "nexora_test_65bda8209625cbc1",
-    "nexora_test_53cb7a4f90607f8a"
+    "nexora_test_53cb7a4f90607f8a",
+    "nexora_test_90a6782dbfaa84e4"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",
