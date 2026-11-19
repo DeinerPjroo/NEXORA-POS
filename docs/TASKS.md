@@ -43,7 +43,7 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-SEC-D | COMPLETED | Rechazos auditados sin secretos, actor/tenant, límites/rollback/fallo de logging. SQLite64/511; SQL auditoría/devolución9/88, Chromium1 y checks específicos correctos. DENIED_ACCESS_AUDIT.md | 1-SEC-A/C |
 | 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
 | 1-OPS-A | TESTING | CI reproducible con checks pertinentes y suites de entrega; comprobar ejecución remota, no solo YAML | GitHub/repositorio y entorno CI |
-| 1-OPS-B | PENDING | Concurrencia real de comandos financieros, UUID y saldos, reutilizando aislamiento y worker existentes | 1-OPS-A; SQL aislado |
+| 1-OPS-B | COMPLETED | Carreras reales de cobro/UUID/apertura/abonos/devolución/fondos/tenant/permisos y regresión MFA: MariaDB9/121, barrera común y esquema conservado. FINANCIAL_CONCURRENCY.md | SQL aislado; CI dirigida |
 | 1-OPS-C | PENDING | Respaldo privado y restauración verificada exclusivamente en destino nuevo, sin tocar datos de trabajo | SQL/medios/clave de cifrado |
 | 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |

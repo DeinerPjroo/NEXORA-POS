@@ -4,11 +4,11 @@
   "reference_date": "2026-11-19",
   "version": "0.32.0",
   "phase": 1,
-  "module": "Operación: CI remota y portabilidad",
-  "status": "TESTING",
-  "active_task": "1-OPS-A",
-  "last_completed_task": "1-SEC-D auditoría0.32; padre1-SEC completo en su núcleo local. MFA0.31 publicado9972b7c",
-  "next_task": "1-OPS-B concurrencia financiera; C backup/restauración; D MySQL8/EER/entrega; después fase3",
+  "module": "Operación: CI remota, concurrencia financiera y respaldo",
+  "status": "IN_PROGRESS",
+  "active_task": "1-OPS-C",
+  "last_completed_task": "1-OPS-B: concurrencia financiera y MFA SQL, 9/121; CI A pendiente caso remoto de categorías",
+  "next_task": "1-OPS-C respaldo/restauración; D entrega/MySQL8/EER; después fase3",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -31,7 +31,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Workflow CI publicado30bdf3c, Actions habilitado. Ejecutado completo44618461098: SQLite326/4094+2omitidas aprobó; MySQL8.4 ejecutó328 y solo falló orden de claves JSON en una aserción; se normaliza manteniendo tipos/valores. Frontend/npm ci detectó dos dependencias opcionales ya exigidas por rolldown pero ausentes del lock: se completan metadatos exactos de registro, sin actualizar versiones existentes. CI no se considera completa todavía; seguir resultados tras commit de reparación y repetir solo lo afectado. .runtime/github-ci.py consulta API reutilizando credencial Git sin imprimir/guardar token. No repetir SQLite completo ya aprobado ni suites SQL ajenas al ajuste. Versiones de trabajo0.32/esquema000027; siguientes1-OPS-B/C/D y fase3.",
+  "working_verification": "CI 44619594981: instalación y build Linux aprobados; MySQL8.4 dirigido8/73 aprobó reparación JSON; Chromium50/51 con único selector ambiguo en categorías corregido y caso local aprobado. Publicado7728822; comprobar run44622299984 dirigido, sin repetir completas. Cobertura previa: SQLite326/4094+2skip, MySQL327 completos+caso corregido dirigido. B final MariaDB9/121 en nexora_test_34e4b943644faf6c: barrera de procesos, cobros/abonos/devoluciones/caja/tenant/permisos y MFA. No cambios financieros de producción ni migraciones; siguiente backup privado/restauración nueva.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -78,7 +78,11 @@
     "nexora_test_ce118fc0c291f60a",
     "nexora_test_ee901254ff3059f1",
     "nexora_test_ee330c754c9dd355",
-    "nexora_test_0837d82602af0c8e"
+    "nexora_test_0837d82602af0c8e",
+    "nexora_test_482ffc32f43e234d",
+    "nexora_test_7437a4948dbcde3d",
+    "nexora_test_da2ea354dfa25a83",
+    "nexora_test_34e4b943644faf6c"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

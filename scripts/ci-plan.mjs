@@ -128,8 +128,16 @@ export function makePlan(
       addBrowser(/commercial-dashboard/);
     }
   }
-  if (files.includes("scripts/test-mfa-worker.php"))
-    addBackend(/MfaConcurrency/);
+  if (
+    files.some((file) =>
+      [
+        "scripts/test-mfa-worker.php",
+        "scripts/test-sql-worker.php",
+        "backend/tests/SqlConcurrencyTestCase.php",
+      ].includes(file),
+    )
+  )
+    addBackend(/MfaConcurrency|FinancialConcurrency/);
   for (const file of productionFrontend) {
     if (
       /features\/auth|components\/AppShell|\/App.tsx|lib\/(api|types)/.test(
