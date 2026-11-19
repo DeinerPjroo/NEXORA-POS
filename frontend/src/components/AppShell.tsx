@@ -23,12 +23,21 @@ import {
   Wallet,
   ShoppingBag,
   ReceiptText,
+  Monitor,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { Brand, ErrorNotice, Loading, useToast } from './ui'
 import { useCan, useSession } from '../features/auth/SessionProvider'
+import { posPermissions } from '../features/pos/pos-permissions'
 
 const navigation = [
+  {
+    to: '/pos',
+    label: 'Terminal POS',
+    icon: Monitor,
+    permission: 'orders.manage',
+    required: posPermissions,
+  },
   { to: '/inicio', label: 'Vista general', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, permission: 'orders.view' },
   { to: '/ventas', label: 'Ventas', icon: ReceiptText, permission: 'sales.view' },
@@ -132,7 +141,10 @@ export function AppShell() {
         <p className="nav-label">{collapsed ? '···' : 'ADMINISTRACIÓN'}</p>
         <nav aria-label="Navegación principal">
           {navigation
-            .filter((item) => can(item.permission))
+            .filter(
+              (item) =>
+                can(item.permission) && (!('required' in item) || item.required?.every(can)),
+            )
             .map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}

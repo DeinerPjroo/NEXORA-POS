@@ -34,6 +34,7 @@ import type { OrderChannel } from '../catalog/context-price-types'
 import { useCartPricing } from './useCartPricing'
 import { PriceDetails } from './PriceDetails'
 import { CartComboDetails } from './CartComboDetails'
+import type { CashOption, SalesSettings } from '../sales/types'
 
 const PriceReviewModal = lazy(() =>
   import('./PriceReviewModal').then((module) => ({ default: module.PriceReviewModal })),
@@ -42,7 +43,7 @@ const ComboOrderPicker = lazy(() =>
   import('./ComboOrderPicker').then((module) => ({ default: module.ComboOrderPicker })),
 )
 
-export function OrderComposer() {
+export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
   const context = useOperationContext()
   const { session } = useSession()
   const [currency] = useState(session!.company.currency)
@@ -64,6 +65,23 @@ export function OrderComposer() {
   const text = useDebounce(search)
   const activeBranches = context.data?.branches.filter((item) => item.is_active) ?? []
   const selected = branch ?? activeBranches[0]?.id ?? null
+  const posCash = useQuery({
+    queryKey: ['pos-cash', selected],
+    queryFn: ({ signal }) =>
+      api<{ data: CashOption[] }>(`sales/cash-context?branch_id=${selected}`, { signal }),
+    enabled: terminal && !!selected && can('sales.collect'),
+    refetchInterval: terminal ? 15000 : false,
+  })
+  const posSettings = useQuery({
+    queryKey: ['sales-settings'],
+    queryFn: ({ signal }) => api<{ data: SalesSettings }>('sales/settings', { signal }),
+    enabled: terminal && can('sales.collect'),
+    refetchInterval: terminal ? 15000 : false,
+  })
+  const posReady =
+    !terminal ||
+    (!!posSettings.data?.data.configured &&
+      !!posCash.data?.data.some((cash) => cash.currency === currency))
   const params = new URLSearchParams({
     status: 'active',
     availability: 'available',
@@ -84,8 +102,13 @@ export function OrderComposer() {
   })
   const operation = useOperation<Order>('orders', async (order) => {
     await client.invalidateQueries({ queryKey: ['orders'] })
-    toast('Pedido registrado. No se ha realizado ningún cobro.')
-    if (can('orders.view')) navigate(`/pedidos/${order.id}`)
+    toast(
+      terminal
+        ? 'Pedido registrado. Revisa y confirma el cobro.'
+        : 'Pedido registrado. No se ha realizado ningún cobro.',
+    )
+    if (terminal) navigate(`/pos/pedidos/${order.id}/cobrar`)
+    else if (can('orders.view')) navigate(`/pedidos/${order.id}`)
     else {
       setCart([])
     }
@@ -137,7 +160,7 @@ export function OrderComposer() {
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selected || !cart.length || pricing.locked) return
+    if (!selected || !cart.length || pricing.locked || (!posReady && !operation.uncertain)) return
     const data = Object.fromEntries(new FormData(event.currentTarget))
     operation.send({
       ...data,
@@ -157,17 +180,71 @@ export function OrderComposer() {
     )
   const conflict = operation.error instanceof ApiError && operation.error.status === 409
   return (
-    <>
+    <div className={terminal ? 'pos-terminal' : undefined}>
       <Link className="text-button product-back" to="/pedidos">
         <ArrowLeft size={16} />
         Volver a pedidos
       </Link>
       <PageTitle
-        eyebrow="CADA PEDIDO EMPIEZA AQUÍ"
-        title="Tomar pedido"
-        description="Elige, personaliza las observaciones y envía. Todo queda registrado."
+        eyebrow={terminal ? 'LISTO PARA ATENDER' : 'CADA PEDIDO EMPIEZA AQUÍ'}
+        title={terminal ? 'Terminal POS' : 'Tomar pedido'}
+        description={
+          terminal
+            ? 'Elige productos, registra el pedido y confirma el cobro.'
+            : 'Elige, personaliza las observaciones y envía. Todo queda registrado.'
+        }
       />
       <ErrorNotice error={context.error} />
+      {terminal && (
+        <section className="pos-status panel" aria-label="Estado del terminal">
+          <ErrorNotice error={posCash.error || posSettings.error} />
+          <div className="panel-heading">
+            <strong>
+              {!selected
+                ? 'No hay sucursales activas'
+                : posCash.isPending || posSettings.isPending
+                  ? 'Consultando caja y configuración…'
+                  : posReady
+                    ? `${posCash.data!.data.length} ${posCash.data!.data.length === 1 ? 'caja abierta' : 'cajas abiertas'} · Configuración confirmada`
+                    : 'Terminal pendiente de preparación'}
+            </strong>
+            <button
+              className="text-button"
+              disabled={locked || !selected || posCash.isFetching || posSettings.isFetching}
+              onClick={() => {
+                void posCash.refetch()
+                void posSettings.refetch()
+              }}
+            >
+              Actualizar estado del terminal
+            </button>
+          </div>
+          {!posCash.isPending && !posCash.data?.data.length && (
+            <p>
+              Abre una caja de esta sucursal para iniciar el cobro.{' '}
+              {can('cash.view') ? (
+                <Link to="/caja" target="_blank" rel="noopener noreferrer">
+                  Abrir caja en otra pestaña
+                </Link>
+              ) : (
+                'Solicita la apertura a una persona autorizada.'
+              )}
+            </p>
+          )}
+          {!posSettings.isPending && !posSettings.data?.data.configured && (
+            <p>
+              La empresa debe confirmar el cálculo de ventas.{' '}
+              {can('sales.configure') ? (
+                <Link to="/ventas/configuracion" target="_blank" rel="noopener noreferrer">
+                  Configurar ventas en otra pestaña
+                </Link>
+              ) : (
+                'Solicita la configuración a una persona autorizada.'
+              )}
+            </p>
+          )}
+        </section>
+      )}
       <div className="operation-toolbar">
         <OperationalBranchPicker
           branches={activeBranches}
@@ -216,7 +293,7 @@ export function OrderComposer() {
                     <button
                       className={`panel order-product${product.availability_context?.allowed === false ? ' schedule-closed' : ''}`}
                       key={product.id}
-                      disabled={!product.sellable || locked || products.isFetching}
+                      disabled={!product.sellable || locked || products.isFetching || !posReady}
                       onClick={() =>
                         product.kind === 'combo'
                           ? setBundling(product)
@@ -418,7 +495,12 @@ export function OrderComposer() {
             className="button primary wide"
             type="submit"
             disabled={
-              operation.isPending || pricing.locked || !cart.length || !selected || conflict
+              operation.isPending ||
+              pricing.locked ||
+              !cart.length ||
+              !selected ||
+              conflict ||
+              (!posReady && !operation.uncertain)
             }
           >
             <Send size={17} />
@@ -426,7 +508,9 @@ export function OrderComposer() {
               ? 'Registrando…'
               : operation.uncertain
                 ? 'Reintentar envío'
-                : 'Registrar pedido'}
+                : terminal
+                  ? 'Continuar al cobro'
+                  : 'Registrar pedido'}
           </button>
         </form>
       </div>
@@ -483,6 +567,6 @@ export function OrderComposer() {
           />
         </Suspense>
       )}
-    </>
+    </div>
   )
 }

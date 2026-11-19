@@ -25,8 +25,20 @@ if ($app->configurationIsCached() || config('database.default') !== 'sqlite' || 
 }
 try {
     $input = json_decode(stream_get_contents(STDIN, 4096), true, 512, JSON_THROW_ON_ERROR);
-    $data = Illuminate\Support\Facades\Validator::make($input, ['company_name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'ends_with:@example.test'], 'password' => ['required', 'string', 'min:20', 'max:72']])->validate();
+    $data = Illuminate\Support\Facades\Validator::make($input, ['company_name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'ends_with:@example.test'], 'password' => ['required', 'string', 'min:20', 'max:72'], 'permissions' => ['sometimes', 'array', 'list', 'max:28'], 'permissions.*' => ['string', 'distinct', Illuminate\Validation\Rule::in(array_keys(App\Domains\Identity\PermissionCatalog::ALL))]])->validate();
+    $permissions = $data['permissions'] ?? null;
+    unset($data['permissions']);
     $user = app(App\Domains\Identity\RegisterCompany::class)->execute([...$data, 'business_type' => 'restaurant', 'branch_name' => 'Principal', 'name' => 'Ana Pérez']);
+    if ($permissions !== null) {
+        app(App\Domains\Tenancy\TenantContext::class)->run($user->tenant_id, function () use ($permissions, $user) {
+            Illuminate\Support\Facades\DB::transaction(function () use ($permissions, $user) {
+                $role = App\Models\Role::create(['name' => 'Operador de prueba']);
+                $role->permissions()->syncWithPivotValues(App\Models\Permission::whereIn('key', $permissions)->pluck('id'), ['tenant_id' => $user->tenant_id]);
+                $user->role_id = $role->id;
+                $user->save();
+            });
+        });
+    }
     echo json_encode(['created' => true, 'tenant_id' => $user->tenant_id], JSON_THROW_ON_ERROR).PHP_EOL;
 } catch (Throwable $error) {
     fwrite(STDERR, 'No se pudo crear el fixture aislado: '.get_class($error).PHP_EOL);

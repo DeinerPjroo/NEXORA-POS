@@ -23,7 +23,7 @@ import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 import { useSalesCash } from './useSalesCash'
 import { TaxBreakdownDetails } from './TaxBreakdownDetails'
 
-export function CheckoutPage() {
+export function CheckoutPage({ terminal = false }: { terminal?: boolean }) {
   const { orderId = '' } = useParams()
   const can = useCan()
   const query = useQuery({
@@ -62,7 +62,10 @@ export function CheckoutPage() {
         <div className="panel empty-state">
           <h2>Este pedido ya tiene una venta.</h2>
           {can('sales.view') && (
-            <Link className="button primary" to={`/ventas/${order.sale_id}`}>
+            <Link
+              className="button primary"
+              to={`${terminal ? '/pos' : ''}/ventas/${order.sale_id}`}
+            >
               Ver recibo
             </Link>
           )}
@@ -82,13 +85,21 @@ export function CheckoutPage() {
           )}
         </div>
       ) : (
-        <CheckoutForm order={order} settings={settings.data.data} />
+        <CheckoutForm order={order} settings={settings.data.data} terminal={terminal} />
       )}
     </>
   )
 }
 
-function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettings }) {
+function CheckoutForm({
+  order,
+  settings,
+  terminal,
+}: {
+  order: Order
+  settings: SalesSettings
+  terminal: boolean
+}) {
   const can = useCan()
   const client = useQueryClient()
   const navigate = useNavigate()
@@ -132,7 +143,7 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
         'checkout-cash',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
-    if (can('sales.view')) navigate(`/ventas/${sale.id}`)
+    if (can('sales.view')) navigate(`${terminal ? '/pos' : ''}/ventas/${sale.id}`)
   })
   const normalizedReceived = received.replace(',', '.')
   const account = quote.data?.data.accounts_preview.find(
@@ -178,7 +189,17 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
       expected_total: quote.data.data.total.replace(/00$/, ''),
     })
   }
-  if (result) return <SaleReceipt sale={result} />
+  if (result)
+    return (
+      <>
+        <SaleReceipt sale={result} />
+        {terminal && (
+          <Link className="button primary" to="/pos">
+            Nueva operación POS
+          </Link>
+        )}
+      </>
+    )
   return (
     <div className="checkout-layout">
       <form className="panel form-stack checkout-form" onSubmit={submit}>
@@ -380,6 +401,7 @@ function CheckoutForm({ order, settings }: { order: Order; settings: SalesSettin
               <div>
                 {item.quantity}× {item.product_name}
                 {item.variant_name && ` · ${item.variant_name}`}
+                {item.notes && <p className="muted small">{item.notes}</p>}
                 <PriceDetails context={item.price_snapshot} currency={order.currency} />
                 <AvailabilityDetails context={item.availability_snapshot} />
                 <ModifierDetails

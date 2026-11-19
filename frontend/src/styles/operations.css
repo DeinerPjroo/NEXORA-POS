@@ -212,6 +212,24 @@
   gap: 24px;
   align-items: start;
 }
+.pos-status {
+  margin-bottom: 20px;
+  padding: 18px;
+}
+.pos-terminal .order-product {
+  min-height: 180px;
+}
+.pos-terminal .quantity-stepper > button {
+  width: 44px;
+  height: 44px;
+}
+.pos-terminal .order-cart button.button {
+  min-height: 44px;
+}
+.pos-terminal .order-cart input,
+.pos-terminal .order-cart select {
+  min-height: 44px;
+}
 .order-menu {
   min-width: 0;
 }

@@ -6,13 +6,18 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // Preparación de fixtures; las pruebas de registro existentes siguen usando la UI y sus límites.
-export async function fixtureWorkspace(page: Page, companyName: string) {
+export async function fixtureWorkspace(page: Page, companyName: string, permissions?: string[]) {
   const backend = fileURLToPath(new URL('../../backend/', import.meta.url))
   const email = `fixture-${crypto.randomUUID()}@example.test`
   const password = `Fixture-${crypto.randomUUID()}A1`
   const result = spawnSync('php', [resolve(backend, '../scripts/create-e2e-workspace.php')], {
     cwd: backend,
-    input: JSON.stringify({ company_name: companyName, email, password }),
+    input: JSON.stringify({
+      company_name: companyName,
+      email,
+      password,
+      ...(permissions ? { permissions } : {}),
+    }),
     encoding: 'utf8',
     windowsHide: true,
     env: {

@@ -13,7 +13,7 @@ import { PartialRefundModal } from './PartialRefundModal'
 import { saleStates } from './types'
 import type { Sale } from './types'
 
-export function SaleDetailPage() {
+export function SaleDetailPage({ terminal = false }: { terminal?: boolean }) {
   const { saleId = '' } = useParams()
   const can = useCan()
   const [refund, setRefund] = useState(false)
@@ -28,9 +28,9 @@ export function SaleDetailPage() {
   const sale = query.data.data
   return (
     <div className="sale-detail-page">
-      <Link className="text-button product-back" to="/ventas">
+      <Link className="text-button product-back" to={terminal ? '/pos' : '/ventas'}>
         <ArrowLeft size={16} />
-        Volver a ventas
+        {terminal ? 'Nueva operación POS' : 'Volver a ventas'}
       </Link>
       <PageTitle
         eyebrow="UN REGISTRO QUE SE CONSERVA"

@@ -43,6 +43,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- POS0.23 (2.3-A): /pos exige catalog.view/orders.view/orders.manage/sales.collect y reutiliza OrderComposer/Checkout/recibo. Caja/configuración visibles, controles táctiles y navegación POS; recibo local sin sales.view no habilita historial. Pedido sigue separado del cobro; comandos/cálculos/UUID/revisiones del backend no se duplican. POS.md. B (inicio por permisos/contexto/ergonomía) pendiente; no cerrar padre2.3 hasta B.
+
 - Galería0.22: ProductGallery reutiliza GD/disco privado y conserva URL/portada anterior; máximo8 activas, FK tenant/product/image y backfill bajo Tenant/product lock. Upload UUID con hash de bytes en servidor; orden completo, portada y retirada con revisión/moneda/Gate/auditoría. Retirada archiva fila y limpia archivo tras commit; rollback limpia blob sin referencia. useOperation preserva FormData/JSON/DELETE inciertos y modales conservan snapshot. GALLERY.md. Catálogo2.2 completo; siguiente terminal POS reutilizando comandos/cálculos, sin otro motor financiero.
 
 - Promociones0.21: CatalogPricing reutiliza resolución contextual y aplica una PromotionResolver por especificidad/prioridad/antigüedad con instante/zona comunes. Descuento de base half-up4 acotado antes de adicionales; variantes propias y combo raíz una vez, referencias de hojas sin promoción. PriceContextv2 copia base/promo, historia anteriorv1; replay/cobro no recotizan. SavePromotion exige Gate antes de UUID, revisiones/moneda/zona/Tenant lock/auditoría y FK, máximo20 activas. PROMOTIONS.md. Verificación por impacto según protocolo vigente.

@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 0.23.0 · 2026-11-19
+
+- Terminal POS con requisitos de permisos compartidos, estado de caja/configuración, controles táctiles y rutas propias de pedido→cobro→recibo→nueva operación. Reutiliza los comandos y cálculos existentes; recibo local sin habilitar historial a quien no tiene sales.view.
+- Resumen de cobro muestra observaciones regulares. Fixture E2E aislado admite permisos reales acotados; guardas de e2e.sqlite conservadas.
+- Verificación dirigida: dos casos de permisos/recibo aprobados y caso operativo final aprobado en1.2min tras corregir visualización de notas. Impuestos mixtos, variantes/preparación/combo promocional, contexto y UUID exactos; venta16.21/caja116.21 sin duplicación. Build/TypeScript/Prettier/PHP-lint fixture y dos capturas correctos; principal494.67kB/gzip139.90. Sin cambios al backend financiero.
+
 ## 0.22.0 · 2026-11-19
 
 - Galería privada de hasta ocho imágenes, portada y orden explícitos, retiro con siguiente portada y limpieza tras commit. Migración de fotografía anterior bajo bloqueo, sin mover archivos ni cambiar su URL; compatibilidad de reemplazo/retirada.

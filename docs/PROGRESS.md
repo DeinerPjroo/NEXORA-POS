@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.22.0** de galería integrado y verificado por impacto; catálogo avanzado2.2 completado. Fase2 continúa con terminal POS y después salones/mesas. La referencia de regresión completa0.20 se conserva abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.23.0** de terminal POS operativo integrado/verificado por impacto; catálogo2.2 y terminal2.3-A completos. Sigue2.3-B (inicio por permisos/contexto/ergonomía) antes de salones/mesas2.4. Referencia completa0.20 conservada abajo; producción aún pendiente.
+
+0.23: tres casos Chromium aprobados por ejecución dirigida (dos de permisos/recibo y operativo final1.2min). Pedido/cobro inciertos sin duplicar, impuestos mixtos/variantes/preparación/combo/promoción y contexto; total16.21/caja116.21. Build/TypeScript/formato/capturas correctos; principal494.67kB/gzip139.90. Backend financiero sin cambios; POS.md. No marcar padre2.3 completo todavía.
 
 0.22: SQLite galería8/121 y legado10/85; SQL backfill/FK2/20 y bloqueo1/15. Chromium dirigido galería/fotografía/promociones3 en3.3min, más galería final1/1.0min con miniaturas cargadas. Migración000022 aplicada, DDL/build/TypeScript/Pint/Prettier y captura móvil correctos; principal491.75kB/gzip138.94, panel7.31kB. Contrato GALLERY.md; siguiente POS_PLAN.md. Verificaciones por impacto según AGENTS.
 

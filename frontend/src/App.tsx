@@ -24,6 +24,7 @@ import { CheckoutPage } from './features/sales/CheckoutPage'
 import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
+import { PosAccess } from './features/pos/PosAccess'
 
 const PaymentHistoryPage = lazy(() =>
   import('./features/sales/PaymentHistoryPage').then((module) => ({
@@ -40,6 +41,32 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/pos"
+          element={
+            <PosAccess>
+              <OrderComposer key="pos" terminal />
+            </PosAccess>
+          }
+        />
+        <Route
+          path="/pos/pedidos/:orderId/cobrar"
+          element={
+            <PosAccess>
+              <CheckoutPage terminal />
+            </PosAccess>
+          }
+        />
+        <Route
+          path="/pos/ventas/:saleId"
+          element={
+            <PosAccess>
+              <PermissionBoundary permission="sales.view">
+                <SaleDetailPage terminal />
+              </PermissionBoundary>
+            </PosAccess>
+          }
+        />
         <Route
           path="/ventas/historial"
           element={
