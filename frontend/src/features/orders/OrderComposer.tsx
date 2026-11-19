@@ -40,7 +40,7 @@ import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
 import type { DiningSelection } from '../dining/session-types'
 import { PosOrderLines } from '../pos/PosOrderLines'
-import { PosTablesModal } from '../dining/PosTablesModal'
+import { PosTablesPanel } from '../dining/PosTablesPanel'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -445,7 +445,8 @@ export function OrderComposer({
                     : 'Seleccionar una mesa de esta sucursal'
                 }
                 onClick={() => {
-                  setTablesOpen(true)
+                  setTablesOpen((value) => !value)
+                  setPanel('cart')
                 }}
               >
                 Mesas
@@ -454,6 +455,7 @@ export function OrderComposer({
                 type="button"
                 disabled={locked}
                 onClick={() => {
+                  setTablesOpen(false)
                   setDetails(true)
                   setPanel('cart')
                 }}
@@ -467,6 +469,7 @@ export function OrderComposer({
                 type="button"
                 disabled={locked}
                 onClick={() => {
+                  setTablesOpen(false)
                   setDetails(true)
                   setPanel('cart')
                 }}
@@ -644,256 +647,277 @@ export function OrderComposer({
             />
           )}
         </section>
-        <form className="panel order-cart" onSubmit={submit} data-pos-slot="order">
-          <div className="panel-heading">
-            <h2>
-              {!terminal && <ShoppingBag size={19} />}
-              {terminal ? 'Pedido en curso' : 'Tu pedido'}
-            </h2>
-            <span className="pill neutral">
-              {cart.reduce((total, line) => total + line.quantity, 0)} unidades
-            </span>
-          </div>
-          <ErrorNotice error={operation.error} />
-          <ErrorNotice error={pricing.error} />
-          {pricing.pending && (
-            <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
-          )}
-          <OperationNotice uncertain={operation.uncertain} />
-          {dining && channel === 'dine_in' && (
-            <p className="pos-dining-selection" role="status">
-              Mesa seleccionada: {dining.label}
-            </p>
-          )}
-          {terminal ? (
-            <PosOrderLines
-              lines={cart}
-              currency={currency}
-              selectedKey={activeLine}
-              disabled={locked}
-              onSelect={setActiveLine}
-              onQuantity={quantity}
-              onRemove={(key) => setCart((previous) => previous.filter((line) => line.key !== key))}
-              onNotes={(key, notes) =>
-                setCart((previous) =>
-                  previous.map((line) => (line.key === key ? { ...line, notes } : line)),
-                )
-              }
-            />
-          ) : cart.length ? (
-            <div className="cart-lines" role="table" aria-label="Líneas del pedido">
-              {terminal && (
-                <div className="pos-lines-heading" role="row">
-                  <span role="columnheader">Producto / cantidad</span>
-                  <span role="columnheader">Subtotal</span>
-                </div>
-              )}
-              {cart.map((line) => (
-                <div
-                  className="cart-line"
-                  role="row"
-                  key={line.key}
-                  data-selected={terminal && activeLine === line.key}
-                  onClick={() => terminal && setActiveLine(line.key)}
-                >
-                  <div className="cart-line-title" role="cell">
-                    <div>
-                      <strong>{line.product_name}</strong>
-                      {line.variant_name && <small>{line.variant_name}</small>}
-                      <ModifierDetails groups={line.modifier_labels} currency={currency} />
-                      <CartComboDetails line={line} currency={currency} />
-                      {!(line.kind === 'combo' && line.price_context?.promotion) && (
-                        <PriceDetails context={line.price_context} currency={currency} />
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label={`Quitar ${line.product_name}`}
-                      disabled={locked}
-                      onClick={() =>
-                        setCart((previous) => previous.filter((item) => item.key !== line.key))
-                      }
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                  <div className="cart-line-controls" role="cell">
-                    <div className="quantity-stepper">
-                      <button
-                        type="button"
-                        aria-label={`Restar ${line.product_name}`}
-                        disabled={line.quantity <= 1 || locked}
-                        onClick={() => quantity(line.key, line.quantity - 1)}
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span>{line.quantity}</span>
-                      <button
-                        type="button"
-                        aria-label={`Sumar ${line.product_name}`}
-                        disabled={line.quantity >= 999 || locked}
-                        onClick={() => quantity(line.key, line.quantity + 1)}
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <span>{formatMoney(cartSubtotal([line]), currency)}</span>
-                  </div>
-                  <input
-                    aria-label={`Observación para ${line.product_name}`}
-                    placeholder="Observación de preparación…"
-                    maxLength={300}
-                    disabled={locked}
-                    value={line.notes}
-                    onChange={(event) =>
-                      setCart((previous) =>
-                        previous.map((item) =>
-                          item.key === line.key ? { ...item, notes: event.target.value } : item,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-              ))}
+        <div
+          className={terminal ? 'pos-order-workspace' : 'order-workspace'}
+          data-view={terminal && tablesOpen ? 'tables' : 'order'}
+        >
+          <form
+            className="panel order-cart"
+            onSubmit={submit}
+            data-pos-slot="order"
+            inert={terminal && tablesOpen}
+            aria-hidden={terminal && tablesOpen ? true : undefined}
+          >
+            <div className="panel-heading">
+              <h2>
+                {!terminal && <ShoppingBag size={19} />}
+                {terminal ? 'Pedido en curso' : 'Tu pedido'}
+              </h2>
+              <span className="pill neutral">
+                {cart.reduce((total, line) => total + line.quantity, 0)} unidades
+              </span>
             </div>
-          ) : (
-            <div className="cart-empty">
-              <ShoppingBag size={30} />
-              <p>Agrega el primer sabor a este pedido.</p>
-            </div>
-          )}
-          {!terminal && (
-            <button
-              type="button"
-              className="button secondary"
-              aria-expanded={details}
-              onClick={() => setDetails(!details)}
-            >
-              Datos del pedido · cliente y notas
-            </button>
-          )}
-          <fieldset disabled={locked} className="form-stack pos-order-details" data-open={details}>
-            {
-              <button type="button" className="pos-detail-close" onClick={() => setDetails(false)}>
-                Cerrar detalles
-              </button>
-            }
-            <Field label="Tipo de pedido">
-              <select
-                name="channel"
-                value={channel}
-                onChange={(event) =>
-                  selected &&
-                  pricing.request({
-                    branchId: selected,
-                    channel: event.target.value as OrderChannel,
-                  })
-                }
-              >
-                <option value="takeaway">Para llevar</option>
-                <option value="dine_in">En el restaurante</option>
-              </select>
-            </Field>
-            <Field label="Referencia del pedido">
-              <input
-                name="reference"
-                maxLength={80}
-                placeholder="Ej. Mesa 4 o nombre de recogida"
-              />
-            </Field>
-            {selected && channel === 'dine_in' && can('dining.view') && can('dining.operate') && (
-              <Suspense fallback={<Loading />}>
-                <DiningSessionPicker
-                  key={selected}
-                  branchId={selected}
-                  selected={dining}
-                  disabled={locked}
-                  onChange={setDining}
-                />
-              </Suspense>
+            <ErrorNotice error={operation.error} />
+            <ErrorNotice error={pricing.error} />
+            {pricing.pending && (
+              <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
             )}
-            <Field label="Nombre del cliente">
-              <input name="customer_name" maxLength={100} placeholder="Opcional" />
-            </Field>
-            <Field label="Observación general">
-              <textarea
-                name="notes"
-                maxLength={1000}
-                rows={2}
-                placeholder="Indicaciones para este pedido"
+            <OperationNotice uncertain={operation.uncertain} />
+            {dining && channel === 'dine_in' && (
+              <p className="pos-dining-selection" role="status">
+                Mesa seleccionada: {dining.label}
+              </p>
+            )}
+            {terminal ? (
+              <PosOrderLines
+                lines={cart}
+                currency={currency}
+                selectedKey={activeLine}
+                disabled={locked}
+                onSelect={setActiveLine}
+                onQuantity={quantity}
+                onRemove={(key) =>
+                  setCart((previous) => previous.filter((line) => line.key !== key))
+                }
+                onNotes={(key, notes) =>
+                  setCart((previous) =>
+                    previous.map((line) => (line.key === key ? { ...line, notes } : line)),
+                  )
+                }
               />
-            </Field>
-          </fieldset>
-          <div className="order-subtotal">
-            <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
-            <strong>{formatMoney(cartSubtotal(cart), currency)}</strong>
-          </div>
-          <p className="muted small">
-            Este registro no incluye cobro ni factura. El descuento, impuesto adicional y redondeo
-            se calculan al cobrar el pedido.
-          </p>
-          {conflict && (
-            <button
-              type="button"
-              className="button secondary"
-              disabled={locked}
-              onClick={() => {
-                if (selected) pricing.request({ branchId: selected, channel })
-              }}
-            >
-              <RefreshCw size={15} />
-              Revisar precios conservando el pedido
-            </button>
-          )}
-          <div className={terminal ? 'pos-order-actions' : undefined}>
-            {terminal && (
+            ) : cart.length ? (
+              <div className="cart-lines" role="table" aria-label="Líneas del pedido">
+                {terminal && (
+                  <div className="pos-lines-heading" role="row">
+                    <span role="columnheader">Producto / cantidad</span>
+                    <span role="columnheader">Subtotal</span>
+                  </div>
+                )}
+                {cart.map((line) => (
+                  <div
+                    className="cart-line"
+                    role="row"
+                    key={line.key}
+                    data-selected={terminal && activeLine === line.key}
+                    onClick={() => terminal && setActiveLine(line.key)}
+                  >
+                    <div className="cart-line-title" role="cell">
+                      <div>
+                        <strong>{line.product_name}</strong>
+                        {line.variant_name && <small>{line.variant_name}</small>}
+                        <ModifierDetails groups={line.modifier_labels} currency={currency} />
+                        <CartComboDetails line={line} currency={currency} />
+                        {!(line.kind === 'combo' && line.price_context?.promotion) && (
+                          <PriceDetails context={line.price_context} currency={currency} />
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        aria-label={`Quitar ${line.product_name}`}
+                        disabled={locked}
+                        onClick={() =>
+                          setCart((previous) => previous.filter((item) => item.key !== line.key))
+                        }
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                    <div className="cart-line-controls" role="cell">
+                      <div className="quantity-stepper">
+                        <button
+                          type="button"
+                          aria-label={`Restar ${line.product_name}`}
+                          disabled={line.quantity <= 1 || locked}
+                          onClick={() => quantity(line.key, line.quantity - 1)}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span>{line.quantity}</span>
+                        <button
+                          type="button"
+                          aria-label={`Sumar ${line.product_name}`}
+                          disabled={line.quantity >= 999 || locked}
+                          onClick={() => quantity(line.key, line.quantity + 1)}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      <span>{formatMoney(cartSubtotal([line]), currency)}</span>
+                    </div>
+                    <input
+                      aria-label={`Observación para ${line.product_name}`}
+                      placeholder="Observación de preparación…"
+                      maxLength={300}
+                      disabled={locked}
+                      value={line.notes}
+                      onChange={(event) =>
+                        setCart((previous) =>
+                          previous.map((item) =>
+                            item.key === line.key ? { ...item, notes: event.target.value } : item,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="cart-empty">
+                <ShoppingBag size={30} />
+                <p>Agrega el primer sabor a este pedido.</p>
+              </div>
+            )}
+            {!terminal && (
               <button
                 type="button"
-                className="pos-kitchen"
-                disabled
-                title="El envío a estaciones se habilitará al integrar comandas de cocina"
+                className="button secondary"
+                aria-expanded={details}
+                onClick={() => setDetails(!details)}
               >
-                ENVIAR A COCINA · No disponible
+                Datos del pedido · cliente y notas
               </button>
             )}
-            <button
-              className="button primary wide"
-              aria-label={terminal ? 'Continuar al cobro' : undefined}
-              ref={submitButton}
-              type="submit"
-              disabled={
-                operation.isPending ||
-                pricing.locked ||
-                (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
-              }
+            <fieldset
+              disabled={locked}
+              className="form-stack pos-order-details"
+              data-open={details}
             >
-              <Send size={17} />
-              {operation.isPending
-                ? 'Registrando…'
-                : operation.uncertain
-                  ? 'Reintentar envío'
-                  : terminal
-                    ? 'COBRAR'
-                    : 'Registrar pedido'}
-            </button>
-          </div>
-        </form>
+              {
+                <button
+                  type="button"
+                  className="pos-detail-close"
+                  onClick={() => setDetails(false)}
+                >
+                  Cerrar detalles
+                </button>
+              }
+              <Field label="Tipo de pedido">
+                <select
+                  name="channel"
+                  value={channel}
+                  onChange={(event) =>
+                    selected &&
+                    pricing.request({
+                      branchId: selected,
+                      channel: event.target.value as OrderChannel,
+                    })
+                  }
+                >
+                  <option value="takeaway">Para llevar</option>
+                  <option value="dine_in">En el restaurante</option>
+                </select>
+              </Field>
+              <Field label="Referencia del pedido">
+                <input
+                  name="reference"
+                  maxLength={80}
+                  placeholder="Ej. Mesa 4 o nombre de recogida"
+                />
+              </Field>
+              {selected && channel === 'dine_in' && can('dining.view') && can('dining.operate') && (
+                <Suspense fallback={<Loading />}>
+                  <DiningSessionPicker
+                    key={selected}
+                    branchId={selected}
+                    selected={dining}
+                    disabled={locked}
+                    onChange={setDining}
+                  />
+                </Suspense>
+              )}
+              <Field label="Nombre del cliente">
+                <input name="customer_name" maxLength={100} placeholder="Opcional" />
+              </Field>
+              <Field label="Observación general">
+                <textarea
+                  name="notes"
+                  maxLength={1000}
+                  rows={2}
+                  placeholder="Indicaciones para este pedido"
+                />
+              </Field>
+            </fieldset>
+            <div className="order-subtotal">
+              <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
+              <strong>{formatMoney(cartSubtotal(cart), currency)}</strong>
+            </div>
+            <p className="muted small">
+              Este registro no incluye cobro ni factura. El descuento, impuesto adicional y redondeo
+              se calculan al cobrar el pedido.
+            </p>
+            {conflict && (
+              <button
+                type="button"
+                className="button secondary"
+                disabled={locked}
+                onClick={() => {
+                  if (selected) pricing.request({ branchId: selected, channel })
+                }}
+              >
+                <RefreshCw size={15} />
+                Revisar precios conservando el pedido
+              </button>
+            )}
+            <div className={terminal ? 'pos-order-actions' : undefined}>
+              {terminal && (
+                <button
+                  type="button"
+                  className="pos-kitchen"
+                  disabled
+                  title="El envío a estaciones se habilitará al integrar comandas de cocina"
+                >
+                  ENVIAR A COCINA · No disponible
+                </button>
+              )}
+              <button
+                className="button primary wide"
+                aria-label={terminal ? 'Continuar al cobro' : undefined}
+                ref={submitButton}
+                type="submit"
+                disabled={
+                  operation.isPending ||
+                  pricing.locked ||
+                  (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
+                }
+              >
+                <Send size={17} />
+                {operation.isPending
+                  ? 'Registrando…'
+                  : operation.uncertain
+                    ? 'Reintentar envío'
+                    : terminal
+                      ? 'COBRAR'
+                      : 'Registrar pedido'}
+              </button>
+            </div>
+          </form>
+          {tablesOpen && selected && (
+            <PosTablesPanel
+              branchId={selected}
+              onClose={() => setTablesOpen(false)}
+              onSelect={(selection) => {
+                setTablesOpen(false)
+                if (channel === 'dine_in') setDining(selection)
+                else {
+                  pendingDining.current = selection
+                  pricing.request({ branchId: selected, channel: 'dine_in' })
+                }
+              }}
+            />
+          )}
+        </div>
       </div>
-      {tablesOpen && selected && (
-        <PosTablesModal
-          branchId={selected}
-          onClose={() => setTablesOpen(false)}
-          onSelect={(selection) => {
-            setTablesOpen(false)
-            if (channel === 'dine_in') setDining(selection)
-            else {
-              pendingDining.current = selection
-              pricing.request({ branchId: selected, channel: 'dine_in' })
-            }
-          }}
-        />
-      )}
       {picking && selected && (
         <VariantOrderPicker
           product={picking}

@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Última corrección del usuario: Mesas abre DENTRO de Pedido en curso, reemplazando visualmente su contenido, no un modal sobre comidas. PosTablesPanel hermano del formulario conserva datos sin forms anidados; Volver restaura comanda. Columna pedido ampliada y comidas/teclado estrechados. Build y Chromium pos-tables1 aprobado42.9s (límites de columna, acceso a productos, cantidad/subtotal y asociación real). Cliente/Nota regresan a detalles. Sin nuevas suites generales ni backend.
+
 POS según corrección visual del usuario: Mesas lateral anclado a derecha de acciones y pedido como tabla HTML compacta, sin tarjetas de carrito; cantidades/notas/quitar en barra única, subtotal inferior y acciones juntas. Build y Chromium pos-tables1 aprobado40.1s (posición, cantidad2/subtotal36000 y atención real). Reutiliza cálculo/UUID/backend. Pos.spec ajusta apertura de Nota a nueva barra; no se repitió su caso completo. Sin suites generales ni nuevos documentos.
 
 Corregido botón Mesas del POS: PosTablesModal muestra salones y ocupación de la sucursal; OccupancyPanel/SessionEditor reutilizados devuelven selección sin salir/perder productos. Cambiar canal conserva revisión de precios; permisos/UUID/revisiones existentes. Build y Chromium dirigido pos-tables.spec1 aprobado41.1s, incluida asociación real de pedido a atención y ausencia de duplicado. Sin backend/migraciones/suites generales.

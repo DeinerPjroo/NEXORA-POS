@@ -7,8 +7,8 @@ import { ErrorNotice } from '../../components/ui'
 export const defaultPosLayout = {
   schemaVersion: 1,
   panels: ['actions', 'order', 'categories', 'products'],
-  orderWidth: 350,
-  categoryWidth: 132,
+  orderWidth: 560,
+  categoryWidth: 110,
   productColumns: 3,
 } as const
 

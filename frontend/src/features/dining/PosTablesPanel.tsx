@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
-import { ErrorNotice, Loading, Modal } from '../../components/ui'
+import { ErrorNotice, Loading } from '../../components/ui'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { DiningRoom } from './types'
@@ -9,7 +9,7 @@ import type { DiningSelection } from './session-types'
 import { OccupancyPanel } from './OccupancyPanel'
 import './dining.css'
 
-export function PosTablesModal({
+export function PosTablesPanel({
   branchId,
   onSelect,
   onClose,
@@ -30,7 +30,13 @@ export function PosTablesModal({
   })
   const room = rooms.data?.data.find((item) => item.id === roomId) ?? rooms.data?.data[0]
   return (
-    <Modal title="Mesas del terminal" onClose={onClose} className="modal pos-tables-drawer">
+    <section className="pos-tables-inline" role="region" aria-label="Mesas del terminal">
+      <header className="pos-tables-inline-heading">
+        <h2>Mesas y salones</h2>
+        <button type="button" onClick={onClose}>
+          Volver al pedido
+        </button>
+      </header>
       <div className="pos-tables-picker">
         <ErrorNotice error={rooms.error} />
         <nav className="terminal-room-tabs" aria-label="Salones de mesas POS">
@@ -56,6 +62,6 @@ export function PosTablesModal({
           <Pagination meta={rooms.data.meta} onPage={setPage} pending={rooms.isFetching} />
         )}
       </div>
-    </Modal>
+    </section>
   )
 }
