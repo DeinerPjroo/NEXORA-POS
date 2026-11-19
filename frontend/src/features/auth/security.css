@@ -16,6 +16,34 @@
   display: grid;
   gap: 14px;
 }
+.mfa-panel {
+  margin-bottom: 24px;
+}
+.mfa-panel > p {
+  margin: 14px 0;
+}
+.mfa-enrollment img {
+  display: block;
+  background: white;
+  max-width: 100%;
+}
+.mfa-enrollment code {
+  display: inline-block;
+  overflow-wrap: anywhere;
+  font-weight: 650;
+}
+.mfa-recovery ul {
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+}
+.mfa-recovery code {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
 .security-page > p {
   max-width: 640px;
 }

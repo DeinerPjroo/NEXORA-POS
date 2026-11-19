@@ -54,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->id ?? $request->ip()));
         RateLimiter::for('recovery', fn (Request $request) => Limit::perMinute(3)->by($request->ip()));
         RateLimiter::for('credentials', fn (Request $request) => Limit::perMinute(5)->by('credentials:'.$request->user()->id));
+        RateLimiter::for('mfa-manage', fn (Request $request) => Limit::perMinute(5)->by('mfa-manage:'.$request->user()->id));
+        RateLimiter::for('mfa-challenge', fn (Request $request) => [
+            Limit::perMinute(5)->by('mfa-challenge:'.($request->session()->get('mfa_pending_login.user_id') ?? $request->ip())),
+            Limit::perMinute(20)->by('mfa-ip:'.$request->ip()),
+        ]);
         RateLimiter::for('verification', fn (Request $request) => Limit::perMinute(3)->by('verification:'.$request->user()->id));
         RateLimiter::for('verification-confirm', fn (Request $request) => Limit::perMinute(10)->by('verification-confirm:'.$request->user()->id));
         RateLimiter::for('unlock', fn (Request $request) => [

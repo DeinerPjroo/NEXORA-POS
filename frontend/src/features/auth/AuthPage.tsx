@@ -20,12 +20,14 @@ import { useSession } from './SessionProvider'
 import { homePath } from './home'
 import type { Session } from '../../lib/types'
 import { verificationReturn } from './verification-link'
+import { MfaLoginForm } from './MfaLoginForm'
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset'
 export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
   const { session, pending, error, reload } = useSession()
   const [visible, setVisible] = useState(false)
   const [done, setDone] = useState(false)
+  const [challenge, setChallenge] = useState(false)
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const client = useQueryClient()
@@ -37,22 +39,30 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
   }
   const mutation = useMutation({
     mutationFn: (body: Record<string, FormDataEntryValue>) =>
-      api<{ message: string }>(
+      api<{ message: string; mfa_required?: boolean }>(
         `auth/${{ login: 'login', register: 'register', forgot: 'forgot-password', reset: 'reset-password' }[mode]}`,
         { method: 'POST', body },
       ),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       if (mode === 'forgot' || mode === 'reset') {
         setDone(true)
         return
       }
-      const profile = await api<Session>('auth/me')
-      client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' })
-      client.getMutationCache().clear()
-      client.setQueryData(['session'], profile)
-      navigate(verificationReturn(params.get('verificar')) ?? homePath(profile), { replace: true })
+      if (result.mfa_required) {
+        setChallenge(true)
+        mutation.reset()
+        return
+      }
+      await completeLogin()
     },
   })
+  async function completeLogin() {
+    const profile = await api<Session>('auth/me')
+    client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' })
+    client.getMutationCache().clear()
+    client.setQueryData(['session'], profile)
+    navigate(verificationReturn(params.get('verificar')) ?? homePath(profile), { replace: true })
+  }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = Object.fromEntries(new FormData(event.currentTarget))
@@ -134,7 +144,15 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
               Reintentar conexión
             </button>
           )}
-          {done ? (
+          {challenge ? (
+            <MfaLoginForm
+              onComplete={completeLogin}
+              onCancel={() => {
+                setChallenge(false)
+                mutation.reset()
+              }}
+            />
+          ) : done ? (
             <div className="success-state" role="status">
               <Check size={28} />
               <h3>{mode === 'forgot' ? 'Revisa tu correo' : 'Contraseña actualizada'}</h3>

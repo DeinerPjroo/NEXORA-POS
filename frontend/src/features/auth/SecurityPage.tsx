@@ -9,6 +9,7 @@ import { useSession } from './SessionProvider'
 import { screenChanged } from './screen-events'
 import './security.css'
 import { EmailVerificationPanel } from './EmailVerificationPanel'
+import { MfaPanel } from './MfaPanel'
 
 export function SecurityPage() {
   const { session, reload } = useSession()
@@ -51,6 +52,7 @@ export function SecurityPage() {
         action={<LockKeyhole size={32} />}
       />
       <EmailVerificationPanel />
+      <MfaPanel />
       <div className="panel security-panel">
         <h2>Tu PIN de acceso rápido</h2>
         <p>

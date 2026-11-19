@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.30.0**: PIN/bloqueo y flujo local de correo completos. SMTP externo pendiente; siguen MFA/denegaciones1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.31.0**: PIN/bloqueo, flujo local de correo y MFA completos. Siguen denegaciones1-SEC-D, operación1-OPS y fases3–6; producción/SMTP externo pendientes.
+
+0.31 completa1-SEC-C: TOTP/QR local, activación confirmada, recuperación de uso único, desafío previo a autenticar y versión de sesión que invalida acceso antiguo. SQLite final15/167 (MFA/RFC y recuperación relacionada); regresión previa de identidad/correo/PIN19/189. MariaDB módulo11/126 en ee901254ff3059f1 y final dirigido3/31 en ee330c754c9dd355: dos procesos compiten por TOTP y recuperación, solo uno aceptado; recuperación/revocación conservan MFA/sesión actual. Chromium MFA2 cubiertos por ejecuciones dirigidas; caso final activación/consulta503 pasó33.2s, recuperación42.8s; cobro incierto1 aprobado43.3s. Build/TypeScript/Pint/Prettier/Composer/plataforma y capturas sin secretos correctos. Migración000027 aplicada y DDL actualizado; principal484.92kB/gzip136.94. Sin suites generales repetidas.
 
 0.30 completa el flujo local1-SEC-B: notificación Laravel, firma relativa60min y confirmación POST/CSRF/cuenta/correo vigentes con auditoría atómica. SQLite correo/seguridad/registro18/186 aprobados; Chromium correo2 aprobados44s y bloqueo/PIN/contraseña2 aprobados por regresión dirigida. Compilación/TypeScript/Pint/Prettier y capturas del módulo revisados. Sin migración/dependencias ni repetición SQL/suites generales. SMTP y recepción externos siguen sin verificar; log/array y failover a log no generan notificación ni anuncian envío.
 

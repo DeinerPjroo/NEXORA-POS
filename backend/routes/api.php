@@ -10,6 +10,7 @@ use App\Http\Controllers\DiningController;
 use App\Http\Controllers\DiningReservationController;
 use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\MultiFactorController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
@@ -36,7 +37,14 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('auth/forgot-password', [AuthController::class, 'forgot'])->middleware('throttle:recovery');
     Route::post('auth/reset-password', [AuthController::class, 'reset'])->middleware('throttle:recovery');
-    Route::middleware(['auth:sanctum', 'tenant', 'screen.unlocked'])->group(function () {
+    Route::post('auth/mfa/challenge', [MultiFactorController::class, 'challenge'])->middleware('throttle:mfa-challenge');
+    Route::post('auth/mfa/cancel', [MultiFactorController::class, 'cancel']);
+    Route::middleware(['auth:sanctum', 'mfa.session', 'tenant', 'screen.unlocked'])->group(function () {
+        Route::get('auth/mfa', [MultiFactorController::class, 'show']);
+        Route::post('auth/mfa/setup', [MultiFactorController::class, 'begin'])->middleware('throttle:credentials');
+        Route::post('auth/mfa/enable', [MultiFactorController::class, 'enable'])->middleware('throttle:mfa-manage');
+        Route::post('auth/mfa/recovery-codes', [MultiFactorController::class, 'rotate'])->middleware('throttle:mfa-manage');
+        Route::post('auth/mfa/disable', [MultiFactorController::class, 'disable'])->middleware('throttle:mfa-manage');
         Route::get('auth/email-verification', [EmailVerificationController::class, 'status']);
         Route::post('auth/email-verification', [EmailVerificationController::class, 'send'])->middleware('throttle:verification');
         Route::post('auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed:relative', 'throttle:verification-confirm'])->name('verification.verify');

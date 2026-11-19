@@ -39,8 +39,8 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-SEC | IN_PROGRESS | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones mediante A–D | Identidad existente; SMTP externo para entrega |
 | 1-SEC-A | COMPLETED | PIN propio hasheado/revisión/contraseña y bloqueo persistente de sesión/API/UI. SQLite10/120+recuperación1/4, SQL10/120; Chromium seguridad3+fundamento2, compilación/formato/capturas y migración000026 verificados. SCREEN_SECURITY.md | Identidad existente |
 | 1-SEC-B | COMPLETED | Flujo local de correo firmado/POST/CSRF/cuenta propia, caducidad, reenvío limitado y estado real0.30. SQLite18/186, Chromium correo2+bloqueo2 dirigidos, compilación/formato/capturas correctos. EMAIL_VERIFICATION.md. SMTP y recepción externos pendientes | 1-SEC-A; SMTP para entrega externa |
-| 1-SEC-C | IN_PROGRESS | MFA con desafío y recuperación, integración de inicio de sesión y pruebas críticas | 1-SEC-B |
-| 1-SEC-D | PENDING | Auditoría de denegaciones sin secretos y límites de acceso comprobados | 1-SEC-A/C |
+| 1-SEC-C | COMPLETED | MFA TOTP/QR, desafío login, recuperación única/renovación/desactivación y revocación versionada0.31. SQLite15/167, SQL11/126+final3/31 con dos procesos/TOTP/recuperación; Chromium2+financiero1, compilación/formato/capturas y migración000027 verificados. MFA.md | 1-SEC-B |
+| 1-SEC-D | IN_PROGRESS | Auditoría de denegaciones sin secretos y límites de acceso comprobados | 1-SEC-A/C |
 | 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |

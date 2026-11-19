@@ -649,3 +649,19 @@ create table `screen_locks` (`session_hash` varchar(64) not null, `tenant_id` bi
 
 alter table `screen_locks` add constraint `screen_locks_tenant_id_user_id_foreign` foreign key (`tenant_id`, `user_id`) references `users` (`tenant_id`, `id`) on delete cascade;
 
+alter table `users` add `mfa_secret` text null;
+
+alter table `users` add `mfa_recovery_hashes` text null;
+
+alter table `users` add `mfa_enabled_at` datetime null;
+
+alter table `users` add `mfa_last_step` bigint unsigned null;
+
+alter table `users` add `mfa_version` int unsigned not null default '1';
+
+alter table `users` add `mfa_pending_secret` text null;
+
+alter table `users` add `mfa_pending_id` char(36) null;
+
+alter table `users` add `mfa_pending_expires_at` datetime null;
+

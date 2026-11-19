@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\Identity\Audit;
+use App\Domains\Identity\MultiFactor;
 use App\Domains\Identity\RegisterCompany;
 use App\Domains\Identity\ScreenSecurity;
 use App\Domains\Tenancy\TenantContext;
@@ -32,7 +33,7 @@ final class AuthController extends Controller
         return response()->json(['message' => 'Tu espacio de trabajo está listo.'], 201);
     }
 
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request, MultiFactor $mfa)
     {
         // Identidad global intencional: no hay empresa confiable antes de autenticar.
         $user = User::where('email', $request->validated('email'))->first();
@@ -42,8 +43,19 @@ final class AuthController extends Controller
             }
             throw ValidationException::withMessages(['email' => 'El correo o la contraseña no son correctos.']);
         }
+        if ($user->mfa_enabled_at !== null) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $request->session()->put('mfa_pending_login', ['user_id' => $user->id, 'expires_at' => now()->addMinutes(5)->timestamp,
+                'version' => $user->mfa_version, 'password_stamp' => $mfa->passwordStamp($user)]);
+            app(TenantContext::class)->run($user->tenant_id, fn () => Audit::record('auth.mfa_challenged', 'Se solicitó el segundo factor.', $user));
+
+            return response()->json(['mfa_required' => true, 'message' => 'Confirma tu segundo factor.'], 202);
+        }
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
+        $request->session()->put('mfa_version', $user->mfa_version);
         app(TenantContext::class)->run($user->tenant_id, fn () => Audit::record('auth.login', 'Inicio de sesión.', $user));
 
         return response()->json(['message' => 'Sesión iniciada.']);
@@ -91,7 +103,10 @@ final class AuthController extends Controller
             DB::transaction(function () use ($user, $password) {
                 Tenant::whereKey($user->tenant_id)->lockForUpdate()->firstOrFail();
                 $user = User::where('tenant_id', $user->tenant_id)->lockForUpdate()->findOrFail($user->id);
-                $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60), 'pin_hash' => null, 'security_revision' => $user->security_revision + 1])->save();
+                $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60), 'pin_hash' => null,
+                    'mfa_pending_secret' => null, 'mfa_pending_id' => null, 'mfa_pending_expires_at' => null,
+                    'mfa_version' => $user->mfa_version + 1,
+                    'security_revision' => $user->security_revision + 1])->save();
                 DB::table('sessions')->where('user_id', $user->id)->delete();
                 DB::table('screen_locks')->where('user_id', $user->id)->delete();
                 app(TenantContext::class)->run($user->tenant_id, fn () => Audit::record('auth.password_reset', 'Se restableció la contraseña y se revocaron las sesiones.', $user));
@@ -121,13 +136,19 @@ final class AuthController extends Controller
 
     public function revokeSessions(Request $request)
     {
-        $data = $request->validate(['password' => ['required', 'string']]);
-        abort_unless(Hash::check($data['password'], $request->user()->password), 422, 'La contraseña no es correcta.');
-        DB::transaction(function () use ($request) {
+        $data = $request->validate(['password' => ['required', 'string', 'max:72', new PasswordByteLength]]);
+        $version = DB::transaction(function () use ($request, $data) {
+            Tenant::whereKey($request->user()->tenant_id)->lockForUpdate()->firstOrFail();
+            $user = User::where('tenant_id', $request->user()->tenant_id)->lockForUpdate()->findOrFail($request->user()->id);
+            abort_unless(Hash::check($data['password'], $user->password), 422, 'La contraseña no es correcta.');
+            $user->forceFill(['mfa_version' => $user->mfa_version + 1])->save();
             DB::table('sessions')->where('user_id', $request->user()->id)->where('id', '!=', $request->session()->getId())->delete();
             DB::table('screen_locks')->where('user_id', $request->user()->id)->where('session_hash', '!=', app(ScreenSecurity::class)->key($request))->delete();
-            Audit::record('auth.sessions_revoked', 'Se cerraron las otras sesiones.', $request->user());
+            Audit::record('auth.sessions_revoked', 'Se cerraron las otras sesiones.', $user);
+
+            return $user->mfa_version;
         });
+        $request->session()->put('mfa_version', $version);
 
         return response()->noContent();
     }
