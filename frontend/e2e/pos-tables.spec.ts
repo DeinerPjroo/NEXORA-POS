@@ -77,6 +77,19 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   await expect(lines.getByRole('row').nth(1).getByRole('cell').first()).toHaveText('2')
   await page.getByRole('button', { name: 'Mesas', exact: true }).click()
   await expect(picker.getByRole('button', { name: 'Salón POS', exact: true })).toBeVisible()
+  await expect(picker.locator('.digital-floor-filters [data-state="available"] strong')).toHaveText(
+    '1',
+  )
+  await expect(picker.locator('.digital-floor-filters [data-state="occupied"] strong')).toHaveText(
+    '0',
+  )
+  await picker.locator('.digital-floor-filters [data-state="occupied"]').click()
+  await expect(picker.getByText('No hay mesas para este filtro.', { exact: true })).toBeVisible()
+  await picker.locator('.digital-floor-filters [data-state="available"]').click()
+  await picker.getByLabel('Buscar mesa', { exact: true }).fill('inexistente')
+  await expect(picker.getByRole('button', { name: 'Ocupar Mesa POS', exact: true })).toHaveCount(0)
+  await picker.getByLabel('Buscar mesa', { exact: true }).clear()
+  await expect(picker.locator('.digital-table-symbol')).toBeVisible()
   await picker.getByRole('button', { name: 'Ocupar Mesa POS', exact: true }).click()
   const opening = page.getByRole('dialog', { name: 'Ocupar mesas', exact: true })
   await opening.getByRole('button', { name: 'Guardar atención', exact: true }).click()
@@ -85,6 +98,9 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   await expect(page.locator('.cart-lines')).toContainText('Pizza de prueba')
   // Una mesa ocupada se puede volver a elegir sin crear otra atención.
   await page.getByRole('button', { name: 'Mesas', exact: true }).click()
+  await expect(picker.locator('.digital-floor-filters [data-state="occupied"] strong')).toHaveText(
+    '1',
+  )
   await picker.getByRole('button', { name: 'Seleccionar Mesa POS', exact: true }).click()
   await expect(picker).toHaveCount(0)
   const { data: sessions } = await readApi<{ data: { id: number }[] }>(

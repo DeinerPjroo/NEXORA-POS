@@ -44,7 +44,7 @@ export function TerminalTablesPage() {
       {query.isPending ? (
         <Loading />
       ) : room ? (
-        <OccupancyPanel key={room.id} room={room} />
+        <OccupancyPanel key={room.id} room={room} digital />
       ) : (
         <p className="notice">
           No hay salones activos. Configúralos en Nexora Admin para operar sus mesas.

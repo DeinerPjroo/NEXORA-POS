@@ -54,7 +54,7 @@ export function PosTablesPanel({
         {rooms.isPending ? (
           <Loading />
         ) : room ? (
-          <OccupancyPanel key={room.id} room={room} onSelect={onSelect} />
+          <OccupancyPanel key={room.id} room={room} onSelect={onSelect} digital />
         ) : (
           !rooms.error && <p>No hay salones activos en esta sucursal. Configúralos en Admin.</p>
         )}
