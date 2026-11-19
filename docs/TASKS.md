@@ -37,8 +37,8 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.4-C | COMPLETED | Reservas/API/UI/horarios/zona/DST/capacidad/cruces/llegada atómica0.27. SQLite6/83+calendario1/10+dependencias15/285; SQL1/17+3/42+1/10; Chromium3 por ejecuciones dirigidas; migración000025/DDL/build/formato/capturas correctos. DINING_RESERVATIONS.md | 2.4-B |
 | 2.5 | COMPLETED | Dashboard real por fecha/sucursal/moneda, comparación, series, métodos, productos y operadores; widgets y permisos. Cierre de fase2: SQLite288/3692+1skip, SQL289/3706; Chromium43 cubiertos (42 completos +1 reintento dirigido). COMMERCIAL_DASHBOARD.md. Costes/ganancia/empleados avanzados dependen de fases3–4 | 2.1–2.4 |
 | 1-SEC | IN_PROGRESS | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones mediante A–D | Identidad existente; SMTP externo para entrega |
-| 1-SEC-A | IN_PROGRESS | PIN propio protegido y bloqueo de sesión exigido por servidor, interfaz de desbloqueo y pruebas dirigidas de acceso/límites/aislamiento | Identidad existente |
-| 1-SEC-B | PENDING | Verificación de correo real y estado/interfaz; envío externo solo verificado con SMTP disponible | 1-SEC-A; SMTP |
+| 1-SEC-A | COMPLETED | PIN propio hasheado/revisión/contraseña y bloqueo persistente de sesión/API/UI. SQLite10/120+recuperación1/4, SQL10/120; Chromium seguridad3+fundamento2, compilación/formato/capturas y migración000026 verificados. SCREEN_SECURITY.md | Identidad existente |
+| 1-SEC-B | IN_PROGRESS | Verificación de correo real y estado/interfaz; envío externo solo verificado con SMTP disponible | 1-SEC-A; SMTP |
 | 1-SEC-C | PENDING | MFA con desafío y recuperación, integración de inicio de sesión y pruebas críticas | 1-SEC-B |
 | 1-SEC-D | PENDING | Auditoría de denegaciones sin secretos y límites de acceso comprobados | 1-SEC-A/C |
 | 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |

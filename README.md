@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.28.0** integra el dashboard comercial: ventas, cobros, devoluciones, comparación de periodos y actividad por sucursal/moneda, con permisos y widgets. Mantiene POS, reservas y ocupación real; continúan seguridad y las fases pendientes. El neto cobrado no representa ganancias. Contrato en [COMMERCIAL_DASHBOARD.md](docs/COMMERCIAL_DASHBOARD.md).
+El incremento **0.29.0** agrega PIN personal y bloqueo de pantalla con protección en servidor, conservando borradores y reintentos de cobro. Mantiene dashboard, POS, reservas y ocupación real; continúan verificación de correo, MFA y las fases pendientes. Contratos: [SCREEN_SECURITY.md](docs/SCREEN_SECURITY.md) y [COMMERCIAL_DASHBOARD.md](docs/COMMERCIAL_DASHBOARD.md).
 
 ## Entorno y requisitos
 

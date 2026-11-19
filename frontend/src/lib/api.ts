@@ -52,6 +52,8 @@ export async function api<T>(
     if (response.status === 204) return undefined as T
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
+      if (response.status === 423 && data.code === 'screen_locked')
+        window.dispatchEvent(new Event('nexora:screen-locked'))
       const messages: Record<number, string> = {
         401: 'Tu sesión ha terminado. Inicia sesión de nuevo.',
         403: 'No tienes permiso para realizar esta acción.',

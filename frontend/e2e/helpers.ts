@@ -44,6 +44,7 @@ export async function fixtureWorkspace(page: Page, companyName: string, permissi
   if (permissions)
     await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible()
   else await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible()
+  return { email, password }
 }
 
 export async function readApi<T>(page: Page, path: string): Promise<T> {

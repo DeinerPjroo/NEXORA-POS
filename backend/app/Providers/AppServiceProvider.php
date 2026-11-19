@@ -50,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('registration', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->id ?? $request->ip()));
         RateLimiter::for('recovery', fn (Request $request) => Limit::perMinute(3)->by($request->ip()));
+        RateLimiter::for('credentials', fn (Request $request) => Limit::perMinute(5)->by('credentials:'.$request->user()->id));
+        RateLimiter::for('unlock', fn (Request $request) => [
+            Limit::perMinute(5)->by('unlock:'.$request->user()->id),
+            Limit::perMinute(20)->by('unlock-ip:'.$request->ip()),
+        ]);
         ResetPassword::createUrlUsing(fn ($user, $token) => config('nexora.frontend_url').'/restablecer?token='.$token.'&email='.urlencode($user->email));
     }
 }

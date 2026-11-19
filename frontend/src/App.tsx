@@ -26,6 +26,9 @@ import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
 import { PosAccess } from './features/pos/PosAccess'
 import { HomeRoute } from './features/auth/HomeRoute'
+const SecurityPage = lazy(() =>
+  import('./features/auth/SecurityPage').then((module) => ({ default: module.SecurityPage })),
+)
 
 const RoomsPage = lazy(() =>
   import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomsPage })),
@@ -65,6 +68,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/mi-seguridad"
+          element={
+            <Suspense fallback={<Loading />}>
+              <SecurityPage />
+            </Suspense>
+          }
+        />
         <Route
           path="/salones/reservas"
           element={

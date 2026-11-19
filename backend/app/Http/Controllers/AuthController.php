@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Domains\Identity\Audit;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Identity\ScreenSecurity;
 use App\Domains\Tenancy\TenantContext;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterCompanyRequest;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\WorkspaceSetting;
 use App\Rules\PasswordByteLength;
@@ -55,12 +57,14 @@ final class AuthController extends Controller
             'user' => $user->only('id', 'name', 'email'), 'company' => $user->tenant,
             'role' => $user->role->only('id', 'name', 'is_owner'),
             'permissions' => $user->role->permissions->pluck('key'), 'settings' => WorkspaceSetting::firstOrFail(),
+            'security' => app(ScreenSecurity::class)->state($request),
         ]);
     }
 
     public function logout(Request $request)
     {
         Audit::record('auth.logout', 'Se cerró la sesión.', $request->user());
+        app(ScreenSecurity::class)->locks($request)->delete();
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -85,14 +89,21 @@ final class AuthController extends Controller
         $data['email'] = strtolower($data['email']);
         $status = Password::reset($data, function (User $user, string $password) {
             DB::transaction(function () use ($user, $password) {
-                $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60)])->save();
+                Tenant::whereKey($user->tenant_id)->lockForUpdate()->firstOrFail();
+                $user = User::where('tenant_id', $user->tenant_id)->lockForUpdate()->findOrFail($user->id);
+                $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60), 'pin_hash' => null, 'security_revision' => $user->security_revision + 1])->save();
                 DB::table('sessions')->where('user_id', $user->id)->delete();
+                DB::table('screen_locks')->where('user_id', $user->id)->delete();
                 app(TenantContext::class)->run($user->tenant_id, fn () => Audit::record('auth.password_reset', 'Se restableció la contraseña y se revocaron las sesiones.', $user));
             });
         });
         if ($status !== Password::PasswordReset) {
             throw ValidationException::withMessages(['email' => 'El enlace no es válido o ha vencido. Solicita uno nuevo.']);
         }
+        // Do not recreate a previously authenticated current session after revocation.
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json(['message' => 'Contraseña actualizada. Inicia sesión de nuevo.']);
     }
@@ -114,6 +125,7 @@ final class AuthController extends Controller
         abort_unless(Hash::check($data['password'], $request->user()->password), 422, 'La contraseña no es correcta.');
         DB::transaction(function () use ($request) {
             DB::table('sessions')->where('user_id', $request->user()->id)->where('id', '!=', $request->session()->getId())->delete();
+            DB::table('screen_locks')->where('user_id', $request->user()->id)->where('session_hash', '!=', app(ScreenSecurity::class)->key($request))->delete();
             Audit::record('auth.sessions_revoked', 'Se cerraron las otras sesiones.', $request->user());
         });
 

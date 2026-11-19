@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureScreenUnlocked;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,9 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : config('nexora.frontend_url').'/ingresar');
-        $middleware->alias(['tenant' => ResolveTenant::class]);
+        $middleware->alias(['tenant' => ResolveTenant::class, 'screen.unlocked' => EnsureScreenUnlocked::class]);
         // Resolver el contexto ANTES de enlazar {branch} o {role} con Eloquent.
         $middleware->prependToPriorityList(SubstituteBindings::class, ResolveTenant::class);
+        $middleware->prependToPriorityList(SubstituteBindings::class, EnsureScreenUnlocked::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());

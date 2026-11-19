@@ -641,3 +641,11 @@ alter table `dining_reservation_tables` add constraint `dining_reservation_membe
 
 alter table `dining_reservation_tables` add constraint `dining_reservation_members_table_fk` foreign key (`tenant_id`, `branch_id`, `dining_table_id`) references `dining_tables` (`tenant_id`, `branch_id`, `id`) on delete restrict;
 
+alter table `users` add `pin_hash` varchar(255) null;
+
+alter table `users` add `security_revision` int unsigned not null default '1';
+
+create table `screen_locks` (`session_hash` varchar(64) not null, `tenant_id` bigint unsigned not null, `user_id` bigint unsigned not null, `challenge` char(36) not null, `created_at` datetime not null, primary key (`session_hash`)) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `screen_locks` add constraint `screen_locks_tenant_id_user_id_foreign` foreign key (`tenant_id`, `user_id`) references `users` (`tenant_id`, `id`) on delete cascade;
+

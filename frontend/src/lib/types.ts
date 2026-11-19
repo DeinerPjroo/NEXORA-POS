@@ -15,11 +15,18 @@ export type Company = {
   locale: string
 }
 export type Session = {
+  security: ScreenSecurity
   user: { id: number; name: string; email: string }
   company: Company
   role: { id: number; name: string; is_owner: boolean }
   permissions: string[]
   settings: Settings
+}
+export type ScreenSecurity = {
+  locked: boolean
+  challenge: string | null
+  pin_enabled: boolean
+  revision: number
 }
 export type Branch = {
   id: number

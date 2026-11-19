@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.28.0**: catálogo2.2/POS2.3/salones2.4/dashboard2.5 completos en su alcance comercial. Verificaciones generales de cierre ejecutadas; siguen seguridad1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.29.0**: seguridad1-SEC-A completa tras cierre comercial de fase2 en0.28. Siguen correo/MFA/denegaciones1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+
+0.29 completa1-SEC-A: PIN propio con contraseña/revisión, bloqueo persistente exigido por servidor y desbloqueo con PIN/contraseña. SQLite seguridad10/120 y regresión de recuperación1/4 tras Form Requests; fundamento completo26 aprobado antes del ajuste final de recuperación. MariaDB seguridad10/120 en nexora_test_ce118fc0c291f60a conservado. Chromium seguridad3 aprobados1.8min (incluye cobro incierto, DTO/UUID exactos, pago único/caja110.01) y fundamento dirigido2 aprobados. Build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal482.55kB/gzip136.26. Migración000026 aplicada y DDL actualizado. Sin suites generales repetidas.
 
 0.28: SQLite completa 288 pruebas/3692 aserciones y 1 omitida de precisión específica SQL; MariaDB completa 289/3706 en 175.214s, nexora_test_f9d65e5cda296f38 conservado. Chromium completo: 42 aprobados y un timeout en fotografías/variantes; ese caso aprobó al reutilizar fixtureWorkspace, sin retirar validaciones (1.6min). Los 43 casos quedaron cubiertos entre ambas ejecuciones; dashboard dirigido 2 aprobados. Build/TypeScript/Pint/Prettier y capturas propias escritorio/móvil correctos; principal 478.65kB/gzip135.25. Sin migraciones nuevas ni cambios de dinero registrado. Contrato COMMERCIAL_DASHBOARD.md.
 

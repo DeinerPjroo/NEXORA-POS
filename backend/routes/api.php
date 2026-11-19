@@ -24,6 +24,7 @@ use App\Http\Controllers\ProductPromotionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
+use App\Http\Controllers\ScreenSecurityController;
 use App\Http\Controllers\TaxProfileController;
 use App\Http\Controllers\VariantController;
 use App\Http\Controllers\WorkspaceController;
@@ -34,7 +35,11 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('auth/forgot-password', [AuthController::class, 'forgot'])->middleware('throttle:recovery');
     Route::post('auth/reset-password', [AuthController::class, 'reset'])->middleware('throttle:recovery');
-    Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+    Route::middleware(['auth:sanctum', 'tenant', 'screen.unlocked'])->group(function () {
+        Route::get('auth/security', [ScreenSecurityController::class, 'show']);
+        Route::put('auth/security', [ScreenSecurityController::class, 'configure'])->middleware('throttle:credentials');
+        Route::post('auth/screen/lock', [ScreenSecurityController::class, 'lock']);
+        Route::post('auth/screen/unlock', [ScreenSecurityController::class, 'unlock'])->middleware('throttle:unlock');
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/sessions', [AuthController::class, 'sessions']);
