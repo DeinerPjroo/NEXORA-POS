@@ -43,6 +43,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- POS0.24 completa2.3: homePath selecciona inicio autorizado y retorno sin bucles; login limpia caché de dominio conservando observador de sesión e hidrata perfil una vez. Preferencia sucursal/canal por empresa/usuario en sessionStorage, validada contra sucursales activas y limpiada al logout; no guardar carrito/dinero/tokens. Paneles móviles conservan formulario; F2/F8 solo foco. Reintento incierto precede validación del contexto vivo y mantiene DTO/UUID, incluso tras retirar sucursal; nuevo terminal refresca contexto. POS.md; seguir2.4 según TABLES_PLAN.md.
+
 - POS0.23 (2.3-A): /pos exige catalog.view/orders.view/orders.manage/sales.collect y reutiliza OrderComposer/Checkout/recibo. Caja/configuración visibles, controles táctiles y navegación POS; recibo local sin sales.view no habilita historial. Pedido sigue separado del cobro; comandos/cálculos/UUID/revisiones del backend no se duplican. POS.md. B (inicio por permisos/contexto/ergonomía) pendiente; no cerrar padre2.3 hasta B.
 
 - Galería0.22: ProductGallery reutiliza GD/disco privado y conserva URL/portada anterior; máximo8 activas, FK tenant/product/image y backfill bajo Tenant/product lock. Upload UUID con hash de bytes en servidor; orden completo, portada y retirada con revisión/moneda/Gate/auditoría. Retirada archiva fila y limpia archivo tras commit; rollback limpia blob sin referencia. useOperation preserva FormData/JSON/DELETE inciertos y modales conservan snapshot. GALLERY.md. Catálogo2.2 completo; siguiente terminal POS reutilizando comandos/cálculos, sin otro motor financiero.

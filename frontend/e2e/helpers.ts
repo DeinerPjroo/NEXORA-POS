@@ -41,7 +41,9 @@ export async function fixtureWorkspace(page: Page, companyName: string, permissi
   await page.getByLabel('Correo electrónico', { exact: true }).fill(email)
   await page.getByLabel('Contraseña', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Entrar a mi espacio', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible()
+  if (permissions)
+    await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible()
+  else await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible()
 }
 
 export async function readApi<T>(page: Page, path: string): Promise<T> {

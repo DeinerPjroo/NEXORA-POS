@@ -216,6 +216,26 @@
   margin-bottom: 20px;
   padding: 18px;
 }
+.pos-view-switch {
+  display: none;
+}
+@media (max-width: 760px) {
+  .pos-terminal .pos-view-switch {
+    display: flex;
+    gap: 8px;
+  }
+  .pos-view-switch > button {
+    flex: 1;
+    min-height: 44px;
+  }
+  .pos-terminal[data-pos-panel='menu'] .order-cart,
+  .pos-terminal[data-pos-panel='cart'] .order-menu {
+    display: none;
+  }
+  .pos-terminal .pos-shortcuts {
+    display: none;
+  }
+}
 .pos-terminal .order-product {
   min-height: 180px;
 }

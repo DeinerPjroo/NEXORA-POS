@@ -29,6 +29,8 @@ import { api } from '../lib/api'
 import { Brand, ErrorNotice, Loading, useToast } from './ui'
 import { useCan, useSession } from '../features/auth/SessionProvider'
 import { posPermissions } from '../features/pos/pos-permissions'
+import { clearPosContext } from '../features/pos/pos-context'
+import { homePath } from '../features/auth/home'
 
 const navigation = [
   {
@@ -87,6 +89,7 @@ export function AppShell() {
     setLoggingOut(true)
     try {
       await api('auth/logout', { method: 'POST' })
+      clearPosContext(session!)
       client.clear()
       navigate('/ingresar', { replace: true })
       reload()
@@ -266,6 +269,7 @@ export function PermissionBoundary({
   children: React.ReactNode
 }) {
   const can = useCan()
+  const { session } = useSession()
   return can(permission) ? (
     children
   ) : (
@@ -273,7 +277,7 @@ export function PermissionBoundary({
       <ShieldCheck size={36} />
       <h1>Acceso restringido</h1>
       <p>Tu rol no permite consultar esta sección.</p>
-      <Link to="/inicio" className="button secondary">
+      <Link to={session ? homePath(session) : '/ingresar'} className="button secondary">
         Volver a mi espacio
       </Link>
     </div>

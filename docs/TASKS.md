@@ -28,10 +28,10 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.2-D2 | COMPLETED | Grupos/alternativas/API/UI/carrito/preview/snapshots/recibo conectados. Migración000020/DDL; 242/2885 SQLite/MariaDB y 23 Playwright en 18.3 minutos aprobados; build/formato/doctor/capturas correctos. COMBO_CHOICES.md | 2.2-D1 |
 | 2.2-E | COMPLETED | Promociones/API/UI/snapshots0.21 conectados. MariaDB dirigidas8/134+finanzas1/35, SQLite permisos/finanzas2/47 y dependencias28/538; Chromium2 en2.9min. Migración000021/DDL/build/formato/capturas correctos. PROMOTIONS.md | 2.2-D |
 | 2.2-F | COMPLETED | Galería0.22/API/UI/portada/orden/reintento/legado conectados. SQLite8/121+legado10/85; SQL backfill/FK2/20 y bloqueo1/15; Chromium3 en3.3min más galería final1/1.0min; migración000022/DDL/build/formato/captura correctos. GALLERY.md | 2.2-E |
-| 2.3 | IN_PROGRESS | A operativo0.23 completado; B pendiente de inicio por permisos/contexto/ergonomía. No cerrar padre hasta B; POS.md/POS_PLAN.md | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
+| 2.3 | COMPLETED | Terminal A/B0.23/0.24 conectados: inicio por permisos, contexto, modo táctil, pedido/cobro/recibo e incertidumbre verificados; POS.md | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.3-A | COMPLETED | Terminal/pedido/cobro/recibo y controles táctiles reutilizan dominios. Tres casos Chromium aprobados: operación financiera/reintentos, permiso denegado y recibo sin historial; build/TypeScript/formato/capturas correctos. POS.md | 2.2-F |
-| 2.3-B | IN_PROGRESS | Inicio por permisos, continuidad de sucursal/canal y ergonomía móvil/atajos; continuar sobre A publicada sin duplicar lógica financiera | 2.3-A |
-| 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |
+| 2.3-B | COMPLETED | Inicio autorizado sin bucles; sucursal/canal por actor, menú/carrito móvil y F2/F8 sin cobro automático. Chromium7+POS3 y caso financiero final1/1.5min aprobados, build/formato/captura correctos;0.24 | 2.3-A |
+| 2.4 | IN_PROGRESS | Desglose A configuración/editor, B ocupación/unión/traslado/meseros, C reservas; TABLES_PLAN.md. No cerrar padre hasta integrarlos y verificarlos | 2.3, empleados mínimos |
 | 2.5 | PENDING | Dashboard comercial real por fecha/sucursal, sin ganancias definitivas; E2E apertura→pedido→cobro→cierre | 2.1–2.4 |
 | 1-SEC | PENDING | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones; subdividir | Identidad existente; SMTP externo para entrega |
 | 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |

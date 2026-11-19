@@ -14,7 +14,7 @@ export function AboutPage() {
         <Sparkles size={32} />
         <h2>Nexora POS</h2>
         <p>El futuro de tu restaurante.</p>
-        <span className="pill violet">Versión 0.8 · Descuentos y propinas voluntarias</span>
+        <span className="pill violet">Catálogo avanzado y terminal POS · Desarrollo por fases</span>
       </div>
       <div className="roadmap-list">
         {[

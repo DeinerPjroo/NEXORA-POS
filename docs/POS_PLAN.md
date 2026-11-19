@@ -1,6 +1,6 @@
 # Terminal POS · 2.3
 
-Avance: A implementado/verificado como0.23, contrato POS.md. Continuar B de inicio por permisos, continuidad de contexto y ergonomía; no reiniciar A ni duplicar comandos financieros.
+Avance: A0.23 y B0.24 implementados/verificados por impacto; padre2.3 completo, contrato POS.md. Continuar salones/mesas2.4 según TABLES_PLAN.md sin duplicar comandos financieros.
 
 Siguiente bloque tras galería0.22. Reutilizar OrderComposer, catálogo/configuradores/carrito, preview, CreateOrder, CheckoutPage y recibo; no crear otro cálculo de precios, impuestos o caja. Alcance inicial: terminal táctil para llevar/en restaurante con contexto visible, caja de sucursal, búsqueda/categorías, variantes/preparaciones/combos/promociones, pedido y acceso directo a cobro real existente.
 

@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.23.0** conecta el **terminal POS** con catálogo, carrito, caja, pedido, cobro y recibo existentes. Incluye variantes/preparaciones, combos/promociones, controles táctiles y recuperación de respuestas inciertas. Continúa inicio por permisos y ergonomía del terminal; mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [POS.md](docs/POS.md), [GALLERY.md](docs/GALLERY.md) y [PROMOTIONS.md](docs/PROMOTIONS.md).
+El incremento **0.24.0** completa el **terminal POS** con inicio por permisos, sucursal/canal conservados, paneles móviles y atajos de foco. Reutiliza catálogo, caja, pedido, cobro y recibo con recuperación de respuestas inciertas. Continúan salones/mesas; pasarelas, cocina, inventario y facturación conservan sus fases. Reglas en [POS.md](docs/POS.md), [GALLERY.md](docs/GALLERY.md) y [PROMOTIONS.md](docs/PROMOTIONS.md).
 
 ## Entorno y requisitos
 

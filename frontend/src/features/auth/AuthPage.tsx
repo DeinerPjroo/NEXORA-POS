@@ -17,6 +17,8 @@ import { api } from '../../lib/api'
 import { businessTypes } from '../../lib/types'
 import { Brand, ErrorNotice, Field, Loading } from '../../components/ui'
 import { useSession } from './SessionProvider'
+import { homePath } from './home'
+import type { Session } from '../../lib/types'
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset'
 export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
@@ -43,10 +45,11 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
         setDone(true)
         return
       }
-      client.clear()
-      await client.invalidateQueries({ queryKey: ['session'] })
-      reload()
-      navigate('/inicio', { replace: true })
+      const profile = await api<Session>('auth/me')
+      client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' })
+      client.getMutationCache().clear()
+      client.setQueryData(['session'], profile)
+      navigate(homePath(profile), { replace: true })
     },
   })
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -59,7 +62,7 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
     mutation.mutate(data)
   }
   if (pending) return <Loading />
-  if (session) return <Navigate to="/inicio" replace />
+  if (session) return <Navigate to={homePath(session)} replace />
   return (
     <div className="auth-layout">
       <aside className="auth-story">

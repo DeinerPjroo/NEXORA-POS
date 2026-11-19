@@ -3,10 +3,11 @@ import { Building2 } from 'lucide-react'
 import { api } from '../../lib/api'
 import type { OperationContext, OperationalBranch } from './types'
 
-export function useOperationContext() {
+export function useOperationContext(refreshOnMount = false) {
   return useQuery({
     queryKey: ['operation-context'],
     queryFn: ({ signal }) => api<OperationContext>('operations/context', { signal }),
+    refetchOnMount: refreshOnMount ? 'always' : true,
   })
 }
 export function OperationalBranchPicker({
@@ -29,7 +30,11 @@ export function OperationalBranchPicker({
         disabled={disabled}
         onChange={(event) => onChange(Number(event.target.value))}
       >
-        {!branches.length && <option value="">Sin sucursales disponibles</option>}
+        {(!branches.length || value === null) && (
+          <option value="" disabled>
+            {branches.length ? 'Elige una sucursal' : 'Sin sucursales disponibles'}
+          </option>
+        )}
         {branches.map((branch) => (
           <option value={branch.id} key={branch.id}>
             {branch.name}

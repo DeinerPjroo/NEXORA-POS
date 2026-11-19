@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -35,6 +35,7 @@ import { useCartPricing } from './useCartPricing'
 import { PriceDetails } from './PriceDetails'
 import { CartComboDetails } from './CartComboDetails'
 import type { CashOption, SalesSettings } from '../sales/types'
+import { loadPosContext, savePosContext } from '../pos/pos-context'
 
 const PriceReviewModal = lazy(() =>
   import('./PriceReviewModal').then((module) => ({ default: module.PriceReviewModal })),
@@ -44,11 +45,17 @@ const ComboOrderPicker = lazy(() =>
 )
 
 export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
-  const context = useOperationContext()
+  const context = useOperationContext(terminal)
   const { session } = useSession()
   const [currency] = useState(session!.company.currency)
-  const [branch, setBranch] = useState<number | null>(null)
-  const [channel, setChannel] = useState<OrderChannel>('takeaway')
+  const [remembered] = useState(() =>
+    terminal ? loadPosContext(session!) : { branchId: null, channel: 'takeaway' as OrderChannel },
+  )
+  const [branch, setBranch] = useState<number | null>(remembered.branchId)
+  const [channel, setChannel] = useState<OrderChannel>(remembered.channel)
+  const [panel, setPanel] = useState<'menu' | 'cart'>('menu')
+  const searchInput = useRef<HTMLInputElement>(null)
+  const submitButton = useRef<HTMLButtonElement>(null)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<CategorySummary | null>(null)
   const [page, setPage] = useState(1)
@@ -64,7 +71,10 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
   const toast = useToast()
   const text = useDebounce(search)
   const activeBranches = context.data?.branches.filter((item) => item.is_active) ?? []
-  const selected = branch ?? activeBranches[0]?.id ?? null
+  const selected =
+    branch === null
+      ? (activeBranches[0]?.id ?? null)
+      : (activeBranches.find((item) => item.id === branch)?.id ?? null)
   const posCash = useQuery({
     queryKey: ['pos-cash', selected],
     queryFn: ({ signal }) =>
@@ -126,6 +136,38 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
     },
   })
   const locked = operation.locked || pricing.locked
+  useEffect(() => {
+    if (terminal && selected && !locked) savePosContext(session!, selected, channel)
+  }, [terminal, selected, channel, locked, session])
+  useEffect(() => {
+    if (!terminal) return
+    const shortcut = (event: KeyboardEvent) => {
+      if (
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        picking ||
+        bundling ||
+        customizing ||
+        pricing.review
+      )
+        return
+      if (event.key === 'F2') {
+        event.preventDefault()
+        setPanel('menu')
+        requestAnimationFrame(() => searchInput.current?.focus())
+      }
+      if (event.key === 'F8') {
+        event.preventDefault()
+        setPanel('cart')
+        requestAnimationFrame(() => submitButton.current?.focus())
+      }
+    }
+    window.addEventListener('keydown', shortcut)
+    return () => window.removeEventListener('keydown', shortcut)
+  }, [terminal, picking, bundling, customizing, pricing.review])
   function configure(product: Product, variant?: Variant) {
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
@@ -160,7 +202,11 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selected || !cart.length || pricing.locked || (!posReady && !operation.uncertain)) return
+    if (operation.uncertain) {
+      operation.send({})
+      return
+    }
+    if (!selected || !cart.length || pricing.locked || !posReady) return
     const data = Object.fromEntries(new FormData(event.currentTarget))
     operation.send({
       ...data,
@@ -180,7 +226,7 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
     )
   const conflict = operation.error instanceof ApiError && operation.error.status === 409
   return (
-    <div className={terminal ? 'pos-terminal' : undefined}>
+    <div className={terminal ? 'pos-terminal' : undefined} data-pos-panel={panel}>
       <Link className="text-button product-back" to="/pedidos">
         <ArrowLeft size={16} />
         Volver a pedidos
@@ -195,13 +241,20 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
         }
       />
       <ErrorNotice error={context.error} />
+      {terminal && branch !== null && !selected && context.data && !context.isFetching && (
+        <p className="notice">
+          La sucursal recordada ya no está disponible. Elige otra sucursal para continuar.
+        </p>
+      )}
       {terminal && (
         <section className="pos-status panel" aria-label="Estado del terminal">
           <ErrorNotice error={posCash.error || posSettings.error} />
           <div className="panel-heading">
             <strong>
               {!selected
-                ? 'No hay sucursales activas'
+                ? activeBranches.length
+                  ? 'Elige una sucursal para operar'
+                  : 'No hay sucursales activas'
                 : posCash.isPending || posSettings.isPending
                   ? 'Consultando caja y configuración…'
                   : posReady
@@ -210,9 +263,16 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
             </strong>
             <button
               className="text-button"
-              disabled={locked || !selected || posCash.isFetching || posSettings.isFetching}
+              disabled={
+                operation.isPending ||
+                pricing.locked ||
+                context.isFetching ||
+                posCash.isFetching ||
+                posSettings.isFetching
+              }
               onClick={() => {
-                void posCash.refetch()
+                void context.refetch()
+                if (selected) void posCash.refetch()
                 void posSettings.refetch()
               }}
             >
@@ -255,11 +315,39 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
         <span className="pill neutral">Sin cobro registrado</span>
       </div>
       <div className="order-composer">
+        {terminal && (
+          <div className="pos-view-switch" role="group" aria-label="Panel del terminal">
+            <button
+              type="button"
+              className={`button ${panel === 'menu' ? 'primary' : 'secondary'}`}
+              aria-pressed={panel === 'menu'}
+              aria-label="Ver menú POS"
+              onClick={() => setPanel('menu')}
+            >
+              Menú
+            </button>
+            <button
+              type="button"
+              className={`button ${panel === 'cart' ? 'primary' : 'secondary'}`}
+              aria-pressed={panel === 'cart'}
+              aria-label="Ver pedido POS"
+              onClick={() => setPanel('cart')}
+            >
+              Pedido ({cart.reduce((sum, line) => sum + line.quantity, 0)})
+            </button>
+          </div>
+        )}
         <section className="order-menu">
+          {terminal && (
+            <p className="muted small pos-shortcuts">
+              F2: buscar · F8: ir al pedido. El cobro siempre requiere confirmación.
+            </p>
+          )}
           <div className="catalog-toolbar">
             <div className="search-input">
               <Search size={17} />
               <input
+                ref={searchInput}
                 aria-label="Buscar en el menú"
                 placeholder="Busca producto o código…"
                 value={search}
@@ -281,7 +369,9 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
           {category && !category.parent_id && (
             <p className="muted small">Esta categoría principal incluye sus subcategorías.</p>
           )}
-          {products.error ? (
+          {!selected && !context.isPending ? (
+            <p className="notice">Elige una sucursal activa para abrir el menú.</p>
+          ) : products.error ? (
             <CatalogError error={products.error} onRetry={() => void products.refetch()} />
           ) : products.isPending ? (
             <Loading />
@@ -493,14 +583,12 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
           )}
           <button
             className="button primary wide"
+            ref={submitButton}
             type="submit"
             disabled={
               operation.isPending ||
               pricing.locked ||
-              !cart.length ||
-              !selected ||
-              conflict ||
-              (!posReady && !operation.uncertain)
+              (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
             }
           >
             <Send size={17} />

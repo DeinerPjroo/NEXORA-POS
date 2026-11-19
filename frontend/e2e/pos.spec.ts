@@ -230,6 +230,22 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
   })
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Reintentar envío', exact: true })).toBeVisible()
+  const originalBranch = (
+    await readApi<{ id: number; name: string; code: string }[]>(page, 'branches')
+  ).find((item) => item.id === branch)!
+  await writeApi(page, 'PUT', `branches/${branch}`, {
+    name: originalBranch.name,
+    code: originalBranch.code,
+    is_active: false,
+  })
+  await page.getByRole('button', { name: 'Actualizar estado del terminal', exact: true }).click()
+  await expect(page.getByLabel('Sucursal de operación', { exact: true })).toHaveValue('')
+  await expect(page.getByRole('button', { name: 'Reintentar envío', exact: true })).toBeEnabled()
+  await writeApi(page, 'PUT', `branches/${branch}`, {
+    name: originalBranch.name,
+    code: originalBranch.code,
+    is_active: true,
+  })
   await page.getByRole('button', { name: 'Reintentar envío', exact: true }).click()
   await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
   expect(orders).toHaveLength(2)
@@ -268,6 +284,8 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     .toBe(true)
   await page.getByRole('link', { name: 'Nueva operación POS', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Terminal POS', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Agregar Tostada POS', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
   await expect(page.locator('.cart-empty')).toBeVisible()
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

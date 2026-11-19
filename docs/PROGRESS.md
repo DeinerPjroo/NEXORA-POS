@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.23.0** de terminal POS operativo integrado/verificado por impacto; catálogo2.2 y terminal2.3-A completos. Sigue2.3-B (inicio por permisos/contexto/ergonomía) antes de salones/mesas2.4. Referencia completa0.20 conservada abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.24.0** integrado/verificado por impacto; catálogo2.2 y terminal POS2.3 completos. Sigue salones/mesas2.4 según TABLES_PLAN.md. Referencia completa0.20 conservada abajo; producción aún pendiente.
+
+0.24: Chromium inicio/contexto/foundation7 en1.8min y POS3 en1.8min; caso final de sucursal retirada/reintento/contexto fresco1 en1.5min. Build/TypeScript/Prettier/capturas correctos, principal497.72kB/gzip140.95. Inicio autorizado, contexto válido por actor, paneles móviles y atajos sin cobro automático; backend financiero sin cambios. POS.md.
 
 0.23: tres casos Chromium aprobados por ejecución dirigida (dos de permisos/recibo y operativo final1.2min). Pedido/cobro inciertos sin duplicar, impuestos mixtos/variantes/preparación/combo/promoción y contexto; total16.21/caja116.21. Build/TypeScript/formato/capturas correctos; principal494.67kB/gzip139.90. Backend financiero sin cambios; POS.md. No marcar padre2.3 completo todavía.
 

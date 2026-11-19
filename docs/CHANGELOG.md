@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 0.24.0 · 2026-11-19
+
+- Inicio y retorno por permisos, sin bucles para operadores sin resumen ni capacidades operativas. Login hidrata perfil una vez y limpia caché de dominio/mutaciones.
+- Sucursal/canal recordados por empresa/usuario en sesión del navegador, validados contra sucursales activas; se limpian al logout. Menú/pedido móvil sin perder datos y F2/F8 de foco, sin registro/cobro automático.
+- Reintento de pedido incierto preservado incluso al refrescar sucursal retirada; contexto fresco al volver del recibo. Backend financiero sin cambios.
+- Dirigidas Chromium inicio/contexto/foundation7 en1.8min, POS3 en1.8min y caso financiero final1 en1.5min aprobados. Build/TypeScript/Prettier/capturas correctos; principal497.72kB/gzip140.95 sin aviso. Padre2.3 completado; siguiente2.4 según TABLES_PLAN.md.
+
 ## 0.23.0 · 2026-11-19
 
 - Terminal POS con requisitos de permisos compartidos, estado de caja/configuración, controles táctiles y rutas propias de pedido→cobro→recibo→nueva operación. Reutiliza los comandos y cálculos existentes; recibo local sin habilitar historial a quien no tiene sales.view.

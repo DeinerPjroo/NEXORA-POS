@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { AppShell, PermissionBoundary } from './components/AppShell'
 import { AuthPage } from './features/auth/AuthPage'
 import { OverviewPage } from './features/workspace/OverviewPage'
@@ -25,6 +25,7 @@ import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
 import { PosAccess } from './features/pos/PosAccess'
+import { HomeRoute } from './features/auth/HomeRoute'
 
 const PaymentHistoryPage = lazy(() =>
   import('./features/sales/PaymentHistoryPage').then((module) => ({
@@ -35,7 +36,7 @@ const PaymentHistoryPage = lazy(() =>
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/inicio" replace />} />
+      <Route path="/" element={<HomeRoute />} />
       <Route path="/ingresar" element={<AuthPage key="login" />} />
       <Route path="/registro" element={<AuthPage key="register" mode="register" />} />
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
