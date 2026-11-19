@@ -1,6 +1,6 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.32.0**: núcleo de seguridad1-SEC completo tras dashboard/POS/salones de fase2. Siguen operación1-OPS y fases3–6; producción/SMTP externo pendientes.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.33.0**: operación local con CI, concurrencia y respaldo/restauración aislada; validación final de rama antes de integrar. Continúa fase3/KDS. Producción, SMTP externo, EER visual y reparación Aria176 local pendientes.
 
 0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.
 

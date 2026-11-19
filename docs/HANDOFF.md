@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+0.33/OPS C: rama8402575 run44623608940 aprobó6/39 en MySQL8.4 (respaldo/restore completo y cuenta restringida). Ajustes finales redacción de secretos/PDO sin query logs y streams: verificar rama actual dirigida antes de integrar main. A/B completos remotos; D documentado en DELIVERY_CHECKLIST.md, EER visual/producción y reparación Aria176 externos. No reparar servidor compartido. Continuarfase3 con3.1-A estaciones/rutas, B comandas y C Reverb; no reiniciar ni repetir completas sin impacto. No hubo cambios de .env/APP_KEY/base de trabajo ni migraciones en0.33.
+
 A/B completos y remotos verdes: runs44622299984 (categorías) y44622476244 (MySQL8.4 carreras9/121). C TESTING en rama de validación: comandos backup/restore, ZIP AES-256/catálogo/claves, esquema/directorio nuevos y cuenta temporal limitada; archivo4/19, Pint/CI5/actionlint pasan. Local SQL falló en GRANT por Aria176 (tablas internas de permisos), sin reparar servidor compartido; copia9cf73701c3202dae y test8d08d59bfd2a6f2e conservados. Validar SQL en CI MySQL8.4 antes de integrar rama main. BACKUPS.md; no marcar C completo todavía.
 
 1-OPS-B completo local: MariaDB final9/121, nexora_test_34e4b943644faf6c conservado. Worker SQL común con barrera coordina dos procesos; ocho carreras financieras y regresión MFA. FINANCIAL_CONCURRENCY.md. Sin cambios de reglas financieras/producción ni migración; CI dirigida pendiente al publicar. Continuar1-OPS-C respaldo privado/restauración exclusivamente nueva. CI A sigue run44622299984 para el caso de categorías corregido.

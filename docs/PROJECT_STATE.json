@@ -2,13 +2,13 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-19",
-  "version": "0.32.0",
-  "phase": 1,
-  "module": "Operación: respaldo cifrado y restauración aislada",
-  "status": "TESTING",
-  "active_task": "1-OPS-C",
-  "last_completed_task": "1-OPS-A CI remota y B concurrencia financiera: MySQL8.4 9/121 aprobadas en44622476244",
-  "next_task": "1-OPS-C respaldo/restauración; D entrega/MySQL8/EER; después fase3",
+  "version": "0.33.0",
+  "phase": 3,
+  "module": "Kitchen: estaciones y enrutamiento de preparación",
+  "status": "IN_PROGRESS",
+  "active_task": "3.1-A",
+  "last_completed_task": "1-OPS-A/B/C/D núcleo local; backup/restauración MySQL8.4 CI6/39; verificación de último ajuste en rama antes de integrar",
+  "next_task": "3.1-A estaciones/rutas; B comandas/estados/tiempos; C Reverb privado; después inventario3.2",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -23,7 +23,9 @@
     "Hardware",
     "DIAN",
     "SMTP externo",
-    "MySQL 8 / Workbench según disponibilidad"
+    "Modelo visual EER Workbench; MySQL8.4 sí verificado en CI",
+    "Reparación interna Aria176 del servidor MariaDB compartido para GRANT local",
+    "Almacenamiento/retención externa de respaldos y despliegue productivo"
   ],
   "test_baseline": {
     "backend": 82,
@@ -31,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "A completa: run44622299984 aprobó categoría corregida; B44622476244 aprobó SQL9/121. C implementado, aún TESTING: archivo cifrado4/19 local; Pint/selecciónCI5/actionlint aprobados. SQL local nexora_test_8d08d59bfd2a6f2e falló GRANT por corrupción interna Aria176; esquema nuevo nexora_restore_9cf73701c3202dae conservado, no reparar servidor compartido. Validar recorrido y cuenta restringida en MySQL8.4 CI de rama antes de integrar main. No ejecutar completas sin impacto ni cambiar .env/APP_KEY/base de trabajo.",
+  "working_verification": "CI backup rama8402575 run44623608940 aprobó6/39 en MySQL8.4: ZIP AES-256, SQL/DECIMAL/FK/tenant, MFA descifrado, medios y bloqueo de importación sobre origen. Ajustes posteriores de redacción de secretos/gestión de streams se verifican dirigidos en rama antes de integrar main. CI A/B ya aprobados44622299984/44622476244 (SQL9/121). No se modificó .env/APP_KEY ni base de trabajo. Local restore pendiente reparación Aria176 de servidor compartido; Workbench/EER visual y producción externos. Siguiente3.1 KDS según REQUIREMENTS6.5, sin anunciar tiempo real antes de Reverb.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

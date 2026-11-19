@@ -149,9 +149,13 @@ final class BackupArchive
                     mkdir(dirname($target), 0700, true);
                 }
                 $source = $zip->getStream($name);
+                if (! $source) {
+                    throw new RuntimeException('No se pudo leer un archivo cifrado.');
+                }
                 $output = fopen($target, 'xb');
-                if (! $source || ! $output) {
-                    throw new RuntimeException('No se pudo leer o crear un archivo.');
+                if (! $output) {
+                    fclose($source);
+                    throw new RuntimeException('No se pudo crear un archivo nuevo.');
                 }
                 try {
                     $copied = stream_copy_to_stream($source, $output);

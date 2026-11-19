@@ -44,7 +44,7 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
 | 1-OPS-A | COMPLETED | CI remota dirigida/de entrega; runs44622299984 y44622476244 aprobados. Cierre previo cubierto por completas y correcciones dirigidas, sin repetir suites ajenas. CI.md | GitHub/repositorio y entorno CI |
 | 1-OPS-B | COMPLETED | Carreras reales de cobro/UUID/apertura/abonos/devolución/fondos/tenant/permisos y regresión MFA: MariaDB9/121, barrera común y esquema conservado. FINANCIAL_CONCURRENCY.md | SQL aislado; CI dirigida |
-| 1-OPS-C | TESTING | ZIP AES-256/SQL/catálogo/claves, restauración nueva con cuenta SQL restringida. Archivo4/19 local; recorrido SQL pendiente CI por error interno Aria176 local. BACKUPS.md | SQL/medios/clave de cifrado |
+| 1-OPS-C | TESTING | ZIP AES-256/SQL/catálogo/claves, restauración nueva con cuenta SQL restringida. MySQL8.4 CI6/39; validar ajuste final en rama antes de integrar. Aria176 local pendiente externo. BACKUPS.md | SQL/medios/clave de cifrado |
 | 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
