@@ -643,15 +643,22 @@ export function OrderComposer({
           )}
           <OperationNotice uncertain={operation.uncertain} />
           {cart.length ? (
-            <div className="cart-lines">
+            <div className="cart-lines" role="table" aria-label="Líneas del pedido">
+              {terminal && (
+                <div className="pos-lines-heading" role="row">
+                  <span role="columnheader">Producto / cantidad</span>
+                  <span role="columnheader">Subtotal</span>
+                </div>
+              )}
               {cart.map((line) => (
                 <div
                   className="cart-line"
+                  role="row"
                   key={line.key}
                   data-selected={terminal && activeLine === line.key}
                   onClick={() => terminal && setActiveLine(line.key)}
                 >
-                  <div className="cart-line-title">
+                  <div className="cart-line-title" role="cell">
                     <div>
                       <strong>{line.product_name}</strong>
                       {line.variant_name && <small>{line.variant_name}</small>}
@@ -673,7 +680,7 @@ export function OrderComposer({
                       <Trash2 size={15} />
                     </button>
                   </div>
-                  <div className="cart-line-controls">
+                  <div className="cart-line-controls" role="cell">
                     <div className="quantity-stepper">
                       <button
                         type="button"
@@ -718,16 +725,22 @@ export function OrderComposer({
               <p>Agrega el primer sabor a este pedido.</p>
             </div>
           )}
-          <fieldset
-            disabled={locked}
-            className={terminal ? 'form-stack pos-order-details' : 'form-stack'}
-            data-open={details}
-          >
-            {terminal && (
+          {!terminal && (
+            <button
+              type="button"
+              className="button secondary"
+              aria-expanded={details}
+              onClick={() => setDetails(!details)}
+            >
+              Datos del pedido · cliente y notas
+            </button>
+          )}
+          <fieldset disabled={locked} className="form-stack pos-order-details" data-open={details}>
+            {
               <button type="button" className="pos-detail-close" onClick={() => setDetails(false)}>
                 Cerrar detalles
               </button>
-            )}
+            }
             <Field label="Tipo de pedido">
               <select
                 name="channel"

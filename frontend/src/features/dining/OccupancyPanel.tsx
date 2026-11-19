@@ -44,7 +44,11 @@ export function OccupancyPanel({ room }: { room: DiningRoom }) {
       ) : (
         <div className="dining-occupancy-grid">
           {query.data?.data.map(({ table, session }) => (
-            <article className="dining-occupancy-card" key={table.id}>
+            <article
+              className="dining-occupancy-card"
+              key={table.id}
+              data-state={session ? 'occupied' : 'available'}
+            >
               <div>
                 <strong>{table.name}</strong>
                 <span className={'pill ' + (session ? 'neutral' : 'green')}>

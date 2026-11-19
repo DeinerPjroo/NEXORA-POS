@@ -33,6 +33,7 @@ import { posPermissions } from '../features/pos/pos-permissions'
 import { clearPosContext } from '../features/pos/pos-context'
 import { homePath } from '../features/auth/home'
 import { ScreenLock } from '../features/auth/ScreenLock'
+import { TerminalEnvironment, isTerminalRoute } from '../features/pos/TerminalEnvironment'
 import { screenChanged } from '../features/auth/screen-events'
 import { verificationReturn } from '../features/auth/verification-link'
 
@@ -152,7 +153,7 @@ export function AppShell() {
       <div
         data-screen-blocked={screenBlocked || locking}
         inert={screenBlocked || locking}
-        className={`app-shell ${collapsed ? 'collapsed' : ''} ${mobile ? 'mobile-open' : ''}`}
+        className={`app-shell ${isTerminalRoute(location.pathname) ? 'terminal-mode' : ''} ${collapsed ? 'collapsed' : ''} ${mobile ? 'mobile-open' : ''}`}
       >
         <a className="skip-link" href="#contenido">
           Saltar al contenido
@@ -281,7 +282,7 @@ export function AppShell() {
               >
                 <Menu size={21} />
               </button>
-              <span>Mi espacio</span>
+              <span>Nexora Admin</span>
               <ChevronRight size={13} />
               <strong>{session.company.name}</strong>
             </div>
@@ -309,7 +310,13 @@ export function AppShell() {
             </div>
           )}
           <main id="contenido" tabIndex={-1} className="page-content">
-            <Outlet />
+            {isTerminalRoute(location.pathname) ? (
+              <TerminalEnvironment onLock={() => void lock()} onLogout={() => void logout()}>
+                <Outlet />
+              </TerminalEnvironment>
+            ) : (
+              <Outlet />
+            )}
           </main>
           <footer className="workspace-footer">
             <span>

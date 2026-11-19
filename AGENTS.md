@@ -2,6 +2,14 @@
 
 Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaurante».
 
+## Requisito permanente de interfaces
+
+- Nexora POS es software profesional de operación de restaurantes, inspirado en flujos RestiPOS/SambaPOS, con identidad propia moderna, compacta, dinámica y personalizable. No diseñar sus pantallas operativas como tienda online, comercio electrónico o carrito de compras.
+- Separar Nexora Admin (configuración, catálogo, empleados, inventario, proveedores, reportes y administración) de Nexora Terminal (cajeros, meseros, cocina y atención). Comparten permisos, servicios y lógica de negocio; no duplicar motores financieros.
+- Terminal aplica a POS, mesas/salones operativos, menú/selección de productos, pedidos activos/para llevar/domicilios, caja rápida, comandas/KDS, cuentas/cobros/métodos/división/traslados. Admin puede conservar su diseño administrativo. El editor de salones es administrativo; la operación de mesas pertenece a Terminal.
+- Terminal usa espacio completo, botones táctiles compactos, cuadrículas de dimensiones consistentes (un producto no crece por existir pocos), fotos opcionales, acciones principales visibles, tablas compactas para líneas y colores de estado acompañados de texto. Desplazamiento interno; sin scroll global de escritorio, grandes vacíos ni formularios secundarios permanentes. Usar modales/paneles compactos y conservar datos/revisiones/UUID ante reintentos.
+- Las imágenes del usuario son referencia de distribución: mesas por salón con estados reales; POS con pedido izquierdo, categorías centrales y productos/teclado derecho; KDS en columnas de estados. No copiar otras marcas ni inventar importes, reservas, conexión en tiempo real o comandas no implementadas. Temas claro/oscuro y slots/esquemas permitidos preparan personalización Studio.
+
 - Trabajar por fases; consultar docs/PROGRESS.md antes de ampliar el alcance.
 - Backend Laravel 13 / PHP 8.3+, API REST; frontend React / TypeScript / Vite.
 - MySQL es la base de producción. SQLite solo para pruebas automatizadas o desarrollo explícito.

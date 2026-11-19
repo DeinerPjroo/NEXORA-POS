@@ -26,6 +26,11 @@ import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
 import { PosAccess } from './features/pos/PosAccess'
 import { HomeRoute } from './features/auth/HomeRoute'
+const TerminalTablesPage = lazy(() =>
+  import('./features/dining/TerminalTablesPage').then((module) => ({
+    default: module.TerminalTablesPage,
+  })),
+)
 const StationsPage = lazy(() =>
   import('./features/kitchen/StationsPage').then((module) => ({ default: module.StationsPage })),
 )
@@ -74,6 +79,16 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/terminal/mesas"
+          element={
+            <PermissionBoundary permission="dining.view">
+              <Suspense fallback={<Loading />}>
+                <TerminalTablesPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/cocina/estaciones"
           element={

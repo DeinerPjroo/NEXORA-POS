@@ -1,0 +1,464 @@
+.terminal-environment {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  color: var(--text);
+  overflow: hidden;
+  --terminal-purple: #7255db;
+  --terminal-blue: #258ca7;
+  --terminal-green: #209b79;
+  --terminal-amber: #cb922f;
+}
+body.terminal-active {
+  overflow: hidden;
+}
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #192337;
+  color: #fff;
+  padding: 9px 14px;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+.terminal-header a {
+  text-decoration: none;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.terminal-header .terminal-brand {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.terminal-brand span {
+  color: #a999ff;
+}
+.terminal-header nav {
+  display: flex;
+  gap: 5px;
+  overflow: auto;
+  min-width: 0;
+}
+.terminal-header nav a {
+  padding: 8px 11px;
+  border-radius: 5px;
+  background: #ffffff0c;
+}
+.terminal-header nav a[aria-current] {
+  background: var(--terminal-purple);
+}
+.terminal-operator {
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.terminal-header button {
+  background: #ffffff15;
+  color: white;
+  border: 0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 20px;
+}
+.terminal-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  overscroll-behavior: contain;
+}
+.terminal-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 10px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.terminal-environment .page-title {
+  margin: 0 0 10px;
+  padding: 0;
+  min-height: 0;
+}
+.terminal-environment .page-title h1 {
+  font-size: 21px;
+}
+.terminal-environment .page-title .eyebrow,
+.terminal-environment .page-title p {
+  display: none;
+}
+.terminal-environment .panel {
+  border-radius: 6px;
+  box-shadow: none;
+}
+.terminal-environment .button {
+  min-height: 40px;
+  border-radius: 5px;
+  padding: 9px 14px;
+  font-size: 12px;
+}
+.terminal-environment .operation-toolbar {
+  margin: 0 0 10px;
+  gap: 8px;
+}
+.terminal-environment .orders-grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 260px));
+  gap: 8px;
+  align-content: start;
+}
+.terminal-environment .order-summary-card {
+  padding: 12px;
+  border-left: 5px solid var(--terminal-blue);
+}
+.terminal-environment .order-summary-card h2 {
+  font-size: 16px;
+}
+.terminal-environment .checkout-layout {
+  gap: 10px;
+  align-items: start;
+  margin: 0;
+  grid-template-columns: minmax(340px, 1fr) minmax(260px, 0.8fr);
+}
+.terminal-environment .checkout-form,
+.terminal-environment .checkout-summary {
+  padding: 14px;
+}
+.terminal-environment .checkout-form .form-stack {
+  gap: 9px;
+}
+.terminal-environment table td,
+.terminal-environment table th {
+  padding: 8px;
+  font-size: 12px;
+}
+.terminal-environment .dining-layout {
+  margin: 8px 0;
+  padding: 12px;
+}
+.terminal-environment .dining-session-order {
+  padding: 9px;
+  gap: 8px;
+}
+.terminal-tables {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+.terminal-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.terminal-section-heading h1 {
+  font-size: 20px;
+  margin: 0;
+}
+.terminal-section-heading span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.terminal-room-tabs {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  flex-shrink: 0;
+}
+.terminal-room-tabs button {
+  min-height: 40px;
+  min-width: 150px;
+  border: 0;
+  border-radius: 5px;
+  padding: 9px 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+.terminal-room-tabs button[aria-pressed='true'] {
+  background: var(--terminal-purple);
+  color: white;
+}
+.terminal-tables > .dining-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.terminal-tables .dining-layout-heading {
+  margin: 0;
+  flex-shrink: 0;
+}
+.terminal-tables .dining-layout-heading h2 {
+  display: none;
+}
+.terminal-tables .dining-layout-heading p {
+  margin: 0;
+  font-size: 11px;
+}
+.terminal-tables .dining-occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  grid-auto-rows: 120px;
+  gap: 8px;
+  overflow: auto;
+  min-height: 0;
+  align-content: start;
+  flex: 1;
+}
+.terminal-tables .dining-occupancy-card {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--terminal-blue);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.terminal-tables .dining-occupancy-card[data-state='occupied'] {
+  background: var(--terminal-green);
+}
+.terminal-tables .dining-occupancy-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+.terminal-tables .dining-occupancy-card strong {
+  font-size: 16px;
+}
+.terminal-tables .dining-occupancy-card .pill {
+  color: white;
+  background: #ffffff20;
+  font-size: 10px;
+}
+.terminal-tables .dining-occupancy-card p {
+  font-size: 11px;
+  margin: 0;
+  color: white;
+}
+.terminal-tables .dining-occupancy-card .muted {
+  display: none;
+}
+.terminal-tables .dining-occupancy-card .button {
+  min-height: 30px;
+  padding: 5px;
+  border: 0;
+  color: white;
+  background: #ffffff20;
+  font-size: 11px;
+}
+.terminal-quick-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.terminal-quick-actions a,
+.terminal-quick-actions button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-height: 48px;
+  border: 0;
+  border-radius: 5px;
+  background: #25334f;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px;
+}
+.terminal-quick-actions button:disabled {
+  opacity: 0.55;
+}
+@media (min-width: 900px) {
+  .terminal-content:has(.checkout-layout) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .terminal-content .checkout-layout {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .terminal-content .checkout-layout > form,
+  .terminal-content .checkout-layout > aside,
+  .terminal-content .checkout-layout > section {
+    max-height: 100%;
+    overflow: auto;
+  }
+  .terminal-tables .dining-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 180px));
+  }
+}
+@media (max-width: 700px) {
+  .terminal-header {
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .terminal-header nav {
+    order: 2;
+    width: 100%;
+  }
+  .terminal-operator {
+    font-size: 10px;
+  }
+  .terminal-section-heading span {
+    display: none;
+  }
+  .terminal-quick-actions {
+    flex-wrap: wrap;
+  }
+  .terminal-quick-actions > * {
+    flex-basis: 40% !important;
+  }
+  .terminal-environment .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+  .terminal-footer span:last-child {
+    display: none;
+  }
+}
+
+.terminal-mode > .sidebar,
+.terminal-mode .workspace-main > .topbar,
+.terminal-mode .workspace-footer {
+  display: none;
+}
+.terminal-mode .workspace-main {
+  margin-left: 0;
+}
+.terminal-environment .order-composer {
+  grid-template-columns: minmax(290px, 350px) minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  align-items: start;
+}
+.terminal-environment .order-composer > .order-cart {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  padding: 12px;
+}
+.terminal-environment .order-composer > .order-menu {
+  grid-column: 2;
+  grid-row: 1;
+}
+.terminal-environment .order-menu-grid {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 160px));
+  gap: 7px;
+  align-content: start;
+}
+.terminal-environment .order-product {
+  height: 100px;
+  min-height: 100px;
+  padding: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--secondary) 16%, var(--surface));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.terminal-environment .order-product-image {
+  display: none;
+}
+.terminal-environment .order-product strong {
+  font-size: 13px;
+}
+.terminal-environment .order-product > small {
+  display: none;
+}
+.terminal-environment .order-cart .cart-line {
+  padding: 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+}
+.terminal-environment .order-cart .cart-line-title strong {
+  font-size: 13px;
+}
+.terminal-environment .order-cart {
+  position: relative;
+}
+.terminal-environment .pos-order-details {
+  display: none;
+}
+.terminal-environment .pos-order-details[data-open='true'] {
+  display: flex;
+}
+.terminal-environment .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--surface);
+  padding: 8px;
+}
+.terminal-environment .checkout-form > button[type='submit'],
+.terminal-environment .order-cart > button[type='submit'] {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+.terminal-environment .pos-terminal .order-composer {
+  grid-template-columns:
+    82px minmax(280px, var(--pos-order-width)) var(--pos-category-width)
+    minmax(0, 1fr);
+  align-items: stretch;
+}
+.terminal-environment .pos-terminal .order-composer > .order-cart {
+  grid-column: 2;
+}
+.terminal-environment .pos-terminal .order-composer > .order-menu {
+  grid-column: 4;
+}
+.terminal-environment .pos-terminal .order-menu-grid {
+  grid-template-columns: repeat(var(--pos-product-columns), minmax(0, 1fr));
+}
+.terminal-environment .pos-terminal .order-product {
+  height: 86px;
+  min-height: 80px;
+}
+.terminal-environment .pos-terminal[data-photos='true'] .order-product {
+  height: 150px;
+}
+@media (max-width: 720px) {
+  .terminal-environment .order-composer {
+    grid-template-columns: 1fr;
+  }
+  .terminal-environment .order-composer > .order-menu {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .terminal-environment .order-composer > .order-cart {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .terminal-environment .pos-terminal .order-composer {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+  .terminal-environment .pos-terminal .order-composer > .order-cart,
+  .terminal-environment .pos-terminal .order-composer > .order-menu {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
