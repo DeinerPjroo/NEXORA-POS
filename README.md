@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.26.0** conecta ocupación real, unión/separación de mesas, meseros, traslado de pedidos y cierre de atención con el POS. Conserva configuración/editor0.25 y el motor existente de cobros; los saldos pendientes impiden liberar las mesas. Continúan reservas2.4-C y las demás fases. Contratos en [DINING_OPERATIONS.md](docs/DINING_OPERATIONS.md), [DINING_LAYOUTS.md](docs/DINING_LAYOUTS.md) y [POS.md](docs/POS.md).
+El incremento **0.27.0** completa salones y mesas con reservas por sucursal, horarios y zona, control de cruces/capacidad y llegada conectada con la ocupación real. Mantiene editor, meseros, traslados y POS/cobros existentes. Continúan dashboard2.5 y las fases pendientes. Contratos en [DINING_RESERVATIONS.md](docs/DINING_RESERVATIONS.md), [DINING_OPERATIONS.md](docs/DINING_OPERATIONS.md) y [POS.md](docs/POS.md).
 
 ## Entorno y requisitos
 

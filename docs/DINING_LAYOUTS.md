@@ -1,6 +1,6 @@
 # Configuración y distribución de salones · 0.25
 
-2.4-A implementa configuración. Operación2.4-B integrada en0.26: ver DINING_OPERATIONS.md. Reservas2.4-C siguen pendientes.
+2.4-A implementa configuración. Operación2.4-B integrada en0.26 y reservas2.4-C en0.27: ver DINING_OPERATIONS.md y DINING_RESERVATIONS.md.
 
 Cada salón pertenece a una sucursal estable y cada mesa al salón/sucursal de su empresa. Consultas con dining.view, comandos con dining.manage antes del replay. Propietarios existentes reciben ambos permisos en migración; otros roles se configuran desde Roles. Listas paginadas, búsqueda y archivo conservan registros; nombres únicos por sucursal/salón incluso archivados. Archivar salón no cambia flags de sus mesas.
 

@@ -1,5 +1,7 @@
 # Salones y mesas · 2.4
 
+A0.25, B0.26 y C0.27 integrados y verificados. Contratos en DINING_LAYOUTS.md, DINING_OPERATIONS.md y DINING_RESERVATIONS.md; resultados dirigidos en PROJECT_STATE/PROGRESS. Padre2.4 completo, fase2 aún continúa con dashboard2.5.
+
 Continuar sobre terminal POS0.24. Alcance original REQUIREMENTS6.4: varios salones, mesas configurables con forma/tamaño/rotación/color/capacidad, arrastre y elementos decorativos/paredes/puertas/divisiones, distribución persistida, ocupación, unión/separación, traslado de pedidos, meseros y reservas. No marcar padre2.4 completo hasta verificar estos bloques.
 
 - A: configuración tenant/sucursal de salones y mesas con revisión/archivo/auditoría; editor visual con geometría y objetos permitidos, persistencia y selección por sucursal. Sin HTML/CSS/código libre. Controles accesibles además de arrastre; geometría acotada y schema versionado. No anunciar ocupación operativa antes de B.

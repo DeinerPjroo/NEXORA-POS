@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Gate;
 
 final class DiningOccupancy
 {
-    public function save(User $actor, array $data, ?DiningSession $session = null): DiningSession
+    public function save(User $actor, array $data, ?DiningSession $session = null, ?int $reservationId = null): DiningSession
     {
         Gate::authorize('dining.operate');
 
-        return app(IdempotentOperation::class)->run($actor, $session ? 'dining.session.update.'.$session->id : 'dining.session.open', $data, DiningSession::class, function ($data) use ($actor, $session) {
+        return app(IdempotentOperation::class)->run($actor, $session ? 'dining.session.update.'.$session->id : 'dining.session.open', $data, DiningSession::class, function ($data) use ($actor, $session, $reservationId) {
             $existing = $session !== null;
             if ($existing) {
                 $session = $this->lock($session->id, (int) $data['revision']);
@@ -38,6 +38,8 @@ final class DiningOccupancy
                 abort_unless($table->branch_id === $session->branch_id && $table->is_active && DiningRoom::whereKey($table->dining_room_id)->where('is_active', true)->exists(), 409, 'Las mesas deben estar activas en la misma sucursal.');
             }
             abort_if($data['guest_count'] > $tables->sum('capacity'), 422, 'La cantidad de personas supera la capacidad de las mesas seleccionadas.');
+            $held = $existing ? $session->memberships()->whereNull('released_at')->pluck('dining_table_id')->all() : [];
+            ReservationWindows::assertAvailableNow(array_values(array_diff($tables->keys()->all(), $held)), $reservationId);
             $occupied = DiningSessionTable::whereIn('dining_table_id', $tables->keys())->whereNull('released_at')->when($existing, fn ($q) => $q->where('dining_session_id', '!=', $session->id))->exists();
             abort_if($occupied, 409, 'Otra atención ya ocupa alguna de estas mesas.');
             $waiter = null;

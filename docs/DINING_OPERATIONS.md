@@ -1,6 +1,6 @@
 # Operación real de mesas · 0.26
 
-2.4-B conecta ocupación, unión/separación, meseros y pedidos al POS. Las reservas siguen en2.4-C.
+2.4-B conecta ocupación, unión/separación, meseros y pedidos al POS. Reservas2.4-C integradas en0.27: ver DINING_RESERVATIONS.md.
 
 dining.operate autoriza operaciones; dining.view permite consultar mesas/atenciones. Propietarios existentes reciben el nuevo permiso; Roles permite asignarlo a usuarios existentes. Un mesero es un usuario activo de esta empresa con dining.operate; se consultan únicamente id/nombre, sin inventar fichas de empleados ni procesos de RRHH.
 

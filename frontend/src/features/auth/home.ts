@@ -12,6 +12,7 @@ export function homePath(session: Session): string {
   const sections = [
     ['orders.view', '/pedidos'],
     ['dining.view', '/salones'],
+    ['dining.reserve', '/salones/reservas'],
     ['cash.view', '/caja'],
     ['catalog.view', '/productos'],
     ['sales.view', '/ventas'],

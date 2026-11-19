@@ -2,20 +2,20 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-19",
-  "version": "0.26.0",
+  "version": "0.27.0",
   "phase": 2,
-  "module": "Reservas de mesas",
+  "module": "Dashboard comercial",
   "status": "IN_PROGRESS",
-  "active_task": "2.4-C",
-  "last_completed_task": "2.4-B: ocupación/unión/separación/meseros/traslados y asociación POS0.26",
-  "next_task": "2.5",
+  "active_task": "2.5",
+  "last_completed_task": "2.4-C: reservas0.27; padre2.4 completo tras A/B/C",
+  "next_task": "1-SEC / 1-OPS: preparar entrega de fase2 y verificaciones completas",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
   "baseline_worktree": "clean; local HEAD equals origin/main",
   "dependencies": [
-    "Configuración/editor de salones y mesas0.25",
-    "Pedidos/caja/ventas existentes y ocupación0.26"
+    "Catálogo/POS2.2/2.3 completados",
+    "Salones/ocupación/reservas2.4 completos0.25–0.27"
   ],
   "blockers": [],
   "external_pending": [
@@ -30,8 +30,8 @@
     "assertions": 591,
     "playwright": 10
   },
-  "current_verification": "0.26 dirigida: SQLite pedidos/ventas/abonos/ocupación40/488, contrato de paginación1/18 y replay con atención cerrada1/15; MariaDB unicidad/FK1/9 y operación/finanzas/permisos/rollback5/114. Chromium ocupación4 y POS3 aprobados por ejecuciones dirigidas; dos casos finales1.1min. DTO/UUID inciertos sobreviven a refetch, traslado y cierre; caja120.25 en prueba de abonos y110.13 en recorrido UI. Migración000024/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal475.65kB/gzip134.54. No se ejecutaron suites generales.",
-  "working_verification": "2.4-B lista para commit/push normal tras A publicada ec58c6d. Seguir C reservas reales con zona/horarios/capacidad/conflictos/estados y llegada asociada a ocupación; no marcar padre2.4 completo hasta integrar/verificar C. Root DiningSession/UUID/Tenant lock y clave activa única evitan doble ocupación; cierre consulta SaleBalance y traslado solo sin venta. Sin procesos pendientes al cerrar B.",
+  "current_verification": "0.27 dirigida: SQLite reservas6/83 y calendario/zona1/10; dependencias de mesas/ocupación15/285. MariaDB cruce/UUID1/17, llegada/rollback/permisos/FK3/42 y calendario/zona1/10, esquemas conservados. Chromium horarios/DST y recepción2 aprobados51.9s; recorrido completo creación incierta/cruce/llegada/cancelación1 aprobado1.2min. Migración000025/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal476.13kB/gzip134.64, reservas12.28kB. Suites generales pendientes del cierre de fase2, sin ejecutarlas por rutina.",
+  "working_verification": "2.4-C lista para commit/push normal sobre ocupación publicada1e7e3d2. Seguir dashboard comercial real2.5 por fecha/sucursal, reutilizando ventas/pagos/devoluciones/caja y sin llamar ganancias definitivas a cobros. Después cierre de fase2 con suites completas según protocolo. Reservas capturan zona/desplazamiento, Tenant lock/UUID/revisiones y llegada atómica a ocupación; calendario usa zona vigente desde DB. Sin servicios de prueba pendientes.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -67,7 +67,11 @@
     "nexora_test_90a6782dbfaa84e4",
     "nexora_test_4c0e14fc7a13cf3b",
     "nexora_test_b61a624a36923725",
-    "nexora_test_1f737982924233b6"
+    "nexora_test_1f737982924233b6",
+    "nexora_test_338cf2fb31c60e89",
+    "nexora_test_566181ace1ccf49c",
+    "nexora_test_2fbfde602504f187",
+    "nexora_test_70de09d103e80fd0"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

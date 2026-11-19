@@ -30,6 +30,11 @@ import { HomeRoute } from './features/auth/HomeRoute'
 const RoomsPage = lazy(() =>
   import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomsPage })),
 )
+const ReservationsPage = lazy(() =>
+  import('./features/dining/ReservationsPage').then((module) => ({
+    default: module.ReservationsPage,
+  })),
+)
 const RoomDetailPage = lazy(() =>
   import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomDetailPage })),
 )
@@ -60,6 +65,16 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/salones/reservas"
+          element={
+            <PermissionBoundary permission="dining.reserve">
+              <Suspense fallback={<Loading />}>
+                <ReservationsPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/salones/atenciones"
           element={

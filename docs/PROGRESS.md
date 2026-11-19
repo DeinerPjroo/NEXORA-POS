@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.26.0** integrado/verificado por impacto; catálogo2.2/POS2.3, configuración/editor2.4-A y ocupación2.4-B completos. Siguen reservas2.4-C; padre2.4 pendiente. Referencia completa0.20 conservada abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.27.0** integrado/verificado por impacto; catálogo2.2/POS2.3 y salones/mesas/reservas2.4 completos. Sigue dashboard2.5 y cierre de fase2. Referencia completa0.20 conservada abajo; producción aún pendiente.
+
+0.27 dirigida: SQLite reservas6/83 y calendario/zona1/10; dependencias de mesas/ocupación15/285. MariaDB cruce/UUID1/17, llegada/rollback/permisos/FK3/42 y calendario/zona1/10, esquemas conservados. Chromium horarios/DST y recepción2 aprobados51.9s; recorrido completo creación incierta/cruce/llegada/cancelación1 aprobado1.2min. Migración000025/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal476.13kB/gzip134.64, reservas12.28kB. Suites generales pendientes del cierre de fase2, sin ejecutarlas por rutina. Contrato DINING_RESERVATIONS.md.
 
 0.26 dirigida: SQLite pedidos/ventas/abonos/ocupación40/488, contrato de paginación1/18 y replay con atención cerrada1/15; MariaDB unicidad/FK1/9 y operación/finanzas/permisos/rollback5/114. Chromium ocupación4 y POS3 aprobados por ejecuciones dirigidas; dos casos finales1.1min. DTO/UUID inciertos sobreviven a refetch, traslado y cierre; caja120.25 en prueba de abonos y110.13 en recorrido UI. Migración000024/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal475.65kB/gzip134.54. No se ejecutaron suites generales. Contrato DINING_OPERATIONS.md; no cerrar padre2.4 hasta reservas.
 

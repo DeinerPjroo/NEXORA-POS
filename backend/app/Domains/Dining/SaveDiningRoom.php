@@ -26,6 +26,7 @@ final class SaveDiningRoom
                 $room->branch_id = Branch::whereKey($data['branch_id'])->lockForUpdate()->firstOrFail()->id;
             }
             $room->fill(array_intersect_key($data, array_flip($room->getFillable())));
+            abort_if($existing && ! $room->is_active && ReservationWindows::hasUpcoming($room->diningTables()->pluck('id')->all()), 409, 'El salón tiene reservas pendientes. Reprograma o cancela esas reservas antes de archivarlo.');
             abort_if($existing && ! $room->is_active && DiningSessionTable::whereIn('dining_table_id', $room->diningTables()->select('id'))->whereNull('released_at')->exists(), 409, 'El salón tiene mesas ocupadas. Cierra las atenciones antes de archivarlo.');
             if (DiningRoom::where('branch_id', $room->branch_id)->where('name', $room->name)->when($existing, fn ($q) => $q->whereKeyNot($room->id))->exists()) {
                 throw ValidationException::withMessages(['name' => 'Este nombre ya existe en la sucursal.']);
@@ -49,6 +50,7 @@ final class SaveDiningRoom
             $table = $existing ? $room->diningTables()->lockForUpdate()->findOrFail($table->id) : new DiningTable;
             abort_if($existing && DiningSessionTable::where('dining_table_id', $table->id)->whereNull('released_at')->exists(), 409, 'La mesa está ocupada. Cierra la atención antes de editarla.');
             abort_if($existing && $table->revision !== (int) $data['revision'], 409, 'La mesa cambió. Actualiza sus datos.');
+            abort_if($existing && (! $data['is_active'] || (int) $data['capacity'] < $table->capacity) && ReservationWindows::hasUpcoming([$table->id]), 409, 'La mesa tiene reservas pendientes. No se puede archivar ni reducir su capacidad.');
             $count = $room->diningTables()->where('is_active', true)->when($existing, fn ($q) => $q->whereKeyNot($table->id))->count();
             abort_if($data['is_active'] && $count >= 48, 422, 'El salón admite hasta 48 mesas activas.');
             if (! $existing) {
