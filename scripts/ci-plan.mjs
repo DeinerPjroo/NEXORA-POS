@@ -205,12 +205,12 @@ export function makePlan(
     backend_filter: sqlAll ? "" : backendFilter,
     backend_filters: filters,
     sqlite_full: full,
-    browser_mode:
-      full || (!manual && dependencyChange)
-        ? "full"
-        : browserSpecs.length
-          ? "targeted"
-          : "off",
+    // Modo rápido: navegador únicamente por selección manual explícita.
+    browser_mode: full
+      ? "full"
+      : manual && browserSpecs.length
+        ? "targeted"
+        : "off",
     browser_specs: browserSpecs,
   };
 }

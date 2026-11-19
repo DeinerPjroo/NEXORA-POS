@@ -2,7 +2,7 @@
 
 Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769b317a66229e8beabdd6a, versión 0.5.0. Árbol limpio. No hay avances posteriores a esa referencia al iniciar esta continuación.
 
-Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas específicas según impacto, estado breve, commit/push y continuar. Suites completas solo al cerrar fase, entrega estable o cambio transversal justificado; cobertura exhaustiva de operaciones críticas. AGENTS.md sustituye las exigencias históricas de regresión completa por incremento.
+Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios agrupados por módulo; solo pruebas indispensables por impacto, especial cuidado financiero/seguridad/tenant. Sin suites completas, Playwright o capturas rutinarias; auditorías y perfeccionamiento se posponen a estabilización. Continuidad breve, sin nuevos documentos por funcionalidad. Sustituye protocolos históricos contradictorios.
 
 | ID | Estado | Capacidad y criterio de aceptación | Dependencias |
 | --- | --- | --- | --- |

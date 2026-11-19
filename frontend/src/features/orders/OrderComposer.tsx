@@ -35,6 +35,8 @@ import { useCartPricing } from './useCartPricing'
 import { PriceDetails } from './PriceDetails'
 import { CartComboDetails } from './CartComboDetails'
 import type { CashOption, SalesSettings } from '../sales/types'
+import { PosCategories, PosKeypad, defaultPosLayout } from '../pos/PosPanels'
+import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
 import type { DiningSelection } from '../dining/session-types'
 
@@ -71,6 +73,11 @@ export function OrderComposer({
     initialDining ? 'dine_in' : remembered.channel,
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
+  const [details, setDetails] = useState(false)
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [photos, setPhotos] = useState(false)
+  const [activeLine, setActiveLine] = useState<string | null>(null)
+  const terminalRoot = useRef<HTMLDivElement>(null)
   const [panel, setPanel] = useState<'menu' | 'cart'>('menu')
   const searchInput = useRef<HTMLInputElement>(null)
   const submitButton = useRef<HTMLButtonElement>(null)
@@ -83,6 +90,11 @@ export function OrderComposer({
     null,
   )
   const [cart, setCart] = useState<CartLine[]>([])
+  useEffect(() => {
+    if (!terminal) return
+    document.body.classList.add('pos-active')
+    return () => document.body.classList.remove('pos-active')
+  }, [terminal])
   const can = useCan()
   const navigate = useNavigate()
   const client = useQueryClient()
@@ -248,7 +260,72 @@ export function OrderComposer({
     )
   const conflict = operation.error instanceof ApiError && operation.error.status === 409
   return (
-    <div className={terminal ? 'pos-terminal' : undefined} data-pos-panel={panel}>
+    <div
+      className={terminal ? 'pos-terminal' : undefined}
+      data-pos-panel={panel}
+      data-photos={photos}
+      data-layout-version={defaultPosLayout.schemaVersion}
+      ref={terminalRoot}
+    >
+      {terminal && (
+        <header className="pos-topbar" data-pos-slot="header">
+          <strong>
+            NEXORA <em>POS</em>
+          </strong>
+          <span className="pos-ready">
+            {posReady ? '● Caja abierta' : '● Revisar caja/configuración'}
+          </span>
+          <OperationalBranchPicker
+            branches={activeBranches}
+            value={selected}
+            onChange={(branchId) => pricing.request({ branchId, channel })}
+            disabled={locked}
+          />
+          <span className="pos-employee">{session!.user.name}</span>
+          <button
+            type="button"
+            onClick={() => setStatusOpen(!statusOpen)}
+            aria-expanded={statusOpen}
+          >
+            Caja
+          </button>
+          <button
+            type="button"
+            aria-label="Actualizar estado del terminal"
+            disabled={locked}
+            onClick={() => {
+              void context.refetch()
+              if (selected) void posCash.refetch()
+              void posSettings.refetch()
+            }}
+          >
+            ↻
+          </button>
+          <button
+            type="button"
+            aria-label="Mostrar fotografías"
+            aria-pressed={photos}
+            onClick={() => setPhotos(!photos)}
+          >
+            Fotos
+          </button>
+          <button
+            type="button"
+            aria-label="Pantalla completa"
+            onClick={() => {
+              const request = document.fullscreenElement
+                ? document.exitFullscreen()
+                : document.documentElement.requestFullscreen()
+              void request.catch(() => toast('Pantalla completa no disponible en este navegador.'))
+            }}
+          >
+            ⛶
+          </button>
+          <Link to="/inicio" aria-label="Salir del terminal">
+            Salir
+          </Link>
+        </header>
+      )}
       <Link className="text-button product-back" to="/pedidos">
         <ArrowLeft size={16} />
         Volver a pedidos
@@ -269,7 +346,11 @@ export function OrderComposer({
         </p>
       )}
       {terminal && (
-        <section className="pos-status panel" aria-label="Estado del terminal">
+        <section
+          className="pos-status panel"
+          aria-label="Estado del terminal"
+          data-open={statusOpen}
+        >
           <ErrorNotice error={posCash.error || posSettings.error} />
           <div className="panel-heading">
             <strong>
@@ -338,6 +419,78 @@ export function OrderComposer({
       </div>
       <div className="order-composer">
         {terminal && (
+          <>
+            <aside className="pos-actions" data-pos-slot="actions">
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => {
+                  setDetails(true)
+                  if (selected) pricing.request({ branchId: selected, channel: 'dine_in' })
+                  setPanel('cart')
+                }}
+              >
+                Mesas
+              </button>
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => {
+                  setDetails(true)
+                  setPanel('cart')
+                }}
+              >
+                Cliente
+              </button>
+              <Link to="/pedidos" target="_blank" rel="noopener noreferrer">
+                Pedidos
+              </Link>
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => {
+                  setDetails(true)
+                  setPanel('cart')
+                }}
+              >
+                Nota
+              </button>
+              <button
+                type="button"
+                disabled
+                title="Los descuentos se aplican en la confirmación del cobro"
+              >
+                Descuento
+              </button>
+              <button type="button" onClick={() => window.print()}>
+                Imprimir borrador
+              </button>
+              <button
+                type="button"
+                className="pos-cancel"
+                disabled={locked || !cart.length}
+                onClick={() => {
+                  if (window.confirm('¿Descartar este pedido sin registrar?')) {
+                    setCart([])
+                    setActiveLine(null)
+                  }
+                }}
+              >
+                Cancelar
+              </button>
+            </aside>
+            <PosCategories
+              value={category}
+              disabled={locked}
+              onChange={(value) => {
+                setCategory(value)
+                setPage(1)
+              }}
+            />
+          </>
+        )}
+
+        {terminal && (
           <div className="pos-view-switch" role="group" aria-label="Panel del terminal">
             <button
               type="button"
@@ -359,7 +512,7 @@ export function OrderComposer({
             </button>
           </div>
         )}
-        <section className="order-menu">
+        <section className="order-menu" data-pos-slot="products">
           {terminal && (
             <p className="muted small pos-shortcuts">
               F2: buscar · F8: ir al pedido. El cobro siempre requiere confirmación.
@@ -458,8 +611,22 @@ export function OrderComposer({
               />
             </>
           )}
+          {terminal && (
+            <PosKeypad
+              disabled={locked || !cart.length}
+              label={
+                cart.find((line) => line.key === activeLine)?.product_name ??
+                cart.at(-1)?.product_name ??
+                'Cantidad'
+              }
+              onApply={(value) => {
+                const line = cart.find((item) => item.key === activeLine) ?? cart.at(-1)
+                if (line) quantity(line.key, value)
+              }}
+            />
+          )}
         </section>
-        <form className="panel order-cart" onSubmit={submit}>
+        <form className="panel order-cart" onSubmit={submit} data-pos-slot="order">
           <div className="panel-heading">
             <h2>
               <ShoppingBag size={19} />
@@ -478,7 +645,12 @@ export function OrderComposer({
           {cart.length ? (
             <div className="cart-lines">
               {cart.map((line) => (
-                <div className="cart-line" key={line.key}>
+                <div
+                  className="cart-line"
+                  key={line.key}
+                  data-selected={terminal && activeLine === line.key}
+                  onClick={() => terminal && setActiveLine(line.key)}
+                >
                   <div className="cart-line-title">
                     <div>
                       <strong>{line.product_name}</strong>
@@ -546,7 +718,16 @@ export function OrderComposer({
               <p>Agrega el primer sabor a este pedido.</p>
             </div>
           )}
-          <fieldset disabled={locked} className="form-stack">
+          <fieldset
+            disabled={locked}
+            className={terminal ? 'form-stack pos-order-details' : 'form-stack'}
+            data-open={details}
+          >
+            {terminal && (
+              <button type="button" className="pos-detail-close" onClick={() => setDetails(false)}>
+                Cerrar detalles
+              </button>
+            )}
             <Field label="Tipo de pedido">
               <select
                 name="channel"
@@ -614,8 +795,19 @@ export function OrderComposer({
               Revisar precios conservando el pedido
             </button>
           )}
+          {terminal && (
+            <button
+              type="button"
+              className="pos-kitchen"
+              disabled
+              title="El envío a estaciones se habilitará al integrar comandas de cocina"
+            >
+              ENVIAR A COCINA · No disponible
+            </button>
+          )}
           <button
             className="button primary wide"
+            aria-label={terminal ? 'Continuar al cobro' : undefined}
             ref={submitButton}
             type="submit"
             disabled={
@@ -630,7 +822,7 @@ export function OrderComposer({
               : operation.uncertain
                 ? 'Reintentar envío'
                 : terminal
-                  ? 'Continuar al cobro'
+                  ? 'COBRAR · Continuar al cobro'
                   : 'Registrar pedido'}
           </button>
         </form>

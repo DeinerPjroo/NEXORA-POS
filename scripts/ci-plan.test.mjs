@@ -40,7 +40,7 @@ test("full suites require explicit delivery scope and dependencies justify trans
   assert.equal(
     makePlan(["frontend/package-lock.json"], { dependencyChange: true })
       .browser_mode,
-    "full",
+    "off",
   );
   const targeted = makePlan(["backend/app/Domains/Operations/SqlBackup.php"], {
     manual: true,
