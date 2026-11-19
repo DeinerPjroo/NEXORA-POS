@@ -42,6 +42,14 @@ test("full suites require explicit delivery scope and dependencies justify trans
       .browser_mode,
     "full",
   );
+  const targeted = makePlan(["backend/app/Domains/Operations/SqlBackup.php"], {
+    manual: true,
+    filter: "BackupArchiveTest|SqlBackupTest",
+    dependencyChange: true,
+  });
+  assert.equal(targeted.sql_mode, "targeted");
+  assert.equal(targeted.browser_mode, "off");
+  assert.equal(targeted.sqlite_full, false);
 });
 test("rejects shell arguments, traversal and unknown scopes instead of silently claiming coverage", () => {
   assert.throws(() =>

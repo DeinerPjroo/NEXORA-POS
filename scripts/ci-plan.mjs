@@ -97,6 +97,8 @@ export function makePlan(
         /foundation|screen-security|email-verification|multi-factor|denied-access-audit|pos-context/,
       );
     if (/Branch|Role|Studio|Workspace/.test(file)) addBackend(/Foundation/);
+    if (/Domains\/Operations|Commands\/Backup/.test(file))
+      addBackend(/BackupArchive|SqlBackup/);
     if (
       /Domains\/(Sales|Cash)|Sale|Payment|Refund|Cash|Order|Split/.test(file)
     ) {
@@ -199,7 +201,7 @@ export function makePlan(
     backend_filters: filters,
     sqlite_full: full,
     browser_mode:
-      full || dependencyChange
+      full || (!manual && dependencyChange)
         ? "full"
         : browserSpecs.length
           ? "targeted"

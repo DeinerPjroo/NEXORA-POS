@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+A/B completos y remotos verdes: runs44622299984 (categorías) y44622476244 (MySQL8.4 carreras9/121). C TESTING en rama de validación: comandos backup/restore, ZIP AES-256/catálogo/claves, esquema/directorio nuevos y cuenta temporal limitada; archivo4/19, Pint/CI5/actionlint pasan. Local SQL falló en GRANT por Aria176 (tablas internas de permisos), sin reparar servidor compartido; copia9cf73701c3202dae y test8d08d59bfd2a6f2e conservados. Validar SQL en CI MySQL8.4 antes de integrar rama main. BACKUPS.md; no marcar C completo todavía.
+
 1-OPS-B completo local: MariaDB final9/121, nexora_test_34e4b943644faf6c conservado. Worker SQL común con barrera coordina dos procesos; ocho carreras financieras y regresión MFA. FINANCIAL_CONCURRENCY.md. Sin cambios de reglas financieras/producción ni migración; CI dirigida pendiente al publicar. Continuar1-OPS-C respaldo privado/restauración exclusivamente nueva. CI A sigue run44622299984 para el caso de categorías corregido.
 
 Seguimiento CI sobre6c0584e, run44619594981: instalación/build Linux y SQL dirigido8/73 aprobados en MySQL8.4. Chromium completo50/51; el único fallo fue selector ambiguo de estado en categorías. Se acota a la tarjeta ZZ Platos y el caso local pasó; publicar y comprobar solamente ese caso remoto. Suites completas anteriores conservan cobertura: SQLite326/4094+2skip; MySQL327 aprobados y aserción restante corregida/verificada en dirigido. No repetirlas por rutina. En paralelo1-OPS-B añade worker SQL común y carreras financieras; aún sin commit ni cierre hasta resultado final.

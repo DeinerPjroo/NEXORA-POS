@@ -42,9 +42,9 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-SEC-C | COMPLETED | MFA TOTP/QR, desafío login, recuperación única/renovación/desactivación y revocación versionada0.31. SQLite15/167, SQL11/126+final3/31 con dos procesos/TOTP/recuperación; Chromium2+financiero1, compilación/formato/capturas y migración000027 verificados. MFA.md | 1-SEC-B |
 | 1-SEC-D | COMPLETED | Rechazos auditados sin secretos, actor/tenant, límites/rollback/fallo de logging. SQLite64/511; SQL auditoría/devolución9/88, Chromium1 y checks específicos correctos. DENIED_ACCESS_AUDIT.md | 1-SEC-A/C |
 | 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
-| 1-OPS-A | TESTING | CI reproducible con checks pertinentes y suites de entrega; comprobar ejecución remota, no solo YAML | GitHub/repositorio y entorno CI |
+| 1-OPS-A | COMPLETED | CI remota dirigida/de entrega; runs44622299984 y44622476244 aprobados. Cierre previo cubierto por completas y correcciones dirigidas, sin repetir suites ajenas. CI.md | GitHub/repositorio y entorno CI |
 | 1-OPS-B | COMPLETED | Carreras reales de cobro/UUID/apertura/abonos/devolución/fondos/tenant/permisos y regresión MFA: MariaDB9/121, barrera común y esquema conservado. FINANCIAL_CONCURRENCY.md | SQL aislado; CI dirigida |
-| 1-OPS-C | PENDING | Respaldo privado y restauración verificada exclusivamente en destino nuevo, sin tocar datos de trabajo | SQL/medios/clave de cifrado |
+| 1-OPS-C | TESTING | ZIP AES-256/SQL/catálogo/claves, restauración nueva con cuenta SQL restringida. Archivo4/19 local; recorrido SQL pendiente CI por error interno Aria176 local. BACKUPS.md | SQL/medios/clave de cifrado |
 | 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
