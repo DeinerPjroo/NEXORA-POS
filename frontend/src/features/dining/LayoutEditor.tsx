@@ -291,8 +291,8 @@ export function LayoutEditor({
             ))}
           </svg>
           <p className="muted">
-            La distribución configura el espacio. La ocupación se registrará desde la operación de
-            mesas.
+            La distribución configura el espacio. Consulta la ocupación actual desde las mesas del
+            salón.
           </p>
         </div>
         <aside className="dining-inspector">

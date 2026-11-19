@@ -567,3 +567,51 @@ alter table `dining_tables` add unique `dining_tables_name_unique`(`tenant_id`, 
 
 alter table `dining_tables` add constraint `dining_tables_room_fk` foreign key (`tenant_id`, `branch_id`, `dining_room_id`) references `dining_rooms` (`tenant_id`, `branch_id`, `id`) on delete restrict;
 
+create table `dining_sessions` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `opened_by` bigint unsigned not null, `closed_by` bigint unsigned null, `waiter_id` bigint unsigned null, `guest_count` smallint unsigned not null, `notes` varchar(300) null, `status` varchar(12) not null default 'open', `revision` int unsigned not null default '1', `opened_at` timestamp not null, `closed_at` timestamp null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `dining_sessions` add constraint `dining_sessions_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `dining_sessions` add unique `dining_sessions_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `dining_sessions` add unique `dining_sessions_tenant_id_id_unique`(`tenant_id`, `id`);
+
+alter table `dining_sessions` add index `dining_sessions_tenant_id_branch_id_status_id_index`(`tenant_id`, `branch_id`, `status`, `id`);
+
+alter table `dining_sessions` add constraint `dining_sessions_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `dining_sessions` add constraint `dining_sessions_tenant_id_opened_by_foreign` foreign key (`tenant_id`, `opened_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `dining_sessions` add constraint `dining_sessions_tenant_id_closed_by_foreign` foreign key (`tenant_id`, `closed_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `dining_sessions` add constraint `dining_sessions_tenant_id_waiter_id_foreign` foreign key (`tenant_id`, `waiter_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `dining_session_tables` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `dining_session_id` bigint unsigned not null, `dining_table_id` bigint unsigned not null, `table_name` varchar(50) not null, `joined_at` timestamp not null, `released_at` timestamp null, `occupied_table` bigint unsigned as (CASE WHEN released_at IS NULL THEN dining_table_id ELSE NULL END) stored) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `dining_session_tables` add constraint `dining_session_tables_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `dining_session_tables` add unique `dining_active_table_unique`(`tenant_id`, `occupied_table`);
+
+alter table `dining_session_tables` add index `dining_members_session_release_idx`(`tenant_id`, `dining_session_id`, `released_at`);
+
+alter table `dining_session_tables` add constraint `dining_members_session_fk` foreign key (`tenant_id`, `branch_id`, `dining_session_id`) references `dining_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `dining_session_tables` add constraint `dining_members_table_fk` foreign key (`tenant_id`, `branch_id`, `dining_table_id`) references `dining_tables` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+create table `dining_events` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `dining_session_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `action` varchar(40) not null, `details` json not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `dining_events` add constraint `dining_events_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `dining_events` add index `dining_events_tenant_id_dining_session_id_id_index`(`tenant_id`, `dining_session_id`, `id`);
+
+alter table `dining_events` add constraint `dining_events_tenant_id_dining_session_id_foreign` foreign key (`tenant_id`, `dining_session_id`) references `dining_sessions` (`tenant_id`, `id`) on delete restrict;
+
+alter table `dining_events` add constraint `dining_events_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `orders` add `dining_session_id` bigint unsigned null;
+
+alter table `orders` add `dining_snapshot` json null;
+
+alter table `orders` add constraint `orders_dining_session_fk` foreign key (`tenant_id`, `branch_id`, `dining_session_id`) references `dining_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `orders` add index `orders_tenant_id_dining_session_id_id_index`(`tenant_id`, `dining_session_id`, `id`);
+

@@ -6,6 +6,7 @@ use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextPriceController;
 use App\Http\Controllers\DiningController;
+use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentHistoryController;
@@ -38,6 +39,17 @@ Route::prefix('v1')->group(function () {
         Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::controller(DiningSessionController::class)->group(function () {
+            Route::get('dining/available-tables', 'availableTables');
+            Route::get('dining/waiters', 'waiters');
+            Route::get('dining-sessions', 'index');
+            Route::post('dining-sessions', 'store');
+            Route::get('dining-sessions/{diningSession}', 'show');
+            Route::put('dining-sessions/{diningSession}', 'update');
+            Route::post('dining-sessions/{diningSession}/close', 'close');
+            Route::post('orders/{order}/dining-transfer', 'transfer');
+            Route::get('dining-rooms/{diningRoom}/occupancy', 'occupancy');
+        });
         Route::scopeBindings()->controller(DiningController::class)->group(function () {
             Route::get('dining-rooms', 'index');
             Route::post('dining-rooms', 'store');

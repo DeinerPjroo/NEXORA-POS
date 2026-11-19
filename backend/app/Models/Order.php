@@ -16,7 +16,7 @@ final class Order extends Model
 
     protected function casts(): array
     {
-        return ['subtotal' => 'decimal:4', 'revision' => 'integer'];
+        return ['subtotal' => 'decimal:4', 'revision' => 'integer', 'dining_session_id' => 'integer', 'dining_snapshot' => 'array'];
     }
 
     public function items(): HasMany

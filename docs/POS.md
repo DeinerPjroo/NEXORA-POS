@@ -1,5 +1,7 @@
 # Terminal POS · 0.24 (2.3-A/B)
 
+Desde0.26, /pos/atenciones/:id precarga una atención real y el selector permite asociarla a un pedido dine_in. Requiere dining.view/operate además de permisos POS; captura revisión inicial, conserva DTO/UUID inciertos y no recotiza historia al trasladar. DINING_OPERATIONS.md define ocupación y cierre; el motor financiero sigue compartido.
+
 Ruta `/pos` y navegación propia; exige catalog.view, orders.view, orders.manage y sales.collect. PosAccess y el menú comparten requisitos. Los comandos siguen autorizados en servidor con tenant/revisión/UUID existentes; origen POS solo cambia navegación interna.
 
 OrderComposer se reutiliza con modo terminal: consulta caja de sucursal/configuración, muestra preparación pendiente y bloquea nuevas operaciones hasta disponer de caja abierta y cálculo confirmado. Puede abrir administración en otra pestaña sin perder pantalla. Estado consultivo cada15s/actualización manual; no reserva caja ni sustituye la revisión de Checkout. Un envío incierto conserva cuerpo/UUID y puede reintentarse aunque cambie el estado consultado.

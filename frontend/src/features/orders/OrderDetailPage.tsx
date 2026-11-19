@@ -61,6 +61,19 @@ export function OrderDetailPage() {
             </p>
           )}
           <div className="order-item-list">
+            {order.dining_snapshot && (
+              <p className="notice">
+                Ubicación inicial: {order.dining_snapshot.tables.map((t) => t.name).join(', ')}.
+                {can('dining.view') && order.dining_session_id && (
+                  <Link
+                    className="text-button"
+                    to={'/salones/atenciones/' + order.dining_session_id}
+                  >
+                    Ver atención actual #{order.dining_session_id}
+                  </Link>
+                )}
+              </p>
+            )}
             <SavedCombos combos={order.combos} items={order.items} currency={order.currency} />
             {order.items
               ?.filter((item) => !item.order_combo_id)

@@ -78,6 +78,14 @@ export type OrderEvent = {
   created_at: string
 }
 export type Order = {
+  dining_session_id?: number | null
+  dining_snapshot?: {
+    version: number
+    session_id: number
+    session_revision: number
+    tables: { id: number; name: string }[]
+    waiter_id: number | null
+  } | null
   combos?: OrderCombo[]
   id: number
   public_id: string

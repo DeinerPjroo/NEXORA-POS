@@ -71,6 +71,29 @@
   flex-wrap: wrap;
   margin-top: 20px;
 }
+.dining-occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.dining-occupancy-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.dining-occupancy-card > div,
+.dining-session-order {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dining-session-order {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
 @media (max-width: 1000px) {
   .dining-workspace {
     grid-template-columns: minmax(0, 1fr);

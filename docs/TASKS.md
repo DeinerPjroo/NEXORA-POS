@@ -33,8 +33,8 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.3-B | COMPLETED | Inicio autorizado sin bucles; sucursal/canal por actor, menú/carrito móvil y F2/F8 sin cobro automático. Chromium7+POS3 y caso financiero final1/1.5min aprobados, build/formato/captura correctos;0.24 | 2.3-A |
 | 2.4 | IN_PROGRESS | Desglose A configuración/editor, B ocupación/unión/traslado/meseros, C reservas; TABLES_PLAN.md. No cerrar padre hasta integrarlos y verificarlos | 2.3, empleados mínimos |
 | 2.4-A | COMPLETED | Salones/mesas y editor visual/API integrados0.25; SQLite7/129, SQL5/54, registro/roles4/23 y Chromium3/1.3min más lector403 final1/19.8s; migración000023/DDL/build/formato/capturas correctos. DINING_LAYOUTS.md | 2.3 |
-| 2.4-B | IN_PROGRESS | Ocupación real, unión/separación/traslado/meseros y asociación POS sin reescribir importes; pruebas de conflictos/permisos/tenant | 2.4-A |
-| 2.4-C | PENDING | Reservas, zona/horarios/capacidad/conflictos/estados e integración con ocupación | 2.4-B |
+| 2.4-B | COMPLETED | Ocupación/unión/separación/meseros/traslado/POS0.26 integrados. SQLite40/488+paginación1/18+replay1/15; SQL1/9+5/114; Chromium ocupación4+POS3 por impacto; migración000024/DDL/build/formato/capturas. DINING_OPERATIONS.md | 2.4-A |
+| 2.4-C | IN_PROGRESS | Reservas, zona/horarios/capacidad/conflictos/estados e integración con ocupación | 2.4-B |
 | 2.5 | PENDING | Dashboard comercial real por fecha/sucursal, sin ganancias definitivas; E2E apertura→pedido→cobro→cierre | 2.1–2.4 |
 | 1-SEC | PENDING | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones; subdividir | Identidad existente; SMTP externo para entrega |
 | 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |

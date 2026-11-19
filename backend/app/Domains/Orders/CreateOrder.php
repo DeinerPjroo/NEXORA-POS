@@ -2,6 +2,7 @@
 
 namespace App\Domains\Orders;
 
+use App\Domains\Dining\DiningOccupancy;
 use App\Domains\Identity\Audit;
 use App\Domains\Operations\IdempotentOperation;
 use App\Models\Order;
@@ -16,11 +17,22 @@ final class CreateOrder
     {
         Gate::authorize('orders.manage');
         Gate::authorize('catalog.view');
+        if ($data['dining_session_id'] ?? null) {
+            Gate::authorize('dining.operate');
+        }
 
         return app(IdempotentOperation::class)->run($actor, 'order.create', $data, Order::class, function ($data) use ($actor) {
+            $occupancy = app(DiningOccupancy::class);
+            $dining = $occupancy->forOrder($actor, $data);
             $plan = app(OrderPlan::class)->build($actor, $data);
             $order = Order::create(['public_id' => (string) Str::uuid(), 'branch_id' => $plan['branch']->id, 'created_by' => $actor->id, 'currency' => $data['currency'], 'channel' => $data['channel'], 'reference' => $data['reference'] ?? null, 'customer_name' => $data['customer_name'] ?? null, 'notes' => $data['notes'] ?? null, 'subtotal' => $plan['subtotal'], 'status' => 'open', 'revision' => 1]);
             $combos = [];
+            if ($dining) {
+                $order->dining_session_id = $dining->id;
+                $order->dining_snapshot = $occupancy->snapshot($dining);
+                $order->save();
+                $occupancy->recordOrder($actor, $dining, $order);
+            }
             foreach ($plan['combos'] as $header) {
                 $combos[] = $order->combos()->create($header)->id;
             }

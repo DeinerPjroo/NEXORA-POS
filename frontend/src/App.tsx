@@ -33,6 +33,17 @@ const RoomsPage = lazy(() =>
 const RoomDetailPage = lazy(() =>
   import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomDetailPage })),
 )
+const SessionsPage = lazy(() =>
+  import('./features/dining/SessionsPage').then((module) => ({ default: module.SessionsPage })),
+)
+const SessionDetailPage = lazy(() =>
+  import('./features/dining/SessionsPage').then((module) => ({
+    default: module.SessionDetailPage,
+  })),
+)
+const DiningPosPage = lazy(() =>
+  import('./features/dining/DiningPosPage').then((module) => ({ default: module.DiningPosPage })),
+)
 
 const PaymentHistoryPage = lazy(() =>
   import('./features/sales/PaymentHistoryPage').then((module) => ({
@@ -49,6 +60,40 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/salones/atenciones"
+          element={
+            <PermissionBoundary permission="dining.view">
+              <Suspense fallback={<Loading />}>
+                <SessionsPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/salones/atenciones/:sessionId"
+          element={
+            <PermissionBoundary permission="dining.view">
+              <Suspense fallback={<Loading />}>
+                <SessionDetailPage />
+              </Suspense>
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/pos/atenciones/:sessionId"
+          element={
+            <PosAccess>
+              <PermissionBoundary permission="dining.view">
+                <PermissionBoundary permission="dining.operate">
+                  <Suspense fallback={<Loading />}>
+                    <DiningPosPage />
+                  </Suspense>
+                </PermissionBoundary>
+              </PermissionBoundary>
+            </PosAccess>
+          }
+        />
         <Route
           path="/salones"
           element={

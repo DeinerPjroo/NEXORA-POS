@@ -12,6 +12,7 @@ import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { DiningRoom, DiningTable } from './types'
 import { LayoutEditor } from './LayoutEditor'
+import { OccupancyPanel } from './OccupancyPanel'
 import './dining.css'
 
 export function RoomsPage() {
@@ -274,6 +275,7 @@ export function RoomDetailPage() {
         />
       ) : (
         <>
+          <OccupancyPanel room={data} />
           <div className="operation-toolbar">
             <select
               aria-label="Estado de mesas"

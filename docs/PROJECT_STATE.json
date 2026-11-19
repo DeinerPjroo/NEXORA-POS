@@ -2,19 +2,20 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-19",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "phase": 2,
-  "module": "Salones y mesas",
+  "module": "Reservas de mesas",
   "status": "IN_PROGRESS",
-  "active_task": "2.4-B",
-  "last_completed_task": "2.4-A: configuración y editor de salones/mesas0.25",
-  "next_task": "2.4-C",
+  "active_task": "2.4-C",
+  "last_completed_task": "2.4-B: ocupación/unión/separación/meseros/traslados y asociación POS0.26",
+  "next_task": "2.5",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
   "baseline_worktree": "clean; local HEAD equals origin/main",
   "dependencies": [
-    "Catálogo, pedidos, caja y venta 0.5 existentes"
+    "Configuración/editor de salones y mesas0.25",
+    "Pedidos/caja/ventas existentes y ocupación0.26"
   ],
   "blockers": [],
   "external_pending": [
@@ -29,8 +30,8 @@
     "assertions": 591,
     "playwright": 10
   },
-  "current_verification": "0.25 dirigida: DiningLayoutTest SQLite7/129; MariaDB persistencia/UUID/revisiones/tenant/FK/rollback5/54 en nexora_test_90a6782dbfaa84e4 conservada. Dependencias de registro/roles4/23. Chromium salones3 en1.3min más lector403 final1/19.8s (UI/arrastre/geometría/persistencia móvil, conflicto y DTO/UUID inciertos exactos, lector); build/TypeScript/Pint/Prettier y capturas del módulo revisados. Migración000023 aplicada y DDL sin conexión exportado. Principal498.48kB/gzip141.07; módulo16.90kB. Sin cambios financieros.",
-  "working_verification": "2.4-A lista para commit/push; siguiente B ocupación/unión/separación/traslado/meseros e integración POS. C reservas pendiente; padre2.4 permanece IN_PROGRESS. Tenant lock y revisión de salón coordinan metadatos/mesas/plano; edición captura snapshot inicial, no adopta revisiones de refetch. No simular estados ocupados/libres antes de B.",
+  "current_verification": "0.26 dirigida: SQLite pedidos/ventas/abonos/ocupación40/488, contrato de paginación1/18 y replay con atención cerrada1/15; MariaDB unicidad/FK1/9 y operación/finanzas/permisos/rollback5/114. Chromium ocupación4 y POS3 aprobados por ejecuciones dirigidas; dos casos finales1.1min. DTO/UUID inciertos sobreviven a refetch, traslado y cierre; caja120.25 en prueba de abonos y110.13 en recorrido UI. Migración000024/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal475.65kB/gzip134.54. No se ejecutaron suites generales.",
+  "working_verification": "2.4-B lista para commit/push normal tras A publicada ec58c6d. Seguir C reservas reales con zona/horarios/capacidad/conflictos/estados y llegada asociada a ocupación; no marcar padre2.4 completo hasta integrar/verificar C. Root DiningSession/UUID/Tenant lock y clave activa única evitan doble ocupación; cierre consulta SaleBalance y traslado solo sin venta. Sin procesos pendientes al cerrar B.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -63,7 +64,10 @@
     "nexora_test_7bfd53b7faf48ec2",
     "nexora_test_65bda8209625cbc1",
     "nexora_test_53cb7a4f90607f8a",
-    "nexora_test_90a6782dbfaa84e4"
+    "nexora_test_90a6782dbfaa84e4",
+    "nexora_test_4c0e14fc7a13cf3b",
+    "nexora_test_b61a624a36923725",
+    "nexora_test_1f737982924233b6"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

@@ -36,6 +36,13 @@ import { PriceDetails } from './PriceDetails'
 import { CartComboDetails } from './CartComboDetails'
 import type { CashOption, SalesSettings } from '../sales/types'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
+import type { DiningSelection } from '../dining/session-types'
+
+const DiningSessionPicker = lazy(() =>
+  import('../dining/DiningSessionPicker').then((module) => ({
+    default: module.DiningSessionPicker,
+  })),
+)
 
 const PriceReviewModal = lazy(() =>
   import('./PriceReviewModal').then((module) => ({ default: module.PriceReviewModal })),
@@ -44,15 +51,26 @@ const ComboOrderPicker = lazy(() =>
   import('./ComboOrderPicker').then((module) => ({ default: module.ComboOrderPicker })),
 )
 
-export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
+export function OrderComposer({
+  terminal = false,
+  initialDining,
+}: {
+  terminal?: boolean
+  initialDining?: DiningSelection
+}) {
   const context = useOperationContext(terminal)
   const { session } = useSession()
   const [currency] = useState(session!.company.currency)
   const [remembered] = useState(() =>
     terminal ? loadPosContext(session!) : { branchId: null, channel: 'takeaway' as OrderChannel },
   )
-  const [branch, setBranch] = useState<number | null>(remembered.branchId)
-  const [channel, setChannel] = useState<OrderChannel>(remembered.channel)
+  const [branch, setBranch] = useState<number | null>(
+    initialDining?.branch_id ?? remembered.branchId,
+  )
+  const [channel, setChannel] = useState<OrderChannel>(
+    initialDining ? 'dine_in' : remembered.channel,
+  )
+  const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [panel, setPanel] = useState<'menu' | 'cart'>('menu')
   const searchInput = useRef<HTMLInputElement>(null)
   const submitButton = useRef<HTMLButtonElement>(null)
@@ -131,6 +149,7 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
       setCart(lines)
       setBranch(target.branchId)
       setChannel(target.channel)
+      if (target.channel !== 'dine_in' || target.branchId !== dining?.branch_id) setDining(null)
       operation.reset()
       void client.invalidateQueries({ queryKey: ['products', 'order-menu'] })
     },
@@ -214,6 +233,9 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
       channel,
       currency,
       items: serializeCart(cart, true),
+      ...(dining && dining.branch_id === selected && channel === 'dine_in'
+        ? { dining_session_id: dining.id, dining_session_revision: dining.revision }
+        : {}),
     })
   }
   if (!can('catalog.view'))
@@ -548,6 +570,17 @@ export function OrderComposer({ terminal = false }: { terminal?: boolean }) {
                 placeholder="Ej. Mesa 4 o nombre de recogida"
               />
             </Field>
+            {selected && channel === 'dine_in' && can('dining.view') && can('dining.operate') && (
+              <Suspense fallback={<Loading />}>
+                <DiningSessionPicker
+                  key={selected}
+                  branchId={selected}
+                  selected={dining}
+                  disabled={locked}
+                  onChange={setDining}
+                />
+              </Suspense>
+            )}
             <Field label="Nombre del cliente">
               <input name="customer_name" maxLength={100} placeholder="Opcional" />
             </Field>

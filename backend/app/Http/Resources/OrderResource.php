@@ -11,6 +11,7 @@ final class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id, 'public_id' => $this->public_id, 'branch_id' => $this->branch_id,
+            'dining_session_id' => $this->dining_session_id, 'dining_snapshot' => $this->dining_snapshot,
             'branch_name' => $this->whenLoaded('branch', fn () => $this->branch->name),
             'channel' => $this->channel, 'reference' => $this->reference, 'customer_name' => $this->customer_name,
             'notes' => $this->notes, 'currency' => $this->currency, 'subtotal' => $this->subtotal,
