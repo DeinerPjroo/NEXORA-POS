@@ -8,6 +8,9 @@ test('subcategorías: seleccionar principal paginada, filtrar y heredar disponib
   test.setTimeout(240_000)
   page.setDefaultTimeout(20_000)
   await fixtureWorkspace(page, 'Oliva Menú')
+  const parentCard = page
+    .locator('.category-card')
+    .filter({ has: page.getByRole('heading', { name: 'ZZ Platos', exact: true }) })
   for (let index = 0; index < 10; index++)
     await writeApi(page, 'POST', 'categories', {
       name: `A Principal ${index}`,
@@ -78,7 +81,7 @@ test('subcategorías: seleccionar principal paginada, filtrar y heredar disponib
   ).toBeDisabled()
   await page.getByLabel('Categoría activa', { exact: true }).uncheck()
   await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
-  await expect(page.locator('.category-card').getByText('Inactiva', { exact: true })).toBeVisible()
+  await expect(parentCard.getByText('Inactiva', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Ver subcategorías de ZZ Platos', exact: true }).click()
   await expect(
     page.locator('.category-card').getByText('Principal inactiva', { exact: true }),
@@ -108,7 +111,7 @@ test('subcategorías: seleccionar principal paginada, filtrar y heredar disponib
   await page.getByRole('button', { name: 'Editar categoría ZZ Platos', exact: true }).click()
   await page.getByLabel('Categoría activa', { exact: true }).check()
   await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
-  await expect(page.locator('.category-card').getByText('Activa', { exact: true })).toBeVisible()
+  await expect(parentCard.getByText('Activa', { exact: true })).toBeVisible()
   await page.goto('/pedidos/nuevo')
   await expect(
     page.getByRole('button', { name: 'Agregar Pizza de la casa', exact: true }),

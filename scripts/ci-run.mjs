@@ -45,8 +45,10 @@ if (mode === "prepare") {
   if (process.env.CI_CHANGED === "true")
     run("node", ["--test", "scripts/ci-plan.test.mjs"]);
 } else if (mode === "frontend-check") {
-  run("npm", ["run", "build"], "frontend");
   const paths = JSON.parse(process.env.FRONTEND_FILES ?? "[]");
+  const testsOnly =
+    paths.length > 0 && paths.every((path) => path.startsWith("frontend/e2e/"));
+  run("npm", ["run", testsOnly ? "check" : "build"], "frontend");
   if (
     paths.some(
       (path) =>
