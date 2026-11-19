@@ -1,0 +1,13 @@
+# Integración continua
+
+Nexora CI usa GitHub Actions con permisos contents:read, checkout sin credenciales persistentes y acciones fijadas a commits verificados. No despliega ni usa credenciales, bases o archivos .env locales. El repositorio es público: no publica trazas, capturas de fallos, .env, logs ni volcados que puedan incluir secretos de prueba. Dependencias se instalan desde locks y se reutilizan cachés de descargas; npm ignora solo la versión raíz al calcular su clave de caché.
+
+Push/PR selecciona checks y pruebas por archivos modificados y dependencias de módulos. Cambios solo documentales o de versión de la aplicación no lanzan suites. SQL dirigido usa únicamente scripts/test-mysql.php sobre un servicio MySQL8.4 efímero, con un esquema aleatorio nuevo conservado durante la ejecución. Filtros relacionados largos se dividen en lotes válidos, sin ampliar a toda la suite por un límite de longitud. No se repite automáticamente SQLite además de SQL por incremento. Cambios de dependencias de runtime justifican verificaciones transversales.
+
+workflow_dispatch permite targeted con backend_filter y/o playwright_specs, o full para cierre de fase, infraestructura transversal o entrega estable. full ejecuta SQLite completo, MySQL completo y Chromium completo en trabajos independientes; no comparte su base/medios/caché mutables entre máquinas. Chromium mantiene un solo worker por entorno. Las suites omitidas se indican expresamente y no se consideran verificadas.
+
+ci-plan.mjs mantiene las relaciones de módulos/pruebas y rechaza cambios de producción sin un alcance reconocible. Al añadir un dominio, agregar su regresión y ajustar selección cuando corresponda. La selección automatizada complementa las pruebas locales específicas y no demuestra cobertura formal de cada dependencia. ci-run.mjs acepta argumentos validados mediante procesos sin shell; rechaza filtros/archivos no permitidos y no sobrescribe un .env existente. prepare solo funciona dentro de GitHub Actions.
+
+Comprobaciones locales del protocolo: node --test scripts/ci-plan.test.mjs, node --check sobre ejecutores, Prettier dirigido y actionlint del workflow. Esto valida configuración, no reemplaza una ejecución remota: registrar ID/commit/resultado de Actions antes de marcar CI verificada. No habilitar branch protection ni desplegar producción como efecto lateral de esta tarea.
+
+Referencias: [Playwright CI](https://playwright.dev/docs/ci), [GitHub, contextos disponibles](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability) y [Actionlint](https://github.com/rhysd/actionlint).

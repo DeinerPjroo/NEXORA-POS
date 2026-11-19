@@ -1,0 +1,226 @@
+name: Nexora CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Validación dirigida o suites completas de entrega
+        type: choice
+        options: [targeted, full]
+        default: targeted
+      backend_filter:
+        description: Filtro PHPUnit dirigido (vacío omite SQL en modo dirigido)
+        type: string
+        default: ""
+      playwright_specs:
+        description: Archivos .spec.ts separados por comas (vacío omite navegador)
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexora-ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      backend_check: ${{ steps.plan.outputs.backend_check }}
+      frontend_check: ${{ steps.plan.outputs.frontend_check }}
+      php_files: ${{ steps.plan.outputs.php_files }}
+      frontend_files: ${{ steps.plan.outputs.frontend_files }}
+      ci_changed: ${{ steps.plan.outputs.ci_changed }}
+      sql_mode: ${{ steps.plan.outputs.sql_mode }}
+      backend_filter: ${{ steps.plan.outputs.backend_filter }}
+      backend_filters: ${{ steps.plan.outputs.backend_filters }}
+      sqlite_full: ${{ steps.plan.outputs.sqlite_full }}
+      browser_mode: ${{ steps.plan.outputs.browser_mode }}
+      browser_specs: ${{ steps.plan.outputs.browser_specs }}
+      npm_key: ${{ steps.plan.outputs.npm_key }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - id: plan
+        run: node scripts/ci-plan.mjs
+
+  backend-checks:
+    needs: plan
+    if: needs.plan.outputs.backend_check == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, gd, pdo_mysql, pdo_sqlite, xmlwriter
+          tools: composer:v2
+          coverage: none
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+      - run: composer install --working-dir=backend --prefer-dist --no-interaction --no-progress
+      - run: node scripts/ci-run.mjs backend-check
+        env:
+          PHP_FILES: ${{ needs.plan.outputs.php_files }}
+          CI_CHANGED: ${{ needs.plan.outputs.ci_changed }}
+
+  frontend-checks:
+    needs: plan
+    if: needs.plan.outputs.frontend_check == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ needs.plan.outputs.npm_key }}
+          restore-keys: npm-${{ runner.os }}-
+      - run: npm ci --prefix frontend
+      - run: node scripts/ci-run.mjs frontend-check
+        env:
+          FRONTEND_FILES: ${{ needs.plan.outputs.frontend_files }}
+
+  sql:
+    needs: plan
+    if: needs.plan.outputs.sql_mode != 'off'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: nexora-ci-ephemeral
+          MYSQL_DATABASE: nexora_ci_bootstrap
+        ports: ["3306/tcp"]
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: nexora_ci_bootstrap
+      DB_USERNAME: root
+      DB_PASSWORD: nexora-ci-ephemeral
+      DB_URL: ""
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      MAIL_MAILER: array
+      BCRYPT_ROUNDS: "4"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, gd, pdo_mysql, pdo_sqlite, xmlwriter
+          tools: composer:v2
+          coverage: none
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+      - run: composer install --working-dir=backend --prefer-dist --no-interaction --no-progress
+      - run: node scripts/ci-run.mjs prepare
+      - run: node scripts/ci-run.mjs sql
+        env:
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          BACKEND_FILTERS: ${{ needs.plan.outputs.backend_filters }}
+          SQL_MODE: ${{ needs.plan.outputs.sql_mode }}
+
+  sqlite-delivery:
+    needs: plan
+    if: needs.plan.outputs.sqlite_full == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      DB_URL: ""
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      MAIL_MAILER: array
+      BCRYPT_ROUNDS: "4"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, gd, pdo_mysql, pdo_sqlite, xmlwriter
+          tools: composer:v2
+          coverage: none
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+      - run: composer install --working-dir=backend --prefer-dist --no-interaction --no-progress
+      - run: node scripts/ci-run.mjs prepare
+      - run: node scripts/ci-run.mjs sqlite
+
+  browser:
+    needs: plan
+    if: needs.plan.outputs.browser_mode != 'off'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      APP_DEBUG: "false"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, gd, pdo_mysql, pdo_sqlite, xmlwriter
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/composer/files
+          key: browser-deps-${{ runner.os }}-${{ needs.plan.outputs.npm_key }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: browser-deps-${{ runner.os }}-
+      - run: composer install --working-dir=backend --prefer-dist --no-interaction --no-progress
+      - run: node scripts/ci-run.mjs prepare
+      - run: npm ci --prefix frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: node scripts/ci-run.mjs browser
+        env:
+          BROWSER_MODE: ${{ needs.plan.outputs.browser_mode }}
+          BROWSER_SPECS: ${{ needs.plan.outputs.browser_specs }}
