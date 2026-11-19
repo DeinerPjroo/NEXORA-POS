@@ -97,6 +97,10 @@ export function makePlan(
         /foundation|screen-security|email-verification|multi-factor|denied-access-audit|pos-context/,
       );
     if (/Branch|Role|Studio|Workspace/.test(file)) addBackend(/Foundation/);
+    if (/Kitchen|kitchen/.test(file)) {
+      addBackend(/KitchenStation/);
+      addBrowser(/kitchen-stations/);
+    }
     if (/Domains\/Operations|Commands\/Backup/.test(file))
       addBackend(/BackupArchive|SqlBackup/);
     if (
@@ -141,6 +145,7 @@ export function makePlan(
   )
     addBackend(/MfaConcurrency|FinancialConcurrency/);
   for (const file of productionFrontend) {
+    if (/features\/kitchen/.test(file)) addBrowser(/kitchen-stations/);
     if (
       /features\/auth|components\/AppShell|\/App.tsx|lib\/(api|types)/.test(
         file,

@@ -10,6 +10,7 @@ use App\Http\Controllers\DiningController;
 use App\Http\Controllers\DiningReservationController;
 use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\KitchenStationController;
 use App\Http\Controllers\MultiFactorController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrderController;
@@ -59,6 +60,9 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('workspace/commercial-dashboard', [CommercialDashboardController::class, 'show']);
         Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::get('kitchen-stations', [KitchenStationController::class, 'index']);
+        Route::post('kitchen-stations', [KitchenStationController::class, 'store']);
+        Route::put('kitchen-stations/{kitchenStation}', [KitchenStationController::class, 'update']);
         Route::controller(DiningReservationController::class)->group(function () {
             Route::get('dining/reservation-tables', 'tables');
             Route::get('dining-reservations', 'index');

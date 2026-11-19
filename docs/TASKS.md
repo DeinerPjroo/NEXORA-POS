@@ -41,12 +41,16 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-SEC-B | COMPLETED | Flujo local de correo firmado/POST/CSRF/cuenta propia, caducidad, reenvío limitado y estado real0.30. SQLite18/186, Chromium correo2+bloqueo2 dirigidos, compilación/formato/capturas correctos. EMAIL_VERIFICATION.md. SMTP y recepción externos pendientes | 1-SEC-A; SMTP para entrega externa |
 | 1-SEC-C | COMPLETED | MFA TOTP/QR, desafío login, recuperación única/renovación/desactivación y revocación versionada0.31. SQLite15/167, SQL11/126+final3/31 con dos procesos/TOTP/recuperación; Chromium2+financiero1, compilación/formato/capturas y migración000027 verificados. MFA.md | 1-SEC-B |
 | 1-SEC-D | COMPLETED | Rechazos auditados sin secretos, actor/tenant, límites/rollback/fallo de logging. SQLite64/511; SQL auditoría/devolución9/88, Chromium1 y checks específicos correctos. DENIED_ACCESS_AUDIT.md | 1-SEC-A/C |
-| 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
+| 1-OPS | COMPLETED | Núcleo local A–D entregado: CI/concurrencia/respaldo-restauración/criterios de entrega. Producción, EER visual y reparación Aria176 son pendientes externos explícitos | Infraestructura local/CI |
 | 1-OPS-A | COMPLETED | CI remota dirigida/de entrega; runs44622299984 y44622476244 aprobados. Cierre previo cubierto por completas y correcciones dirigidas, sin repetir suites ajenas. CI.md | GitHub/repositorio y entorno CI |
 | 1-OPS-B | COMPLETED | Carreras reales de cobro/UUID/apertura/abonos/devolución/fondos/tenant/permisos y regresión MFA: MariaDB9/121, barrera común y esquema conservado. FINANCIAL_CONCURRENCY.md | SQL aislado; CI dirigida |
-| 1-OPS-C | TESTING | ZIP AES-256/SQL/catálogo/claves, restauración nueva con cuenta SQL restringida. MySQL8.4 CI6/39; validar ajuste final en rama antes de integrar. Aria176 local pendiente externo. BACKUPS.md | SQL/medios/clave de cifrado |
-| 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |
-| 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
+| 1-OPS-C | COMPLETED | ZIP AES-256/SQL/catálogo/claves y cuenta SQL restringida: MySQL8.4 CI6/39, ajuste final44624077134 y main44624592750 aprobados. Aria176 local pendiente externo. BACKUPS.md | SQL/medios/clave de cifrado |
+| 1-OPS-D | COMPLETED | MySQL8.4 validado realmente en CI; entrega documentada en DELIVERY_CHECKLIST.md. EER visual Workbench y despliegue quedan explícitamente externos, sin simular validación | A–C; entorno disponible |
+| 3.1 | IN_PROGRESS | Kitchen/KDS en A estaciones, B rutas/comandas, C Reverb privado, D estados/tiempos/prioridades/historial. KITCHEN.md | Pedidos/POS |
+| 3.1-A | TESTING | Estaciones por sucursal/API/UI/revisión/archivo/permisos/UUID y auditoría. SQLite31/158, MariaDB5/47, build y migración000028 aprobados; navegador/visual pendientes | Identidad, sucursales e idempotencia existentes |
+| 3.1-B | PENDING | Enrutamiento y comandas con snapshots por estación, estados/registro transaccional sin alterar finanzas | 3.1-A; pedidos |
+| 3.1-C | PENDING | Reverb privado por tenant/sucursal, autorización y reconexión con estado real | 3.1-B |
+| 3.1-D | PENDING | Estados configurables, prioridad/tiempos/avisos e historial conectado | 3.1-B/C |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |
 | 3.4 | PENDING | Proveedores/compras/recepciones/cuentas por pagar | 3.2 |

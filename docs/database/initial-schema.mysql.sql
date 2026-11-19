@@ -665,3 +665,13 @@ alter table `users` add `mfa_pending_id` char(36) null;
 
 alter table `users` add `mfa_pending_expires_at` datetime null;
 
+create table `kitchen_stations` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `name` varchar(80) not null, `color` varchar(7) not null, `target_minutes` smallint unsigned not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_stations` add constraint `kitchen_stations_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_stations` add unique `kitchen_station_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `kitchen_stations` add unique `kitchen_station_name`(`tenant_id`, `branch_id`, `name`);
+
+alter table `kitchen_stations` add constraint `kitchen_station_branch` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+

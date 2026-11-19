@@ -13,6 +13,7 @@ export function homePath(session: Session): string {
     ['orders.view', '/pedidos'],
     ['dining.view', '/salones'],
     ['dining.reserve', '/salones/reservas'],
+    ['kitchen.view', '/cocina/estaciones'],
     ['cash.view', '/caja'],
     ['catalog.view', '/productos'],
     ['sales.view', '/ventas'],

@@ -47,6 +47,12 @@ const navigation = [
   { to: '/inicio', label: 'Vista general', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, permission: 'orders.view' },
   { to: '/salones', label: 'Salones y mesas', icon: Building2, permission: 'dining.view' },
+  {
+    to: '/cocina/estaciones',
+    label: 'Estaciones de cocina',
+    icon: Building2,
+    permission: 'kitchen.view',
+  },
   { to: '/salones/reservas', label: 'Reservas', icon: Building2, permission: 'dining.reserve' },
   { to: '/ventas', label: 'Ventas', icon: ReceiptText, permission: 'sales.view' },
   { to: '/caja', label: 'Caja', icon: Wallet, permission: 'cash.view' },
