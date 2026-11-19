@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.31.0**: PIN/bloqueo, flujo local de correo y MFA completos. Siguen denegaciones1-SEC-D, operación1-OPS y fases3–6; producción/SMTP externo pendientes.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.32.0**: núcleo de seguridad1-SEC completo tras dashboard/POS/salones de fase2. Siguen operación1-OPS y fases3–6; producción/SMTP externo pendientes.
+
+0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.
 
 0.31 completa1-SEC-C: TOTP/QR local, activación confirmada, recuperación de uso único, desafío previo a autenticar y versión de sesión que invalida acceso antiguo. SQLite final15/167 (MFA/RFC y recuperación relacionada); regresión previa de identidad/correo/PIN19/189. MariaDB módulo11/126 en ee901254ff3059f1 y final dirigido3/31 en ee330c754c9dd355: dos procesos compiten por TOTP y recuperación, solo uno aceptado; recuperación/revocación conservan MFA/sesión actual. Chromium MFA2 cubiertos por ejecuciones dirigidas; caso final activación/consulta503 pasó33.2s, recuperación42.8s; cobro incierto1 aprobado43.3s. Build/TypeScript/Pint/Prettier/Composer/plataforma y capturas sin secretos correctos. Migración000027 aplicada y DDL actualizado; principal484.92kB/gzip136.94. Sin suites generales repetidas.
 

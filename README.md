@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.31.0** agrega MFA con aplicación autenticadora, QR local y códigos de recuperación de uso único. El login exige el segundo factor antes de abrir el espacio y revoca sesiones antiguas al cambiar la seguridad. Mantiene PIN/bloqueo, correo firmado y la operación del restaurante. Contrato: [MFA.md](docs/MFA.md). SMTP externo y las fases pendientes continúan abiertos.
+El incremento **0.32.0** completa la auditoría de accesos rechazados, con historial por empresa y omisión de secretos. Mantiene MFA, PIN/bloqueo, correo firmado y operación del restaurante. Continúan integración continua, concurrencia financiera, respaldos y las fases pendientes; SMTP externo sin verificar. Contrato: [DENIED_ACCESS_AUDIT.md](docs/DENIED_ACCESS_AUDIT.md).
 
 ## Entorno y requisitos
 

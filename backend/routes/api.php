@@ -39,7 +39,7 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/reset-password', [AuthController::class, 'reset'])->middleware('throttle:recovery');
     Route::post('auth/mfa/challenge', [MultiFactorController::class, 'challenge'])->middleware('throttle:mfa-challenge');
     Route::post('auth/mfa/cancel', [MultiFactorController::class, 'cancel']);
-    Route::middleware(['auth:sanctum', 'mfa.session', 'tenant', 'screen.unlocked'])->group(function () {
+    Route::middleware(['auth:sanctum', 'audit.denials', 'mfa.session', 'tenant', 'screen.unlocked'])->group(function () {
         Route::get('auth/mfa', [MultiFactorController::class, 'show']);
         Route::post('auth/mfa/setup', [MultiFactorController::class, 'begin'])->middleware('throttle:credentials');
         Route::post('auth/mfa/enable', [MultiFactorController::class, 'enable'])->middleware('throttle:mfa-manage');

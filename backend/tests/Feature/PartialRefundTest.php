@@ -216,15 +216,18 @@ class PartialRefundTest extends TestCase
         });
     }
 
-    public function test_another_sale_payment_in_same_tenant_is_rejected_and_audit_is_unchanged(): void
+    public function test_another_sale_payment_is_rejected_without_financial_writes_and_access_is_audited(): void
     {
         $work = $this->work();
         $order = $this->postJson('/api/v1/orders', ['idempotency_key' => (string) Str::uuid(), 'branch_id' => $work['branch'], 'channel' => 'takeaway', 'currency' => 'COP', 'items' => [['product_id' => $work['product'], 'quantity' => 1, 'product_revision' => 1, 'expected_unit_price' => '100.01']]])->assertCreated()->json('data');
         $other = $this->postJson('/api/v1/orders/'.$order['id'].'/collect', ['idempotency_key' => (string) Str::uuid(), 'cash_session_id' => $work['session']['id'], 'cash_revision' => 3, 'order_revision' => 1, 'settings_revision' => 2, 'discount_amount' => '0', 'expected_total' => '100.01', 'received_amount' => '100.01'])->assertCreated()->json('data');
         $records = DB::table('audit_logs')->count();
+        $businessRecords = DB::table('audit_logs')->where('action', 'not like', 'access.%')->count();
         $this->postJson($this->path($work), $this->payload($work, ['cash_revision' => 4, 'refunds' => [['payment_id' => $work['sale']['payments'][0]['id'], 'amount' => '1'], ['payment_id' => $other['payments'][0]['id'], 'amount' => '1']]]))->assertNotFound();
         $this->assertDatabaseCount('sale_refunds', 0);
-        $this->assertDatabaseCount('audit_logs', $records);
+        $this->assertDatabaseCount('audit_logs', $records + 1);
+        $this->assertSame($businessRecords, DB::table('audit_logs')->where('action', 'not like', 'access.%')->count());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'access.unavailable']);
         $this->getJson('/api/v1/cash/sessions/'.$work['session']['id'])->assertJsonPath('data.revision', 4)->assertJsonPath('data.expected_amount', '1140.0100');
     }
 

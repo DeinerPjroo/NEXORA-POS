@@ -36,12 +36,16 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.4-B | COMPLETED | Ocupación/unión/separación/meseros/traslado/POS0.26 integrados. SQLite40/488+paginación1/18+replay1/15; SQL1/9+5/114; Chromium ocupación4+POS3 por impacto; migración000024/DDL/build/formato/capturas. DINING_OPERATIONS.md | 2.4-A |
 | 2.4-C | COMPLETED | Reservas/API/UI/horarios/zona/DST/capacidad/cruces/llegada atómica0.27. SQLite6/83+calendario1/10+dependencias15/285; SQL1/17+3/42+1/10; Chromium3 por ejecuciones dirigidas; migración000025/DDL/build/formato/capturas correctos. DINING_RESERVATIONS.md | 2.4-B |
 | 2.5 | COMPLETED | Dashboard real por fecha/sucursal/moneda, comparación, series, métodos, productos y operadores; widgets y permisos. Cierre de fase2: SQLite288/3692+1skip, SQL289/3706; Chromium43 cubiertos (42 completos +1 reintento dirigido). COMMERCIAL_DASHBOARD.md. Costes/ganancia/empleados avanzados dependen de fases3–4 | 2.1–2.4 |
-| 1-SEC | IN_PROGRESS | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones mediante A–D | Identidad existente; SMTP externo para entrega |
+| 1-SEC | COMPLETED | PIN/bloqueo, flujo local de verificación de correo, MFA y denegaciones A–D integrados/verificados. Entrega SMTP externa pendiente explícita | Identidad existente; SMTP para entrega externa |
 | 1-SEC-A | COMPLETED | PIN propio hasheado/revisión/contraseña y bloqueo persistente de sesión/API/UI. SQLite10/120+recuperación1/4, SQL10/120; Chromium seguridad3+fundamento2, compilación/formato/capturas y migración000026 verificados. SCREEN_SECURITY.md | Identidad existente |
 | 1-SEC-B | COMPLETED | Flujo local de correo firmado/POST/CSRF/cuenta propia, caducidad, reenvío limitado y estado real0.30. SQLite18/186, Chromium correo2+bloqueo2 dirigidos, compilación/formato/capturas correctos. EMAIL_VERIFICATION.md. SMTP y recepción externos pendientes | 1-SEC-A; SMTP para entrega externa |
 | 1-SEC-C | COMPLETED | MFA TOTP/QR, desafío login, recuperación única/renovación/desactivación y revocación versionada0.31. SQLite15/167, SQL11/126+final3/31 con dos procesos/TOTP/recuperación; Chromium2+financiero1, compilación/formato/capturas y migración000027 verificados. MFA.md | 1-SEC-B |
-| 1-SEC-D | IN_PROGRESS | Auditoría de denegaciones sin secretos y límites de acceso comprobados | 1-SEC-A/C |
-| 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |
+| 1-SEC-D | COMPLETED | Rechazos auditados sin secretos, actor/tenant, límites/rollback/fallo de logging. SQLite64/511; SQL auditoría/devolución9/88, Chromium1 y checks específicos correctos. DENIED_ACCESS_AUDIT.md | 1-SEC-A/C |
+| 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
+| 1-OPS-A | IN_PROGRESS | CI reproducible con checks pertinentes y suites de entrega; comprobar ejecución remota, no solo YAML | GitHub/repositorio y entorno CI |
+| 1-OPS-B | PENDING | Concurrencia real de comandos financieros, UUID y saldos, reutilizando aislamiento y worker existentes | 1-OPS-A; SQL aislado |
+| 1-OPS-C | PENDING | Respaldo privado y restauración verificada exclusivamente en destino nuevo, sin tocar datos de trabajo | SQL/medios/clave de cifrado |
+| 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |
