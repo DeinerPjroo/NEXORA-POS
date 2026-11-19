@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+POS según corrección visual del usuario: Mesas lateral anclado a derecha de acciones y pedido como tabla HTML compacta, sin tarjetas de carrito; cantidades/notas/quitar en barra única, subtotal inferior y acciones juntas. Build y Chromium pos-tables1 aprobado40.1s (posición, cantidad2/subtotal36000 y atención real). Reutiliza cálculo/UUID/backend. Pos.spec ajusta apertura de Nota a nueva barra; no se repitió su caso completo. Sin suites generales ni nuevos documentos.
+
 Corregido botón Mesas del POS: PosTablesModal muestra salones y ocupación de la sucursal; OccupancyPanel/SessionEditor reutilizados devuelven selección sin salir/perder productos. Cambiar canal conserva revisión de precios; permisos/UUID/revisiones existentes. Build y Chromium dirigido pos-tables.spec1 aprobado41.1s, incluida asociación real de pedido a atención y ausencia de duplicado. Sin backend/migraciones/suites generales.
 
 Requisito permanente del usuario: Admin separado de Terminal profesional de restaurante, sin estética ecommerce en operación (AGENTS). Implementado TerminalEnvironment para pedidos/caja/cobros/atenciones/reservas, /terminal/mesas con ocupación por salón real, botones compactos/estados, tamaños de producto limitados y secundarios emergentes. Backend y flujos monetarios compartidos. Build/TypeScript y Chromium dirigido2 aprobados (cobro+permisos y mesas+retorno Admin), sin suites/capturas rutinarias. KDS/comandas/domicilios siguen pendientes; no mostrar datos ni conexión simulados. Continuar desde este estado con protocolo rápido.

@@ -30,7 +30,7 @@ export function PosTablesModal({
   })
   const room = rooms.data?.data.find((item) => item.id === roomId) ?? rooms.data?.data[0]
   return (
-    <Modal title="Mesas del terminal" onClose={onClose}>
+    <Modal title="Mesas del terminal" onClose={onClose} className="modal pos-tables-drawer">
       <div className="pos-tables-picker">
         <ErrorNotice error={rooms.error} />
         <nav className="terminal-room-tabs" aria-label="Salones de mesas POS">

@@ -53,8 +53,17 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   await page.goto('/pos')
   await page.getByRole('button', { name: 'Agregar Pizza de prueba', exact: true }).click()
   await expect(page.locator('.cart-lines')).toContainText('Pizza de prueba')
+  const lines = page.getByRole('table', { name: 'Líneas del pedido', exact: true })
+  await expect(lines.getByRole('columnheader', { name: 'Cant.', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Sumar Pizza de prueba', exact: true }).click()
+  await expect(lines.getByRole('row').nth(1).getByRole('cell').first()).toHaveText('2')
   await page.getByRole('button', { name: 'Mesas', exact: true }).click()
   const picker = page.getByRole('dialog', { name: 'Mesas del terminal', exact: true })
+  await expect(picker).toHaveClass(/pos-tables-drawer/)
+  const actions = await page.locator('.pos-actions').boundingBox()
+  const drawer = await picker.boundingBox()
+  expect(drawer!.x).toBeGreaterThanOrEqual(actions!.x + actions!.width)
+  expect(drawer!.width).toBeGreaterThan(page.viewportSize()!.width / 2)
   await expect(picker.getByRole('button', { name: 'Salón POS', exact: true })).toBeVisible()
   await picker.getByRole('button', { name: 'Ocupar Mesa POS', exact: true }).click()
   const opening = page.getByRole('dialog', { name: 'Ocupar mesas', exact: true })
@@ -74,10 +83,16 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
   await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
   const orderId = page.url().match(/pedidos\/(\d+)/)![1]
-  const { data: order } = await readApi<{ data: { channel: string; dining_session_id: number } }>(
-    page,
-    'orders/' + orderId,
-  )
+  const { data: order } = await readApi<{
+    data: {
+      channel: string
+      dining_session_id: number
+      items: { quantity: number }[]
+      subtotal: string
+    }
+  }>(page, 'orders/' + orderId)
   expect(order.channel).toBe('dine_in')
   expect(order.dining_session_id).toBe(sessions[0].id)
+  expect(order.items[0].quantity).toBe(2)
+  expect(order.subtotal).toBe('36000.0000')
 })

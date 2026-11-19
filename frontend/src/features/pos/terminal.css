@@ -527,3 +527,200 @@ body.pos-active {
   color: var(--text);
   margin: 0;
 }
+.modal.pos-tables-drawer {
+  position: fixed;
+  inset: 68px 10px 10px 102px;
+  margin: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  border-radius: 6px;
+  border-left: 3px solid var(--secondary);
+  padding: 16px;
+}
+.pos-tables-drawer::backdrop {
+  background: linear-gradient(to right, transparent 0 94px, #0003 94px);
+}
+.pos-tables-drawer .pos-tables-picker {
+  height: calc(100% - 55px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pos-tables-drawer .dining-layout {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.pos-tables-drawer .dining-occupancy-grid {
+  max-height: none;
+  overflow: visible;
+}
+.pos-terminal .pos-order-ledger {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+.pos-terminal .pos-order-lines-scroll {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
+.pos-terminal .pos-order-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.pos-terminal .pos-order-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--canvas);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 6px;
+  border: 0;
+  text-align: left;
+}
+.pos-terminal .pos-order-table th:first-child {
+  width: 43px;
+  text-align: center;
+}
+.pos-terminal .pos-order-table th:last-child {
+  width: 94px;
+  text-align: right;
+}
+.pos-terminal .pos-order-table td {
+  vertical-align: top;
+  padding: 9px 6px;
+  border: 0;
+  border-bottom: 3px solid var(--surface);
+  background: var(--canvas);
+}
+.pos-terminal .pos-order-table tr[data-selected='true'] td {
+  background: color-mix(in srgb, var(--pos-primary) 22%, var(--surface));
+}
+.pos-terminal .pos-order-table td:first-child {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 650;
+  padding-top: 12px;
+}
+.pos-terminal .pos-order-table td:last-child {
+  text-align: right;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pos-terminal .pos-line-select {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  min-height: 24px;
+  width: 100%;
+}
+.pos-terminal .pos-order-table small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.pos-terminal .pos-line-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.pos-terminal .pos-line-actions button {
+  min-height: 36px;
+  min-width: 35px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  color: var(--text);
+  padding: 6px 9px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.pos-terminal .pos-line-actions output {
+  min-width: 24px;
+  text-align: center;
+  font-size: 13px;
+}
+.pos-terminal .pos-line-actions button:last-child {
+  margin-left: auto;
+  color: #cb5264;
+}
+.pos-terminal .pos-order-empty {
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 0;
+  padding: 18px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  gap: 5px;
+}
+.pos-terminal .pos-order-empty p {
+  margin: 0;
+}
+.pos-terminal .pos-order-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  flex-shrink: 0;
+  background: var(--surface);
+  padding-top: 5px;
+}
+.pos-terminal .pos-order-actions > button {
+  min-height: 58px;
+  padding: 10px 5px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 750;
+  white-space: normal;
+}
+.pos-terminal .pos-order-actions > button[type='submit'] {
+  background: var(--pos-pay);
+  color: white;
+  border: 0;
+  font-size: 18px;
+}
+.pos-terminal .order-cart {
+  gap: 6px;
+  padding: 8px;
+}
+.pos-terminal .order-subtotal {
+  padding: 12px 3px;
+  margin: 0;
+}
+.pos-terminal .order-subtotal strong {
+  font-size: 28px;
+}
+@media (max-width: 1000px) {
+  .modal.pos-tables-drawer {
+    left: 86px;
+  }
+}
+@media (max-width: 720px) {
+  .modal.pos-tables-drawer {
+    inset: 108px 5px 5px 68px;
+    padding: 10px;
+  }
+  .pos-tables-drawer .dining-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  }
+}

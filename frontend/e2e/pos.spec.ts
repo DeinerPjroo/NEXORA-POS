@@ -204,6 +204,8 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
   await prep.getByRole('button', { name: 'Agregar con estas opciones', exact: true }).click()
   await picker.getByRole('button', { name: 'Revisar precio del combo', exact: true }).click()
   await picker.getByRole('button', { name: 'Agregar combo revisado', exact: true }).click()
+  await page.getByRole('button', { name: 'Seleccionar Tostada POS', exact: true }).click()
+  await page.locator('.pos-line-actions').getByRole('button', { name: 'Nota', exact: true }).click()
   await page.getByLabel('Observación para Tostada POS', { exact: true }).fill('Conservar nota POS')
   await expect(page.locator('.order-subtotal')).toContainText(formatMoney('15.5052'))
   await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(north.id))

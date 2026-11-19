@@ -39,6 +39,7 @@ import { PosCategories, PosKeypad, defaultPosLayout } from '../pos/PosPanels'
 import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
 import type { DiningSelection } from '../dining/session-types'
+import { PosOrderLines } from '../pos/PosOrderLines'
 import { PosTablesModal } from '../dining/PosTablesModal'
 
 const DiningSessionPicker = lazy(() =>
@@ -646,8 +647,8 @@ export function OrderComposer({
         <form className="panel order-cart" onSubmit={submit} data-pos-slot="order">
           <div className="panel-heading">
             <h2>
-              <ShoppingBag size={19} />
-              Tu pedido
+              {!terminal && <ShoppingBag size={19} />}
+              {terminal ? 'Pedido en curso' : 'Tu pedido'}
             </h2>
             <span className="pill neutral">
               {cart.reduce((total, line) => total + line.quantity, 0)} unidades
@@ -664,7 +665,22 @@ export function OrderComposer({
               Mesa seleccionada: {dining.label}
             </p>
           )}
-          {cart.length ? (
+          {terminal ? (
+            <PosOrderLines
+              lines={cart}
+              currency={currency}
+              selectedKey={activeLine}
+              disabled={locked}
+              onSelect={setActiveLine}
+              onQuantity={quantity}
+              onRemove={(key) => setCart((previous) => previous.filter((line) => line.key !== key))}
+              onNotes={(key, notes) =>
+                setCart((previous) =>
+                  previous.map((line) => (line.key === key ? { ...line, notes } : line)),
+                )
+              }
+            />
+          ) : cart.length ? (
             <div className="cart-lines" role="table" aria-label="Líneas del pedido">
               {terminal && (
                 <div className="pos-lines-heading" role="row">
@@ -810,7 +826,7 @@ export function OrderComposer({
             </Field>
           </fieldset>
           <div className="order-subtotal">
-            <span>Subtotal del pedido</span>
+            <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
             <strong>{formatMoney(cartSubtotal(cart), currency)}</strong>
           </div>
           <p className="muted small">
@@ -830,36 +846,38 @@ export function OrderComposer({
               Revisar precios conservando el pedido
             </button>
           )}
-          {terminal && (
+          <div className={terminal ? 'pos-order-actions' : undefined}>
+            {terminal && (
+              <button
+                type="button"
+                className="pos-kitchen"
+                disabled
+                title="El envío a estaciones se habilitará al integrar comandas de cocina"
+              >
+                ENVIAR A COCINA · No disponible
+              </button>
+            )}
             <button
-              type="button"
-              className="pos-kitchen"
-              disabled
-              title="El envío a estaciones se habilitará al integrar comandas de cocina"
+              className="button primary wide"
+              aria-label={terminal ? 'Continuar al cobro' : undefined}
+              ref={submitButton}
+              type="submit"
+              disabled={
+                operation.isPending ||
+                pricing.locked ||
+                (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
+              }
             >
-              ENVIAR A COCINA · No disponible
+              <Send size={17} />
+              {operation.isPending
+                ? 'Registrando…'
+                : operation.uncertain
+                  ? 'Reintentar envío'
+                  : terminal
+                    ? 'COBRAR'
+                    : 'Registrar pedido'}
             </button>
-          )}
-          <button
-            className="button primary wide"
-            aria-label={terminal ? 'Continuar al cobro' : undefined}
-            ref={submitButton}
-            type="submit"
-            disabled={
-              operation.isPending ||
-              pricing.locked ||
-              (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
-            }
-          >
-            <Send size={17} />
-            {operation.isPending
-              ? 'Registrando…'
-              : operation.uncertain
-                ? 'Reintentar envío'
-                : terminal
-                  ? 'COBRAR · Continuar al cobro'
-                  : 'Registrar pedido'}
-          </button>
+          </div>
         </form>
       </div>
       {tablesOpen && selected && (

@@ -4,9 +4,9 @@
   "reference_date": "2026-11-19",
   "version": "0.33.0",
   "phase": 3,
-  "module": "Corrección: selector de mesas en Terminal POS",
+  "module": "Terminal POS: panel lateral de mesas y comanda tabular",
   "status": "COMPLETED",
-  "active_task": "POS-TABLES-FIX",
+  "active_task": "POS-DRAWER-LEDGER",
   "last_completed_task": "1-OPS-A/B/C/D núcleo local; backup/restauración MySQL8.4 CI6/39; verificación de último ajuste en rama antes de integrar",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Mesas ya no abre detalles genéricos: modal de salones/ocupación por sucursal, selección de atención abierta y alta mediante SessionEditor existente. Conserva productos; cambio a dine_in usa preview/revisión de precios, cancela selección pendiente al rechazar revisión; exige permisos y respeta operación bloqueada. Build/TypeScript aprobados y Chromium dirigido pos-tables.spec1 aprobado41.1s: abre salón, ocupa mesa, selecciona existente sin duplicar atención, conserva pedido y verifica dining_session_id real al continuar al cobro. Sin backend/migraciones ni suites completas.",
+  "working_verification": "POS: Mesas abre panel lateral junto a acciones (geometría verificada). PosOrderLines presenta tabla HTML Cant./Producto/Importe, precio unitario, selección, barra única de cantidades/quitar/nota, subtotal inferior y acciones juntas. Build/TypeScript aprobados; Chromium pos-tables1 aprobado40.1s: cantidad2, subtotal36000, abrir/ocupar/reseleccionar mesa sin duplicar atención y asociación real antes del cobro. Sin backend/migraciones ni suites completas. Selector de nota de pos.spec actualizado a nueva barra; ese escenario completo no se repitió.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
