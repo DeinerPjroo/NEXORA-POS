@@ -52,7 +52,9 @@ class DeniedAccessAuditTest extends TestCase
         $this->assertNotNull($log);
         $this->assertEquals($actor->tenant_id, $log->tenant_id);
         $this->assertEquals($actor->id, $log->actor_id);
-        $this->assertSame(['status' => 403, 'method' => 'POST', 'route' => 'api/v1/categories'], json_decode($log->metadata, true));
+        $metadata = json_decode($log->metadata, true);
+        ksort($metadata); // MySQL JSON objects do not preserve insertion order.
+        $this->assertSame(['method' => 'POST', 'route' => 'api/v1/categories', 'status' => 403], $metadata);
         foreach (['Secret-DoNotLog', '654321', 'Injected name', 'Private note', 'do-not-log-this'] as $secret) {
             $this->assertStringNotContainsString($secret, json_encode($log));
         }

@@ -42,7 +42,7 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 1-SEC-C | COMPLETED | MFA TOTP/QR, desafío login, recuperación única/renovación/desactivación y revocación versionada0.31. SQLite15/167, SQL11/126+final3/31 con dos procesos/TOTP/recuperación; Chromium2+financiero1, compilación/formato/capturas y migración000027 verificados. MFA.md | 1-SEC-B |
 | 1-SEC-D | COMPLETED | Rechazos auditados sin secretos, actor/tenant, límites/rollback/fallo de logging. SQLite64/511; SQL auditoría/devolución9/88, Chromium1 y checks específicos correctos. DENIED_ACCESS_AUDIT.md | 1-SEC-A/C |
 | 1-OPS | IN_PROGRESS | Preparar CI, concurrencia financiera, respaldos/restauración y validación de despliegue mediante A–D, conservando datos | Infraestructura local/CI |
-| 1-OPS-A | IN_PROGRESS | CI reproducible con checks pertinentes y suites de entrega; comprobar ejecución remota, no solo YAML | GitHub/repositorio y entorno CI |
+| 1-OPS-A | TESTING | CI reproducible con checks pertinentes y suites de entrega; comprobar ejecución remota, no solo YAML | GitHub/repositorio y entorno CI |
 | 1-OPS-B | PENDING | Concurrencia real de comandos financieros, UUID y saldos, reutilizando aislamiento y worker existentes | 1-OPS-A; SQL aislado |
 | 1-OPS-C | PENDING | Respaldo privado y restauración verificada exclusivamente en destino nuevo, sin tocar datos de trabajo | SQL/medios/clave de cifrado |
 | 1-OPS-D | PENDING | MySQL8/EER y entrega de fase según entorno disponible, con pendientes externos explícitos | A–C; MySQL8/Workbench/despliegue |

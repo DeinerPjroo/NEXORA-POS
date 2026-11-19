@@ -4,8 +4,8 @@
   "reference_date": "2026-11-19",
   "version": "0.32.0",
   "phase": 1,
-  "module": "Operación: integración continua",
-  "status": "IN_PROGRESS",
+  "module": "Operación: CI remota y portabilidad",
+  "status": "TESTING",
   "active_task": "1-OPS-A",
   "last_completed_task": "1-SEC-D auditoría0.32; padre1-SEC completo en su núcleo local. MFA0.31 publicado9972b7c",
   "next_task": "1-OPS-B concurrencia financiera; C backup/restauración; D MySQL8/EER/entrega; después fase3",
@@ -31,7 +31,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "0.32 preparado para commit/push sobre9972b7c. Sin procesos pendientes. DENIED_ACCESS_AUDIT.md: terminate registra solo401/403/404/423/429 de actor autenticado, rutas de servidor y muestras1/60s/ruta/status/método +20 por actor/min. No escribir secretos ni ocultar fallos de auditoría de negocio. PartialRefundTest actualizado exige rechazo auditado y cero cambios financieros. Seguir1-OPS-A CI desde estado actual; aún no hay workflow implementado. Verificaciones generales al cerrar fase/entrega estable, no repetir las ya aprobadas sin impacto. Trabajo000027 y claves/DB protegidas.",
+  "working_verification": "Workflow CI publicado30bdf3c, Actions habilitado. Ejecutado completo44618461098: SQLite326/4094+2omitidas aprobó; MySQL8.4 ejecutó328 y solo falló orden de claves JSON en una aserción; se normaliza manteniendo tipos/valores. Frontend/npm ci detectó dos dependencias opcionales ya exigidas por rolldown pero ausentes del lock: se completan metadatos exactos de registro, sin actualizar versiones existentes. CI no se considera completa todavía; seguir resultados tras commit de reparación y repetir solo lo afectado. .runtime/github-ci.py consulta API reutilizando credencial Git sin imprimir/guardar token. No repetir SQLite completo ya aprobado ni suites SQL ajenas al ajuste. Versiones de trabajo0.32/esquema000027; siguientes1-OPS-B/C/D y fase3.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
