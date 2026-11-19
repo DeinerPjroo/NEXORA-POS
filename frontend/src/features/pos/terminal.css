@@ -495,3 +495,35 @@ body.pos-active {
   top: 0;
   z-index: 1;
 }
+.modal:has(.pos-tables-picker) {
+  width: min(1000px, 96vw);
+  max-width: 1000px;
+}
+.pos-tables-picker .dining-layout {
+  margin: 8px 0;
+  padding: 10px;
+}
+.pos-tables-picker .dining-occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 8px;
+  max-height: 50dvh;
+  overflow: auto;
+}
+.pos-tables-picker .dining-occupancy-card {
+  padding: 10px;
+  border-radius: 6px;
+}
+.pos-tables-picker .dining-occupancy-card .button {
+  padding: 7px;
+  font-size: 12px;
+  min-height: 36px;
+}
+.pos-dining-selection {
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 5px;
+  background: var(--canvas);
+  color: var(--text);
+  margin: 0;
+}

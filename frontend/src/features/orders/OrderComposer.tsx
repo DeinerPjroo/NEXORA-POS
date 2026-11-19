@@ -39,6 +39,7 @@ import { PosCategories, PosKeypad, defaultPosLayout } from '../pos/PosPanels'
 import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
 import type { DiningSelection } from '../dining/session-types'
+import { PosTablesModal } from '../dining/PosTablesModal'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -74,6 +75,8 @@ export function OrderComposer({
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [details, setDetails] = useState(false)
+  const [tablesOpen, setTablesOpen] = useState(false)
+  const pendingDining = useRef<DiningSelection | null>(null)
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
   const [activeLine, setActiveLine] = useState<string | null>(null)
@@ -161,12 +164,23 @@ export function OrderComposer({
       setCart(lines)
       setBranch(target.branchId)
       setChannel(target.channel)
-      if (target.channel !== 'dine_in' || target.branchId !== dining?.branch_id) setDining(null)
+      if (
+        pendingDining.current &&
+        target.channel === 'dine_in' &&
+        target.branchId === pendingDining.current.branch_id
+      ) {
+        setDining(pendingDining.current)
+        pendingDining.current = null
+      } else if (target.channel !== 'dine_in' || target.branchId !== dining?.branch_id)
+        setDining(null)
       operation.reset()
       void client.invalidateQueries({ queryKey: ['products', 'order-menu'] })
     },
   })
   const locked = operation.locked || pricing.locked
+  useEffect(() => {
+    if (pricing.error) pendingDining.current = null
+  }, [pricing.error])
   useEffect(() => {
     if (terminal && selected && !locked) savePosContext(session!, selected, channel)
   }, [terminal, selected, channel, locked, session])
@@ -423,11 +437,14 @@ export function OrderComposer({
             <aside className="pos-actions" data-pos-slot="actions">
               <button
                 type="button"
-                disabled={locked}
+                disabled={locked || !selected || !can('dining.view') || !can('dining.operate')}
+                title={
+                  !can('dining.view') || !can('dining.operate')
+                    ? 'Necesitas permisos para consultar y operar mesas'
+                    : 'Seleccionar una mesa de esta sucursal'
+                }
                 onClick={() => {
-                  setDetails(true)
-                  if (selected) pricing.request({ branchId: selected, channel: 'dine_in' })
-                  setPanel('cart')
+                  setTablesOpen(true)
                 }}
               >
                 Mesas
@@ -642,6 +659,11 @@ export function OrderComposer({
             <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
           )}
           <OperationNotice uncertain={operation.uncertain} />
+          {dining && channel === 'dine_in' && (
+            <p className="pos-dining-selection" role="status">
+              Mesa seleccionada: {dining.label}
+            </p>
+          )}
           {cart.length ? (
             <div className="cart-lines" role="table" aria-label="Líneas del pedido">
               {terminal && (
@@ -840,6 +862,20 @@ export function OrderComposer({
           </button>
         </form>
       </div>
+      {tablesOpen && selected && (
+        <PosTablesModal
+          branchId={selected}
+          onClose={() => setTablesOpen(false)}
+          onSelect={(selection) => {
+            setTablesOpen(false)
+            if (channel === 'dine_in') setDining(selection)
+            else {
+              pendingDining.current = selection
+              pricing.request({ branchId: selected, channel: 'dine_in' })
+            }
+          }}
+        />
+      )}
       {picking && selected && (
         <VariantOrderPicker
           product={picking}
@@ -889,7 +925,10 @@ export function OrderComposer({
             review={pricing.review}
             currency={currency}
             onApply={pricing.accept}
-            onCancel={pricing.cancel}
+            onCancel={() => {
+              pendingDining.current = null
+              pricing.cancel()
+            }}
           />
         </Suspense>
       )}

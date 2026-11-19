@@ -14,11 +14,13 @@ export function SessionEditor({
   session,
   initialTable,
   onClose,
+  onSaved,
 }: {
   branchId: number
   session?: DiningSession
   initialTable?: TableChoice
   onClose: () => void
+  onSaved?: (session: DiningSession) => void
 }) {
   const client = useQueryClient()
   const [page, setPage] = useState(1)
@@ -59,13 +61,14 @@ export function SessionEditor({
   })
   const operation = useOperation<DiningSession>(
     'dining-sessions' + (session ? '/' + session.id : ''),
-    async () => {
+    async (saved) => {
       await Promise.all(
         ['dining-occupancy', 'dining-sessions', 'dining-session', 'dining-available'].map((key) =>
           client.invalidateQueries({ queryKey: [key] }),
         ),
       )
       onClose()
+      onSaved?.(saved)
     },
     session ? 'PUT' : 'POST',
   )

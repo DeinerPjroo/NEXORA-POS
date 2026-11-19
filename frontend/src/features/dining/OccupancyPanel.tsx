@@ -5,7 +5,7 @@ import { api } from '../../lib/api'
 import { ErrorNotice, Loading } from '../../components/ui'
 import { useCan } from '../auth/SessionProvider'
 import type { DiningRoom } from './types'
-import type { TableChoice } from './session-types'
+import type { DiningSelection, TableChoice } from './session-types'
 import { SessionEditor } from './SessionEditor'
 
 type Occupancy = {
@@ -18,7 +18,13 @@ type Occupancy = {
     opened_at: string
   } | null
 }
-export function OccupancyPanel({ room }: { room: DiningRoom }) {
+export function OccupancyPanel({
+  room,
+  onSelect,
+}: {
+  room: DiningRoom
+  onSelect?: (selection: DiningSelection) => void
+}) {
   const can = useCan()
   const [opening, setOpening] = useState<TableChoice | null>(null)
   const query = useQuery({
@@ -67,6 +73,22 @@ export function OccupancyPanel({ room }: { room: DiningRoom }) {
                   <Link className="button secondary" to={'/salones/atenciones/' + session.id}>
                     Ver atención #{session.id}
                   </Link>
+                  {onSelect && (
+                    <button
+                      type="button"
+                      className="button primary"
+                      onClick={() =>
+                        onSelect({
+                          id: session.id,
+                          revision: session.revision,
+                          branch_id: room.branch_id,
+                          label: table.name + ' · Atención #' + session.id,
+                        })
+                      }
+                    >
+                      Seleccionar {table.name}
+                    </button>
+                  )}
                 </>
               ) : (
                 can('dining.operate') &&
@@ -93,6 +115,23 @@ export function OccupancyPanel({ room }: { room: DiningRoom }) {
           branchId={room.branch_id}
           initialTable={opening}
           onClose={() => setOpening(null)}
+          onSaved={
+            onSelect
+              ? (session) =>
+                  onSelect({
+                    id: session.id,
+                    revision: session.revision,
+                    branch_id: session.branch_id,
+                    label:
+                      session.tables
+                        .filter((t) => !t.released_at)
+                        .map((t) => t.table_name)
+                        .join(', ') +
+                      ' · Atención #' +
+                      session.id,
+                  })
+              : undefined
+          }
         />
       )}
     </section>
