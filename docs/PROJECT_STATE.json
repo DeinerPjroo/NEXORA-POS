@@ -2,13 +2,13 @@
   "schema_version": 1,
   "project": "Nexora POS",
   "reference_date": "2026-11-19",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "phase": 2,
   "module": "Catálogo avanzado",
   "status": "IN_PROGRESS",
-  "active_task": "2.2-E",
-  "last_completed_task": "2.2-D2: grupos de alternativas 0.20.0; padre 2.2-D completo",
-  "next_task": "2.2-F",
+  "active_task": "2.2-F",
+  "last_completed_task": "2.2-E: promociones de catálogo 0.21.0",
+  "next_task": "2.3",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -29,8 +29,8 @@
     "assertions": 591,
     "playwright": 10
   },
-  "current_verification": "0.20 verificada: 242 pruebas/2885 aserciones en SQLite y MariaDB; suite completa de 23 Playwright aprobada en 18.3 minutos. Migración 000020 aplicada, DDL/doctor/Pint/build/TypeScript/Prettier y capturas finales correctos. Principal 489.93 kB/gzip 138.46; panel 15.74 y configurador 5.28 kB, sin aviso. Esquema nexora_test_34164beced348cd5 conservado. Dependencias sin cambios; auditorías 0.19 reutilizadas.",
-  "working_verification": "0.20 publicada en 2f1dcd8; E continúa sin reinicio. Backend de promociones/API/cálculo conectado; PromotionTest dirigido MariaDB aprobado8/134, esquema nexora_test_98f7515a550265ba conservado. Sin procesos de pruebas pendientes. Faltan cobertura financiera/seguridad ampliada, UI/E2E y migración de trabajo. Protocolo2026-11-19: pruebas solo afectadas; cobertura exhaustiva de operaciones críticas, suites completas solo por fase/entrega estable/cambio transversal justificado. No repetir resultados vigentes ni auditorías generales. Continuar desde este WIP y publicar únicamente lo verificado.",
+  "current_verification": "0.21 verificada por impacto: MariaDB PromotionTest8/134 y caso financiero1/35; SQLite permisos/finanzas2/47 y dependencias precios/combos/horarios28/538. Playwright dirigido promociones/contexto2 aprobados en2.9min. Migración000021 aplicada; DDL/build/TypeScript/Pint/Prettier y dos capturas revisados. Principal491.22kB/gzip138.73 y PromotionsPanel8.24kB. Esquemas nexora_test_98f7515a550265ba y nexora_test_7bfd53b7faf48ec2 conservados. Referencia de suite completa0.20 en HANDOFF/PROGRESS.",
+  "working_verification": "Promociones terminadas; commit/push normal autorizado antes de galería2.2-F. Sin procesos de pruebas pendientes. Reutilizar resultados dirigidos vigentes y protocolo2026-11-19; no reiniciar fases ni ejecutar suites generales por rutina. Galería debe reutilizar fotografía privada/recodificación GD, revisiones y portada compatible. MySQL XAMPP se reinició al encontrarse detenido; conexión/migración funcionales sin cambiar credenciales ni datos.",
   "development_protocol": "2026-11-19: contexto mínimo en STATE/HANDOFF/TASKS, implementar e integrar, pruebas dirigidas según impacto, correcciones, estado breve, commit/push y continuar. AGENTS.md prevalece sobre protocolos históricos más exhaustivos.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -59,7 +59,8 @@
     "nexora_test_894aa259f5cc3a6b",
     "nexora_test_89138c797a2eab69",
     "nexora_test_34164beced348cd5",
-    "nexora_test_98f7515a550265ba"
+    "nexora_test_98f7515a550265ba",
+    "nexora_test_7bfd53b7faf48ec2"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

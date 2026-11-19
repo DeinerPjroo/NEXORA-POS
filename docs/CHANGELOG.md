@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 0.21.0 · 2026-11-19
+
+- Promociones de base fija/porcentual por producto/presentación/contexto/fechas locales inclusivas. Una ganadora por especificidad, prioridad y antigüedad; hasta20 activas, archivo y revisión/UUID/moneda/zona/auditoría/FK propios.
+- Interfaz de administración/preparación/carrito/revisión/recibo conectada. PriceContextv2 conserva promoción/base anterior/descuento; adicionales completos y combo raíz una vez con referencias sin promoción individual. Fórmulas financieras previas conservadas.
+- Verificación dirigida: MariaDB PromotionTest8/134 y caso financiero1/35; SQLite permisos/finanzas2/47 y dependencias precios/combos/horarios28/538; Chromium promociones/contexto2 en2.9min. Migración000021 aplicada, DDL/build/TypeScript/formato y dos capturas revisados. Esquemas nexora_test_98f7515a550265ba y nexora_test_7bfd53b7faf48ec2 conservados.
+- Protocolo2026-11-19 persistido: pruebas por impacto y cobertura exhaustiva crítica; suites completas por fase/entrega estable/cambio transversal justificado. SQL dirigido admite --filter restringido sin cambiar aislamiento ni retención.
+
 ## 0.20.0 · 2026-11-18
 
 - Grupos propios de combo con mínimos/máximos de alternativas, archivo paginado y límites8 grupos/20 alternativas activas; pertenencia estable de componentes y FK tenant/root/group. Revisiones/UUID/moneda/Gate/auditoría bajo Tenant lock, capacidad mínima y rollback.

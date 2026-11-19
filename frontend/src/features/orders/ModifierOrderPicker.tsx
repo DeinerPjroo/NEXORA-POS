@@ -8,6 +8,7 @@ import type { Product, Variant } from '../catalog/types'
 import type { ModifierGroup } from '../catalog/modifier-types'
 import type { CartConfiguration } from './cart'
 import { contextualPrice } from './cart'
+import { PriceDetails } from './PriceDetails'
 
 export function ModifierOrderPicker({
   product,
@@ -107,6 +108,12 @@ export function ModifierOrderPicker({
                 Actualizar catálogo
               </button>
             </div>
+          )}
+          {basePriceOverride === undefined && (
+            <PriceDetails
+              context={variant ? variant.price_context : product.price_context}
+              currency={currency}
+            />
           )}
           {groups.map((group) => (
             <fieldset className="modifier-choice-group" key={group.id} disabled={!current}>

@@ -12,6 +12,9 @@ import type { CatalogPage, Product, Variant } from './types'
 const ContextPricesPanel = lazy(() =>
   import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
 )
+const PromotionsPanel = lazy(() =>
+  import('./PromotionsPanel').then((module) => ({ default: module.PromotionsPanel })),
+)
 
 export function VariantsPanel({ product }: { product: Product }) {
   const [page, setPage] = useState(1)
@@ -163,6 +166,7 @@ export function VariantsPanel({ product }: { product: Product }) {
         <Modal title={`Precios · ${pricing.name}`} onClose={() => setPricing(null)}>
           <Suspense fallback={<Loading />}>
             <ContextPricesPanel product={product} variant={pricing} />
+            <PromotionsPanel product={product} variant={pricing} />
           </Suspense>
         </Modal>
       )}

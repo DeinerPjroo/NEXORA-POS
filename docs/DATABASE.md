@@ -1,5 +1,9 @@
 # Base de datos
 
+## Promociones (0.21)
+
+Migración000021: product_promotions con entidad/contexto, tipo/valor DECIMAL(19,4), prioridad, fechas locales, estado/revisión y FK tenant/product/variant/branch. Identidad estable y máximo20 activas bajo bloqueo de empresa. PriceContextv2 se conserva en snapshots JSON existentes sin nuevas filas financieras. Migración aplicada y pruebas SQL dirigidas aprobadas; PROMOTIONS.md.
+
 ## Alternativas de combo (0.20)
 
 Migración000020 incremental: product_combo_groups con nombre/min/max/orden/estado/revisión y FK tenant/product; product_combo_components.combo_group_id nullable con FK tenant/root/group. Null conserva componentes fijos anteriores; grupo archivado conserva alternativas sin cambiar sus flags. Cabeceras nuevas con grupos copian snapshot estructural versión2; historia fija versión1 y fórmulas tributarias previas se conservan. Descenso rechazado para preservar historia. Contrato en COMBO_CHOICES.md; resultados finales SQL/migración en PROJECT_STATE/HANDOFF.

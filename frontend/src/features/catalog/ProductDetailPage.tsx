@@ -26,6 +26,9 @@ const ContextPricesPanel = lazy(() =>
 const AvailabilityPanel = lazy(() =>
   import('./AvailabilityPanel').then((module) => ({ default: module.AvailabilityPanel })),
 )
+const PromotionsPanel = lazy(() =>
+  import('./PromotionsPanel').then((module) => ({ default: module.PromotionsPanel })),
+)
 
 export function ProductDetailPage() {
   const { productId = '' } = useParams()
@@ -140,6 +143,9 @@ export function ProductDetailPage() {
       </Suspense>
       <Suspense fallback={<Loading />}>
         <ContextPricesPanel product={product} />
+      </Suspense>
+      <Suspense fallback={<Loading />}>
+        <PromotionsPanel product={product} />
       </Suspense>
       <Suspense fallback={<Loading />}>
         {product.kind !== 'combo' && <ProductModifiersPanel product={product} />}

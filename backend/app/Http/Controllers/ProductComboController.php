@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domains\Catalog\CatalogEligibility;
 use App\Domains\Catalog\CatalogPriceContext;
-use App\Domains\Catalog\CatalogPriceResolver;
+use App\Domains\Catalog\CatalogPricing;
 use App\Domains\Catalog\SaveCombo;
 use App\Domains\Catalog\SaveComboGroup;
 use App\Http\Requests\CatalogFiltersRequest;
@@ -16,6 +16,7 @@ use App\Http\Resources\ComboGroupResource;
 use App\Models\Product;
 use App\Models\ProductComboComponent;
 use App\Models\ProductComboGroup;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 
 final class ProductComboController extends Controller
@@ -36,12 +37,14 @@ final class ProductComboController extends Controller
         abort_unless($product->kind === 'combo', 422, 'Este producto no es un combo.');
         $context = app(CatalogPriceContext::class)->from($request->validated());
         abort_unless($context, 422, 'Elige sucursal y canal antes de configurar el combo.');
-        app(CatalogEligibility::class)->decorate(new Collection([$product]), $request->user()->tenant()->value('timezone'));
+        $instant = CarbonImmutable::now();
+        $timezone = $request->user()->tenant()->value('timezone');
+        app(CatalogEligibility::class)->decorate(new Collection([$product]), $timezone, $instant);
         $components = $product->comboComponents;
-        $resolver = app(CatalogPriceResolver::class);
-        $rules = $resolver->candidates([$product->id, ...$components->pluck('component_product_id')->all()], $components->pluck('component_variant_id')->filter()->unique()->all(), $context['branch']->id, $context['channel']);
+        $resolver = app(CatalogPricing::class);
+        $rules = $resolver->candidates([$product->id, ...$components->pluck('component_product_id')->all()], $components->pluck('component_variant_id')->filter()->unique()->all(), $context['branch']->id, $context['channel'], $timezone, $instant);
         foreach ($components as $component) {
-            $price = $resolver->resolve($component->componentProduct, $component->componentVariant, $context['branch'], $context['channel'], $rules);
+            $price = $resolver->resolve($component->componentProduct, $component->componentVariant, $context['branch'], $context['channel'], $rules, false);
             ($component->componentVariant ?? $component->componentProduct)->setAttribute('price_context', $price);
         }
 

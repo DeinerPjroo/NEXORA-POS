@@ -2,6 +2,7 @@ import { formatMoney } from '../../lib/money'
 import { comboModes } from '../catalog/combo-types'
 import { taxSummary } from '../sales/tax-types'
 import { ModifierDetails } from './ModifierDetails'
+import { PriceDetails } from './PriceDetails'
 import type { CartLine } from './cart'
 
 export function CartComboDetails({ line, currency }: { line: CartLine; currency: string }) {
@@ -9,6 +10,9 @@ export function CartComboDetails({ line, currency }: { line: CartLine; currency:
   return (
     <div className="combo-composition">
       {line.allocation_mode && <small className="muted">{comboModes[line.allocation_mode]}</small>}
+      {line.price_context?.promotion && (
+        <PriceDetails context={line.price_context} currency={currency} />
+      )}
       {line.groups?.map((group) => (
         <small key={group.id}>
           {group.name}: {group.selected_component_ids.length} alternativas elegidas (

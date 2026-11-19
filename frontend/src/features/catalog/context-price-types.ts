@@ -12,6 +12,8 @@ export type PriceContext = {
   rule_id: number | null
   rule_revision: number | null
   amount: string
+  base_amount?: string
+  promotion?: import('./promotion-types').PromotionSnapshot
   branch_id: number
   branch_name: string
   channel: OrderChannel

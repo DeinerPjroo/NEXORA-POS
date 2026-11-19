@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **18 de noviembre de 2026**, America/Bogota. Entrega **0.20.0** verificada. Fase 2 con catálogo/subcategorías/modificadores/precios contextuales/horarios/combos fijos y alternativas, caja, pedidos, abonos/mixtos, ajustes/devoluciones, cuentas/impuestos e historial/revisión manual de pagos. Todavía no se declara lista para producción.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.21.0** de promociones integrado y verificado por impacto. Fase 2 continúa con galería privada antes de POS/mesas. La referencia de regresión completa0.20 se conserva abajo; producción aún pendiente.
+
+0.21: MariaDB dirigido8/134 más financiero1/35; SQLite permisos/finanzas2/47 y dependencias precios/combos/horarios28/538; Chromium promociones/contexto2 aprobados en2.9min. Migración000021 aplicada, DDL/build/TypeScript/Pint/Prettier y capturas admin/recibo revisados. Principal491.22kB/gzip138.73, panel promocional8.24kB. Contrato PROMOTIONS.md; protocolo vigente de pruebas dirigidas en AGENTS. Las verificaciones completas siguientes corresponden a0.20.
 
 ## Implementado y probado
 

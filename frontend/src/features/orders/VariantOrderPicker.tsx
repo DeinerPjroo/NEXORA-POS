@@ -65,6 +65,9 @@ export function VariantOrderPicker({
                 <span>
                   <strong>{variant.name}</strong>
                   <small>{variant.sku}</small>
+                  {variant.price_context?.promotion && (
+                    <small>Promoción: {variant.price_context.promotion.name}</small>
+                  )}
                 </span>
                 <b>{formatMoney(contextualPrice(product, variant), currency)}</b>
                 <Check size={17} />

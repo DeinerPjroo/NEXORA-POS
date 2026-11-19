@@ -1,6 +1,11 @@
 <?php
 
 // Usa las credenciales locales sin imprimirlas y prueba SOLO una base nueva de nombre aleatorio.
+$testArguments = array_slice($argv, 1);
+if (count($testArguments) > 1 || (isset($testArguments[0]) && !preg_match('/\A--filter=[A-Za-z0-9_:|.]{1,200}\z/', $testArguments[0]))) {
+    fwrite(STDERR, "Uso: php scripts/test-mysql.php [--filter=NombreDePrueba]\n");
+    exit(2);
+}
 require __DIR__.'/../backend/vendor/autoload.php';
 $app = require __DIR__.'/../backend/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
@@ -27,7 +32,7 @@ try {
     $connection->statement('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $created = true;
     echo 'Pruebas aisladas en '.$database.PHP_EOL;
-    $process = new Process([PHP_BINARY, 'vendor/bin/phpunit', '--testdox'], __DIR__.'/../backend', [
+    $process = new Process([PHP_BINARY, 'vendor/bin/phpunit', '--testdox', ...$testArguments], __DIR__.'/../backend', [
         'APP_ENV' => 'testing', 'DB_CONNECTION' => $driver, 'DB_URL' => '',
         'DB_HOST' => (string) $config['host'], 'DB_PORT' => (string) $config['port'],
         'DB_USERNAME' => (string) $config['username'], 'DB_PASSWORD' => (string) $config['password'],

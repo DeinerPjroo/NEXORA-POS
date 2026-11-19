@@ -521,3 +521,15 @@ alter table `product_combo_components` add `combo_group_id` bigint unsigned null
 
 alter table `product_combo_components` add constraint `combo_components_group_fk` foreign key (`tenant_id`, `product_id`, `combo_group_id`) references `product_combo_groups` (`tenant_id`, `product_id`, `id`) on delete restrict;
 
+create table `product_promotions` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `variant_id` bigint unsigned null, `branch_id` bigint unsigned null, `channel` varchar(20) not null, `name` varchar(80) not null, `discount_type` varchar(12) not null, `discount_value` decimal(19, 4) not null, `priority` smallint unsigned not null default '0', `valid_from` varchar(10) null, `valid_until` varchar(10) null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_promotions` add constraint `product_promotions_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_promotions` add index `promotions_active_product`(`tenant_id`, `product_id`, `is_active`);
+
+alter table `product_promotions` add constraint `promotions_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_promotions` add constraint `promotions_variant_fk` foreign key (`tenant_id`, `product_id`, `variant_id`) references `product_variants` (`tenant_id`, `product_id`, `id`) on delete restrict;
+
+alter table `product_promotions` add constraint `promotions_branch_fk` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+

@@ -15,6 +15,7 @@ use App\Http\Controllers\ProductComboController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductModifierController;
+use App\Http\Controllers\ProductPromotionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
@@ -89,6 +90,9 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/promotions', [ProductPromotionController::class, 'index']);
+            Route::post('products/{product}/promotions', [ProductPromotionController::class, 'store']);
+            Route::put('products/{product}/promotions/{promotion}', [ProductPromotionController::class, 'update']);
             Route::get('products/{product}/combo-groups', [ProductComboController::class, 'groups']);
             Route::post('products/{product}/combo-groups', [ProductComboController::class, 'storeGroup']);
             Route::put('products/{product}/combo-groups/{comboGroup}', [ProductComboController::class, 'updateGroup']);

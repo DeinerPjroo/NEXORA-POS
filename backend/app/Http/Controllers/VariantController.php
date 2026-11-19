@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\Catalog\CatalogPriceContext;
-use App\Domains\Catalog\CatalogPriceResolver;
+use App\Domains\Catalog\CatalogPricing;
 use App\Domains\Catalog\CatalogSearch;
 use App\Domains\Catalog\SaveVariant;
 use App\Http\Requests\CatalogFiltersRequest;
@@ -28,8 +28,8 @@ final class VariantController extends Controller
         $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
         $context = app(CatalogPriceContext::class)->from($data);
         if ($context) {
-            $resolver = app(CatalogPriceResolver::class);
-            $rules = $resolver->candidates([$product->id], $page->getCollection()->modelKeys(), $context['branch']->id, $context['channel']);
+            $resolver = app(CatalogPricing::class);
+            $rules = $resolver->candidates([$product->id], $page->getCollection()->modelKeys(), $context['branch']->id, $context['channel'], $request->user()->tenant()->value('timezone'));
             foreach ($page as $variant) {
                 $variant->setAttribute('price_context', $resolver->resolve($product, $variant, $context['branch'], $context['channel'], $rules));
             }

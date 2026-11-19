@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Domains\Catalog\CatalogEligibility;
 use App\Domains\Catalog\CatalogPriceContext;
-use App\Domains\Catalog\CatalogPriceResolver;
+use App\Domains\Catalog\CatalogPricing;
 use App\Domains\Catalog\CatalogSearch;
 use App\Domains\Catalog\SaveCatalogRecord;
 use App\Http\Requests\CatalogFiltersRequest;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,11 +31,13 @@ final class ProductController extends Controller
             ->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('is_available', $availability === 'available'));
 
         $page = $query->orderBy('name')->orderBy('id')->paginate($data['per_page'] ?? 20);
-        app(CatalogEligibility::class)->decorate($page->getCollection(), $request->user()->tenant()->value('timezone'));
+        $instant = CarbonImmutable::now();
+        $timezone = $request->user()->tenant()->value('timezone');
+        app(CatalogEligibility::class)->decorate($page->getCollection(), $timezone, $instant);
         $context = app(CatalogPriceContext::class)->from($data);
         if ($context) {
-            $resolver = app(CatalogPriceResolver::class);
-            $rules = $resolver->candidates($page->getCollection()->modelKeys(), [], $context['branch']->id, $context['channel']);
+            $resolver = app(CatalogPricing::class);
+            $rules = $resolver->candidates($page->getCollection()->modelKeys(), [], $context['branch']->id, $context['channel'], $timezone, $instant);
             foreach ($page as $product) {
                 $product->setAttribute('price_context', $product->variants_count ? null : $resolver->resolve($product, null, $context['branch'], $context['channel'], $rules));
             }

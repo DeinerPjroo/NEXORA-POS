@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-La entrega **0.20.0** agrega **grupos de alternativas de combos**, con mínimos/máximos, unidades y preparaciones elegidas explícitamente e historia en pedido/recibo. Conserva combos fijos, reparto exacto, precios por sucursal/canal, horarios, impuestos, cuentas, devoluciones, abonos/mixtos, propinas e historial/revisión manual de pagos. Promociones, galerías, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [COMBO_CHOICES.md](docs/COMBO_CHOICES.md), [FIXED_COMBOS.md](docs/FIXED_COMBOS.md) y [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md).
+El incremento **0.21.0** agrega **promociones de catálogo** por producto/presentación/contexto y fechas, con prioridad, descuento de base y precio histórico en pedido/recibo. Conserva combos y alternativas, adicionales, horarios, impuestos, cuentas, devoluciones, abonos/mixtos, propinas e historial/revisión manual de pagos. Galerías, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PROMOTIONS.md](docs/PROMOTIONS.md), [COMBO_CHOICES.md](docs/COMBO_CHOICES.md) y [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md).
 
 ## Entorno y requisitos
 

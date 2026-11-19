@@ -11,6 +11,7 @@ import { ModifierOrderPicker } from './ModifierOrderPicker'
 import { makeComboLine } from './cart'
 import type { CartConfiguration, CartLine } from './cart'
 import { CartComboDetails } from './CartComboDetails'
+import { PriceDetails } from './PriceDetails'
 
 export function ComboOrderPicker({
   product,
@@ -117,6 +118,9 @@ export function ComboOrderPicker({
           </p>
           {!current && (
             <p className="notice">El combo cambió. Actualiza el catálogo antes de configurarlo.</p>
+          )}
+          {query.data.price_context.promotion && (
+            <PriceDetails context={query.data.price_context} currency={currency} />
           )}
           {query.data.combo_context.reason && (
             <p className="notice">{query.data.combo_context.reason}</p>

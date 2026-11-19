@@ -3,7 +3,7 @@
 namespace App\Domains\Orders;
 
 use App\Domains\Catalog\AvailabilitySchedule;
-use App\Domains\Catalog\CatalogPriceResolver;
+use App\Domains\Catalog\CatalogPricing;
 use App\Domains\Operations\Money;
 use App\Models\Branch;
 use App\Models\Category;
@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductComboComponent;
 use App\Models\ProductComboGroup;
 use App\Models\ProductVariant;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 final class OrderCatalog
@@ -23,7 +24,7 @@ final class OrderCatalog
 
     private Collection $variants;
 
-    private Collection $prices;
+    private array $prices;
 
     // El llamante mantiene el bloqueo Tenant durante todo el plan.
     public function __construct(array $lines, private Branch $branch, private string $channel, string $timezone)
@@ -47,10 +48,11 @@ final class OrderCatalog
         foreach ($this->products as $product) {
             $product->setRelation('category', $categories->get($product->category_id));
         }
-        app(AvailabilitySchedule::class)->decorate($this->products, $timezone);
+        $instant = CarbonImmutable::now();
+        app(AvailabilitySchedule::class)->decorate($this->products, $timezone, $instant);
         $variantIds = collect($lines)->pluck('variant_id')->merge($selected->pluck('component_variant_id'))->filter()->unique()->values()->all();
         $this->variants = ProductVariant::whereIn('id', $variantIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
-        $this->prices = app(CatalogPriceResolver::class)->candidates($ids->all(), $variantIds, $branch->id, $channel);
+        $this->prices = app(CatalogPricing::class)->candidates($ids->all(), $variantIds, $branch->id, $channel, $timezone, $instant);
     }
 
     public function resolve(Product $product, ?int $variantId, array $line, bool $expectations, bool $comparePrice = true, bool $extrasOnly = false): array
@@ -67,7 +69,7 @@ final class OrderCatalog
         } else {
             abort_if($variantId !== null, 409, 'La variante no corresponde al producto.');
         }
-        $context = app(CatalogPriceResolver::class)->resolve($product, $variant, $this->branch, $this->channel, $this->prices);
+        $context = app(CatalogPricing::class)->resolve($product, $variant, $this->branch, $this->channel, $this->prices, ! $extrasOnly);
         $modifiers = app(OrderModifiers::class)->resolve($product, $extrasOnly ? '0.0000' : $context['amount'], $line['modifiers'] ?? []);
         $price = $modifiers['unit_price'];
         abort_if($expectations && $comparePrice && bccomp($price, $line['expected_unit_price'], 4) !== 0, 409, 'El precio cambió. Revisa el catálogo antes de enviar.');

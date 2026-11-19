@@ -21,8 +21,20 @@ export type CartReview = {
 }
 
 function visibleConfiguration(line: CartLine): string {
+  const promotion = line.price_context?.promotion
   return JSON.stringify({
     price: line.expected_unit_price,
+    promotion: promotion
+      ? {
+          id: promotion.id,
+          name: promotion.name,
+          revision: promotion.revision,
+          discount_type: promotion.discount_type,
+          discount_value: promotion.discount_value,
+          discount_amount: promotion.discount_amount,
+          base_amount: line.price_context?.base_amount,
+        }
+      : null,
     product: line.product_name,
     variant: line.variant_name,
     allocation_mode: line.allocation_mode,

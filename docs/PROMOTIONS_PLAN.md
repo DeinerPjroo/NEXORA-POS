@@ -1,6 +1,6 @@
 # Promociones · diseño 2.2-E
 
-Incremento iniciado sobre 0.20 publicada en 2f1dcd8, con árbol limpio y origin/main alineado. Diseño y aceptación; implementación en curso, todavía sin verificación/publicación propia. Fuente: REQUIREMENTS 6.3/6.6 y CATALOG_ADVANCED_PLAN. Reutilizar precios contextuales, horarios, revisión de carrito, snapshots y cálculo tributario; no introducir motor de expresiones ni dependencias nuevas.
+Diseño original sobre0.20 publicada en2f1dcd8. Implementado y verificado por impacto como0.21, contrato en PROMOTIONS.md y resultados en PROJECT_STATE/HANDOFF. Fuente: REQUIREMENTS6.3/6.6 y CATALOG_ADVANCED_PLAN; reutiliza precios contextuales, horarios, revisión de carrito, snapshots y cálculo tributario sin dependencias nuevas.
 
 ## Alcance inicial
 

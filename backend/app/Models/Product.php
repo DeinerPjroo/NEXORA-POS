@@ -46,6 +46,11 @@ final class Product extends Model
         return $this->hasMany(ProductContextPrice::class);
     }
 
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(ProductPromotion::class);
+    }
+
     public function availabilityWindows(): HasMany
     {
         return $this->hasMany(ProductAvailabilityWindow::class);

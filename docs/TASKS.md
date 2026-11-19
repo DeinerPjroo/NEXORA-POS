@@ -26,8 +26,8 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.2-D | COMPLETED | D1 fijo0.19 y D2 alternativas0.20 verificados y conectados; contratos FIXED_COMBOS.md y COMBO_CHOICES.md | 2.2-C2 |
 | 2.2-D1 | COMPLETED | Composición/API/UI/carrito/preview/reparto/snapshots/recibo conectados. Migración 000019/DDL, 232/2652 SQLite/MariaDB y 22 Playwright en 20.7 minutos aprobados; build/formato/doctor/capturas correctos. FIXED_COMBOS.md | 2.2-C2 |
 | 2.2-D2 | COMPLETED | Grupos/alternativas/API/UI/carrito/preview/snapshots/recibo conectados. Migración000020/DDL; 242/2885 SQLite/MariaDB y 23 Playwright en 18.3 minutos aprobados; build/formato/doctor/capturas correctos. COMBO_CHOICES.md | 2.2-D1 |
-| 2.2-E | IN_PROGRESS | Diseño/aceptación PROMOTIONS_PLAN.md; modelo/API/cálculo por entidad/contexto/vigencia y snapshots en desarrollo. Pruebas dirigidas iniciadas; faltan UI/finanzas ampliadas/E2E y regresión final antes de publicación | 2.2-D |
-| 2.2-F | PENDING | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad | 2.2-E |
+| 2.2-E | COMPLETED | Promociones/API/UI/snapshots0.21 conectados. MariaDB dirigidas8/134+finanzas1/35, SQLite permisos/finanzas2/47 y dependencias28/538; Chromium2 en2.9min. Migración000021/DDL/build/formato/capturas correctos. PROMOTIONS.md | 2.2-D |
+| 2.2-F | IN_PROGRESS | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad; iniciar sobre0.21 publicada reutilizando fotografía privada existente | 2.2-E |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |
 | 2.5 | PENDING | Dashboard comercial real por fecha/sucursal, sin ganancias definitivas; E2E apertura→pedido→cobro→cierre | 2.1–2.4 |

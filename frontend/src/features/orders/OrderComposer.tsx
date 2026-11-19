@@ -234,6 +234,9 @@ export function OrderComposer() {
                         )}
                       </span>
                       <strong>{product.name}</strong>
+                      {product.price_context?.promotion && (
+                        <small>Promoción: {product.price_context.promotion.name}</small>
+                      )}
                       <small>
                         {product.kind === 'combo' && product.combo_context?.reason
                           ? product.combo_context.reason
@@ -293,7 +296,9 @@ export function OrderComposer() {
                       {line.variant_name && <small>{line.variant_name}</small>}
                       <ModifierDetails groups={line.modifier_labels} currency={currency} />
                       <CartComboDetails line={line} currency={currency} />
-                      <PriceDetails context={line.price_context} currency={currency} />
+                      {!(line.kind === 'combo' && line.price_context?.promotion) && (
+                        <PriceDetails context={line.price_context} currency={currency} />
+                      )}
                     </div>
                     <button
                       type="button"
