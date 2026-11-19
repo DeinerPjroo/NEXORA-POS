@@ -1,5 +1,11 @@
 # Continuidad de Nexora POS
 
+## Protocolo y continuidad vigentes · 2026-11-19
+
+Instrucción nueva del usuario: implementar e integrar, pruebas solo de archivos/funciones/dependencias afectadas, corregir, estado breve, commit/push y continuar. Dinero/impuestos/concurrencia/permisos/tenant/integridad requieren cobertura exhaustiva; suites generales solo por fin de fase, entrega estable o cambio transversal justificado. No ejecutar automáticamente ambos motores ni capturas generales; no repetir resultados sin cambios. Recuperar contexto desde STATE/HANDOFF/TASKS y archivos de tarea activa. AGENTS.md sustituye las exigencias más exhaustivas de las entradas históricas siguientes. Conservar las seis fases, datos/arquitectura/seguridad y pruebas existentes.
+
+0.20 publicada en 2f1dcd8, árbol limpio/origin alineado al iniciar E. Continuar WIP local de promociones: migración000021/modelo/API/SavePromotion/CatalogPricing/PromotionResolver conectados a menú/variantes/configurador/OrderCatalog, PriceContextv2 y promoción de raíz sin promocionar referencias de hojas. PromotionTest dirigido MariaDB8/134 aprobado, esquema nexora_test_98f7515a550265ba conservado. SQL dirigido admite solo argumento --filter=Nombre y nunca limpia esquemas. Sin procesos pendientes; no repetir las8 pruebas sin cambios. Faltan prueba financiera ampliada/seguridad, UI/E2E y migración de trabajo. Todavía no publicar promociones como verificadas. Puertos de prueba8011/5199, desarrollo8001/5173; no tocar8000/Horizonte ni secretos/datos.
+
 ## Estado actual y referencia inicial
 
 - Rama main; HEAD y origin/main a487f235649d2a7cf769b317a66229e8beabdd6a, árbol inicialmente limpio. Versión 0.5.0; no existen avances posteriores a la revisión aportada.

@@ -2,6 +2,8 @@
 
 Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769b317a66229e8beabdd6a, versión 0.5.0. Árbol limpio. No hay avances posteriores a esa referencia al iniciar esta continuación.
 
+Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas específicas según impacto, estado breve, commit/push y continuar. Suites completas solo al cerrar fase, entrega estable o cambio transversal justificado; cobertura exhaustiva de operaciones críticas. AGENTS.md sustituye las exigencias históricas de regresión completa por incremento.
+
 | ID | Estado | Capacidad y criterio de aceptación | Dependencias |
 | --- | --- | --- | --- |
 | CONT-01 | COMPLETED | Documentos de continuidad, protocolo permanente y pruebas SQL sin DROP DATABASE; 82/591 en SQLite y MariaDB, esquema aislado conservado | Ninguna |
@@ -24,7 +26,7 @@ Estado inicial contrastado con código local y origin/main: a487f235649d2a7cf769
 | 2.2-D | COMPLETED | D1 fijo0.19 y D2 alternativas0.20 verificados y conectados; contratos FIXED_COMBOS.md y COMBO_CHOICES.md | 2.2-C2 |
 | 2.2-D1 | COMPLETED | Composición/API/UI/carrito/preview/reparto/snapshots/recibo conectados. Migración 000019/DDL, 232/2652 SQLite/MariaDB y 22 Playwright en 20.7 minutos aprobados; build/formato/doctor/capturas correctos. FIXED_COMBOS.md | 2.2-C2 |
 | 2.2-D2 | COMPLETED | Grupos/alternativas/API/UI/carrito/preview/snapshots/recibo conectados. Migración000020/DDL; 242/2885 SQLite/MariaDB y 23 Playwright en 18.3 minutos aprobados; build/formato/doctor/capturas correctos. COMBO_CHOICES.md | 2.2-D1 |
-| 2.2-E | IN_PROGRESS | Diseño y aceptación en PROMOTIONS_PLAN.md; reglas por entidad/contexto/vigencia, prioridad/compatibilidad/base y snapshots. Todavía sin código | 2.2-D |
+| 2.2-E | IN_PROGRESS | Diseño/aceptación PROMOTIONS_PLAN.md; modelo/API/cálculo por entidad/contexto/vigencia y snapshots en desarrollo. Pruebas dirigidas iniciadas; faltan UI/finanzas ampliadas/E2E y regresión final antes de publicación | 2.2-D |
 | 2.2-F | PENDING | Galería privada ordenada/portada, recodificación, revisiones y compatibilidad | 2.2-E |
 | 2.3 | PENDING | Terminal POS táctil reutiliza dominios, componentes autorizados preparados para Studio, inicio por permisos | 2.1/2.2; mesas/delivery mínimos cuando corresponda |
 | 2.4 | PENDING | Salones/editor/mesas, asignación/traslado, cuentas/meseros y reservas integrados en POS | 2.3, empleados mínimos |

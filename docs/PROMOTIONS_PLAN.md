@@ -1,6 +1,6 @@
 # Promociones · diseño 2.2-E
 
-Siguiente incremento tras verificar/publicar grupos de alternativas0.20. Diseño, todavía sin código. Fuente: REQUIREMENTS6.3/6.6 y CATALOG_ADVANCED_PLAN. Reutilizar precios contextuales, horarios, revisión de carrito, snapshots y cálculo tributario; no introducir motor de expresiones ni dependencias nuevas.
+Incremento iniciado sobre 0.20 publicada en 2f1dcd8, con árbol limpio y origin/main alineado. Diseño y aceptación; implementación en curso, todavía sin verificación/publicación propia. Fuente: REQUIREMENTS 6.3/6.6 y CATALOG_ADVANCED_PLAN. Reutilizar precios contextuales, horarios, revisión de carrito, snapshots y cálculo tributario; no introducir motor de expresiones ni dependencias nuevas.
 
 ## Alcance inicial
 
@@ -29,6 +29,6 @@ Panel de ficha paginado/archivo, formulario con contexto/vigencia/prioridad y ex
 - API/FK/bindings propios, revisiones/UUID/replay/permisos/archivo/límites y rollback; conflictos concurrentes y zona/moneda obsoletas.
 - Prioridad/empates/contexto/variante propia, límites/decimal/porcentaje/fijo y vigencia local/inicio/final con instante compartido, sin cambios de reloj en producción.
 - Producto regular y variante con adicionales; combo fijo/alternativas con base promocionada y referencias sin doble descuento. Perfiles incluidos/adicionales, descuento manual, propina, cuentas, abonos/devoluciones e historia.
-- Chromium conectado de configuración a elección/revisión/contexto/registro con respuesta incierta y promoción cambiada después, cobro/recibo/móvil. Pruebas dirigidas durante desarrollo; suites completas SQLite/MariaDB/Playwright al cierre antes de commit/push, con DDL/migración/doctor/build/formato y capturas.
+- Chromium dirigido de configuración a elección/revisión/contexto/registro con respuesta incierta y promoción cambiada después, cobro/recibo/móvil. Pruebas afectadas y cobertura exhaustiva financiera/seguridad/tenant/concurrencia; migración/DDL y TypeScript/build cuando correspondan. Protocolo2026-11-19: suites completas solo por fase/entrega estable/cambio transversal justificado, sin repetir verificaciones vigentes ni capturas generales.
 
-No empezar código E antes de terminar la verificación/publicación D2. Esta definición conserva la secuencia autónoma y no declara promociones operativas.
+D2 está verificado y publicado antes de código E. Contrato acordado para implementación: máximo 20 activas por producto incluyendo variantes; prioridad específica de contexto, menor número y menor ID como antigüedad; fechas locales inclusivas. PriceContext versión 2 solo cuando hay promoción aplicada, con base_amount y promotion copiados (id/nombre/revisión/tipo/valor/descuento/prioridad/vigencia/contexto/zona/fecha local). amount es base efectiva; versión 1 anterior sin promoción permanece legible. CatalogPricing reutiliza CatalogPriceResolver y aplica promoción separada; referencias de combo optan por base contextual sin promoción. No cambiar fórmula de venta ni versión tributaria. Esta definición no declara promociones operativas.
