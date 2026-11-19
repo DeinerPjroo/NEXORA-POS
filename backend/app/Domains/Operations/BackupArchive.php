@@ -41,7 +41,7 @@ final class BackupArchive
         return $directory;
     }
 
-    public function requireEncryption(string $password): void
+    public function requireEncryption(#[\SensitiveParameter] string $password): void
     {
         if (strlen($password) < 32 || ! class_exists(ZipArchive::class)
             || ! ZipArchive::isEncryptionMethodSupported(ZipArchive::EM_AES_256)) {
@@ -49,7 +49,7 @@ final class BackupArchive
         }
     }
 
-    private function open(string $file, string $password, int $flags): ZipArchive
+    private function open(string $file, #[\SensitiveParameter] string $password, int $flags): ZipArchive
     {
         $this->requireEncryption($password);
         $zip = new ZipArchive;
@@ -60,7 +60,7 @@ final class BackupArchive
         return $zip;
     }
 
-    public function pack(string $file, string $dump, string $mediaRoot, array $keys, string $password): void
+    public function pack(string $file, string $dump, string $mediaRoot, #[\SensitiveParameter] array $keys, #[\SensitiveParameter] string $password): void
     {
         $zip = $this->open($file, $password, ZipArchive::CREATE | ZipArchive::EXCL);
         $manifest = ['format' => 1, 'created_at' => gmdate(DATE_ATOM), 'files' => []];
@@ -108,7 +108,7 @@ final class BackupArchive
         }
     }
 
-    public function unpack(string $file, string $directory, string $password): array
+    public function unpack(string $file, string $directory, #[\SensitiveParameter] string $password): array
     {
         $zip = $this->open($file, $password, ZipArchive::RDONLY);
         try {

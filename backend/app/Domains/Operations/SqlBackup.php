@@ -20,7 +20,7 @@ final class SqlBackup
         return $connection->getConfig();
     }
 
-    private function client(string $binary, array $config, array $arguments, mixed $input = null): void
+    private function client(string $binary, #[\SensitiveParameter] array $config, array $arguments, mixed $input = null): void
     {
         $process = new Process([$binary, '--no-defaults', '--protocol=TCP', '--host='.$config['host'], '--port='.$config['port'],
             '--user='.$config['username'], '--default-character-set=utf8mb4', ...$arguments], null, ['MYSQL_PWD' => (string) $config['password']]);
@@ -32,7 +32,7 @@ final class SqlBackup
         }
     }
 
-    public function create(string $root, string $password, string $dumpBinary = 'mysqldump'): string
+    public function create(string $root, #[\SensitiveParameter] string $password, string $dumpBinary = 'mysqldump'): string
     {
         $this->archive->requireEncryption($password);
         $config = $this->connection();
@@ -66,7 +66,7 @@ final class SqlBackup
         }
     }
 
-    public function restore(string $file, string $root, string $password, string $mysqlBinary = 'mysql'): array
+    public function restore(string $file, string $root, #[\SensitiveParameter] string $password, string $mysqlBinary = 'mysql'): array
     {
         $this->archive->requireEncryption($password);
         $config = $this->connection();
@@ -85,7 +85,12 @@ final class SqlBackup
         DB::statement('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
         $createdUser = false;
         try {
-            DB::statement('CREATE USER '.$account.' IDENTIFIED BY '.$pdo->quote($secret));
+            try {
+                // PDO directo evita que listeners/query logs de Laravel reciban la contraseña.
+                $pdo->exec('CREATE USER '.$account.' IDENTIFIED BY '.$pdo->quote($secret));
+            } catch (\PDOException) {
+                throw new RuntimeException('No se pudo crear la cuenta SQL temporal. Comprueba permisos del operador.');
+            }
             $createdUser = true;
             DB::statement('GRANT ALL PRIVILEGES ON `'.addcslashes($database, '_%').'`.* TO '.$account);
             $input = fopen($directory.DIRECTORY_SEPARATOR.'database.sql', 'rb');
