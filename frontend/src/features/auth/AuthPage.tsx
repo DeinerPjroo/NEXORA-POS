@@ -19,6 +19,7 @@ import { Brand, ErrorNotice, Field, Loading } from '../../components/ui'
 import { useSession } from './SessionProvider'
 import { homePath } from './home'
 import type { Session } from '../../lib/types'
+import { verificationReturn } from './verification-link'
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset'
 export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
@@ -49,7 +50,7 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
       client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' })
       client.getMutationCache().clear()
       client.setQueryData(['session'], profile)
-      navigate(homePath(profile), { replace: true })
+      navigate(verificationReturn(params.get('verificar')) ?? homePath(profile), { replace: true })
     },
   })
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -62,7 +63,10 @@ export function AuthPage({ mode = 'login' }: { mode?: Mode }) {
     mutation.mutate(data)
   }
   if (pending) return <Loading />
-  if (session) return <Navigate to={homePath(session)} replace />
+  if (session)
+    return (
+      <Navigate to={verificationReturn(params.get('verificar')) ?? homePath(session)} replace />
+    )
   return (
     <div className="auth-layout">
       <aside className="auth-story">

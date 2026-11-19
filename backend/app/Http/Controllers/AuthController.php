@@ -54,7 +54,7 @@ final class AuthController extends Controller
         $user = $request->user()->load('role.permissions', 'tenant');
 
         return response()->json([
-            'user' => $user->only('id', 'name', 'email'), 'company' => $user->tenant,
+            'user' => $user->only('id', 'name', 'email', 'email_verified_at'), 'company' => $user->tenant,
             'role' => $user->role->only('id', 'name', 'is_owner'),
             'permissions' => $user->role->permissions->pluck('key'), 'settings' => WorkspaceSetting::firstOrFail(),
             'security' => app(ScreenSecurity::class)->state($request),

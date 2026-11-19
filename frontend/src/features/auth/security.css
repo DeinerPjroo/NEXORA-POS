@@ -11,6 +11,11 @@
 .security-page > p {
   line-height: 1.65;
 }
+.email-verification-panel {
+  margin-bottom: 24px;
+  display: grid;
+  gap: 14px;
+}
 .security-page > p {
   max-width: 640px;
 }

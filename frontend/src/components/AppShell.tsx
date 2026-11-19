@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   ArrowUpRight,
@@ -34,6 +34,7 @@ import { clearPosContext } from '../features/pos/pos-context'
 import { homePath } from '../features/auth/home'
 import { ScreenLock } from '../features/auth/ScreenLock'
 import { screenChanged } from '../features/auth/screen-events'
+import { verificationReturn } from '../features/auth/verification-link'
 
 const navigation = [
   {
@@ -59,6 +60,7 @@ const navigation = [
 ]
 
 export function AppShell() {
+  const location = useLocation()
   const { session, pending, error, reload, screenBlocked } = useSession()
   const can = useCan()
   const [collapsed, setCollapsed] = useState(false)
@@ -90,7 +92,22 @@ export function AppShell() {
         </button>
       </div>
     )
-  if (!session) return <Navigate to="/ingresar" replace />
+  if (!session) {
+    const verification =
+      location.pathname === '/verificar-correo'
+        ? new URLSearchParams(location.search).get('verificacion')
+        : null
+    return (
+      <Navigate
+        to={
+          verificationReturn(verification)
+            ? `/ingresar?verificar=${encodeURIComponent(verification!)}`
+            : '/ingresar'
+        }
+        replace
+      />
+    )
+  }
   async function logout() {
     setLoggingOut(true)
     try {

@@ -6,7 +6,12 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // Preparación de fixtures; las pruebas de registro existentes siguen usando la UI y sus límites.
-export async function fixtureWorkspace(page: Page, companyName: string, permissions?: string[]) {
+export async function fixtureWorkspace(
+  page: Page,
+  companyName: string,
+  permissions?: string[],
+  options: { emailVerified?: boolean } = {},
+) {
   const backend = fileURLToPath(new URL('../../backend/', import.meta.url))
   const email = `fixture-${crypto.randomUUID()}@example.test`
   const password = `Fixture-${crypto.randomUUID()}A1`
@@ -16,6 +21,7 @@ export async function fixtureWorkspace(page: Page, companyName: string, permissi
       company_name: companyName,
       email,
       password,
+      ...(options.emailVerified ? { email_verified: true } : {}),
       ...(permissions ? { permissions } : {}),
     }),
     encoding: 'utf8',

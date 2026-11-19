@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.29.0** agrega PIN personal y bloqueo de pantalla con protección en servidor, conservando borradores y reintentos de cobro. Mantiene dashboard, POS, reservas y ocupación real; continúan verificación de correo, MFA y las fases pendientes. Contratos: [SCREEN_SECURITY.md](docs/SCREEN_SECURITY.md) y [COMMERCIAL_DASHBOARD.md](docs/COMMERCIAL_DASHBOARD.md).
+El incremento **0.30.0** agrega verificación de correo con enlaces firmados, confirmación segura y estado en Seguridad personal. Mantiene PIN/bloqueo, dashboard, POS y reservas. La recepción por SMTP externo sigue pendiente; continúan MFA y las demás fases. Contratos: [EMAIL_VERIFICATION.md](docs/EMAIL_VERIFICATION.md) y [SCREEN_SECURITY.md](docs/SCREEN_SECURITY.md).
 
 ## Entorno y requisitos
 

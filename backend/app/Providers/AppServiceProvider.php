@@ -13,10 +13,13 @@ use App\Policies\BranchPolicy;
 use App\Policies\CatalogPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -51,10 +54,22 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->id ?? $request->ip()));
         RateLimiter::for('recovery', fn (Request $request) => Limit::perMinute(3)->by($request->ip()));
         RateLimiter::for('credentials', fn (Request $request) => Limit::perMinute(5)->by('credentials:'.$request->user()->id));
+        RateLimiter::for('verification', fn (Request $request) => Limit::perMinute(3)->by('verification:'.$request->user()->id));
+        RateLimiter::for('verification-confirm', fn (Request $request) => Limit::perMinute(10)->by('verification-confirm:'.$request->user()->id));
         RateLimiter::for('unlock', fn (Request $request) => [
             Limit::perMinute(5)->by('unlock:'.$request->user()->id),
             Limit::perMinute(20)->by('unlock-ip:'.$request->ip()),
         ]);
         ResetPassword::createUrlUsing(fn ($user, $token) => config('nexora.frontend_url').'/restablecer?token='.$token.'&email='.urlencode($user->email));
+        VerifyEmail::createUrlUsing(function ($user) {
+            $signed = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60),
+                ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())], absolute: false);
+
+            return config('nexora.frontend_url').'/verificar-correo?verificacion='.rawurlencode($signed);
+        });
+        VerifyEmail::toMailUsing(fn ($user, $url) => (new MailMessage)
+            ->subject('Verifica tu correo en Nexora POS')->greeting('Hola, '.$user->name.'.')
+            ->line('Confirma el correo asociado a tu cuenta. Este enlace vence en 60 minutos.')
+            ->action('Verificar mi correo', $url)->line('Si no solicitaste este enlace, puedes ignorar este mensaje.'));
     }
 }

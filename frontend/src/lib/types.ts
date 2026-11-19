@@ -16,7 +16,7 @@ export type Company = {
 }
 export type Session = {
   security: ScreenSecurity
-  user: { id: number; name: string; email: string }
+  user: { id: number; name: string; email: string; email_verified_at: string | null }
   company: Company
   role: { id: number; name: string; is_owner: boolean }
   permissions: string[]

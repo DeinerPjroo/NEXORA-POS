@@ -4,10 +4,11 @@ import { useMutation } from '@tanstack/react-query'
 import { LockKeyhole } from 'lucide-react'
 import { api } from '../../lib/api'
 import type { ScreenSecurity } from '../../lib/types'
-import { ErrorNotice, Field, Submit, useToast } from '../../components/ui'
+import { ErrorNotice, Field, PageTitle, Submit, useToast } from '../../components/ui'
 import { useSession } from './SessionProvider'
 import { screenChanged } from './screen-events'
 import './security.css'
+import { EmailVerificationPanel } from './EmailVerificationPanel'
 
 export function SecurityPage() {
   const { session, reload } = useSession()
@@ -43,14 +44,13 @@ export function SecurityPage() {
   }
   return (
     <section className="security-page">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">MI CUENTA</p>
-          <h1>Seguridad personal</h1>
-          <p>Protege tu acceso en este dispositivo.</p>
-        </div>
-        <LockKeyhole size={32} />
-      </div>
+      <PageTitle
+        eyebrow="MI CUENTA"
+        title="Seguridad personal"
+        description="Protege tu acceso en este dispositivo."
+        action={<LockKeyhole size={32} />}
+      />
+      <EmailVerificationPanel />
       <div className="panel security-panel">
         <h2>Tu PIN de acceso rápido</h2>
         <p>

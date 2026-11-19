@@ -29,6 +29,9 @@ import { HomeRoute } from './features/auth/HomeRoute'
 const SecurityPage = lazy(() =>
   import('./features/auth/SecurityPage').then((module) => ({ default: module.SecurityPage })),
 )
+const VerifyEmailPage = lazy(() =>
+  import('./features/auth/VerifyEmailPage').then((module) => ({ default: module.VerifyEmailPage })),
+)
 
 const RoomsPage = lazy(() =>
   import('./features/dining/RoomsPage').then((module) => ({ default: module.RoomsPage })),
@@ -68,6 +71,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/verificar-correo"
+          element={
+            <Suspense fallback={<Loading />}>
+              <VerifyEmailPage />
+            </Suspense>
+          }
+        />
         <Route
           path="/mi-seguridad"
           element={

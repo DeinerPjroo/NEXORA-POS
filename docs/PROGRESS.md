@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.29.0**: seguridad1-SEC-A completa tras cierre comercial de fase2 en0.28. Siguen correo/MFA/denegaciones1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.30.0**: PIN/bloqueo y flujo local de correo completos. SMTP externo pendiente; siguen MFA/denegaciones1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+
+0.30 completa el flujo local1-SEC-B: notificación Laravel, firma relativa60min y confirmación POST/CSRF/cuenta/correo vigentes con auditoría atómica. SQLite correo/seguridad/registro18/186 aprobados; Chromium correo2 aprobados44s y bloqueo/PIN/contraseña2 aprobados por regresión dirigida. Compilación/TypeScript/Pint/Prettier y capturas del módulo revisados. Sin migración/dependencias ni repetición SQL/suites generales. SMTP y recepción externos siguen sin verificar; log/array y failover a log no generan notificación ni anuncian envío.
 
 0.29 completa1-SEC-A: PIN propio con contraseña/revisión, bloqueo persistente exigido por servidor y desbloqueo con PIN/contraseña. SQLite seguridad10/120 y regresión de recuperación1/4 tras Form Requests; fundamento completo26 aprobado antes del ajuste final de recuperación. MariaDB seguridad10/120 en nexora_test_ce118fc0c291f60a conservado. Chromium seguridad3 aprobados1.8min (incluye cobro incierto, DTO/UUID exactos, pago único/caja110.01) y fundamento dirigido2 aprobados. Build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal482.55kB/gzip136.26. Migración000026 aplicada y DDL actualizado. Sin suites generales repetidas.
 
