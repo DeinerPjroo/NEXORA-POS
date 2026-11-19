@@ -38,6 +38,8 @@ import type { CashOption, SalesSettings } from '../sales/types'
 import { PosCategories, PosKeypad, defaultPosLayout } from '../pos/PosPanels'
 import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
+import { TableOrders } from '../dining/TableOrders'
+import type { DiningSession } from '../dining/session-types'
 import type { DiningSelection } from '../dining/session-types'
 import { PosOrderLines } from '../pos/PosOrderLines'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
@@ -78,6 +80,9 @@ export function OrderComposer({
   const [details, setDetails] = useState(false)
   const [tablesOpen, setTablesOpen] = useState(false)
   const pendingDining = useRef<DiningSelection | null>(null)
+  const pendingTableSwitch = useRef<DiningSelection | null>(null)
+  const orderIntent = useRef<'save' | 'checkout'>('checkout')
+  const orderForm = useRef<HTMLFormElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
   const [activeLine, setActiveLine] = useState<string | null>(null)
@@ -146,6 +151,25 @@ export function OrderComposer({
   })
   const operation = useOperation<Order>('orders', async (order) => {
     await client.invalidateQueries({ queryKey: ['orders'] })
+    if (orderIntent.current === 'save' && order.dining_session_id) {
+      const fresh = await api<{ data: DiningSession }>('dining-sessions/' + order.dining_session_id)
+      await client.invalidateQueries({ queryKey: ['table-orders', order.dining_session_id] })
+      setCart([])
+      setActiveLine(null)
+      const next = pendingTableSwitch.current
+      pendingTableSwitch.current = null
+      if (next) {
+        orderForm.current?.reset()
+        setDining(next)
+        setBranch(next.branch_id)
+        setChannel('dine_in')
+      } else
+        setDining((current) =>
+          current?.id === fresh.data.id ? { ...current, revision: fresh.data.revision } : current,
+        )
+      toast('Pedido guardado en su mesa.')
+      return
+    }
     toast(
       terminal
         ? 'Pedido registrado. Revisa y confirma el cobro.'
@@ -252,7 +276,13 @@ export function OrderComposer({
       operation.send({})
       return
     }
-    if (!selected || !cart.length || pricing.locked || !posReady) return
+    if (
+      !selected ||
+      !cart.length ||
+      pricing.locked ||
+      (orderIntent.current === 'checkout' && !posReady)
+    )
+      return
     const data = Object.fromEntries(new FormData(event.currentTarget))
     operation.send({
       ...data,
@@ -654,6 +684,7 @@ export function OrderComposer({
           <form
             className="panel order-cart"
             onSubmit={submit}
+            ref={orderForm}
             data-pos-slot="order"
             inert={terminal && tablesOpen}
             aria-hidden={terminal && tablesOpen ? true : undefined}
@@ -677,6 +708,12 @@ export function OrderComposer({
               <p className="pos-dining-selection" role="status">
                 Mesa seleccionada: {dining.label}
               </p>
+            )}
+            {terminal && dining && channel === 'dine_in' && (
+              <TableOrders key={dining.id} selection={dining} />
+            )}
+            {terminal && dining && (
+              <p className="pos-new-lines-label">Nuevos productos · pendientes de guardar</p>
             )}
             {terminal ? (
               <PosOrderLines
@@ -870,6 +907,26 @@ export function OrderComposer({
               </button>
             )}
             <div className={terminal ? 'pos-order-actions' : undefined}>
+              {terminal && dining && (
+                <button
+                  type="button"
+                  className="pos-save-order"
+                  disabled={
+                    operation.isPending ||
+                    pricing.locked ||
+                    (!operation.uncertain && !cart.length) ||
+                    (operation.uncertain && orderIntent.current !== 'save')
+                  }
+                  onClick={() => {
+                    if (!operation.uncertain) orderIntent.current = 'save'
+                    orderForm.current?.requestSubmit()
+                  }}
+                >
+                  {operation.uncertain && orderIntent.current === 'save'
+                    ? 'Reintentar guardado'
+                    : 'GUARDAR EN MESA'}
+                </button>
+              )}
               {terminal && (
                 <button
                   type="button"
@@ -883,6 +940,9 @@ export function OrderComposer({
               <button
                 className="button primary wide"
                 aria-label={terminal ? 'Continuar al cobro' : undefined}
+                onClick={() => {
+                  if (!operation.uncertain) orderIntent.current = 'checkout'
+                }}
                 ref={submitButton}
                 type="submit"
                 disabled={
@@ -908,6 +968,14 @@ export function OrderComposer({
               onClose={() => setTablesOpen(false)}
               onSelect={(selection) => {
                 setTablesOpen(false)
+                if (dining && dining.id !== selection.id && cart.length) {
+                  pendingTableSwitch.current = selection
+                  orderIntent.current = 'save'
+                  orderForm.current?.requestSubmit()
+                  return
+                }
+                if (dining && dining.id !== selection.id) orderForm.current?.reset()
+                pendingTableSwitch.current = null
                 if (channel === 'dine_in') setDining(selection)
                 else {
                   pendingDining.current = selection

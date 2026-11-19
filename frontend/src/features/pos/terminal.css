@@ -685,6 +685,86 @@ body.pos-active {
   background: var(--surface);
   padding-top: 5px;
 }
+.pos-saved-orders {
+  flex: 1;
+  min-height: 100px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 7px;
+}
+.pos-saved-orders > header,
+.pos-saved-order > div,
+.pos-saved-order > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+}
+.pos-saved-orders > header {
+  position: sticky;
+  top: -7px;
+  background: var(--surface);
+  padding: 5px 0;
+  z-index: 1;
+}
+.pos-saved-orders button {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--canvas);
+  color: var(--text);
+  padding: 5px;
+  font-size: 10px;
+}
+.pos-saved-order {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.pos-saved-order > div span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.pos-saved-order table {
+  width: 100%;
+  font-size: 11px;
+  margin: 7px 0;
+}
+.pos-saved-order table td,
+.pos-saved-order table th {
+  padding: 5px;
+  text-align: left;
+  font-size: 11px;
+}
+.pos-saved-order table td:last-child,
+.pos-saved-order table th:last-child {
+  text-align: right;
+}
+.pos-saved-order small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.pos-saved-order footer a {
+  color: var(--pos-pay);
+  font-weight: 700;
+}
+.pos-new-lines-label {
+  margin: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+.pos-order-actions:has(.pos-save-order) {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.pos-save-order {
+  border: 0;
+  background: #253650;
+  color: white;
+}
+.pos-saved-orders:has(+ .pos-new-lines-label) + .pos-new-lines-label + .pos-order-ledger {
+  flex: 0.65;
+}
 .pos-terminal .pos-order-actions > button {
   min-height: 58px;
   padding: 10px 5px;

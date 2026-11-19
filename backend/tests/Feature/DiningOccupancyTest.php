@@ -84,6 +84,27 @@ class DiningOccupancyTest extends TestCase
         return [...$this->key(), 'branch_id' => $this->branch, 'channel' => 'dine_in', 'currency' => 'COP', 'dining_session_id' => $s['id'], 'dining_session_revision' => $s['revision'], 'items' => [['product_id' => $p->id, 'quantity' => 2, 'product_revision' => 1, 'expected_unit_price' => '10.1250']]];
     }
 
+    public function test_table_orders_only_returns_own_attention_items_and_requires_permissions(): void
+    {
+        $a = $this->open([0]);
+        $b = $this->open([1]);
+        $input = $this->orderInput($a);
+        $first = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data.id');
+        $second = $this->postJson('/api/v1/orders', [...$input, ...$this->key(), 'dining_session_id' => $b['id'], 'dining_session_revision' => $b['revision']])->assertCreated()->json('data.id');
+        $url = '/api/v1/dining-sessions/'.$a['id'].'/orders';
+        $this->getJson($url)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $first)->assertJsonPath('data.0.items.0.product_name', 'Menú')->assertJsonPath('data.0.subtotal', '20.2500');
+        $this->getJson('/api/v1/dining-sessions/'.$b['id'].'/orders')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $second);
+        $this->getJson($url.'?per_page=31')->assertUnprocessable();
+        $other = $this->company('table-orders-other@example.test');
+        $this->actingAs($other)->getJson($url)->assertNotFound();
+        $this->actingAs($this->owner);
+        DB::table('role_permission')->where('role_id', $this->owner->role_id)->where('permission_id', DB::table('permissions')->where('key', 'orders.view')->value('id'))->delete();
+        $this->owner->unsetRelation('role');
+        $this->getJson($url)->assertForbidden();
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+    }
+
     public function test_occupancy_join_separate_waiter_history_close_and_exact_replay(): void
     {
         $input = $this->payload();

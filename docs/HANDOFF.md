@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Pedidos por mesa implementados: lectura paginada /dining-sessions/{id}/orders con permisos/tenant; guardados separados de productos nuevos. GUARDAR EN MESA y autosave antes de cambiar atención, sin copiar guardados al formulario; revisión fresca y UUID/DTO de reintento existentes. Build y backend1/21 aprobados; Chromium pos-table-orders1 aprobó1.2min: Mesa1 picada/Mesa2 hamburguesa, recarga, respuesta perdida y reintento sin duplicar. Sin migración ni suites generales. No implica cobro conjunto de varios pedidos ni envío KDS.
+
 Mesas: apertura desde mesa elegida ya no muestra casillas/listado; initialTable queda fija y se confirma número de personas/capacidad. La mesa se ocupa completa aunque sobren sillas (regla permanente AGENTS); unión/separación solo mediante editar atención. TypeScript y pos-tables1 aprobados42.0s, comprobando2 personas/4 plazas, exclusión de disponibles y rechazo409 a segunda atención. Sin backend/migraciones. Test histórico de unión adaptado al paso explícito, sin repetir su caso completo.
 
 Mesas digitales: OccupancyPanel digital opcional activado en PosTablesPanel/TerminalTablesPage, botón de mesa completo con símbolo/número, estado y capacidad/personas; búsqueda y filtros con contadores reales, refresh existente, foco/hover y reduced-motion. Permanece dentro de Pedido en curso. Admin conserva vista anterior; sin backend/datos financieros modificados. Build y Chromium pos-tables1 aprobado46.1s (filtros/búsqueda/ocupación/selección/conservación).

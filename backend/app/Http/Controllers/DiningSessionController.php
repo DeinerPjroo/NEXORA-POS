@@ -42,6 +42,15 @@ final class DiningSessionController extends Controller
         return $this->detail($request, $service->save($request->user(), $request->validated()))->response()->setStatusCode(201);
     }
 
+    public function orders(Request $request, DiningSession $diningSession)
+    {
+        Gate::authorize('dining.view');
+        Gate::authorize('orders.view');
+        $data = $request->validate(['page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'between:1,30']]);
+
+        return OrderResource::collection($diningSession->orders()->with('branch', 'items', 'sale')->latest('id')->paginate($data['per_page'] ?? 20));
+    }
+
     public function update(DiningSessionRequest $request, DiningSession $diningSession, DiningOccupancy $service)
     {
         return $this->detail($request, $service->save($request->user(), $request->validated(), $diningSession));

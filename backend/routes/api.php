@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
             Route::get('dining-sessions', 'index');
             Route::post('dining-sessions', 'store');
             Route::get('dining-sessions/{diningSession}', 'show');
+            Route::get('dining-sessions/{diningSession}/orders', 'orders');
             Route::put('dining-sessions/{diningSession}', 'update');
             Route::post('dining-sessions/{diningSession}/close', 'close');
             Route::post('orders/{order}/dining-transfer', 'transfer');
