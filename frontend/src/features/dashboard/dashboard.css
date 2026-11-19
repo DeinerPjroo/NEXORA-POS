@@ -1,0 +1,244 @@
+.commercial-dashboard {
+  margin-bottom: 26px;
+}
+.commercial-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.commercial-heading h2,
+.commercial-section h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.commercial-heading p {
+  margin: 0;
+}
+.commercial-filters {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 18px;
+}
+.commercial-filters .field {
+  flex: 1 1 160px;
+}
+.commercial-filters input,
+.commercial-filters select {
+  width: 100%;
+}
+.commercial-view-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 18px 0;
+}
+.commercial-view-options > span {
+  flex: 1 1 250px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.commercial-view-options details {
+  position: relative;
+}
+.commercial-view-options summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+.commercial-widget-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  min-width: 240px;
+  box-shadow: 0 10px 28px #10162218;
+}
+.commercial-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.commercial-metric > strong {
+  font-size: clamp(18px, 2vw, 27px);
+  overflow-wrap: anywhere;
+}
+.commercial-metric p {
+  min-height: 30px;
+}
+.commercial-metric small {
+  font-size: 11px;
+}
+.commercial-definition {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 14px 0 24px;
+}
+.commercial-section {
+  padding: 22px;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.commercial-live {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.commercial-live a {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: var(--text);
+  font-size: 12px;
+  text-decoration: none;
+}
+.commercial-live strong {
+  font-size: 27px;
+}
+.commercial-chart {
+  display: flex;
+  position: relative;
+  min-height: 220px;
+  gap: 3px;
+  padding-bottom: 20px;
+}
+.commercial-chart::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100px;
+  border-top: 1px solid var(--line);
+}
+.commercial-day {
+  flex: 1;
+  min-width: 0;
+  height: 200px;
+  position: relative;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.commercial-day > span {
+  position: absolute;
+  width: 80%;
+  left: 10%;
+  min-height: 0;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+.commercial-day .positive {
+  bottom: 50%;
+  background: var(--accent);
+}
+.commercial-day .negative {
+  top: 50%;
+  background: #e77969;
+}
+.commercial-day.selected > span {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--text);
+}
+.commercial-day small {
+  position: absolute;
+  bottom: -16px;
+  left: 0;
+  width: 100%;
+  font-size: 9px;
+  color: var(--muted);
+}
+.commercial-day-detail {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+}
+.commercial-day-detail p {
+  flex: 1;
+}
+.commercial-day-detail strong {
+  font-size: 23px;
+}
+.commercial-rankings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.commercial-rankings .commercial-section {
+  margin: 0;
+}
+.commercial-rank {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.commercial-rank > :nth-child(2) {
+  flex: 1;
+}
+.commercial-rank strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.commercial-rank a {
+  color: var(--text);
+}
+.commercial-as-of {
+  font-size: 11px;
+  margin-top: 20px;
+}
+.overview-workspace {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.overview-workspace > summary {
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+@media (max-width: 1050px) {
+  .commercial-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .commercial-rankings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .commercial-section {
+    padding: 16px;
+  }
+  .commercial-chart {
+    gap: 1px;
+  }
+  .commercial-widget-picker {
+    right: auto;
+    left: 0;
+  }
+}
+@media (max-width: 430px) {
+  .commercial-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .commercial-live {
+    gap: 22px;
+  }
+  .commercial-view-options {
+    gap: 16px;
+  }
+}

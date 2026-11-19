@@ -30,6 +30,19 @@ class ProductGalleryTest extends TestCase
     protected function beforeTruncatingDatabase(): void
     {
         // SQLite :memory: no comparte PDO entre aplicaciones sin RefreshDatabase.
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            // SQL conserva el esquema: limpiar filas al terminar evita contaminar clases
+            // RefreshDatabase posteriores sin reconstruir todas las migraciones por caso.
+            $this->beforeApplicationDestroyed(function () {
+                $name = DB::getDatabaseName();
+                if (! preg_match('/^nexora_test_[a-f0-9]{16}$/D', $name) || getenv('NEXORA_ISOLATED_DATABASE') !== $name) {
+                    throw new \LogicException('La limpieza de galería exige el esquema SQL aislado.');
+                }
+                $this->truncateTablesForAllConnections();
+            });
+
+            return;
+        }
         RefreshDatabaseState::$migrated = false;
         $this->beforeApplicationDestroyed(function () {
             RefreshDatabaseState::$migrated = false;

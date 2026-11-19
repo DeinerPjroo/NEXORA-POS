@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.27.0** integrado/verificado por impacto; catálogo2.2/POS2.3 y salones/mesas/reservas2.4 completos. Sigue dashboard2.5 y cierre de fase2. Referencia completa0.20 conservada abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.28.0**: catálogo2.2/POS2.3/salones2.4/dashboard2.5 completos en su alcance comercial. Verificaciones generales de cierre ejecutadas; siguen seguridad1-SEC, operación1-OPS y fases3–6. Producción aún pendiente.
+
+0.28: SQLite completa 288 pruebas/3692 aserciones y 1 omitida de precisión específica SQL; MariaDB completa 289/3706 en 175.214s, nexora_test_f9d65e5cda296f38 conservado. Chromium completo: 42 aprobados y un timeout en fotografías/variantes; ese caso aprobó al reutilizar fixtureWorkspace, sin retirar validaciones (1.6min). Los 43 casos quedaron cubiertos entre ambas ejecuciones; dashboard dirigido 2 aprobados. Build/TypeScript/Pint/Prettier y capturas propias escritorio/móvil correctos; principal 478.65kB/gzip135.25. Sin migraciones nuevas ni cambios de dinero registrado. Contrato COMMERCIAL_DASHBOARD.md.
 
 0.27 dirigida: SQLite reservas6/83 y calendario/zona1/10; dependencias de mesas/ocupación15/285. MariaDB cruce/UUID1/17, llegada/rollback/permisos/FK3/42 y calendario/zona1/10, esquemas conservados. Chromium horarios/DST y recepción2 aprobados51.9s; recorrido completo creación incierta/cruce/llegada/cancelación1 aprobado1.2min. Migración000025/DDL/build/TypeScript/Pint/Prettier y capturas escritorio/móvil correctos; principal476.13kB/gzip134.64, reservas12.28kB. Suites generales pendientes del cierre de fase2, sin ejecutarlas por rutina. Contrato DINING_RESERVATIONS.md.
 

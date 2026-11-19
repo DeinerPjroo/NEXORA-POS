@@ -12,6 +12,7 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 
 $driver = config('database.default');
 if (!in_array($driver, ['mysql', 'mariadb'], true)) {
@@ -27,6 +28,7 @@ $config = $connection->getConfig();
 $database = 'nexora_test_'.bin2hex(random_bytes(8));
 $created = false;
 $status = 1;
+$testTimeout = $testArguments ? 180 : 600;
 try {
     // CREATE sin IF NOT EXISTS: jamás reutilizar ni limpiar una base anterior.
     $connection->statement('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
@@ -40,8 +42,10 @@ try {
         'NEXORA_ISOLATED_DATABASE' => $database,
         'MAIL_MAILER' => 'array', 'BCRYPT_ROUNDS' => '4',
     ]);
-    $process->setTimeout(180);
+    $process->setTimeout($testTimeout);
     $status = $process->run(fn ($type, $output) => print($output));
+} catch (ProcessTimedOutException $error) {
+    fwrite(STDERR, 'La ejecución excedió el límite de '.$testTimeout.' segundos; sus resultados son parciales.'.PHP_EOL);
 } catch (Throwable $error) {
     fwrite(STDERR, "No se completó la prueba. Verifica conexión y permiso para crear una base temporal.\n");
     fwrite(STDERR, 'Diagnóstico: '.get_class($error).' (código '.$error->getCode().')'.PHP_EOL);

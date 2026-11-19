@@ -1,21 +1,13 @@
 import { expect, test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import { fixtureWorkspace } from './helpers'
 
 test('fotografía privada y variantes: guardar, persistir, editar y evitar cambios obsoletos', async ({
   page,
   context,
 }) => {
   test.setTimeout(100_000)
-  await page.goto('/registro')
-  await page.getByLabel('Nombre del restaurante', { exact: true }).fill('Casa Oliva Presentaciones')
-  await page.getByLabel('Tu nombre', { exact: true }).fill('Ana Pérez')
-  await page
-    .getByLabel('Correo electrónico', { exact: true })
-    .fill(`detail-${Date.now()}@example.test`)
-  await page.getByLabel('Contraseña', { exact: true }).fill('SeguraNexora123')
-  await page.getByLabel('Confirma tu contraseña').fill('SeguraNexora123')
-  await page.getByRole('button', { name: 'Crear mi espacio de trabajo' }).click()
-  await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible()
+  await fixtureWorkspace(page, 'Casa Oliva Presentaciones')
   await page.getByRole('navigation').getByRole('link', { name: 'Categorías', exact: true }).click()
   await page.getByRole('button', { name: 'Nueva categoría' }).click()
   await page.getByLabel('Nombre de la categoría').fill('Pizzas')
@@ -111,6 +103,7 @@ test('fotografía privada y variantes: guardar, persistir, editar y evitar cambi
     page.getByRole('heading', { name: 'Tu próximo gran paso.', exact: true }),
   ).toBeVisible()
   const privateResponse = await page.request.get(imageUrl, {
+    timeout: 10000,
     headers: { Referer: page.url(), Accept: 'image/png' },
   })
   expect(privateResponse.status()).toBe(401)

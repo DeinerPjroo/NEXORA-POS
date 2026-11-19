@@ -35,8 +35,12 @@ Protocolo vigente 2026-11-19: contexto mínimo, implementar/integrar, pruebas es
 | 2.4-A | COMPLETED | Salones/mesas y editor visual/API integrados0.25; SQLite7/129, SQL5/54, registro/roles4/23 y Chromium3/1.3min más lector403 final1/19.8s; migración000023/DDL/build/formato/capturas correctos. DINING_LAYOUTS.md | 2.3 |
 | 2.4-B | COMPLETED | Ocupación/unión/separación/meseros/traslado/POS0.26 integrados. SQLite40/488+paginación1/18+replay1/15; SQL1/9+5/114; Chromium ocupación4+POS3 por impacto; migración000024/DDL/build/formato/capturas. DINING_OPERATIONS.md | 2.4-A |
 | 2.4-C | COMPLETED | Reservas/API/UI/horarios/zona/DST/capacidad/cruces/llegada atómica0.27. SQLite6/83+calendario1/10+dependencias15/285; SQL1/17+3/42+1/10; Chromium3 por ejecuciones dirigidas; migración000025/DDL/build/formato/capturas correctos. DINING_RESERVATIONS.md | 2.4-B |
-| 2.5 | IN_PROGRESS | Dashboard comercial real por fecha/sucursal, sin ganancias definitivas; E2E apertura→pedido→cobro→cierre | 2.1–2.4 |
-| 1-SEC | PENDING | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones; subdividir | Identidad existente; SMTP externo para entrega |
+| 2.5 | COMPLETED | Dashboard real por fecha/sucursal/moneda, comparación, series, métodos, productos y operadores; widgets y permisos. Cierre de fase2: SQLite288/3692+1skip, SQL289/3706; Chromium43 cubiertos (42 completos +1 reintento dirigido). COMMERCIAL_DASHBOARD.md. Costes/ganancia/empleados avanzados dependen de fases3–4 | 2.1–2.4 |
+| 1-SEC | IN_PROGRESS | PIN, bloqueo, verificación de correo, MFA y auditoría de denegaciones mediante A–D | Identidad existente; SMTP externo para entrega |
+| 1-SEC-A | IN_PROGRESS | PIN propio protegido y bloqueo de sesión exigido por servidor, interfaz de desbloqueo y pruebas dirigidas de acceso/límites/aislamiento | Identidad existente |
+| 1-SEC-B | PENDING | Verificación de correo real y estado/interfaz; envío externo solo verificado con SMTP disponible | 1-SEC-A; SMTP |
+| 1-SEC-C | PENDING | MFA con desafío y recuperación, integración de inicio de sesión y pruebas críticas | 1-SEC-B |
+| 1-SEC-D | PENDING | Auditoría de denegaciones sin secretos y límites de acceso comprobados | 1-SEC-A/C |
 | 1-OPS | PENDING | CI, concurrencia, backups/restauración, MySQL 8 y EER verificados según entorno disponible | Infraestructura local/CI; no destruir datos |
 | 3.1 | PENDING | Kitchen/KDS, estaciones, Reverb, tiempos, prioridades e historial | Pedidos/POS |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |

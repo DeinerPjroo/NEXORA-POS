@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-019 · Métricas comerciales sin reinterpretar historia (0.28)
+
+Separar ventas por su fecha de registro y cobros/devoluciones por fecha del evento, con periodos locales y comparación equivalente. Agregados BCMath por moneda y permisos por dominio; deuda actual reutiliza SaleBalance, combo cuenta cabecera y excluye componentes. Transacción de lectura coherente sin mutex de escritura de empresa. No presentar neto como ganancia ni egresos manuales como todos los gastos. COMMERCIAL_DASHBOARD.md define el contrato.
+
 ## DEC-018 · Distribución versionada y separada de ocupación (0.25)
 
 Salón como raíz de revisión: metadatos, mesas y plano serializan con Tenant lock y revisión del salón; el plano exige el conjunto completo de mesas activas. Nombres únicos también en archivo; sucursal y salón de pertenencia estables. FK compuestas tenant/sucursal/salón. Geometría entera acotada y objetos de catálogo permitido, sin código libre ni estados de ocupación inventados. Editor captura revisión/datos al abrir y congela DTO/UUID inciertos. DINING_LAYOUTS.md define límites y contrato; B agrega la operación real sin otra implementación financiera.

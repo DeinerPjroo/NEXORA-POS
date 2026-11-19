@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommercialDashboardController;
 use App\Http\Controllers\ContextPriceController;
 use App\Http\Controllers\DiningController;
 use App\Http\Controllers\DiningReservationController;
@@ -39,6 +40,7 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/sessions', [AuthController::class, 'sessions']);
         Route::delete('auth/sessions', [AuthController::class, 'revokeSessions'])->middleware('throttle:recovery');
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
+        Route::get('workspace/commercial-dashboard', [CommercialDashboardController::class, 'show']);
         Route::get('operations/context', [OperationsController::class, 'context']);
         Route::controller(DiningReservationController::class)->group(function () {
             Route::get('dining/reservation-tables', 'tables');
