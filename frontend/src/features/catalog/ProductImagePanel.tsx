@@ -71,6 +71,10 @@ export function ProductImagePanel({ product }: { product: Product }) {
         )}
       </div>
       <ErrorNotice error={mutation.error} />
+      <p className="muted small">
+        Esta fotografía es la portada. La galería permite conservar otras imágenes; al quitar la
+        portada se mostrará la siguiente si existe.
+      </p>
       {can('catalog.manage') && (
         <>
           <label className="photo-file-label">

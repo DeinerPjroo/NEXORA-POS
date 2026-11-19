@@ -533,3 +533,17 @@ alter table `product_promotions` add constraint `promotions_variant_fk` foreign 
 
 alter table `product_promotions` add constraint `promotions_branch_fk` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
 
+create table `product_images` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `product_id` bigint unsigned not null, `path` varchar(255) not null, `mime` varchar(30) not null, `position` tinyint unsigned not null default '0', `is_active` tinyint(1) not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `product_images` add constraint `product_images_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `product_images` add unique `product_images_identity`(`tenant_id`, `product_id`, `id`);
+
+alter table `product_images` add constraint `product_images_product_fk` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+alter table `product_images` add index `product_images_order`(`tenant_id`, `product_id`, `is_active`, `position`);
+
+alter table `products` add `cover_image_id` bigint unsigned null;
+
+alter table `products` add constraint `products_cover_image_fk` foreign key (`tenant_id`, `id`, `cover_image_id`) references `product_images` (`tenant_id`, `product_id`, `id`) on delete restrict;
+

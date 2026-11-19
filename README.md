@@ -2,7 +2,7 @@
 
 **El futuro de tu restaurante.** Plataforma modular de gestión gastronómica con aislamiento por empresa y personalización propia.
 
-El incremento **0.21.0** agrega **promociones de catálogo** por producto/presentación/contexto y fechas, con prioridad, descuento de base y precio histórico en pedido/recibo. Conserva combos y alternativas, adicionales, horarios, impuestos, cuentas, devoluciones, abonos/mixtos, propinas e historial/revisión manual de pagos. Galerías, mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [PROMOTIONS.md](docs/PROMOTIONS.md), [COMBO_CHOICES.md](docs/COMBO_CHOICES.md) y [CONTEXT_PRICES.md](docs/CONTEXT_PRICES.md).
+El incremento **0.22.0** agrega **galería privada de productos**, con hasta ocho imágenes, portada, orden y reintentos seguros; conserva fotografía y URL anteriores. Catálogo, combos/alternativas, promociones, pedidos, impuestos, cuentas, pagos manuales y devoluciones están conectados. Continúa terminal POS; mesas, pasarelas, cocina, inventario y facturación siguen pendientes. Reglas en [GALLERY.md](docs/GALLERY.md), [PROMOTIONS.md](docs/PROMOTIONS.md) y [COMBO_CHOICES.md](docs/COMBO_CHOICES.md).
 
 ## Entorno y requisitos
 

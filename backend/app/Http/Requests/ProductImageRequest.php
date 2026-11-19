@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-final class ProductImageRequest extends FormRequest
+class ProductImageRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 0.22.0 · 2026-11-19
+
+- Galería privada de hasta ocho imágenes, portada y orden explícitos, retiro con siguiente portada y limpieza tras commit. Migración de fotografía anterior bajo bloqueo, sin mover archivos ni cambiar su URL; compatibilidad de reemplazo/retirada.
+- UUID, hash de archivo en servidor, revisión/moneda/Tenant lock/Gate/auditoría/FK; multipart/JSON/DELETE inciertos conservados en useOperation. Recodificación GD y validaciones existentes reutilizadas.
+- Dirigidas SQLite galería8/121 y legado10/85; MariaDB backfill/FK2/20 y ajuste de bloqueo1/15; interoperabilidad de pruebas2/36. Chromium galería/fotografía/promociones3 en3.3min y galería final con miniaturas cargadas1 en1.0min. Migración000022 aplicada, DDL/build/TypeScript/formato y captura móvil correctos. Esquemas nexora_test_65bda8209625cbc1 y nexora_test_53cb7a4f90607f8a conservados.
+
 ## 0.21.0 · 2026-11-19
 
 - Promociones de base fija/porcentual por producto/presentación/contexto/fechas locales inclusivas. Una ganadora por especificidad, prioridad y antigüedad; hasta20 activas, archivo y revisión/UUID/moneda/zona/auditoría/FK propios.

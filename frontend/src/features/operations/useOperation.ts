@@ -5,12 +5,13 @@ import { api, ApiError } from '../../lib/api'
 export function useOperation<T>(
   path: string,
   onSuccess: (result: T) => void | Promise<void>,
-  method: 'POST' | 'PUT' = 'POST',
+  method: 'POST' | 'PUT' | 'DELETE' = 'POST',
 ) {
   const [key, setKey] = useState(() => crypto.randomUUID())
-  const last = useRef<Record<string, unknown> | null>(null)
+  const last = useRef<Record<string, unknown> | FormData | null>(null)
   const mutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api<{ data: T }>(path, { method, body }),
+    mutationFn: (body: Record<string, unknown> | FormData) =>
+      api<{ data: T }>(path, { method, body }),
     onSuccess: async (result) => {
       await onSuccess(result.data)
       last.current = null
@@ -20,8 +21,14 @@ export function useOperation<T>(
   const uncertain =
     mutation.error instanceof ApiError &&
     (mutation.error.status === 0 || mutation.error.status >= 500)
-  function send(data: Record<string, unknown>) {
-    const body = uncertain && last.current ? last.current : { ...data, idempotency_key: key }
+  function send(data: Record<string, unknown> | FormData) {
+    const body =
+      uncertain && last.current
+        ? last.current
+        : data instanceof FormData
+          ? data
+          : { ...data, idempotency_key: key }
+    if (body instanceof FormData && !uncertain) body.set('idempotency_key', key)
     last.current = body
     mutation.mutate(body)
   }

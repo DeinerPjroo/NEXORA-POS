@@ -1,6 +1,8 @@
 # Progreso real
 
-Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.21.0** de promociones integrado y verificado por impacto. Fase 2 continúa con galería privada antes de POS/mesas. La referencia de regresión completa0.20 se conserva abajo; producción aún pendiente.
+Fecha de referencia: **19 de noviembre de 2026**, America/Bogota. Incremento **0.22.0** de galería integrado y verificado por impacto; catálogo avanzado2.2 completado. Fase2 continúa con terminal POS y después salones/mesas. La referencia de regresión completa0.20 se conserva abajo; producción aún pendiente.
+
+0.22: SQLite galería8/121 y legado10/85; SQL backfill/FK2/20 y bloqueo1/15. Chromium dirigido galería/fotografía/promociones3 en3.3min, más galería final1/1.0min con miniaturas cargadas. Migración000022 aplicada, DDL/build/TypeScript/Pint/Prettier y captura móvil correctos; principal491.75kB/gzip138.94, panel7.31kB. Contrato GALLERY.md; siguiente POS_PLAN.md. Verificaciones por impacto según AGENTS.
 
 0.21: MariaDB dirigido8/134 más financiero1/35; SQLite permisos/finanzas2/47 y dependencias precios/combos/horarios28/538; Chromium promociones/contexto2 aprobados en2.9min. Migración000021 aplicada, DDL/build/TypeScript/Pint/Prettier y capturas admin/recibo revisados. Principal491.22kB/gzip138.73, panel promocional8.24kB. Contrato PROMOTIONS.md; protocolo vigente de pruebas dirigidas en AGENTS. Las verificaciones completas siguientes corresponden a0.20.
 
@@ -118,6 +120,6 @@ Las pruebas SQLite y las pruebas reales en MariaDB se complementan. SQLite NUMER
 
 ## Fuera del alcance implementado
 
-No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. En catálogo faltan promociones y galerías; subcategorías operan desde 0.15, modificadores desde 0.16, precios por contexto desde 0.17 horarios desde 0.18 combos fijos desde0.19 y grupos de alternativas desde0.20. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
+No existen todavía mesas, pasarelas, división por productos/unión de cuentas, liquidación/reparto de propinas, devoluciones por producto, conciliación bancaria automatizada, KDS/Reverb, inventarios/recetas, compras, empleados/asignaciones, clientes/fidelización, domicilios, reportes comerciales, facturación, planes/suscripciones, superadministración o landing. Abonos/mixtos y propinas son registros manuales; revisión humana disponible desde 0.14, sin confirmación bancaria. La entrega sigue separada del pago. Catálogo avanzado completo, con promociones desde0.21 y galería privada desde0.22; subcategorías operan desde 0.15, modificadores desde 0.16, precios por contexto desde 0.17 horarios desde 0.18 combos fijos desde0.19 y grupos de alternativas desde0.20. Tampoco editor avanzado, widgets, documentos, automatizaciones, layouts importables, móvil/escritorio, offline, hardware o DIAN.
 
 Esas funciones están conservadas en REQUIREMENTS, diseñadas a nivel de arquitectura y repartidas en ROADMAP; no se anuncian como operativas.

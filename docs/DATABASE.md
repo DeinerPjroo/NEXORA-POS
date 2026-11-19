@@ -1,5 +1,9 @@
 # Base de datos
 
+## Galería privada (0.22)
+
+Migración000022: product_images con FK tenant/product y unique tenant/product/id; products.cover_image_id con FK a imagen del mismo producto/empresa. Backfill de fotografía anterior bajo Tenant/product lock y revalidación, conservando archivo/URL/revisión. image_path/image_mime espejan portada. Filas retiradas inactivas y limpieza física tras commit. Migración aplicada y backfill/FK comprobados en MariaDB; GALLERY.md.
+
 ## Promociones (0.21)
 
 Migración000021: product_promotions con entidad/contexto, tipo/valor DECIMAL(19,4), prioridad, fechas locales, estado/revisión y FK tenant/product/variant/branch. Identidad estable y máximo20 activas bajo bloqueo de empresa. PriceContextv2 se conserva en snapshots JSON existentes sin nuevas filas financieras. Migración aplicada y pruebas SQL dirigidas aprobadas; PROMOTIONS.md.

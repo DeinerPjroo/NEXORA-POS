@@ -13,6 +13,7 @@ use App\Http\Controllers\PaymentReviewController;
 use App\Http\Controllers\ProductAvailabilityController;
 use App\Http\Controllers\ProductComboController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductGalleryController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductModifierController;
 use App\Http\Controllers\ProductPromotionController;
@@ -90,6 +91,12 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/image', [ProductImageController::class, 'store'])->middleware('throttle:uploads');
         Route::delete('products/{product}/image', [ProductImageController::class, 'destroy']);
         Route::scopeBindings()->group(function () {
+            Route::get('products/{product}/images', [ProductGalleryController::class, 'index']);
+            Route::post('products/{product}/images', [ProductGalleryController::class, 'store'])->middleware('throttle:uploads');
+            Route::put('products/{product}/images/order', [ProductGalleryController::class, 'order']);
+            Route::get('products/{product}/images/{productImage}', [ProductGalleryController::class, 'show']);
+            Route::put('products/{product}/images/{productImage}/cover', [ProductGalleryController::class, 'cover']);
+            Route::delete('products/{product}/images/{productImage}', [ProductGalleryController::class, 'destroy']);
             Route::get('products/{product}/promotions', [ProductPromotionController::class, 'index']);
             Route::post('products/{product}/promotions', [ProductPromotionController::class, 'store']);
             Route::put('products/{product}/promotions/{promotion}', [ProductPromotionController::class, 'update']);

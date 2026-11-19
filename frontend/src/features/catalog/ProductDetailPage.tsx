@@ -20,6 +20,9 @@ const ProductModifiersPanel = lazy(() =>
 const ComboPanel = lazy(() =>
   import('./ComboPanel').then((module) => ({ default: module.ComboPanel })),
 )
+const ProductGalleryPanel = lazy(() =>
+  import('./ProductGalleryPanel').then((module) => ({ default: module.ProductGalleryPanel })),
+)
 const ContextPricesPanel = lazy(() =>
   import('./ContextPricesPanel').then((module) => ({ default: module.ContextPricesPanel })),
 )
@@ -138,6 +141,9 @@ export function ProductDetailPage() {
       ) : (
         <VariantsPanel product={product} />
       )}
+      <Suspense fallback={<Loading />}>
+        <ProductGalleryPanel product={product} />
+      </Suspense>
       <Suspense fallback={<Loading />}>
         <AvailabilityPanel product={product} />
       </Suspense>

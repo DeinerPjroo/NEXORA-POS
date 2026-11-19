@@ -51,6 +51,11 @@ final class Product extends Model
         return $this->hasMany(ProductPromotion::class);
     }
 
+    public function productImages(): HasMany
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
     public function availabilityWindows(): HasMany
     {
         return $this->hasMany(ProductAvailabilityWindow::class);
