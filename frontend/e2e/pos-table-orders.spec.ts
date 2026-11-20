@@ -155,7 +155,7 @@ test('POS: guarda por mesa al cambiar, reintenta sin duplicar y recupera solo su
     expect(orders[0].items).toHaveLength(name === 'Mesa 1' ? 3 : 1)
   }
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  const checkout = page.getByRole('dialog', { name: 'Cobro en terminal', exact: true })
+  const checkout = page.getByRole('region', { name: 'Cobro en terminal', exact: true })
   await expect(checkout).toBeVisible()
   await expect(
     checkout.getByRole('heading', {

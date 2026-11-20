@@ -261,7 +261,7 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     is_active: true,
   })
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await expect(page).toHaveURL(/\/pos$/)
   expect(orders).toHaveLength(2)
   expect(orders[0]).toBe(orders[1])
@@ -283,13 +283,13 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
   await cashKeys.getByRole('button', { name: 'Efectivo 0', exact: true }).click()
   await expect(page.getByLabel('Efectivo recibido', { exact: true })).toHaveValue('20')
   await page
-    .getByRole('dialog', { name: 'Cobro en terminal' })
+    .getByRole('region', { name: 'Cobro en terminal' })
     .screenshot({ path: 'test-results/terminal-checkout-desktop.png' })
   await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Reintentar cobro', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Volver al pedido', exact: true })).toBeDisabled()
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await page.getByRole('button', { name: 'Reintentar cobro', exact: true }).click()
   await expect(page.getByRole('article', { name: /^Recibo / })).toBeVisible()
   await expect(page).toHaveURL(/\/pos$/)
@@ -308,7 +308,7 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     .toBe(true)
   await page.getByRole('button', { name: 'Nueva operación POS', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Agregar Tostada POS', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
   await expect(page.locator('.cart-empty')).toBeVisible()
@@ -375,13 +375,16 @@ test('POS: cobrar sin sales.view muestra recibo local y permite nueva operación
   await page.goto('/pos')
   await page.getByRole('button', { name: 'Agregar Producto POS', exact: true }).click()
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await page.getByLabel('Efectivo recibido', { exact: true }).fill('20')
   await expect(
     page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }),
   ).toBeEnabled()
-  const checkout = page.getByRole('dialog', { name: 'Cobro en terminal' })
-  await checkout.locator('.checkout-form').evaluate((form) => {
+  const checkout = page.getByRole('region', { name: 'Cobro en terminal' })
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.locator('.pos-topbar')).toBeVisible()
+  await expect(page.locator('.order-composer')).toBeHidden()
+  await checkout.locator('.checkout-form > fieldset').evaluate((form) => {
     form.scrollTop = form.scrollHeight
   })
   await expect
@@ -390,15 +393,23 @@ test('POS: cobrar sin sales.view muestra recibo local y permite nueva operación
         const total = dialog.querySelector('.digital-pay-total')!.getBoundingClientRect()
         const header = dialog.querySelector('.terminal-checkout-header')!.getBoundingClientRect()
         const confirm = dialog.querySelector('button[type="submit"]')!.getBoundingClientRect()
-        return total.top >= header.bottom && total.bottom <= confirm.top
+        const tender = dialog.querySelector('.digital-tender-status')!.getBoundingClientRect()
+        return (
+          total.top >= header.bottom &&
+          total.bottom <= confirm.top &&
+          tender.top >= total.top &&
+          tender.bottom <= total.bottom
+        )
       }),
     )
     .toBe(true)
-  await checkout.screenshot({ path: 'test-results/checkout-digital-light.png' })
+  await page
+    .locator('.pos-terminal')
+    .screenshot({ path: 'test-results/checkout-digital-light.png' })
   await page.evaluate(() => {
     document.documentElement.dataset.theme = 'dark'
   })
-  await checkout.screenshot({ path: 'test-results/checkout-digital-dark.png' })
+  await page.locator('.pos-terminal').screenshot({ path: 'test-results/checkout-digital-dark.png' })
   await page.setViewportSize({ width: 390, height: 844 })
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

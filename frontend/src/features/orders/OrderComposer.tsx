@@ -251,7 +251,7 @@ export function OrderComposer({
     if (terminal && selected && !locked) savePosContext(session!, selected, channel)
   }, [terminal, selected, channel, locked, session])
   useEffect(() => {
-    if (!terminal) return
+    if (!terminal || checkoutOpen) return
     const shortcut = (event: KeyboardEvent) => {
       if (
         event.repeat ||
@@ -278,7 +278,7 @@ export function OrderComposer({
     }
     window.addEventListener('keydown', shortcut)
     return () => window.removeEventListener('keydown', shortcut)
-  }, [terminal, picking, bundling, customizing, pricing.review])
+  }, [terminal, checkoutOpen, picking, bundling, customizing, pricing.review])
   function configure(product: Product, variant?: Variant) {
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
@@ -361,12 +361,13 @@ export function OrderComposer({
     <div
       className={terminal ? 'pos-terminal' : undefined}
       data-pos-panel={panel}
+      data-mode={checkoutOpen ? 'checkout' : 'order'}
       data-photos={photos}
       data-layout-version={defaultPosLayout.schemaVersion}
       ref={terminalRoot}
     >
       {terminal && (
-        <header className="pos-topbar" data-pos-slot="header">
+        <header className="pos-topbar" data-pos-slot="header" inert={checkoutOpen}>
           <strong>
             NEXORA <em>POS</em>
           </strong>
@@ -515,7 +516,7 @@ export function OrderComposer({
         />
         <span className="pill neutral">Sin cobro registrado</span>
       </div>
-      <div className="order-composer">
+      <div className="order-composer" inert={checkoutOpen}>
         {terminal && (
           <>
             <aside className="pos-actions" data-pos-slot="actions">
@@ -1088,6 +1089,7 @@ export function OrderComposer({
           orderId={checkoutOrderId}
           onClose={(completed) => {
             setCheckoutOpen(false)
+            requestAnimationFrame(() => submitButton.current?.focus())
             if (completed) {
               setCheckoutOrderId(null)
               setPanel('menu')

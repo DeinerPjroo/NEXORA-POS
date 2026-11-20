@@ -139,7 +139,7 @@ test('POS: Mesas abre salones, ocupa y selecciona conservando el pedido', async 
   })
   expect(conflict.status()).toBe(409)
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await expect(page).toHaveURL(/\/pos$/)
   const heading = await page.getByRole('heading', { name: /^Cobrar pedido #/ }).innerText()
   const orderId = heading.match(/#(\d+)/)![1]

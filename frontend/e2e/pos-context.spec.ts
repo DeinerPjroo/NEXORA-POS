@@ -103,11 +103,11 @@ test('POS: inicio operativo, paneles móviles, atajos y contexto conservado sin 
     .locator('.pos-terminal')
     .screenshot({ path: '../docs/screenshots/pos-context-mobile.png', animations: 'disabled' })
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await expect(page.getByText('Nota que permanece', { exact: true })).toBeVisible()
   await page.getByLabel('Efectivo recibido', { exact: true }).fill('20')
   await page
-    .getByRole('dialog', { name: 'Cobro en terminal' })
+    .getByRole('region', { name: 'Cobro en terminal' })
     .screenshot({ path: 'test-results/terminal-checkout-mobile.png' })
   await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
   await expect(page.getByRole('article', { name: /^Recibo / })).toBeVisible()

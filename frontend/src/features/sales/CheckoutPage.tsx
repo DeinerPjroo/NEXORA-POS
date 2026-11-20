@@ -245,8 +245,6 @@ function CheckoutForm({
             Registrar cobro
           </h2>
         </div>
-        <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
-        <OperationNotice uncertain={operation.uncertain} />
         {digital && (
           <div className="digital-pay-total">
             <span>TOTAL A COBRAR</span>
@@ -258,6 +256,20 @@ function CheckoutForm({
             <small>
               {selected ? `${selected.name} · Caja abierta` : 'Selecciona una caja abierta'}
             </small>
+            {isCash && (
+              <div className="digital-tender-status" aria-live="polite">
+                <div>
+                  <span>Recibido</span>
+                  <strong>
+                    {formatMoney(normalizedReceived.replace(/\.$/, '.0') || '0', order.currency)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Cambio</span>
+                  <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
+                </div>
+              </div>
+            )}
             {quote.data &&
               paymentValid &&
               moneyUnits(normalizedPayment) < moneyUnits(quote.data.data.total) && (
@@ -266,6 +278,8 @@ function CheckoutForm({
           </div>
         )}
         <fieldset disabled={operation.locked} className="form-stack">
+          <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
+          <OperationNotice uncertain={operation.uncertain} />
           {digital ? (
             <div className="digital-payment-methods" role="group" aria-label="Métodos de pago">
               {methods.data?.data.map((item) => (
@@ -440,7 +454,7 @@ function CheckoutForm({
         {operation.error instanceof ApiError && operation.error.status === 409 && (
           <button
             type="button"
-            className="button secondary"
+            className="button secondary checkout-review-data"
             onClick={() => {
               operation.reset()
               adjustments.reset()
