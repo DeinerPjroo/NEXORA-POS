@@ -91,6 +91,7 @@ class KitchenWorkflowTest extends TestCase
         $p = $this->route($this->product(), $a);
         $q = $this->route($this->product('Jugo'), $b);
         $order = $this->order([$p, $q]);
+        $this->getJson('/api/v1/kitchen-routes?branch_id='.$this->branch)->assertOk()->assertJsonPath('meta.total', 2)->assertJsonCount(2, 'data');
         $input = [...$this->key(), 'order_revision' => $order['revision']];
         $url = '/api/v1/orders/'.$order['id'].'/kitchen-dispatch';
         $first = $this->postJson($url, $input)->assertCreated()->assertJsonCount(2, 'data.tickets')->json('data');

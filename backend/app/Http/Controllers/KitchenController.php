@@ -8,6 +8,7 @@ use App\Models\KitchenRoute;
 use App\Models\KitchenTicket;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
@@ -24,7 +25,7 @@ final class KitchenController extends Controller
         Gate::authorize('catalog.view');
         $data = $request->validate(['branch_id' => ['required', 'integer', $this->own($request, 'branches')], 'page' => ['sometimes', 'integer', 'min:1']]);
 
-        return KitchenRoute::where('branch_id', $data['branch_id'])->with('product:id,name,revision', 'station:id,name')->orderBy('id')->paginate(30)->through(fn ($r) => [...$r->only('id', 'branch_id', 'product_id', 'kitchen_station_id', 'is_active', 'revision'), 'product' => $r->product->only('id', 'name', 'revision'), 'station' => $r->station->only('id', 'name')]);
+        return JsonResource::collection(KitchenRoute::where('branch_id', $data['branch_id'])->with('product:id,name,revision', 'station:id,name')->orderBy('id')->paginate(30)->through(fn ($r) => [...$r->only('id', 'branch_id', 'product_id', 'kitchen_station_id', 'is_active', 'revision'), 'product' => $r->product->only('id', 'name', 'revision'), 'station' => $r->station->only('id', 'name')]));
     }
 
     public function saveRoute(Request $request, KitchenWorkflow $service)

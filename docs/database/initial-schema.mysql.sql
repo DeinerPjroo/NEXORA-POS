@@ -675,3 +675,59 @@ alter table `kitchen_stations` add unique `kitchen_station_name`(`tenant_id`, `b
 
 alter table `kitchen_stations` add constraint `kitchen_station_branch` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
 
+alter table `orders` add unique `orders_kitchen_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `order_items` add unique `order_item_kitchen_identity`(`tenant_id`, `order_id`, `id`);
+
+create table `kitchen_routes` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `product_id` bigint unsigned not null, `kitchen_station_id` bigint unsigned not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_routes` add constraint `kitchen_routes_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_routes` add unique `kroute_product_branch`(`tenant_id`, `branch_id`, `product_id`);
+
+alter table `kitchen_routes` add constraint `kroute_station` foreign key (`tenant_id`, `branch_id`, `kitchen_station_id`) references `kitchen_stations` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `kitchen_routes` add constraint `kroute_product` foreign key (`tenant_id`, `product_id`) references `products` (`tenant_id`, `id`) on delete restrict;
+
+create table `kitchen_dispatches` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `order_id` bigint unsigned not null, `created_by` bigint unsigned not null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_dispatches` add constraint `kitchen_dispatches_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_dispatches` add unique `kdispatch_identity`(`tenant_id`, `order_id`, `id`);
+
+alter table `kitchen_dispatches` add constraint `kdispatch_order` foreign key (`tenant_id`, `branch_id`, `order_id`) references `orders` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `kitchen_dispatches` add constraint `kdispatch_actor` foreign key (`tenant_id`, `created_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `kitchen_tickets` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `order_id` bigint unsigned not null, `kitchen_dispatch_id` bigint unsigned not null, `kitchen_station_id` bigint unsigned not null, `station_name` varchar(80) not null, `station_color` varchar(7) not null, `target_minutes` smallint unsigned not null, `order_snapshot` json not null, `status` varchar(20) not null default 'new', `revision` int unsigned not null default '1', `started_at` datetime null, `ready_at` datetime null, `delivered_at` datetime null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_tickets` add constraint `kitchen_tickets_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_tickets` add unique `kticket_identity`(`tenant_id`, `order_id`, `id`);
+
+alter table `kitchen_tickets` add index `kticket_board`(`tenant_id`, `branch_id`, `status`, `id`);
+
+alter table `kitchen_tickets` add constraint `kticket_station` foreign key (`tenant_id`, `branch_id`, `kitchen_station_id`) references `kitchen_stations` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `kitchen_tickets` add constraint `kticket_dispatch` foreign key (`tenant_id`, `order_id`, `kitchen_dispatch_id`) references `kitchen_dispatches` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `kitchen_tickets` add constraint `kticket_order_branch` foreign key (`tenant_id`, `branch_id`, `order_id`) references `orders` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+create table `kitchen_ticket_lines` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `kitchen_ticket_id` bigint unsigned not null, `order_item_id` bigint unsigned not null, `snapshot` json not null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_ticket_lines` add constraint `kitchen_ticket_lines_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_ticket_lines` add unique `kline_sent_once`(`tenant_id`, `order_item_id`);
+
+alter table `kitchen_ticket_lines` add constraint `kline_ticket` foreign key (`tenant_id`, `order_id`, `kitchen_ticket_id`) references `kitchen_tickets` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `kitchen_ticket_lines` add constraint `kline_order_item` foreign key (`tenant_id`, `order_id`, `order_item_id`) references `order_items` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+create table `kitchen_ticket_events` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `kitchen_ticket_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `from_status` varchar(20) null, `to_status` varchar(20) not null, `reason` varchar(300) null, `created_at` datetime not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `kitchen_ticket_events` add constraint `kitchen_ticket_events_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `kitchen_ticket_events` add constraint `kevent_ticket` foreign key (`tenant_id`, `order_id`, `kitchen_ticket_id`) references `kitchen_tickets` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `kitchen_ticket_events` add constraint `kevent_actor` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

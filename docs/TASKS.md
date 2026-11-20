@@ -54,8 +54,8 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 1-OPS-D | COMPLETED | MySQL8.4 validado realmente en CI; entrega documentada en DELIVERY_CHECKLIST.md. EER visual Workbench y despliegue quedan explícitamente externos, sin simular validación | A–C; entorno disponible |
 | 3.1 | IN_PROGRESS | Kitchen/KDS en A estaciones, B rutas/comandas, C Reverb privado, D estados/tiempos/prioridades/historial. KITCHEN.md | Pedidos/POS |
 | 3.1-A | COMPLETED | Estaciones existentes verificadas: creación/archivo/móvil y lector/403 Chromium2 cubiertos entre ejecuciones. Prueba de cambio de sesión espera logout y envía Origin a Sanctum. Cobertura backend/SQL/build previa conservada | Identidad, sucursales e idempotencia existentes |
-| 3.1-B | IN_PROGRESS | Enrutamiento y comandas con snapshots por estación, estados/registro transaccional sin alterar finanzas | 3.1-A; pedidos |
-| 3.1-C | PENDING | Reverb privado por tenant/sucursal, autorización y reconexión con estado real | 3.1-B |
+| 3.1-B | COMPLETED | Rutas/snapshots/comandas incrementales, estados sincronizados y cancelación; permisos/revisión/UUID/FK. Native8 cubiertos, SQL8/120, paginación1/27 y Chromium flujo real1 aprobados; migración000029 aplicada/DDL. Tablero consulta real5s, no Reverb todavía | 3.1-A; pedidos |
+| 3.1-C | IN_PROGRESS | Reverb privado por tenant/sucursal, autorización y reconexión con estado real | 3.1-B |
 | 3.1-D | PENDING | Estados configurables, prioridad/tiempos/avisos e historial conectado | 3.1-B/C |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |
