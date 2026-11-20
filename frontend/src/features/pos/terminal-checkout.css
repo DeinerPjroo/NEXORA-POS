@@ -428,3 +428,136 @@
     padding-top: 8px;
   }
 }
+.terminal-checkout-body:has(.pending-checkout-grid) {
+  flex: 1;
+  overflow: hidden;
+}
+.pending-checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  height: 100%;
+  min-height: 0;
+  gap: 12px;
+}
+.pending-checkout-grid > .panel {
+  min-height: 0;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 10px;
+}
+.pending-account-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+.pending-account-summary > .pos-split-parts {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  max-height: 180px;
+  flex-shrink: 0;
+}
+.pending-account-summary .pos-split-parts button[aria-pressed='true'] {
+  border-color: var(--pos-primary);
+  background: color-mix(in srgb, var(--pos-primary) 15%, var(--surface));
+}
+.pending-account-summary .pos-split-parts button {
+  min-height: 62px;
+  font-size: 13px;
+}
+.pending-payment-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pending-payment-panel > h3 {
+  display: none;
+}
+.pending-payment-panel > form.form-stack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pending-payment-panel > form > .digital-pay-total,
+.pending-payment-panel .form-actions {
+  flex-shrink: 0;
+}
+.pending-payment-panel > form > fieldset.form-stack {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  gap: 8px;
+  padding: 0;
+}
+.pending-payment-panel .field {
+  margin: 0;
+  gap: 5px;
+}
+.pending-payment-panel .field input {
+  min-height: 44px;
+  font-size: 22px;
+  font-weight: 750;
+  text-align: right;
+}
+.pending-payment-panel .digital-payment-methods > button {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 3px;
+}
+.pending-payment-panel .payment-draft-lines:empty {
+  display: none;
+}
+.pending-payment-panel .payment-draft-line {
+  padding: 8px;
+  margin: 0;
+  font-size: 12px;
+}
+.pending-payment-panel .prepare-account-payment {
+  min-height: 42px;
+  margin: 0;
+}
+.pending-payment-panel .checkout-change {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--pos-pay) 12%, var(--surface));
+}
+.pending-payment-panel .form-actions {
+  position: static;
+  display: flex;
+  margin: 0;
+  padding: 8px 0 0;
+  gap: 8px;
+  background: var(--surface);
+}
+.pending-payment-panel .form-actions > button {
+  min-height: 48px;
+}
+.pending-payment-panel .form-actions > button[type='submit'] {
+  flex: 1;
+  background: var(--pos-pay);
+  color: white;
+}
+@media (max-width: 720px) {
+  .terminal-checkout-body:has(.pending-checkout-grid) {
+    overflow: auto;
+  }
+  .pending-checkout-grid {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pending-checkout-grid > .panel {
+    overflow: visible;
+  }
+  .pending-payment-panel > form > fieldset.form-stack {
+    overflow: visible;
+  }
+  .pending-payment-panel .form-actions {
+    position: sticky;
+    bottom: 0;
+  }
+}

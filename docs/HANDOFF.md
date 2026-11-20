@@ -1,6 +1,8 @@
 # Continuidad de Nexora POS
 
-## Protocolo y continuidad vigentes · 2026-11-19
+## Protocolo y continuidad vigentes · 2026-11-20
+
+Saldo pendiente ya conserva diseño digital: dos columnas, cuentas/productos a izquierda, AddPayments embedded compacto a derecha; métodos táctiles, teclado/importes rápidos, caja/abono desplegables y Preparar/Confirmar fijos. Recibo completo solo al saldar; admin conserva modal existente. Lógica/UUID/snapshots y pagos anteriores reutilizados. Build/TS/formato y Chromium pos-split-accounts final1.6min aprobados: reapertura/recarga de mesa, centavos/reintento, tres pagos sobre misma venta, saldo0/caja1100.0100, sin dialog/móvil sin overflow; captura lista con caja y método cargados revisada. Primer test adaptado porque esperaba recibo durante deuda; items opcionales protegidos. Sin backend ni migración, no repetir SQL/suites generales por presentación.
 
 Corrección de cobro parcial: el filtro pending de mesa ya no excluye toda venta; conserva deuda calculada por SaleBalance/BCMath y solo oculta cuentas saldadas/canceladas. Terminal mantiene Cobrar pedido y cuentas pendientes, permite pagos restantes con AddPayments integrado y reanuda venta vigente tras volver/recargar/seleccionar mesa. Solo saldo cero marca finalizado. Snapshots/revisiones/caja por formulario y reintentos preservados; menú evita append sobre venta. Build/TS/formato/Pint aprobados, nativas2/69 y MariaDB2/69 (1dfe2a3f9a71e418 conservado). Chromium final1.4min aprobado: mesa/recarga/reanudación tras primer pago, restantes cobradas sobre misma venta, saldo0/caja1100.0100, un reintento exacto y tres pagos totales. Test móvil adaptado para abrir Pedido antes de Mesas. Sin migraciones/suites generales; no se reiniciaron fases ni se tocó base de trabajo.
 

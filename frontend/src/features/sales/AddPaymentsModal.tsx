@@ -10,6 +10,7 @@ import { useOperation } from '../operations/useOperation'
 import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
 import type { PaymentMethod, Sale } from './types'
 import { useSalesCash } from './useSalesCash'
+import { CashTenderKeypad } from '../pos/CashTenderKeypad'
 
 type DraftPayment = {
   account_id?: number
@@ -151,31 +152,72 @@ export function AddPaymentsModal({
       }}
     >
       <form className="form-stack" onSubmit={submit}>
-        <div className="notice">
-          <span>
-            Saldo pendiente: <strong>{formatMoney(snapshot.balance_due, snapshot.currency)}</strong>
-            . Puedes registrar un abono o combinar métodos en un solo envío.
-          </span>
+        <div className={embedded ? 'digital-pay-total' : 'notice'}>
+          {embedded ? (
+            <>
+              <span>
+                {lines.length
+                  ? 'PAGOS PREPARADOS'
+                  : `A COBRAR · ${account?.label ?? 'Saldo pendiente'}`}
+              </span>
+              <strong>
+                {formatMoney(lines.length ? unitsToMoney(total) : normalized, snapshot.currency)}
+              </strong>
+              <small>
+                {selected?.name ?? 'Selecciona una caja abierta'} · Recibo {snapshot.receipt_code}
+              </small>
+            </>
+          ) : (
+            <span>
+              Saldo pendiente:{' '}
+              <strong>{formatMoney(snapshot.balance_due, snapshot.currency)}</strong>. Puedes
+              registrar un abono o combinar métodos en un solo envío.
+            </span>
+          )}
         </div>
         <ErrorNotice error={operation.error || cash.error || methods.error} />
         <OperationNotice uncertain={operation.uncertain} />
         <fieldset disabled={operation.locked} className="form-stack">
-          <Field label="Caja de la operación">
-            <select
-              value={selected?.id ?? ''}
-              onChange={(event) => setCashId(event.target.value)}
-              required
+          {embedded && (
+            <div
+              className="digital-payment-methods"
+              role="group"
+              aria-label="Métodos para el saldo"
             >
-              <option value="" disabled>
-                Selecciona una caja abierta
-              </option>
-              {cash.data?.data.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} · Sesión #{item.id}
-                </option>
+              {methods.data?.data.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  aria-pressed={method?.id === item.id}
+                  onClick={() => setChosen(item)}
+                >
+                  <strong>{item.name}</strong>
+                  <small>{item.kind === 'cash' ? 'Efectivo' : 'Registro manual'}</small>
+                </button>
               ))}
-            </select>
-          </Field>
+              {(methods.data?.meta.last_page ?? 1) > 1 && (
+                <PaymentMethodField method={method} onPick={setChosen} />
+              )}
+            </div>
+          )}
+          <PaymentOptions embedded={embedded} title="Cambiar caja">
+            <Field label="Caja de la operación">
+              <select
+                value={selected?.id ?? ''}
+                onChange={(event) => setCashId(event.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  Selecciona una caja abierta
+                </option>
+                {cash.data?.data.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} · Sesión #{item.id}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </PaymentOptions>
           {!cash.isPending && !cash.data?.data.length && (
             <p className="notice">Necesitas una sesión abierta en esta sucursal.</p>
           )}
@@ -209,34 +251,36 @@ export function AddPaymentsModal({
           </div>
           {remaining > 0n && (
             <>
-              {!!snapshot.accounts.length && (
-                <Field label="Cuenta de este pago">
-                  <select
-                    value={account?.id ?? ''}
-                    onChange={(event) => {
-                      setAccountId(Number(event.target.value))
-                      setAmount(null)
-                      setReceived('')
-                      setReference('')
-                    }}
-                  >
-                    {accounts.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.label} · Saldo{' '}
-                        {formatMoney(unitsToMoney(item.remaining), snapshot.currency)}
-                      </option>
-                    ))}
-                  </select>
+              <PaymentOptions embedded={embedded} title="Abono o cambiar cuenta">
+                {!!snapshot.accounts.length && (
+                  <Field label="Cuenta de este pago">
+                    <select
+                      value={account?.id ?? ''}
+                      onChange={(event) => {
+                        setAccountId(Number(event.target.value))
+                        setAmount(null)
+                        setReceived('')
+                        setReference('')
+                      }}
+                    >
+                      {accounts.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.label} · Saldo{' '}
+                          {formatMoney(unitsToMoney(item.remaining), snapshot.currency)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {!embedded && <PaymentMethodField method={method} onPick={setChosen} />}
+                <Field label="Importe a agregar">
+                  <input
+                    value={amount ?? unitsToMoney(limit).slice(0, -2)}
+                    onChange={(event) => setAmount(event.target.value)}
+                    inputMode="decimal"
+                  />
                 </Field>
-              )}
-              <PaymentMethodField method={method} onPick={setChosen} />
-              <Field label="Importe a agregar">
-                <input
-                  value={amount ?? unitsToMoney(limit).slice(0, -2)}
-                  onChange={(event) => setAmount(event.target.value)}
-                  inputMode="decimal"
-                />
-              </Field>
+              </PaymentOptions>
               {isCash ? (
                 <Field label="Efectivo recibido para este pago">
                   <input
@@ -254,15 +298,50 @@ export function AddPaymentsModal({
                   />
                 </Field>
               )}
-              <button
-                type="button"
-                className="button secondary"
-                disabled={!ready || lines.length >= 20}
-                onClick={add}
-              >
-                <Plus size={16} />
-                Agregar pago al lote
-              </button>
+              {embedded && isCash && (
+                <>
+                  <div className="digital-cash-shortcuts">
+                    <button
+                      type="button"
+                      disabled={!amountValid}
+                      onClick={() => setReceived(normalized)}
+                    >
+                      Exacto
+                    </button>
+                    {snapshot.currency === 'COP' &&
+                      ['20000', '50000', '100000'].map((value) => (
+                        <button type="button" key={value} onClick={() => setReceived(value)}>
+                          {formatMoney(value, snapshot.currency)}
+                        </button>
+                      ))}
+                  </div>
+                  <CashTenderKeypad value={received} onChange={setReceived} />
+                  <div className="checkout-change">
+                    <span>Cambio a entregar</span>
+                    <strong>
+                      {validMoney(tendered) &&
+                      amountValid &&
+                      moneyUnits(tendered) >= moneyUnits(normalized)
+                        ? formatMoney(
+                            unitsToMoney(moneyUnits(tendered) - moneyUnits(normalized)),
+                            snapshot.currency,
+                          )
+                        : '—'}
+                    </strong>
+                  </div>
+                </>
+              )}
+              {!embedded && (
+                <button
+                  type="button"
+                  className="button secondary prepare-account-payment"
+                  disabled={!ready || lines.length >= 20}
+                  onClick={add}
+                >
+                  <Plus size={16} />
+                  {embedded ? 'Preparar pago de esta cuenta' : 'Agregar pago al lote'}
+                </button>
+              )}
             </>
           )}
           <div className="checkout-change">
@@ -287,6 +366,16 @@ export function AddPaymentsModal({
           </button>
         )}
         <div className="form-actions">
+          {embedded && remaining > 0n && (
+            <button
+              type="button"
+              className="button secondary prepare-account-payment"
+              disabled={!ready || lines.length >= 20 || operation.locked}
+              onClick={add}
+            >
+              Preparar pago de esta cuenta
+            </button>
+          )}
           <button
             type="button"
             className="button secondary"
@@ -299,7 +388,13 @@ export function AddPaymentsModal({
             pending={operation.isPending}
             disabled={!operation.uncertain && (!lines.length || !selected)}
           >
-            {operation.uncertain ? 'Reintentar lote de pagos' : 'Confirmar lote de pagos'}
+            {operation.uncertain
+              ? embedded
+                ? 'Reintentar pagos'
+                : 'Reintentar lote de pagos'
+              : embedded
+                ? 'Confirmar pagos preparados'
+                : 'Confirmar lote de pagos'}
           </Submit>
         </div>
       </form>
@@ -319,7 +414,7 @@ function PaymentContainer({
   onClose: () => void
 }) {
   return embedded ? (
-    <section className="panel" aria-label="Cobrar saldo pendiente">
+    <section className="panel pending-payment-panel" aria-label="Cobrar saldo pendiente">
       <h3>{title}</h3>
       {children}
     </section>
@@ -327,5 +422,24 @@ function PaymentContainer({
     <Modal title={title} onClose={onClose}>
       {children}
     </Modal>
+  )
+}
+
+function PaymentOptions({
+  embedded,
+  children,
+  title,
+}: {
+  embedded: boolean
+  children: import('react').ReactNode
+  title: string
+}) {
+  return embedded ? (
+    <details className="digital-payment-options">
+      <summary>{title}</summary>
+      {children}
+    </details>
+  ) : (
+    <>{children}</>
   )
 }

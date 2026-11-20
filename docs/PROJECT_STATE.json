@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "project": "Nexora POS",
-  "reference_date": "2026-11-19",
+  "reference_date": "2026-11-20",
   "version": "0.33.0",
   "phase": 3,
-  "module": "Terminal: continuidad de cuentas parcialmente cobradas",
+  "module": "Terminal: vista digital de saldos pendientes",
   "status": "COMPLETED",
-  "active_task": "PARTIAL-TABLE-CHECKOUT",
-  "last_completed_task": "PARTIAL-TABLE-CHECKOUT",
+  "active_task": "PENDING-CHECKOUT-DIGITAL",
+  "last_completed_task": "PENDING-CHECKOUT-DIGITAL",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Pedidos pendientes de mesa incluyen ventas con deuda mediante SaleBalance/BCMath, sin sumar dinero en SQL ni exponer datos adicionales. Cobro parcial conserva título/pedido y cuentas pendientes; reanuda venta vigente con permiso sales.view y usa AddPayments existente integrado, snapshot por revisión, UUID/bloqueo y caja nueva por formulario. Solo saldo cero finaliza; productos de venta existente protegidos contra append. Build/TS/Prettier/Pint aprobados; backend dirigido2/69 y MariaDB2/69 en nexora_test_1dfe2a3f9a71e418 conservado. Chromium pos-split-accounts final1.4min aprobado: respuesta perdida, retorno/recarga/reselección de mesa con productos, reanudación y pago de restantes sobre misma venta, tres pagos, saldo0/caja1100.0100 y exclusión final de pendientes. Primer intento de reapertura móvil ajustó selector para abrir Pedido antes de Mesas. Sin migraciones ni suites generales.",
+  "working_verification": "Saldo pendiente usa dos columnas digitales: cuentas/productos/saldo a izquierda y pago a derecha. AddPayments embedded compacto con métodos táctiles, teclado/importes rápidos, opciones de caja/abono desplegables y acciones Preparar/Confirmar fijas. Sin recibo completo mientras existe deuda; conserva recibo final y comandos/snapshots/UUID originales. Build/TypeScript/formato aprobados. Chromium pos-split-accounts final1.6min aprobado: centavos, respuesta perdida, recarga/reselección de mesa, restantes sobre misma venta, tres pagos, saldo0/caja1100.0100; nueva vista sin dialog y móvil sin overflow. Captura escritorio con caja/método cargados revisada. Ajustados test que esperaba recibo anticipado y acceso opcional a items. Sin backend/migraciones/suites generales; no repetir SQL del cambio anterior sin impacto.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

@@ -64,29 +64,58 @@ export function TerminalCheckout({
         {sale ? (
           <>
             {pending && (
-              <>
-                <div className="notice">
-                  Saldo pendiente: <strong>{formatMoney(sale.balance_due, sale.currency)}</strong>
-                </div>
-                <fieldset
-                  disabled={locked}
-                  className="pos-split-parts"
-                  aria-label="Cuentas pendientes"
-                >
-                  {sale.accounts.map((account) => (
-                    <button
-                      type="button"
-                      key={account.id}
-                      disabled={moneyUnits(account.balance_due) === 0n}
-                      onClick={() => setAccountId(account.id)}
-                    >
-                      {account.label} ·{' '}
-                      {moneyUnits(account.balance_due) === 0n
-                        ? 'Pagada'
-                        : formatMoney(account.balance_due, sale.currency)}
-                    </button>
-                  ))}
-                </fieldset>
+              <div className="pending-checkout-grid">
+                <aside className="panel pending-account-summary">
+                  <div className="digital-pay-total">
+                    <span>SALDO PENDIENTE</span>
+                    <strong>{formatMoney(sale.balance_due, sale.currency)}</strong>
+                    <small>{sale.receipt_code} · Los pagos anteriores se conservan</small>
+                  </div>
+                  <fieldset
+                    disabled={locked}
+                    className="pos-split-parts"
+                    aria-label="Cuentas pendientes"
+                  >
+                    {sale.accounts.map((account) => (
+                      <button
+                        type="button"
+                        key={account.id}
+                        disabled={moneyUnits(account.balance_due) === 0n}
+                        aria-pressed={
+                          account.id ===
+                          (accountId ??
+                            sale.accounts.find((item) => moneyUnits(item.balance_due) > 0n)?.id)
+                        }
+                        onClick={() => setAccountId(account.id)}
+                      >
+                        {account.label} ·{' '}
+                        {moneyUnits(account.balance_due) === 0n
+                          ? 'Pagada'
+                          : formatMoney(account.balance_due, sale.currency)}
+                      </button>
+                    ))}
+                  </fieldset>
+                  <div className="digital-checkout-lines">
+                    <table aria-label="Productos de la cuenta pendiente">
+                      <thead>
+                        <tr>
+                          <th>Cant.</th>
+                          <th>Producto</th>
+                          <th>Importe</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sale.items?.map((item) => (
+                          <tr key={item.id}>
+                            <td>{item.quantity}</td>
+                            <td>{item.product_name}</td>
+                            <td>{formatMoney(item.line_subtotal, sale.currency)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </aside>
                 <AddPaymentsModal
                   key={`${sale.revision}:${accountId ?? ''}`}
                   embedded
@@ -100,9 +129,9 @@ export function TerminalCheckout({
                     setLocked(false)
                   }}
                 />
-              </>
+              </div>
             )}
-            <SaleReceipt sale={sale} />
+            {!pending && <SaleReceipt sale={sale} />}
             {!pending && (
               <button type="button" className="button primary" onClick={close}>
                 Nueva operación POS
