@@ -1,0 +1,323 @@
+.pos-terminal .order-cart {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--secondary) 25%, var(--line));
+  box-shadow: inset 0 3px 0 var(--secondary);
+}
+.pos-terminal .order-cart > .panel-heading {
+  min-height: 50px;
+  padding: 4px 7px 9px;
+  border-bottom: 1px solid var(--line);
+}
+.pos-digital-heading-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pos-digital-eyebrow {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+.pos-terminal .order-cart > .panel-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.4px;
+}
+.pos-terminal .order-cart > .panel-heading > .pill {
+  font-size: 10px;
+  border: 1px solid color-mix(in srgb, var(--secondary) 25%, var(--line));
+  background: color-mix(in srgb, var(--secondary) 9%, var(--surface));
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
+}
+.pos-terminal .pos-dining-selection {
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--pos-pay) 25%, var(--line));
+  border-left: 3px solid var(--pos-pay);
+  background: color-mix(in srgb, var(--pos-pay) 8%, var(--surface));
+  padding: 10px 11px;
+  font-size: 12px;
+  font-weight: 650;
+}
+.pos-terminal .pos-saved-orders {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  padding: 8px;
+}
+.pos-terminal .pos-saved-orders > header {
+  background: var(--canvas);
+  top: -8px;
+  padding: 5px 0 10px;
+  font-size: 10px;
+}
+.pos-digital-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.pos-terminal .pos-saved-orders > header button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+.pos-terminal .pos-saved-order {
+  --order-state: #a66a16;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.pos-terminal .pos-saved-order[data-state='preparing'] {
+  --order-state: #258ca7;
+}
+.pos-terminal .pos-saved-order[data-state='ready'],
+.pos-terminal .pos-saved-order[data-state='paid'] {
+  --order-state: #118466;
+}
+.pos-terminal .pos-saved-order[data-state='delivered'] {
+  --order-state: #6d76a0;
+}
+.pos-terminal .pos-saved-order[data-state='cancelled'] {
+  --order-state: #bf495e;
+}
+.pos-terminal .pos-saved-order > div {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid var(--order-state);
+  background: color-mix(in srgb, var(--order-state) 7%, var(--surface));
+  flex-wrap: wrap;
+}
+.pos-terminal .pos-digital-order-id {
+  font-size: 13px;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+.pos-terminal .pos-saved-order > div > .pos-digital-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 650;
+  color: var(--order-state);
+  background: color-mix(in srgb, var(--order-state) 10%, var(--surface));
+  padding: 4px 7px;
+  border-radius: 5px;
+}
+.pos-digital-status i {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pos-terminal .pos-saved-order table {
+  table-layout: fixed;
+  margin: 0;
+}
+.pos-terminal .pos-saved-order th {
+  background: var(--canvas);
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 10px;
+}
+.pos-terminal .pos-saved-order th,
+.pos-terminal .pos-saved-order td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.pos-terminal .pos-saved-order th:first-child {
+  width: 45px;
+  text-align: center;
+}
+.pos-terminal .pos-saved-order td:first-child {
+  text-align: center;
+}
+.pos-terminal .pos-saved-order th:last-child {
+  width: 95px;
+}
+.pos-terminal .pos-saved-order td:last-child {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.pos-digital-quantity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 3px 5px;
+  background: color-mix(in srgb, var(--secondary) 12%, var(--surface));
+  color: var(--secondary);
+  border: 1px solid color-mix(in srgb, var(--secondary) 20%, var(--line));
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.pos-terminal .pos-saved-order > footer {
+  padding: 9px;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.pos-digital-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.pos-digital-amount svg {
+  color: var(--pos-pay);
+}
+.pos-digital-amount strong {
+  font-size: 13px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.pos-terminal .pos-saved-order footer a {
+  padding: 7px 9px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--pos-pay) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pos-pay) 25%, var(--line));
+  font-size: 10px;
+  text-decoration: none;
+}
+.pos-terminal .pos-new-lines-label {
+  padding: 7px 9px;
+  background: color-mix(in srgb, var(--secondary) 8%, var(--surface));
+  border-left: 3px solid var(--secondary);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 650;
+  color: var(--text);
+}
+.pos-terminal .pos-order-table {
+  border-spacing: 0 4px;
+  border-collapse: separate;
+}
+.pos-terminal .pos-order-table td {
+  border: 0;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
+.pos-terminal .pos-order-table td:first-child {
+  border-radius: 5px 0 0 5px;
+  padding-top: 8px;
+}
+.pos-terminal .pos-order-table td:last-child {
+  border-radius: 0 5px 5px 0;
+}
+.pos-terminal .pos-order-table tr[data-selected='true'] td {
+  background: color-mix(in srgb, var(--secondary) 13%, var(--surface));
+  border-color: color-mix(in srgb, var(--secondary) 35%, var(--line));
+}
+.pos-terminal .pos-order-empty {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100px;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--secondary) 5%, var(--surface)),
+    var(--surface)
+  );
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  gap: 7px;
+  margin-top: 5px;
+}
+.pos-terminal .pos-order-empty > svg {
+  color: var(--secondary);
+  opacity: 0.7;
+}
+.pos-terminal .pos-line-actions {
+  padding: 7px 0;
+  gap: 5px;
+}
+.pos-terminal .pos-line-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 6px;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.pos-terminal .pos-line-actions output {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.pos-terminal .order-subtotal {
+  padding: 12px 9px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--pos-pay) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pos-pay) 20%, var(--line));
+}
+.pos-terminal .order-subtotal > span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.pos-terminal .order-subtotal strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 29px;
+}
+.pos-terminal .pos-order-actions > button {
+  border-radius: 7px;
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+  min-height: 54px;
+}
+.pos-terminal .pos-order-actions > .pos-save-order {
+  background: linear-gradient(135deg, #344d74, #253650);
+  border-top: 2px solid #6384b3;
+}
+.pos-terminal .pos-order-actions > button[type='submit'] {
+  background: linear-gradient(135deg, #149b78, #0d7b5e);
+  border-top: 2px solid #51c5a2;
+}
+:root[data-theme='dark'] .pos-terminal .pos-saved-order {
+  --order-state: #e8b452;
+}
+:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='preparing'] {
+  --order-state: #52bddb;
+}
+:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='ready'],
+:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='paid'] {
+  --order-state: #4bcda8;
+}
+:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='cancelled'] {
+  --order-state: #ee899b;
+}
+@media (hover: hover) {
+  .pos-terminal .pos-line-actions button:not(:disabled):hover {
+    background: color-mix(in srgb, var(--secondary) 12%, var(--surface));
+  }
+  .pos-terminal .pos-order-actions > button:not(:disabled):hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pos-terminal .pos-line-actions button,
+  .pos-terminal .pos-order-actions > button {
+    transition: none;
+  }
+  .pos-terminal .pos-order-actions > button:not(:disabled):hover {
+    transform: none;
+  }
+}

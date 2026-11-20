@@ -4,6 +4,7 @@ import { cartSubtotal } from '../orders/cart'
 import type { CartLine } from '../orders/cart'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { CartComboDetails } from '../orders/CartComboDetails'
+import { ListPlus, Minus, Plus, StickyNote, Trash2 } from 'lucide-react'
 
 export function PosOrderLines({
   lines,
@@ -44,7 +45,9 @@ export function PosOrderLines({
                 data-selected={selected?.key === line.key}
                 onClick={() => onSelect(line.key)}
               >
-                <td>{line.quantity}</td>
+                <td>
+                  <span className="pos-digital-quantity">{line.quantity}</span>
+                </td>
                 <td>
                   <button
                     type="button"
@@ -70,6 +73,7 @@ export function PosOrderLines({
         </table>
         {!lines.length && (
           <div className="pos-order-empty cart-empty">
+            <ListPlus size={25} aria-hidden="true" />
             <p>Pedido sin líneas</p>
             <small>Selecciona productos del menú para comenzar.</small>
           </div>
@@ -83,7 +87,7 @@ export function PosOrderLines({
             aria-label={`Restar ${selected.product_name}`}
             onClick={() => onQuantity(selected.key, selected.quantity - 1)}
           >
-            −
+            <Minus size={15} />
           </button>
           <output>{selected.quantity}</output>
           <button
@@ -92,7 +96,7 @@ export function PosOrderLines({
             aria-label={`Sumar ${selected.product_name}`}
             onClick={() => onQuantity(selected.key, selected.quantity + 1)}
           >
-            +
+            <Plus size={15} />
           </button>
           <button
             type="button"
@@ -100,6 +104,7 @@ export function PosOrderLines({
             aria-expanded={editingNotes}
             onClick={() => setEditingNotes(!editingNotes)}
           >
+            <StickyNote size={14} />
             Nota
           </button>
           <button
@@ -108,6 +113,7 @@ export function PosOrderLines({
             aria-label={`Quitar ${selected.product_name}`}
             onClick={() => onRemove(selected.key)}
           >
+            <Trash2 size={14} />
             Quitar
           </button>
         </div>

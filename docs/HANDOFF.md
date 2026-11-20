@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Pedido en curso digitalizado según confirmación explícita del usuario: cabecera, mesa, número/estado real, cantidades e iconos táctiles, tabla y subtotal; digital-order.css conserva semántica de comanda y reduce movimiento si se solicita. Sin modificar guardado/montos/cobros. Build/TypeScript aprobados; no repetir suites ni declarar nueva prueba funcional/visual ejecutada.
+
 Nueva regla: productos adicionales actualizan MISMO pedido de mesa sin cobros; no crear otro por cada guardado. CreateOrder append mantiene ID/snapshots, revisiones/UUID/Tenant lock/BCMath/auditoría y rechaza ventas existentes. POS consulta pendiente y metadato session_revision, actualiza su ID y no duplica líneas. Native12/105, SQL carreras3/47 (b0127201de5d5b75), Chromium pos-table-orders1 aprobado1.3min con mismo ID tras agregar/recargar y mesas aisladas; build/TypeScript/Pint correctos. Sin migración, sin fusionar datos históricos ni modificar ventas cobradas.
 
 Pedidos por mesa implementados: lectura paginada /dining-sessions/{id}/orders con permisos/tenant; guardados separados de productos nuevos. GUARDAR EN MESA y autosave antes de cambiar atención, sin copiar guardados al formulario; revisión fresca y UUID/DTO de reintento existentes. Build y backend1/21 aprobados; Chromium pos-table-orders1 aprobó1.2min: Mesa1 picada/Mesa2 hamburguesa, recarga, respuesta perdida y reintento sin duplicar. Sin migración ni suites generales. No implica cobro conjunto de varios pedidos ni envío KDS.

@@ -10,6 +10,7 @@ import type { Order } from '../operations/types'
 import { orderStates } from '../operations/types'
 import type { DiningSelection } from './session-types'
 import { useCan } from '../auth/SessionProvider'
+import { ClipboardList, RefreshCw, CheckCircle2 } from 'lucide-react'
 
 export function TableOrders({ selection }: { selection: DiningSelection }) {
   const [page, setPage] = useState(1)
@@ -23,8 +24,12 @@ export function TableOrders({ selection }: { selection: DiningSelection }) {
   return (
     <section className="pos-saved-orders" aria-label="Pedidos guardados de la mesa">
       <header>
-        <strong>Pedidos guardados</strong>
+        <strong className="pos-digital-section-title">
+          <ClipboardList size={14} />
+          Pedidos guardados
+        </strong>
         <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
+          <RefreshCw size={12} className={query.isFetching ? 'spin' : undefined} />
           Actualizar
         </button>
       </header>
@@ -34,10 +39,15 @@ export function TableOrders({ selection }: { selection: DiningSelection }) {
       ) : query.data?.data.length ? (
         <>
           {query.data.data.map((order) => (
-            <article key={order.id} className="pos-saved-order">
+            <article
+              key={order.id}
+              className="pos-saved-order"
+              data-state={order.sale_status ?? order.status}
+            >
               <div>
-                <strong>Pedido #{order.id}</strong>
-                <span>
+                <strong className="pos-digital-order-id">Pedido #{order.id}</strong>
+                <span className="pos-digital-status">
+                  <i aria-hidden="true" />
                   {orderStates[order.status]}
                   {order.sale_id ? ' · Venta registrada' : ''}
                 </span>
@@ -53,7 +63,9 @@ export function TableOrders({ selection }: { selection: DiningSelection }) {
                 <tbody>
                   {order.items?.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.quantity}</td>
+                      <td>
+                        <span className="pos-digital-quantity">{item.quantity}</span>
+                      </td>
                       <td>
                         {item.product_name}
                         {item.variant_name && <small>{item.variant_name}</small>}
@@ -65,7 +77,10 @@ export function TableOrders({ selection }: { selection: DiningSelection }) {
                 </tbody>
               </table>
               <footer>
-                <span>Subtotal {formatMoney(order.subtotal, order.currency)}</span>
+                <span className="pos-digital-amount">
+                  <CheckCircle2 size={13} />
+                  Subtotal <strong>{formatMoney(order.subtotal, order.currency)}</strong>
+                </span>
                 {!order.sale_id && order.status !== 'cancelled' && can('sales.collect') && (
                   <Link to={`/pos/pedidos/${order.id}/cobrar`}>Cobrar pedido #{order.id}</Link>
                 )}

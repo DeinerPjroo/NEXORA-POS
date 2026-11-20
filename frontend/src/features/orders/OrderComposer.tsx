@@ -42,6 +42,7 @@ import { TableOrders } from '../dining/TableOrders'
 import type { DiningSession } from '../dining/session-types'
 import type { DiningSelection } from '../dining/session-types'
 import { PosOrderLines } from '../pos/PosOrderLines'
+import '../pos/digital-order.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
 
 const DiningSessionPicker = lazy(() =>
@@ -725,12 +726,16 @@ export function OrderComposer({
             aria-hidden={terminal && tablesOpen ? true : undefined}
           >
             <div className="panel-heading">
-              <h2>
-                {!terminal && <ShoppingBag size={19} />}
-                {terminal ? 'Pedido en curso' : 'Tu pedido'}
-              </h2>
+              <div className="pos-digital-heading-text">
+                {terminal && <span className="pos-digital-eyebrow">CONTROL DE PEDIDO</span>}
+                <h2>
+                  {!terminal && <ShoppingBag size={19} />}
+                  {terminal ? 'Pedido en curso' : 'Tu pedido'}
+                </h2>
+              </div>
               <span className="pill neutral">
-                {cart.reduce((total, line) => total + line.quantity, 0)} unidades
+                {cart.reduce((total, line) => total + line.quantity, 0)}{' '}
+                {terminal ? 'nuevas' : 'unidades'}
               </span>
             </div>
             <ErrorNotice error={operation.error} />
