@@ -46,6 +46,7 @@ final class DiningOccupancy
             if ($data['waiter_id'] ?? null) {
                 $waiter = User::where('tenant_id', $actor->tenant_id)->whereKey($data['waiter_id'])->with('role.permissions')->firstOrFail();
                 abort_unless($waiter->hasPermission('dining.operate'), 422, 'El mesero debe ser un usuario activo autorizado para operar mesas.');
+                abort_unless($waiter->canAccessBranch((int) $session->branch_id), 422, 'El mesero no tiene acceso a esta sucursal.');
             }
             $session->guest_count = (int) $data['guest_count'];
             $session->notes = $data['notes'] ?? null;

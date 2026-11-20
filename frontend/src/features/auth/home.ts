@@ -9,11 +9,13 @@ export function homePath(session: Session): string {
   )
     return '/inicio'
   if (posPermissions.every(can)) return '/pos'
+  if (can('kitchen.view') && !can('orders.manage')) return '/terminal/cocina'
+  if (can('dining.view') && can('dining.operate')) return '/terminal/mesas'
   const sections = [
     ['orders.view', '/pedidos'],
     ['dining.view', '/salones'],
     ['dining.reserve', '/salones/reservas'],
-    ['kitchen.view', '/cocina/estaciones'],
+    ['kitchen.view', '/terminal/cocina'],
     ['cash.view', '/caja'],
     ['catalog.view', '/productos'],
     ['sales.view', '/ventas'],

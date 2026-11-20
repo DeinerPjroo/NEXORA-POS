@@ -214,7 +214,7 @@ class FixedComboTest extends TestCase
     {
         $work = $this->work();
         $this->setupCombo($work);
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id]));
         $this->getJson($work['path'].'/combo-configuration?branch_id='.$work['branch'].'&channel=takeaway')->assertOk()->assertJsonMissingPath('data.0.product.cost_price');

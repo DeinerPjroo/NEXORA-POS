@@ -14,7 +14,7 @@ final class Role extends Model
 
     protected function casts(): array
     {
-        return ['is_owner' => 'boolean'];
+        return ['is_owner' => 'boolean', 'revision' => 'integer'];
     }
 
     public function permissions(): BelongsToMany

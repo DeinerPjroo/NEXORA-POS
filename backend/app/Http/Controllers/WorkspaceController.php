@@ -40,8 +40,8 @@ final class WorkspaceController extends Controller
     {
         Gate::authorize('team.view');
 
-        return User::where('tenant_id', $request->user()->tenant_id)->with('role:id,tenant_id,name')->orderBy('id')
-            ->get(['id', 'tenant_id', 'name', 'email', 'role_id', 'is_active', 'created_at']);
+        return User::where('tenant_id', $request->user()->tenant_id)->with('role', 'branches')->orderBy('id')
+            ->get()->map(fn ($user) => app(EmployeeController::class)->present($user));
     }
 
     public function settings()

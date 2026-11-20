@@ -29,14 +29,14 @@ final class RegisterCompany
             return app(TenantContext::class)->run($tenant->id, function () use ($tenant, $data) {
                 $permissions = Permission::all();
                 $roles = [];
-                foreach (['Propietario', 'Administrador', 'Cajero', 'Mesero', 'Cocinero', 'Repartidor', 'Encargado de inventario'] as $name) {
+                foreach (['Propietario', 'Administrador', 'Cajero', 'Mesero', 'Cocinero', 'Repartidor', 'Supervisor', 'Encargado de inventario'] as $name) {
                     $role = new Role(['name' => $name]);
                     $role->is_owner = $name === 'Propietario';
                     $role->save();
                     $keys = match ($name) {
                         'Propietario' => $permissions->pluck('id'),
-                        'Administrador' => $permissions->whereNotIn('key', ['roles.manage'])->pluck('id'),
-                        default => $permissions->where('key', 'dashboard.view')->pluck('id'),
+                        'Administrador' => $permissions->pluck('id'),
+                        default => $permissions->whereIn('key', EmployeeRoles::PRESETS[$name] ?? ['dashboard.view'])->pluck('id'),
                     };
                     $role->permissions()->syncWithPivotValues($keys, ['tenant_id' => $tenant->id]);
                     $roles[$name] = $role;

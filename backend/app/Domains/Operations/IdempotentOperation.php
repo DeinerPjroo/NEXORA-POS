@@ -18,6 +18,8 @@ final class IdempotentOperation
 
         return DB::transaction(function () use ($actor, $action, $data, $key, $hash, $model, $operation) {
             Tenant::whereKey($actor->tenant_id)->lockForUpdate()->firstOrFail();
+            $currentActor = User::where('tenant_id', $actor->tenant_id)->findOrFail($actor->id);
+            abort_unless($currentActor->is_active && $currentActor->mfa_version === $actor->mfa_version, 403, 'Los accesos de tu cuenta cambiaron. Inicia sesión de nuevo.');
             $record = IdempotencyRecord::where('key', $key)->first();
             if ($record) {
                 abort_unless($record->action === $action && (int) $record->actor_id === $actor->id && hash_equals($record->request_hash, $hash) && $record->resource_type === $model, 409, 'La clave de operación ya se usó con otro contenido.');

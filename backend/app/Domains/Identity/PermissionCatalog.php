@@ -18,6 +18,8 @@ final class PermissionCatalog
         'branches.view' => ['Consultar sucursales', 'Sucursales'],
         'branches.manage' => ['Administrar sucursales', 'Sucursales'],
         'team.view' => ['Consultar equipo', 'Equipo'],
+        'team.manage' => ['Registrar y administrar empleados', 'Equipo'],
+        'team.credentials' => ['Restablecer credenciales y revocar sesiones', 'Equipo'],
         'roles.view' => ['Consultar roles', 'Equipo'],
         'roles.manage' => ['Administrar roles', 'Equipo'],
         'settings.view' => ['Consultar configuración', 'Configuración'],

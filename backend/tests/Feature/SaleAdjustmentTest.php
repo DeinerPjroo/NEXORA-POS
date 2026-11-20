@@ -111,7 +111,7 @@ class SaleAdjustmentTest extends TestCase
     {
         $work = $this->work();
         $this->configure();
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'sales.collect')->value('id')]);
         $user = User::factory()->create(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id]);
         $this->actingAs($user);

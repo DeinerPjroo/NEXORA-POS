@@ -85,7 +85,9 @@ export function OrderComposer({
   const [tablesOpen, setTablesOpen] = useState(false)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
-  const orderIntent = useRef<'save' | 'checkout' | 'kitchen'>('checkout')
+  const orderIntent = useRef<'save' | 'checkout' | 'kitchen'>(
+    terminal && !session!.permissions.includes('sales.collect') ? 'save' : 'checkout',
+  )
   const [kitchenOrderId, setKitchenOrderId] = useState<number | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
@@ -140,6 +142,7 @@ export function OrderComposer({
   })
   const posReady =
     !terminal ||
+    !can('sales.collect') ||
     (!!posSettings.data?.data.configured &&
       !!posCash.data?.data.some((cash) => cash.currency === currency))
   const params = new URLSearchParams({
@@ -334,7 +337,7 @@ export function OrderComposer({
       !cart.length ||
       pricing.locked ||
       tableOrderUnavailable ||
-      (orderIntent.current === 'checkout' && !posReady)
+      (orderIntent.current === 'checkout' && terminal && (!posReady || !can('sales.collect')))
     )
       return
     const data = Object.fromEntries(new FormData(event.currentTarget))
@@ -384,7 +387,11 @@ export function OrderComposer({
             NEXORA <em>POS</em>
           </strong>
           <span className="pos-ready">
-            {posReady ? '● Caja abierta' : '● Revisar caja/configuración'}
+            {!can('sales.collect')
+              ? '● Toma de pedidos'
+              : posReady
+                ? '● Caja abierta'
+                : '● Revisar caja/configuración'}
           </span>
           <OperationalBranchPicker
             branches={activeBranches}
@@ -393,21 +400,25 @@ export function OrderComposer({
             disabled={locked}
           />
           <span className="pos-employee">{session!.user.name}</span>
-          <button
-            type="button"
-            onClick={() => setStatusOpen(!statusOpen)}
-            aria-expanded={statusOpen}
-          >
-            Caja
-          </button>
+          {can('sales.collect') && (
+            <button
+              type="button"
+              onClick={() => setStatusOpen(!statusOpen)}
+              aria-expanded={statusOpen}
+            >
+              Caja
+            </button>
+          )}
           <button
             type="button"
             aria-label="Actualizar estado del terminal"
             disabled={operation.isPending || pricing.locked}
             onClick={() => {
               void context.refetch()
-              if (selected) void posCash.refetch()
-              void posSettings.refetch()
+              if (can('sales.collect')) {
+                if (selected) void posCash.refetch()
+                void posSettings.refetch()
+              }
             }}
           >
             ↻
@@ -456,7 +467,7 @@ export function OrderComposer({
           La sucursal recordada ya no está disponible. Elige otra sucursal para continuar.
         </p>
       )}
-      {terminal && (
+      {terminal && can('sales.collect') && (
         <section
           className="pos-status panel"
           aria-label="Estado del terminal"
@@ -1046,44 +1057,46 @@ export function OrderComposer({
                   ENVIAR A COCINA
                 </button>
               )}
-              <button
-                className="button primary wide"
-                aria-label={terminal ? 'Continuar al cobro' : undefined}
-                onClick={(event) => {
-                  if (!operation.uncertain) orderIntent.current = 'checkout'
-                  if (
-                    !operation.uncertain &&
-                    !cart.length &&
-                    (currentOrder || resumableCheckoutId)
-                  ) {
-                    event.preventDefault()
-                    setCheckoutOrderId(currentOrder?.id ?? resumableCheckoutId)
-                    setCheckoutContext(currentCheckoutContext)
-                    setCheckoutOpen(true)
+              {(!terminal || can('sales.collect')) && (
+                <button
+                  className="button primary wide"
+                  aria-label={terminal ? 'Continuar al cobro' : undefined}
+                  onClick={(event) => {
+                    if (!operation.uncertain) orderIntent.current = 'checkout'
+                    if (
+                      !operation.uncertain &&
+                      !cart.length &&
+                      (currentOrder || resumableCheckoutId)
+                    ) {
+                      event.preventDefault()
+                      setCheckoutOrderId(currentOrder?.id ?? resumableCheckoutId)
+                      setCheckoutContext(currentCheckoutContext)
+                      setCheckoutOpen(true)
+                    }
+                  }}
+                  ref={submitButton}
+                  type="submit"
+                  disabled={
+                    operation.isPending ||
+                    pricing.locked ||
+                    (!operation.uncertain &&
+                      ((!cart.length && !currentOrder && !resumableCheckoutId) ||
+                        !selected ||
+                        conflict ||
+                        !posReady ||
+                        tableOrderUnavailable))
                   }
-                }}
-                ref={submitButton}
-                type="submit"
-                disabled={
-                  operation.isPending ||
-                  pricing.locked ||
-                  (!operation.uncertain &&
-                    ((!cart.length && !currentOrder && !resumableCheckoutId) ||
-                      !selected ||
-                      conflict ||
-                      !posReady ||
-                      tableOrderUnavailable))
-                }
-              >
-                <Send size={17} />
-                {operation.isPending
-                  ? 'Registrando…'
-                  : operation.uncertain
-                    ? 'Reintentar envío'
-                    : terminal
-                      ? 'COBRAR'
-                      : 'Registrar pedido'}
-              </button>
+                >
+                  <Send size={17} />
+                  {operation.isPending
+                    ? 'Registrando…'
+                    : operation.uncertain
+                      ? 'Reintentar envío'
+                      : terminal
+                        ? 'COBRAR'
+                        : 'Registrar pedido'}
+                </button>
+              )}
             </div>
           </form>
           {tablesOpen && selected && (

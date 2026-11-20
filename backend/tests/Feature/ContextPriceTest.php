@@ -125,7 +125,7 @@ class ContextPriceTest extends TestCase
         $this->getJson($first['path'])->assertNotFound();
         $this->putJson($second['path'].'/'.$price['id'], ['idempotency_key' => (string) Str::uuid(), 'product_revision' => 1, 'revision' => 1, 'currency' => 'COP', 'amount' => '1', 'is_active' => false])->assertNotFound();
         $this->postJson($second['path'], $this->payload(1, ['branch_id' => $first['branch']]))->assertUnprocessable();
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]));
         $this->getJson($second['path'])->assertOk();

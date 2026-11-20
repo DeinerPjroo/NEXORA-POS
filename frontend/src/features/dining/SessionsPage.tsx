@@ -126,11 +126,12 @@ export function SessionDetailPage() {
             <button className="button secondary" onClick={() => setClosing(structuredClone(s))}>
               Cerrar atención
             </button>
-            {posPermissions.every(can) && can('dining.view') && (
-              <Link className="button primary" to={'/pos/atenciones/' + s.id}>
-                Tomar pedido en POS
-              </Link>
-            )}
+            {posPermissions.filter((key) => key !== 'sales.collect').every(can) &&
+              can('dining.view') && (
+                <Link className="button primary" to={'/pos/atenciones/' + s.id}>
+                  Tomar pedido en POS
+                </Link>
+              )}
           </div>
         )}
       </section>

@@ -60,7 +60,7 @@ const navigation = [
   { to: '/productos', label: 'Productos', icon: Package, permission: 'catalog.view' },
   { to: '/categorias', label: 'Categorías', icon: Tags, permission: 'catalog.view' },
   { to: '/sucursales', label: 'Sucursales', icon: Building2, permission: 'branches.view' },
-  { to: '/equipo', label: 'Mi equipo', icon: Users, permission: 'team.view' },
+  { to: '/equipo', label: 'Empleados y usuarios', icon: Users, permission: 'team.view' },
   { to: '/roles', label: 'Roles y permisos', icon: ShieldCheck, permission: 'roles.view' },
   { to: '/studio', label: 'Nexora Studio', icon: Sparkles, permission: 'studio.view' },
   { to: '/configuracion', label: 'Configuración', icon: Settings2, permission: 'settings.view' },

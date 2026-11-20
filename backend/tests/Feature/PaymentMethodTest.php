@@ -151,7 +151,7 @@ class PaymentMethodTest extends TestCase
     public function test_unprivileged_role_cannot_configure_or_view_methods(): void
     {
         $owner = $this->owner();
-        $role = DB::table('roles')->where('tenant_id', $owner->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $owner->tenant_id)->where('name', 'Encargado de inventario')->first();
         $user = User::factory()->create(['tenant_id' => $owner->tenant_id, 'role_id' => $role->id]);
         $this->actingAs($user);
         $this->getJson('/api/v1/payment-methods')->assertForbidden();

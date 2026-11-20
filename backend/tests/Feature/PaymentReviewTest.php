@@ -149,7 +149,7 @@ class PaymentReviewTest extends TestCase
         $second = $this->work('other-review@example.test');
         $this->getJson($this->path($first))->assertNotFound();
         $this->postJson($this->path($first), $this->payload())->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $reader = User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]);
         DB::table('role_permission')->insert(['tenant_id' => $reader->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'sales.view')->value('id')]);
         $this->actingAs($reader);

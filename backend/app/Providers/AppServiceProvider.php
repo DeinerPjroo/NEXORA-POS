@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domains\Identity\PermissionCatalog;
+use App\Domains\Tenancy\BranchAccess;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Category;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        $this->app->scoped(BranchAccess::class);
     }
 
     /**

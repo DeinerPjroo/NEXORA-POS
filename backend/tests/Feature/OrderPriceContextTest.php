@@ -113,7 +113,7 @@ class OrderPriceContextTest extends TestCase
         $this->postJson('/api/v1/orders/preview', $invalid)->assertUnprocessable();
         DB::table('categories')->where('id', $work['category'])->update(['is_active' => false]);
         $this->postJson('/api/v1/orders/preview', $work['input'])->assertConflict();
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $this->actingAs(User::factory()->create(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id]));
         $this->postJson('/api/v1/orders/preview', $work['input'])->assertForbidden();
         $this->assertDatabaseCount('orders', 0);

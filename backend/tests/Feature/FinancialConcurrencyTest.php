@@ -200,7 +200,7 @@ class FinancialConcurrencyTest extends SqlConcurrencyTestCase
         $work = $this->work();
         $data = $this->collect($work);
         $this->postJson('/api/v1/orders/'.$work['order']['id'].'/collect', $data)->assertCreated();
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->value('id');
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->value('id');
         $work['owner']->forceFill(['role_id' => $role])->save();
         $job = $this->job($work, 'sale.collect', $work['order']['id'], $data);
         $results = $this->race([$job, $job]);

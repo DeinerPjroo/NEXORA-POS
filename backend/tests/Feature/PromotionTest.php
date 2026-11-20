@@ -270,7 +270,7 @@ class PromotionTest extends TestCase
     {
         $body = $this->payload();
         $promotion = $this->postJson($this->path.'/promotions', $body)->assertCreated()->json('data');
-        $role = DB::table('roles')->where('tenant_id', $this->owner->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $this->owner->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $this->owner->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $this->owner->tenant_id, 'role_id' => $role->id]));
         $this->getJson($this->path.'/promotions')->assertOk()->assertJsonMissingPath('data.0.tenant_id')->assertJsonMissingPath('data.0.variant.cost_price');

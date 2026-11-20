@@ -166,7 +166,7 @@ export default function App() {
         <Route
           path="/pos/atenciones/:sessionId"
           element={
-            <PosAccess>
+            <PosAccess takingOrder>
               <PermissionBoundary permission="dining.view">
                 <PermissionBoundary permission="dining.operate">
                   <Suspense fallback={<Loading />}>

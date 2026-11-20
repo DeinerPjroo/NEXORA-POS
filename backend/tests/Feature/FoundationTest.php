@@ -46,7 +46,7 @@ class FoundationTest extends TestCase
         $this->getJson('/api/v1/auth/me')->assertOk()->assertJsonPath('company.name', 'Casa Oliva')->assertJsonPath('settings.revision', 1)->assertJsonPath('role.is_owner', true);
         $this->assertDatabaseCount('tenants', 1);
         $this->assertDatabaseCount('branches', 1);
-        $this->assertDatabaseCount('roles', 7);
+        $this->assertDatabaseCount('roles', 8);
         $this->assertDatabaseCount('theme_versions', 1);
         $this->assertTrue(Hash::check('SeguraNexora123', User::first()->password));
         $this->assertDatabaseHas('audit_logs', ['action' => 'company.created']);
@@ -132,7 +132,7 @@ class FoundationTest extends TestCase
         $b = $this->owner('b@example.test');
         $this->actingAs($a);
         $this->getJson('/api/v1/branches')->assertOk()->assertJsonCount(1)->assertJsonPath('0.tenant_id', $a->tenant_id);
-        $this->getJson('/api/v1/roles')->assertOk()->assertJsonCount(7, 'roles')->assertJsonPath('roles.0.tenant_id', $a->tenant_id);
+        $this->getJson('/api/v1/roles')->assertOk()->assertJsonCount(8, 'roles')->assertJsonPath('roles.0.tenant_id', $a->tenant_id);
         $this->getJson('/api/v1/workspace/team')->assertOk()->assertJsonCount(1)->assertJsonMissing(['email' => $b->email]);
         $this->getJson('/api/v1/workspace/theme')->assertOk()->assertJsonCount(1, 'versions')->assertJsonPath('versions.0.tenant_id', $a->tenant_id);
         $this->getJson('/api/v1/workspace/overview')->assertOk()->assertJsonPath('branches', 1)->assertJsonPath('team', 1)->assertJsonCount(1, 'activity');
@@ -193,7 +193,7 @@ class FoundationTest extends TestCase
         $this->actingAs($user)->postJson('/api/v1/branches', ['name' => 'No', 'code' => 'NO'])->assertForbidden();
         $this->getJson('/api/v1/roles')->assertForbidden();
         $this->getJson('/api/v1/workspace/team')->assertForbidden();
-        $this->getJson('/api/v1/workspace/overview')->assertOk()->assertJsonCount(0, 'activity');
+        $this->getJson('/api/v1/workspace/overview')->assertForbidden();
         $this->putJson('/api/v1/workspace/theme', ['revision' => 1, 'theme' => config('nexora.theme')])->assertForbidden();
     }
 
@@ -201,7 +201,7 @@ class FoundationTest extends TestCase
     {
         $owner = $this->owner();
         $this->actingAs($owner)->putJson('/api/v1/roles/'.$owner->role_id, ['name' => 'Cambio', 'permissions' => []])->assertForbidden();
-        $this->postJson('/api/v1/roles', ['name' => 'Supervisor', 'permissions' => ['dashboard.view', 'branches.view']])->assertCreated()->assertJsonCount(2, 'permissions');
+        $this->postJson('/api/v1/roles', ['name' => 'Supervisor de sede', 'permissions' => ['dashboard.view', 'branches.view']])->assertCreated()->assertJsonCount(2, 'permissions');
         $this->assertDatabaseHas('audit_logs', ['action' => 'role.saved']);
     }
 

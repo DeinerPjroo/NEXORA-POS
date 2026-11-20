@@ -212,7 +212,7 @@ class SalesTest extends TestCase
         $owner = $this->owner();
         $work = $this->workspace($owner);
         $this->configure();
-        $role = DB::table('roles')->where('tenant_id', $owner->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $owner->tenant_id)->where('name', 'Encargado de inventario')->first();
         $user = User::factory()->create(['tenant_id' => $owner->tenant_id, 'role_id' => $role->id]);
         $this->actingAs($user);
         $this->getJson('/api/v1/sales')->assertForbidden();

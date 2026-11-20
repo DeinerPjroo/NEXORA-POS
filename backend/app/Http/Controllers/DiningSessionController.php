@@ -10,6 +10,7 @@ use App\Http\Requests\DiningSessionRequest;
 use App\Http\Requests\DiningTransferRequest;
 use App\Http\Resources\DiningSessionResource;
 use App\Http\Resources\OrderResource;
+use App\Models\Branch;
 use App\Models\DiningRoom;
 use App\Models\DiningSession;
 use App\Models\DiningSessionTable;
@@ -107,9 +108,13 @@ final class DiningSessionController extends Controller
     public function waiters(Request $request)
     {
         Gate::authorize('dining.operate');
-        $d = $request->validate(['search' => ['nullable', 'string', 'max:80'], 'page' => ['sometimes', 'integer', 'min:1']]);
+        $d = $request->validate(['branch_id' => ['sometimes', 'integer'], 'search' => ['nullable', 'string', 'max:80'], 'page' => ['sometimes', 'integer', 'min:1']]);
+        if (isset($d['branch_id'])) {
+            Branch::findOrFail($d['branch_id']);
+        }
 
         return JsonResource::collection(User::where('tenant_id', $request->user()->tenant_id)->where('is_active', true)->whereHas('role.permissions', fn ($q) => $q->where('key', 'dining.operate'))
+            ->when($d['branch_id'] ?? null, fn ($q, $id) => $q->where(fn ($q) => $q->where('all_branches', true)->orWhereHas('branches', fn ($q) => $q->where('branches.id', $id))))
             ->when($d['search'] ?? null, fn ($q, $s) => $q->where('name', 'like', '%'.$s.'%'))->orderBy('name')->orderBy('id')->paginate(50, ['id', 'name']));
     }
 

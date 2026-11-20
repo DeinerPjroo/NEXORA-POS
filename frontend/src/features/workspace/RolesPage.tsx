@@ -134,7 +134,11 @@ function RoleEditor({
   })
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    mutation.mutate({ name: new FormData(event.currentTarget).get('name'), permissions: selected })
+    mutation.mutate({
+      name: new FormData(event.currentTarget).get('name'),
+      permissions: selected,
+      ...(role ? { revision: role.revision } : {}),
+    })
   }
   return (
     <Modal title={role ? `Editar rol: ${role.name}` : 'Crea un rol a tu medida'} onClose={onClose}>

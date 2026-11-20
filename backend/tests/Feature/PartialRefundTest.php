@@ -177,7 +177,7 @@ class PartialRefundTest extends TestCase
         $second = $this->work('other-refund@example.test');
         $this->postJson($this->path($first), $this->payload($first))->assertNotFound();
         $this->postJson($this->path($second), $this->payload($second, ['refunds' => [['payment_id' => $first['sale']['payments'][0]['id'], 'amount' => '1']]]))->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $this->actingAs(User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]));
         $this->postJson($this->path($second), $this->payload($second))->assertForbidden();
         $this->assertDatabaseCount('sale_refunds', 0);

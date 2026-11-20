@@ -175,7 +175,7 @@ class AvailabilityScheduleTest extends TestCase
         $second = $this->work('foreign-schedule@example.test');
         $this->getJson($first['path'].'/availability-windows')->assertNotFound();
         $this->putJson($second['path'].'/availability-windows/'.$window['id'], $this->payload(1, ['revision' => 1]))->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]));
         $this->getJson($second['path'].'/availability-windows')->assertOk()->assertJsonMissingPath('cost_price');

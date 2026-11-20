@@ -190,7 +190,7 @@ class ProductGalleryTest extends TestCase
         $other = $this->postJson('/api/v1/products', ['category_id' => $this->product['category_id'], 'name' => 'Otra', 'sku' => 'OTRA', 'sale_price' => '1', 'currency' => 'COP', 'is_active' => true, 'is_available' => true])->assertCreated()->json('data');
         $this->get('/api/v1/products/'.$other['id'].'/images/'.$image['id'])->assertNotFound();
         $this->putJson('/api/v1/products/'.$other['id'].'/images/'.$image['id'].'/cover', $this->payload())->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $this->owner->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $this->owner->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $this->owner->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $this->owner->tenant_id, 'role_id' => $role->id]));
         $this->getJson($this->path.'/images')->assertOk();

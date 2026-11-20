@@ -55,11 +55,14 @@ export function SessionEditor({
       ),
   })
   const staff = useQuery({
-    queryKey: ['dining-waiters', staffPage],
+    queryKey: ['dining-waiters', branchId, staffPage],
     queryFn: ({ signal }) =>
-      api<CatalogPage<{ id: number; name: string }>>('dining/waiters?page=' + staffPage, {
-        signal,
-      }),
+      api<CatalogPage<{ id: number; name: string }>>(
+        'dining/waiters?branch_id=' + branchId + '&page=' + staffPage,
+        {
+          signal,
+        },
+      ),
   })
   const operation = useOperation<DiningSession>(
     'dining-sessions' + (session ? '/' + session.id : ''),

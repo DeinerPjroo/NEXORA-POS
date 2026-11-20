@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-020 · COMPLETED · Empleados con identidad y sucursales existentes
+
+Extender users/roles con revisiones y employee_branches con FK compuestas. Cuentas nuevas requieren sucursales explícitas; acceso legado se conserva. Contexto BranchAccess autenticado limita modelos operativos y comandos, sin confiar en sucursal del cliente. Tenant lock serializa cambios y se revalida versión de sesión antes de comandos idempotentes. Proteger propietario/cuenta propia y negar concesiones superiores al actor. Cambios de acceso revocan sesiones, conservan MFA e historia; PIN6 existente solo desbloquea sesión personal. Admin gestiona empleados, Terminal/Kitchen reutilizan los mismos permisos y servicios.
+
 ## DEC-019 · Métricas comerciales sin reinterpretar historia (0.28)
 
 Separar ventas por su fecha de registro y cobros/devoluciones por fecha del evento, con periodos locales y comparación equivalente. Agregados BCMath por moneda y permisos por dominio; deuda actual reutiliza SaleBalance, combo cuenta cabecera y excluye componentes. Transacción de lectura coherente sin mutex de escritura de empresa. No presentar neto como ganancia ni egresos manuales como todos los gastos. COMMERCIAL_DASHBOARD.md define el contrato.

@@ -38,7 +38,13 @@ export type Branch = {
   is_active: boolean
 }
 export type Permission = { id: number; key: string; name: string; group: string }
-export type Role = { id: number; name: string; is_owner: boolean; permissions: Permission[] }
+export type Role = {
+  id: number
+  name: string
+  is_owner: boolean
+  permissions: Permission[]
+  revision: number
+}
 export type Activity = { id: number; action: string; description: string; created_at: string }
 export const businessTypes = [
   ['restaurant', 'Restaurante'],

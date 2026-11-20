@@ -10,6 +10,7 @@ use App\Http\Controllers\DiningController;
 use App\Http\Controllers\DiningReservationController;
 use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\KitchenStationController;
 use App\Http\Controllers\MultiFactorController;
@@ -141,6 +142,10 @@ Route::prefix('v1')->group(function () {
         Route::post('branches', [BranchController::class, 'store']);
         Route::put('branches/{branch}', [BranchController::class, 'update']);
         Route::get('roles', [RoleController::class, 'index']);
+        Route::get('employees/options', [EmployeeController::class, 'options']);
+        Route::post('employees', [EmployeeController::class, 'store']);
+        Route::put('employees/{employee}', [EmployeeController::class, 'update']);
+        Route::post('employees/{employee}/security', [EmployeeController::class, 'update'])->name('employees.security')->middleware('throttle:10,1');
         Route::post('roles', [RoleController::class, 'store']);
         Route::put('roles/{role}', [RoleController::class, 'update']);
         Route::get('categories', [CategoryController::class, 'index']);

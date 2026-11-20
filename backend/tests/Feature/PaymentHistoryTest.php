@@ -104,7 +104,7 @@ class PaymentHistoryTest extends TestCase
     public function test_sales_reader_can_read_history_without_access_to_drawer_balance(): void
     {
         $work = $this->work();
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $user = User::factory()->create(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id]);
         $this->actingAs($user);
         $this->getJson('/api/v1/finance/payments')->assertForbidden();

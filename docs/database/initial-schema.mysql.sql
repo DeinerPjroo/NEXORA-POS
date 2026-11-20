@@ -731,3 +731,15 @@ alter table `kitchen_ticket_events` add constraint `kevent_ticket` foreign key (
 
 alter table `kitchen_ticket_events` add constraint `kevent_actor` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `users` add `employee_revision` int unsigned not null default '1';
+
+alter table `users` add `all_branches` tinyint(1) not null default '1';
+
+alter table `roles` add `revision` int unsigned not null default '1';
+
+create table `employee_branches` (`tenant_id` bigint unsigned not null, `user_id` bigint unsigned not null, `branch_id` bigint unsigned not null, primary key (`tenant_id`, `user_id`, `branch_id`)) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `employee_branches` add constraint `employee_branches_tenant_id_user_id_foreign` foreign key (`tenant_id`, `user_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `employee_branches` add constraint `employee_branches_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+

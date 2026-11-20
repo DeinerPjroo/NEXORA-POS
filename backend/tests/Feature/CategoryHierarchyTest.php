@@ -133,7 +133,7 @@ class CategoryHierarchyTest extends TestCase
         $this->postJson('/api/v1/categories', ['name' => 'Ajena', 'color' => '#8271FF', 'is_active' => true, 'parent_id' => $root['id'], 'parent_revision' => 1])->assertUnprocessable();
         $this->getJson('/api/v1/categories?parent_id='.$root['id'])->assertUnprocessable();
         $this->putJson('/api/v1/categories/'.$root['id'], $this->edit($root))->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $other->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $other->tenant_id)->where('name', 'Encargado de inventario')->first();
         $this->actingAs(User::factory()->create(['tenant_id' => $other->tenant_id, 'role_id' => $role->id]));
         $this->postJson('/api/v1/categories', ['name' => 'Sin permiso', 'color' => '#8271FF', 'is_active' => true])->assertForbidden();
         $this->assertDatabaseHas('categories', ['id' => $root['id'], 'tenant_id' => $first->tenant_id, 'parent_id' => null]);

@@ -193,7 +193,7 @@ class ProductTaxTest extends TestCase
         $second = $this->work('other-product-tax@example.test');
         $this->updateProfile($first['exclusive'])->assertNotFound();
         $this->getJson('/api/v1/tax-profiles?status=all')->assertOk()->assertJsonCount(2, 'data');
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $this->actingAs(User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]));
         $this->postJson('/api/v1/tax-profiles', $this->profileData('No autorizado'))->assertForbidden();
         $this->actingAs($second['owner']);

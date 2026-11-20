@@ -117,7 +117,7 @@ class ModifierCatalogTest extends TestCase
         $second = $this->work('other-modifiers@example.test');
         $this->getJson($first['path'])->assertNotFound();
         $this->getJson($second['path'].'/'.$group['id'].'/options')->assertNotFound();
-        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $second['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         DB::table('role_permission')->insert(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id, 'permission_id' => DB::table('permissions')->where('key', 'catalog.view')->value('id')]);
         $this->actingAs(User::factory()->create(['tenant_id' => $second['owner']->tenant_id, 'role_id' => $role->id]));
         $this->getJson('/api/v1/products/'.$second['product']['id'].'/modifier-configuration')->assertOk();

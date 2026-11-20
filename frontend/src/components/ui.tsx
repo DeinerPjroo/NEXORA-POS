@@ -96,11 +96,13 @@ export function Modal({
   children,
   onClose,
   className = 'modal',
+  locked = false,
 }: {
   title: string
   children: ReactNode
   onClose: () => void
   className?: string
+  locked?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -113,14 +115,23 @@ export function Modal({
       ref={dialog}
       className={className}
       aria-label={title}
-      onCancel={onClose}
+      onCancel={(event) => {
+        event.preventDefault()
+        if (!locked) onClose()
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
+        if (!locked && event.target === event.currentTarget) onClose()
       }}
     >
       <div className="modal-header">
         <h2>{title}</h2>
-        <button type="button" className="icon-button" aria-label="Cerrar" onClick={onClose}>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label="Cerrar"
+          disabled={locked}
+          onClick={onClose}
+        >
           <X size={20} />
         </button>
       </div>

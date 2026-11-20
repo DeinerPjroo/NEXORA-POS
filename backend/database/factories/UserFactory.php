@@ -29,8 +29,11 @@ class UserFactory extends Factory
         return [
             // Crear dentro de TenantContext::run; no se inventa una empresa implícita.
             'tenant_id' => fn () => app(TenantContext::class)->id(),
-            'role_id' => fn () => Role::where('name', 'Cajero')->firstOrFail()->id,
+            // Fixtures start without operational privileges; tests opt into a role explicitly.
+            'role_id' => fn () => Role::where('name', 'Encargado de inventario')->firstOrFail()->id,
             'is_active' => true,
+            'all_branches' => true,
+            'mfa_version' => 1,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

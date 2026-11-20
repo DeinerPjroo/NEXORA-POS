@@ -36,7 +36,7 @@ class DeniedAccessAuditTest extends TestCase
 
     private function limited(User $user): User
     {
-        $role = app(TenantContext::class)->run($user->tenant_id, fn () => Role::where('is_owner', false)->where('name', 'Cajero')->firstOrFail());
+        $role = app(TenantContext::class)->run($user->tenant_id, fn () => Role::where('is_owner', false)->where('name', 'Encargado de inventario')->firstOrFail());
         $user->forceFill(['role_id' => $role->id])->save();
 
         return $user->fresh();

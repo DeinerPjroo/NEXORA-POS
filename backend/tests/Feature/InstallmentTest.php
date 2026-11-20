@@ -155,7 +155,7 @@ class InstallmentTest extends TestCase
     {
         $work = $this->work();
         $sale = $this->partial($work);
-        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Cajero')->first();
+        $role = DB::table('roles')->where('tenant_id', $work['owner']->tenant_id)->where('name', 'Encargado de inventario')->first();
         $this->actingAs(User::factory()->create(['tenant_id' => $work['owner']->tenant_id, 'role_id' => $role->id]));
         $this->postJson('/api/v1/sales/'.$sale['id'].'/payments', $this->payload($work))->assertForbidden();
     }
