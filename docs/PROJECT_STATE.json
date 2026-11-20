@@ -4,10 +4,10 @@
   "reference_date": "2026-11-19",
   "version": "0.33.0",
   "phase": 3,
-  "module": "Terminal: división de cuenta táctil",
+  "module": "Terminal: continuidad de cuentas parcialmente cobradas",
   "status": "COMPLETED",
-  "active_task": "DIGITAL-SPLIT-ACCOUNTS",
-  "last_completed_task": "DIGITAL-SPLIT-ACCOUNTS",
+  "active_task": "PARTIAL-TABLE-CHECKOUT",
+  "last_completed_task": "PARTIAL-TABLE-CHECKOUT",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "División inicial táctil en cuenta izquierda: presets2/3/4/6, controles2–20 y tarjetas por cuenta con selección/importe explícitos; sin modal ni selects en Terminal. Admin conserva formulario. Partes/importes desde quote existente; cambiar cantidad/selección limpia pago/efectivo. Solo sales.view; fieldset bloquea cambios ante envío incierto. Build/TypeScript/Prettier aprobados; Chromium pos-split-accounts1 aprobado51.5s: 100.01 entre3=33.34/33.34/33.33, cambio/reset/sin dividir, móvil sin overflow, pago Cuenta2 con UUID/DTO exactos ante respuesta perdida, una venta/pago, saldo66.6700 y caja1033.3400. Captura escritorio revisada. Sin backend/migraciones/suites generales ni nuevo motor de reparto.",
+  "working_verification": "Pedidos pendientes de mesa incluyen ventas con deuda mediante SaleBalance/BCMath, sin sumar dinero en SQL ni exponer datos adicionales. Cobro parcial conserva título/pedido y cuentas pendientes; reanuda venta vigente con permiso sales.view y usa AddPayments existente integrado, snapshot por revisión, UUID/bloqueo y caja nueva por formulario. Solo saldo cero finaliza; productos de venta existente protegidos contra append. Build/TS/Prettier/Pint aprobados; backend dirigido2/69 y MariaDB2/69 en nexora_test_1dfe2a3f9a71e418 conservado. Chromium pos-split-accounts final1.4min aprobado: respuesta perdida, retorno/recarga/reselección de mesa con productos, reanudación y pago de restantes sobre misma venta, tres pagos, saldo0/caja1100.0100 y exclusión final de pendientes. Primer intento de reapertura móvil ajustó selector para abrir Pedido antes de Mesas. Sin migraciones ni suites generales.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

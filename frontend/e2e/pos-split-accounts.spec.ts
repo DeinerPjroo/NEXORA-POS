@@ -7,6 +7,7 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   page,
 }) => {
   test.setTimeout(180_000)
+  page.setDefaultTimeout(20_000)
   await page.setViewportSize({ width: 1440, height: 900 })
   await fixtureWorkspace(page, 'División táctil')
   const category = await writeApi<{ id: number }>(page, 'POST', 'categories', {
@@ -31,7 +32,10 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
     tax_rate: '0',
     tip_enabled: false,
   })
-  const { data: registers } = await readApi<{ data: { id: number }[] }>(page, 'cash/registers')
+  const { data: registers } = await readApi<{ data: { id: number; branch_id: number }[] }>(
+    page,
+    'cash/registers',
+  )
   const { data: cash } = await writeApi<{ data: { id: number } }>(
     page,
     'POST',
@@ -39,6 +43,42 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
     { idempotency_key: crypto.randomUUID(), opening_amount: '1000', currency: 'COP' },
   )
   await page.goto('/pos')
+  const { data: room } = await writeApi<{ data: { id: number } }>(page, 'POST', 'dining-rooms', {
+    idempotency_key: crypto.randomUUID(),
+    branch_id: registers[0].branch_id,
+    name: 'Sala división',
+    color: '#7258df',
+    is_active: true,
+  })
+  const { data: table } = await writeApi<{ data: { id: number; revision: number } }>(
+    page,
+    'POST',
+    `dining-rooms/${room.id}/tables`,
+    {
+      idempotency_key: crypto.randomUUID(),
+      room_revision: 1,
+      name: 'Mesa división',
+      capacity: 4,
+      shape: 'square',
+      color: '#7258df',
+      is_active: true,
+    },
+  )
+  const { data: dining } = await writeApi<{ data: { id: number } }>(
+    page,
+    'POST',
+    'dining-sessions',
+    {
+      idempotency_key: crypto.randomUUID(),
+      branch_id: registers[0].branch_id,
+      guest_count: 2,
+      tables: [{ id: table.id, revision: table.revision }],
+      notes: '',
+      waiter_id: null,
+    },
+  )
+  await page.getByRole('button', { name: 'Mesas', exact: true }).click()
+  await page.getByRole('button', { name: 'Seleccionar Mesa división', exact: true }).click()
   await page.getByRole('button', { name: 'Agregar Cuenta compartida', exact: true }).click()
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
   const split = page.getByRole('region', { name: 'División de cuenta', exact: true })
@@ -108,9 +148,37 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   ])
   expect(sale.payments).toHaveLength(1)
   expect(sale.balance_due).toBe('66.6700')
+  await page.getByRole('button', { name: 'Volver al pedido', exact: true }).click()
+  await page.reload()
+  await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Mesas', exact: true }).click()
+  await page.getByRole('button', { name: 'Seleccionar Mesa división', exact: true }).click()
+  await expect(page.getByRole('table', { name: 'Líneas del pedido', exact: true })).toContainText(
+    'Cuenta compartida',
+  )
+  await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
+  await expect(page.getByRole('heading', { name: /^Cobrar pedido #/ })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cobrar saldo pendiente' })).toBeVisible()
+  await page.getByRole('button', { name: /Cuenta 3 ·/ }).click()
+  await page.getByLabel('Efectivo recibido para este pago', { exact: true }).fill('40')
+  await page.getByRole('button', { name: 'Agregar pago al lote', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirmar lote de pagos', exact: true }).click()
+  await expect(page.getByRole('button', { name: /Cuenta 3 · Pagada/ })).toBeDisabled()
+  await page.getByRole('button', { name: /Cuenta 1 ·/ }).click()
+  await page.getByLabel('Efectivo recibido para este pago', { exact: true }).fill('40')
+  await page.getByRole('button', { name: 'Agregar pago al lote', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirmar lote de pagos', exact: true }).click()
+  await expect(page.getByRole('heading', { name: /^Recibo V-/ })).toBeVisible()
+  const { data: completed } = await readApi<{ data: Sale }>(page, `sales/${sale.id}`)
+  expect(completed.balance_due).toBe('0.0000')
+  expect(completed.payments).toHaveLength(3)
+  expect(
+    (await readApi<{ data: unknown[] }>(page, `dining-sessions/${dining.id}/orders?pending=1`))
+      .data,
+  ).toHaveLength(0)
   const { data: updatedCash } = await readApi<{ data: { expected_amount: string } }>(
     page,
     `cash/sessions/${cash.id}`,
   )
-  expect(updatedCash.expected_amount).toBe('1033.3400')
+  expect(updatedCash.expected_amount).toBe('1100.0100')
 })

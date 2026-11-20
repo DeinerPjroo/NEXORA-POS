@@ -674,7 +674,13 @@ export function OrderComposer({
                           ? ({ '--product-accent': product.category.color } as CSSProperties)
                           : undefined
                       }
-                      disabled={!product.sellable || locked || products.isFetching || !posReady}
+                      disabled={
+                        !product.sellable ||
+                        locked ||
+                        products.isFetching ||
+                        !posReady ||
+                        !!currentOrder?.sale_id
+                      }
                       onClick={() =>
                         product.kind === 'combo'
                           ? setBundling(product)

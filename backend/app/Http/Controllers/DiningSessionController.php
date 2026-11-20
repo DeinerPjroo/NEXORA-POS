@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\Dining\DiningOccupancy;
+use App\Domains\Sales\SaleBalance;
 use App\Http\Requests\DiningCloseRequest;
 use App\Http\Requests\DiningSessionFiltersRequest;
 use App\Http\Requests\DiningSessionRequest;
@@ -48,7 +49,16 @@ final class DiningSessionController extends Controller
         Gate::authorize('orders.view');
         $data = $request->validate(['page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'between:1,30'], 'pending' => ['sometimes', 'boolean']]);
 
-        return OrderResource::collection($diningSession->orders()->when($data['pending'] ?? false, fn ($q) => $q->where('status', '!=', 'cancelled')->whereDoesntHave('sale'))->with('branch', 'items', 'sale')->latest('id')->paginate($data['per_page'] ?? 20))->additional(['session_revision' => $diningSession->revision]);
+        $orders = $diningSession->orders();
+        if ($data['pending'] ?? false) {
+            $ids = $diningSession->orders()->where('status', '!=', 'cancelled')
+                ->with('sale.payments', 'sale.refunds')->get()
+                ->filter(fn ($order) => ! $order->sale || bccomp(app(SaleBalance::class)->amounts($order->sale)['balance_due'], '0', 4) > 0)
+                ->modelKeys();
+            $orders->whereKey($ids);
+        }
+
+        return OrderResource::collection($orders->with('branch', 'items', 'sale')->latest('id')->paginate($data['per_page'] ?? 20))->additional(['session_revision' => $diningSession->revision]);
     }
 
     public function update(DiningSessionRequest $request, DiningSession $diningSession, DiningOccupancy $service)

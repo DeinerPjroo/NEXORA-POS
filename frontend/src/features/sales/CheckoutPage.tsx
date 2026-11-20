@@ -76,7 +76,9 @@ export function CheckoutPage({
         title={`Cobrar pedido #${order.id}`}
         description={`${order.branch_name} · Registro de pago · ${order.currency}`}
       />
-      {order.sale_id ? (
+      {order.sale_id && onCollected && can('sales.view') ? (
+        <ResumeSale saleId={order.sale_id} onResume={onCollected} />
+      ) : order.sale_id ? (
         <div className="panel empty-state">
           <h2>Este pedido ya tiene una venta.</h2>
           {can('sales.view') && (
@@ -112,6 +114,22 @@ export function CheckoutPage({
         />
       )}
     </>
+  )
+}
+
+function ResumeSale({ saleId, onResume }: { saleId: number; onResume: (sale: Sale) => void }) {
+  const query = useQuery({
+    queryKey: ['sale', saleId],
+    queryFn: () => api<{ data: Sale }>(`sales/${saleId}`),
+    refetchOnMount: 'always',
+  })
+  useEffect(() => {
+    if (query.data && !query.isFetching && !query.error) onResume(query.data.data)
+  }, [query.data, query.isFetching, query.error, onResume])
+  return query.error ? (
+    <CatalogError error={query.error} onRetry={() => void query.refetch()} />
+  ) : (
+    <Loading />
   )
 }
 

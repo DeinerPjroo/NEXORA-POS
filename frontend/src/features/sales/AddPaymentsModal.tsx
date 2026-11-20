@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
@@ -21,7 +21,21 @@ type DraftPayment = {
 }
 const validMoney = (value: string) => /^(?:0|[1-9][0-9]{0,14})(?:\.[0-9]{1,2})?$/.test(value)
 
-export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () => void }) {
+export function AddPaymentsModal({
+  sale,
+  onClose,
+  embedded = false,
+  initialAccountId,
+  onPaid,
+  onLockChange,
+}: {
+  sale: Sale
+  onClose: () => void
+  embedded?: boolean
+  initialAccountId?: number
+  onPaid?: (sale: Sale) => void
+  onLockChange?: (locked: boolean) => void
+}) {
   const [snapshot] = useState(sale)
   const [lines, setLines] = useState<DraftPayment[]>([])
   const [chosen, setChosen] = useState<PaymentMethod | null>(null)
@@ -29,7 +43,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
   const [amount, setAmount] = useState<string | null>(null)
   const [received, setReceived] = useState('')
   const [reference, setReference] = useState('')
-  const [accountId, setAccountId] = useState<number | null>(null)
+  const [accountId, setAccountId] = useState<number | null>(initialAccountId ?? null)
   const methods = useDefaultPaymentMethod()
   const method = chosen ?? methods.data?.data[0]
   const cash = useSalesCash(snapshot.branch_id)
@@ -64,7 +78,7 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
       : !!reference.trim() && reference.length <= 120)
   const client = useQueryClient()
   const toast = useToast()
-  const operation = useOperation<Sale>(`sales/${snapshot.id}/payments`, async () => {
+  const operation = useOperation<Sale>(`sales/${snapshot.id}/payments`, async (updated) => {
     await Promise.all(
       [
         'sale',
@@ -76,11 +90,19 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
         'cash-session',
         'cash-movements',
         'payment-history',
+        'table-active-order',
+        'table-orders',
+        'dining-occupancy',
+        'pos-cash',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
     toast('Pagos registrados. El saldo se actualizó.')
-    onClose()
+    if (onPaid) onPaid(updated)
+    else onClose()
   })
+  useEffect(() => {
+    onLockChange?.(operation.locked)
+  }, [operation.locked, onLockChange])
   function add() {
     if (!ready || !method || lines.length >= 20) return
     setLines([
@@ -121,7 +143,13 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
     })
   }
   return (
-    <Modal title={`Agregar pagos · ${snapshot.receipt_code}`} onClose={onClose}>
+    <PaymentContainer
+      embedded={embedded}
+      title={`Agregar pagos · ${snapshot.receipt_code}`}
+      onClose={() => {
+        if (!operation.locked) onClose()
+      }}
+    >
       <form className="form-stack" onSubmit={submit}>
         <div className="notice">
           <span>
@@ -259,7 +287,12 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
           </button>
         )}
         <div className="form-actions">
-          <button type="button" className="button secondary" onClick={onClose}>
+          <button
+            type="button"
+            className="button secondary"
+            disabled={operation.locked}
+            onClick={onClose}
+          >
             Volver
           </button>
           <Submit
@@ -270,6 +303,29 @@ export function AddPaymentsModal({ sale, onClose }: { sale: Sale; onClose: () =>
           </Submit>
         </div>
       </form>
+    </PaymentContainer>
+  )
+}
+
+function PaymentContainer({
+  embedded,
+  children,
+  title,
+  onClose,
+}: {
+  embedded: boolean
+  children: import('react').ReactNode
+  title: string
+  onClose: () => void
+}) {
+  return embedded ? (
+    <section className="panel" aria-label="Cobrar saldo pendiente">
+      <h3>{title}</h3>
+      {children}
+    </section>
+  ) : (
+    <Modal title={title} onClose={onClose}>
+      {children}
     </Modal>
   )
 }
