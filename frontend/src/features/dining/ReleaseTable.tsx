@@ -15,7 +15,6 @@ export function ReleaseTable({
   onClose: () => void
 }) {
   const [snapshot] = useState(session)
-  const [confirmed, setConfirmed] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const node = dialog.current
@@ -49,21 +48,11 @@ export function ReleaseTable({
         if (!operation.locked) onClose()
       }}
     >
-      <h3>Liberar {label}</h3>
-      <p>
-        La atención se cerrará y sus mesas quedarán disponibles. Los pedidos y pagos se conservan.
-      </p>
+      <span className="release-table-label">{label}</span>
+      <h3>¿La mesa ya quedó desocupada?</h3>
+      <p>Las mesas unidas también quedarán libres.</p>
       <ErrorNotice error={operation.error} />
       <OperationNotice uncertain={operation.uncertain} />
-      <label className="checkbox-line">
-        <input
-          type="checkbox"
-          checked={confirmed}
-          disabled={operation.locked}
-          onChange={(event) => setConfirmed(event.target.checked)}
-        />
-        Confirmo que los clientes ya se retiraron.
-      </label>
       <div className="form-actions">
         <button
           type="button"
@@ -71,15 +60,15 @@ export function ReleaseTable({
           disabled={operation.locked}
           onClick={onClose}
         >
-          Cancelar
+          No, volver
         </button>
         <button
           type="button"
           className="button primary"
-          disabled={operation.isPending || (!operation.uncertain && !confirmed)}
+          disabled={operation.isPending}
           onClick={() => operation.send({ revision: snapshot.revision })}
         >
-          {operation.uncertain ? 'Reintentar liberación' : 'Confirmar liberación'}
+          {operation.uncertain ? 'Reintentar liberación' : 'Sí, liberar mesa'}
         </button>
       </div>
     </dialog>

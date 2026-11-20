@@ -203,9 +203,8 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   await tile.getByRole('button', { name: 'Liberar Mesa división', exact: true }).click()
   const release = page.getByRole('dialog', { name: 'Liberar mesa', exact: true })
   await expect(
-    release.getByRole('button', { name: 'Confirmar liberación', exact: true }),
-  ).toBeDisabled()
-  await release.getByRole('checkbox').check()
+    release.getByRole('heading', { name: '¿La mesa ya quedó desocupada?', exact: true }),
+  ).toBeVisible()
   const releases: string[] = []
   await page.route(`**/api/v1/dining-sessions/${dining.id}/close`, async (route) => {
     releases.push(route.request().postData()!)
@@ -213,7 +212,7 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
     if (releases.length === 1) await route.abort('failed')
     else await route.fulfill({ response })
   })
-  await release.getByRole('button', { name: 'Confirmar liberación', exact: true }).click()
+  await release.getByRole('button', { name: 'Sí, liberar mesa', exact: true }).click()
   await expect(
     release.getByRole('button', { name: 'Reintentar liberación', exact: true }),
   ).toBeVisible()
