@@ -2,6 +2,8 @@
 
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación
 
+Recogidas operativas reutilizan la Terminal POS mediante canal inicial fijo y selector interno de pedidos persistidos. Líneas registradas se consultan, no se reconstruyen como adiciones. Cocina/cobro conservan el mismo Order; Nueva recogida es explícita y bloqueada con borrador o envío incierto. No ampliar append fuera de mesa en este cambio visual. Lectores conservan consulta sin conceder gestión.
+
 Conservar Order como identidad financiera. preparation_destination por línea no cambia el canal ni recotiza precios: una mesa admite servir/empacar y separa cantidades pendientes. PreparationCorrection agrega historia y reemplaza solo instrucciones efectivas; snapshots de línea/comanda permanecen inmutables. Revisión de pedido y tickets invalida acciones viejas. takeaway es recogida; delivery usa OrderDelivery/eventos con FK, revisiones/UUID, sucursal y repartidor autorizado. Contactos solo para gestor o asignado. Salida a reparto entrega tickets listos al repartidor en la misma transacción; entrega al cliente es otro estado y nunca un cobro. Reutilizar servicios de pedido/cocina/caja existentes.
 
 ## DEC-020 · COMPLETED · Empleados con identidad y sucursales existentes

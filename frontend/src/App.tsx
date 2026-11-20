@@ -18,6 +18,7 @@ import { CashSessionPage } from './features/cash/CashSessionPage'
 import { OrdersPage } from './features/orders/OrdersPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { OrderComposer } from './features/orders/OrderComposer'
+import { PickupTerminalPage } from './features/orders/PickupTerminalPage'
 import { SalesPage } from './features/sales/SalesPage'
 import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
@@ -86,7 +87,7 @@ export default function App() {
           path="/terminal/recogidas"
           element={
             <PermissionBoundary permission="orders.view">
-              <OrdersPage channel="takeaway" />
+              <PickupTerminalPage />
             </PermissionBoundary>
           }
         />

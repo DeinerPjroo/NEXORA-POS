@@ -49,6 +49,7 @@ import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { KitchenSend } from '../kitchen/KitchenSend'
 import { TableKitchen, CorrectPreparation } from '../kitchen/TableKitchen'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
+import { PosPickupsPanel } from './PosPickupsPanel'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -66,9 +67,11 @@ const ComboOrderPicker = lazy(() =>
 export function OrderComposer({
   terminal = false,
   initialDining,
+  initialChannel,
 }: {
   terminal?: boolean
   initialDining?: DiningSelection
+  initialChannel?: OrderChannel
 }) {
   const context = useOperationContext(terminal)
   const { session } = useSession()
@@ -83,15 +86,18 @@ export function OrderComposer({
   const [channel, setChannel] = useState<OrderChannel>(
     initialDining
       ? 'dine_in'
-      : searchParams.get('canal') === 'delivery'
-        ? 'delivery'
-        : searchParams.get('canal') === 'takeaway'
-          ? 'takeaway'
-          : remembered.channel,
+      : (initialChannel ??
+          (searchParams.get('canal') === 'delivery'
+            ? 'delivery'
+            : searchParams.get('canal') === 'takeaway'
+              ? 'takeaway'
+              : remembered.channel)),
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [details, setDetails] = useState(false)
   const [tablesOpen, setTablesOpen] = useState(false)
+  const [pickupsOpen, setPickupsOpen] = useState(false)
+  const [pickupId, setPickupId] = useState<number | null>(null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
   const orderIntent = useRef<'save' | 'checkout' | 'kitchen'>(
@@ -192,12 +198,23 @@ export function OrderComposer({
   })
   const tableOrderUnavailable =
     terminal && !!dining && (activeTableOrder.isPending || !!activeTableOrder.error)
+  const pickupOrder = useQuery({
+    queryKey: ['orders', 'pos-pickup', pickupId],
+    queryFn: ({ signal }) => api<{ data: Order }>(`orders/${pickupId}`, { signal }),
+    enabled: !!pickupId && channel === 'takeaway',
+    refetchInterval: 15000,
+  })
+  const savedPickup = channel === 'takeaway' && !!pickupId
   const acknowledged =
     terminal && dining && confirmedOrder?.dining_session_id === dining.id ? confirmedOrder : null
   const currentOrder =
     terminal && dining && channel === 'dine_in'
       ? (acknowledged ?? activeTableOrder.data?.data[0])
-      : undefined
+      : savedPickup &&
+          pickupOrder.data?.data.channel === 'takeaway' &&
+          pickupOrder.data.data.branch_id === selected
+        ? pickupOrder.data.data
+        : undefined
   const displayCart = acknowledged ? [] : cart
   const operation = useOperation<Order>('orders', async (order) => {
     if (terminal && order.dining_session_id) setConfirmedOrder(order)
@@ -226,8 +243,12 @@ export function OrderComposer({
       toast('Pedido guardado en su mesa.')
       return
     }
-    if (terminal && (orderIntent.current === 'kitchen' || !can('sales.collect'))) {
+    if (terminal && (orderIntent.current !== 'checkout' || !can('sales.collect'))) {
       setCart([])
+      if (order.channel === 'takeaway') {
+        client.setQueryData(['orders', 'pos-pickup', order.id], { data: order })
+        setPickupId(order.id)
+      }
       setActiveLine(null)
       setConfirmedOrder(null)
       setCheckoutOrderId(order.id)
@@ -243,6 +264,10 @@ export function OrderComposer({
     )
     if (terminal) {
       setCart([])
+      if (order.channel === 'takeaway') {
+        client.setQueryData(['orders', 'pos-pickup', order.id], { data: order })
+        setPickupId(order.id)
+      }
       setActiveLine(null)
       setConfirmedOrder(null)
       setCheckoutOrderId(order.id)
@@ -315,6 +340,7 @@ export function OrderComposer({
     return () => window.removeEventListener('keydown', shortcut)
   }, [terminal, checkoutOpen, picking, bundling, customizing, pricing.review])
   function configure(product: Product, variant?: Variant) {
+    if (savedPickup) return
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
     else add(product, variant)
@@ -325,7 +351,7 @@ export function OrderComposer({
     addLine(line)
   }
   function addLine(line: CartLine) {
-    if (locked) return
+    if (locked || savedPickup) return
     line = withDestination(line, channel === 'dine_in' ? 'table' : 'takeaway')
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
@@ -408,6 +434,7 @@ export function OrderComposer({
     }
     if (
       !selected ||
+      savedPickup ||
       !cart.length ||
       pricing.locked ||
       tableOrderUnavailable ||
@@ -494,7 +521,7 @@ export function OrderComposer({
             branches={activeBranches}
             value={selected}
             onChange={(branchId) => pricing.request({ branchId, channel })}
-            disabled={locked}
+            disabled={locked || savedPickup || pickupsOpen}
           />
           {can('sales.collect') && (
             <button
@@ -527,6 +554,9 @@ export function OrderComposer({
           >
             Fotos
           </button>
+          {channel === 'takeaway' && (
+            <strong className="pos-channel-label">Para llevar · Mostrador</strong>
+          )}
         </header>
       )}
       <Link className="text-button product-back" to="/pedidos">
@@ -624,10 +654,43 @@ export function OrderComposer({
         {terminal && (
           <>
             <aside className="pos-actions" data-pos-slot="actions">
+              {channel === 'takeaway' && (
+                <>
+                  <button
+                    type="button"
+                    disabled={locked || !!cart.length || !selected}
+                    aria-expanded={pickupsOpen}
+                    onClick={() => {
+                      setTablesOpen(false)
+                      setPickupsOpen(!pickupsOpen)
+                      setPanel('cart')
+                    }}
+                  >
+                    Recogidas
+                  </button>
+                  <button
+                    type="button"
+                    disabled={locked || !!cart.length}
+                    onClick={() => {
+                      setPickupId(null)
+                      setCheckoutOrderId(null)
+                      setCheckoutContext('')
+                      setPickupsOpen(false)
+                      setDetails(false)
+                      orderForm.current?.reset()
+                      operation.reset()
+                    }}
+                  >
+                    Nueva recogida
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 disabled={
                   locked ||
+                  savedPickup ||
+                  !!initialChannel ||
                   (tableOrderUnavailable && !!cart.length) ||
                   !selected ||
                   !can('dining.view') ||
@@ -647,7 +710,7 @@ export function OrderComposer({
               </button>
               <button
                 type="button"
-                disabled={locked}
+                disabled={locked || savedPickup}
                 onClick={() => {
                   setTablesOpen(false)
                   setDetails(true)
@@ -661,7 +724,7 @@ export function OrderComposer({
               </Link>
               <button
                 type="button"
-                disabled={locked}
+                disabled={locked || savedPickup}
                 onClick={() => {
                   setTablesOpen(false)
                   setDetails(true)
@@ -781,6 +844,8 @@ export function OrderComposer({
                       disabled={
                         !product.sellable ||
                         locked ||
+                        savedPickup ||
+                        pickupsOpen ||
                         products.isFetching ||
                         !posReady ||
                         !!currentOrder?.sale_id
@@ -854,15 +919,15 @@ export function OrderComposer({
         </section>
         <div
           className={terminal ? 'pos-order-workspace' : 'order-workspace'}
-          data-view={terminal && tablesOpen ? 'tables' : 'order'}
+          data-view={terminal && (tablesOpen || pickupsOpen) ? 'tables' : 'order'}
         >
           <form
             className="panel order-cart"
             onSubmit={submit}
             ref={orderForm}
             data-pos-slot="order"
-            inert={terminal && tablesOpen}
-            aria-hidden={terminal && tablesOpen ? true : undefined}
+            inert={terminal && (tablesOpen || pickupsOpen)}
+            aria-hidden={terminal && (tablesOpen || pickupsOpen) ? true : undefined}
           >
             <div className="panel-heading">
               <div className="pos-digital-heading-text">
@@ -880,6 +945,30 @@ export function OrderComposer({
               </span>
             </div>
             <ErrorNotice error={operation.error} />
+            {savedPickup && (
+              <>
+                <ErrorNotice error={pickupOrder.error} />
+                {pickupOrder.isPending && <p role="status">Cargando recogida…</p>}
+                {pickupOrder.error && (
+                  <button type="button" onClick={() => void pickupOrder.refetch()}>
+                    Reintentar consulta
+                  </button>
+                )}
+                {currentOrder && (
+                  <p className="pos-dining-selection">
+                    {currentOrder.reference ||
+                      currentOrder.customer_name ||
+                      'Recogida en mostrador'}
+                    {' · '}
+                    {currentOrder.sale_status === 'paid' ? 'Pagada' : 'Pedido registrado'}
+                  </p>
+                )}
+                <p className="muted small">
+                  Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva
+                  recogida.
+                </p>
+              </>
+            )}
             <ErrorNotice error={pricing.error} />
             {pricing.pending && (
               <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
@@ -1040,7 +1129,7 @@ export function OrderComposer({
               </button>
             )}
             <fieldset
-              disabled={locked}
+              disabled={locked || savedPickup}
               className="form-stack pos-order-details"
               data-open={details}
             >
@@ -1056,6 +1145,7 @@ export function OrderComposer({
               <Field label="Tipo de pedido">
                 <select
                   name="channel"
+                  disabled={!!initialChannel}
                   value={channel}
                   onChange={(event) =>
                     selected &&
@@ -1145,6 +1235,24 @@ export function OrderComposer({
               </button>
             )}
             <div className={terminal ? 'pos-order-actions' : undefined}>
+              {terminal && channel === 'takeaway' && !savedPickup && (
+                <button
+                  type="button"
+                  className="pos-save-order"
+                  disabled={
+                    operation.isPending ||
+                    pricing.locked ||
+                    (!operation.uncertain && !cart.length) ||
+                    (operation.uncertain && orderIntent.current !== 'save')
+                  }
+                  onClick={() => {
+                    if (!operation.uncertain) orderIntent.current = 'save'
+                    orderForm.current?.requestSubmit()
+                  }}
+                >
+                  {operation.uncertain ? 'Reintentar guardado' : 'GUARDAR RECOGIDA'}
+                </button>
+              )}
               {terminal && dining && (
                 <button
                   type="button"
@@ -1174,6 +1282,7 @@ export function OrderComposer({
                   disabled={
                     locked ||
                     tableOrderUnavailable ||
+                    (savedPickup && (!currentOrder || currentOrder.status === 'cancelled')) ||
                     (!cart.length && !currentOrder && !resumableCheckoutId)
                   }
                   onClick={() => {
@@ -1213,7 +1322,12 @@ export function OrderComposer({
                         !selected ||
                         conflict ||
                         !posReady ||
-                        tableOrderUnavailable))
+                        tableOrderUnavailable)) ||
+                    (savedPickup &&
+                      (!currentOrder ||
+                        currentOrder.status === 'cancelled' ||
+                        currentOrder.sale_status === 'paid' ||
+                        currentOrder.sale_status === 'refunded'))
                   }
                 >
                   <Send size={17} />
@@ -1250,6 +1364,21 @@ export function OrderComposer({
               }}
             />
           )}
+          {pickupsOpen && selected && (
+            <PosPickupsPanel
+              key={selected}
+              branchId={selected}
+              onClose={() => setPickupsOpen(false)}
+              onSelect={(id) => {
+                setPickupId(id)
+                setCheckoutOrderId(null)
+                setCheckoutContext('')
+                setPickupsOpen(false)
+                setDetails(false)
+                operation.reset()
+              }}
+            />
+          )}
         </div>
       </div>
       {kitchenOrderId && (
@@ -1267,6 +1396,7 @@ export function OrderComposer({
             setCheckoutOpen(false)
             requestAnimationFrame(() => submitButton.current?.focus())
             if (completed) {
+              if (savedPickup) void pickupOrder.refetch()
               setCheckoutOrderId(null)
               setPanel('menu')
               setDining(null)
