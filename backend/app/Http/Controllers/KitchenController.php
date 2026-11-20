@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domains\Kitchen\KitchenWorkflow;
 use App\Http\Resources\KitchenTicketResource;
+use App\Models\DiningSession;
 use App\Models\KitchenRoute;
 use App\Models\KitchenTicket;
 use App\Models\Order;
@@ -14,11 +15,15 @@ use Illuminate\Validation\Rule;
 
 final class KitchenController extends Controller
 {
-    public function sessionTickets(Request $request, \App\Models\DiningSession $diningSession) {
-        Gate::authorize('dining.view'); Gate::authorize('orders.view');
-        $request->validate(['page'=>['sometimes','integer','min:1']]);
-        return KitchenTicketResource::collection(KitchenTicket::whereIn('order_id',Order::where('dining_session_id',$diningSession->id)->select('id'))->with('lines','events')->latest('id')->paginate(30))->additional(['server_now'=>now()->toISOString()]);
+    public function sessionTickets(Request $request, DiningSession $diningSession)
+    {
+        Gate::authorize('dining.view');
+        Gate::authorize('orders.view');
+        $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
+
+        return KitchenTicketResource::collection(KitchenTicket::whereIn('order_id', Order::where('dining_session_id', $diningSession->id)->select('id'))->with('lines', 'events')->latest('id')->paginate(30))->additional(['server_now' => now()->toISOString()]);
     }
+
     private function own(Request $request, string $table)
     {
         return Rule::exists($table, 'id')->where('tenant_id', $request->user()->tenant_id);
@@ -47,7 +52,7 @@ final class KitchenController extends Controller
         Gate::authorize('orders.view');
         Gate::authorize('orders.manage');
 
-        return ['data' => ['order_id' => $order->id, 'order_revision' => $order->revision, 'status' => $order->status, 'lines' => $service->pending($order)->map(fn ($row) => ['id' => $row['item']->id, 'name' => $row['item']->product_name, 'quantity' => $row['item']->quantity, 'station' => $row['station']?->only('id', 'name')])]];
+        return ['data' => ['order_id' => $order->id, 'order_revision' => $order->revision, 'status' => $order->status, 'lines' => $service->pending($order)->map(fn ($row) => ['id' => $row['item']->id, 'name' => $row['item']->product_name, 'quantity' => $row['item']->quantity, 'preparation_destination' => $row['item']->destination($order->channel), 'station' => $row['station']?->only('id', 'name')])]];
     }
 
     public function dispatch(Request $request, Order $order, KitchenWorkflow $service)

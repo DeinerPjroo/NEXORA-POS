@@ -100,7 +100,9 @@ export function serializeCart(lines: CartLine[], expectations: boolean) {
     variant_id: line.variant_id,
     quantity: line.quantity,
     notes: line.notes,
-    ...(line.preparation_destination ? {preparation_destination:line.preparation_destination} : {}),
+    ...(line.preparation_destination
+      ? { preparation_destination: line.preparation_destination }
+      : {}),
     ...(line.modifiers ? { modifiers: line.modifiers } : {}),
     ...(line.kind === 'combo'
       ? {
@@ -134,7 +136,11 @@ export function serializeCart(lines: CartLine[], expectations: boolean) {
   }))
 }
 export function withDestination(line: CartLine, destination: 'table' | 'takeaway'): CartLine {
-  return {...line, preparation_destination:destination,key:line.key.replace(/\|destination=(table|takeaway)$/,'')+'|destination='+destination}
+  return {
+    ...line,
+    preparation_destination: destination,
+    key: line.key.replace(/\|destination=(table|takeaway)$/, '') + '|destination=' + destination,
+  }
 }
 export function cartSubtotal(lines: CartLine[]): string {
   return unitsToMoney(

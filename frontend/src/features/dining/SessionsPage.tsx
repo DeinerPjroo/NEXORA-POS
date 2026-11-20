@@ -12,6 +12,7 @@ import type { DiningSession } from './session-types'
 import { SessionEditor } from './SessionEditor'
 import { posPermissions } from '../pos/pos-permissions'
 import './dining.css'
+import { TableKitchen } from '../kitchen/TableKitchen'
 
 export function SessionsPage() {
   const [page, setPage] = useState(1)
@@ -68,6 +69,7 @@ export function SessionsPage() {
   )
 }
 export function SessionDetailPage() {
+  const [kitchen, setKitchen] = useState(false)
   const { sessionId } = useParams()
   const can = useCan()
   const [editing, setEditing] = useState<DiningSession | null>(null)
@@ -137,6 +139,9 @@ export function SessionDetailPage() {
       </section>
       {can('orders.view') && (
         <section className="panel dining-layout">
+          <button className="button secondary" onClick={() => setKitchen(true)}>
+            Comandas de esta mesa
+          </button>
           <h2>Pedidos de esta atención</h2>
           <p className="muted">
             Hasta los 100 pedidos de la atención. El cierre exige cobrar o cancelar los pendientes.
@@ -185,6 +190,7 @@ export function SessionDetailPage() {
         <SessionEditor branchId={s.branch_id} session={editing} onClose={() => setEditing(null)} />
       )}
       {closing && <CloseSession session={closing} onClose={() => setClosing(null)} />}
+      {kitchen && <TableKitchen sessionId={s.id} onClose={() => setKitchen(false)} />}
       {transferring && (
         <TransferEditor
           source={transferring.source}

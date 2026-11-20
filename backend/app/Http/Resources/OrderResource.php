@@ -9,7 +9,10 @@ final class OrderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        if($this->resource->relationLoaded('items')) $this->resource->loadMissing('items.preparationCorrections');
+        if ($this->resource->relationLoaded('items')) {
+            $this->resource->loadMissing('items.preparationCorrections');
+        }
+
         return [
             'id' => $this->id, 'public_id' => $this->public_id, 'branch_id' => $this->branch_id,
             'dining_session_id' => $this->dining_session_id, 'dining_snapshot' => $this->dining_snapshot,
@@ -20,7 +23,7 @@ final class OrderResource extends JsonResource
             'items_count' => $this->items_count ?? null,
             'sale_id' => $this->whenLoaded('sale', fn () => $this->sale?->id),
             'sale_status' => $this->whenLoaded('sale', fn () => $this->sale?->status),
-            'items' => $this->whenLoaded('items', fn () => $this->items->map(fn ($item) => [...$item->only('id', 'product_id', 'variant_id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes', 'tax_snapshot', 'base_unit_price', 'modifiers_snapshot', 'price_snapshot', 'availability_snapshot', 'order_combo_id', 'combo_position'),'preparation_destination'=>$item->destination($this->channel),'preparation_corrections'=>$item->preparationCorrections->map(fn($c)=>$c->only('id','from_destination','to_destination','reason','created_at'))])),
+            'items' => $this->whenLoaded('items', fn () => $this->items->map(fn ($item) => [...$item->only('id', 'product_id', 'variant_id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes', 'tax_snapshot', 'base_unit_price', 'modifiers_snapshot', 'price_snapshot', 'availability_snapshot', 'order_combo_id', 'combo_position'), 'preparation_destination' => $item->destination($this->channel), 'preparation_corrections' => $item->preparationCorrections->map(fn ($c) => $c->only('id', 'from_destination', 'to_destination', 'reason', 'created_at'))])),
             'combos' => $this->whenLoaded('items', fn () => OrderComboResource::collection($this->combos)),
             'events' => $this->whenLoaded('events', fn () => $this->events->map(fn ($event) => $event->only('id', 'from_status', 'to_status', 'reason', 'created_at'))),
         ];

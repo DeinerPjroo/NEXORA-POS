@@ -28,6 +28,7 @@ final class ChangeOrderState
                 abort_if(KitchenTicket::where('order_id', $order->id)->exists(), 409, 'Este pedido se prepara en cocina. Actualiza sus comandas desde Nexora Kitchen.');
             } else {
                 app(KitchenWorkflow::class)->cancel($actor, $order, $data['reason'] ?? null);
+                app(DeliveryWorkflow::class)->cancel($actor, $order, $data['reason'] ?? null);
             }
             $from = $order->status;
             $order->status = $data['status'];

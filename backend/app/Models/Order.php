@@ -39,6 +39,11 @@ final class Order extends Model
         return $this->hasMany(OrderEvent::class);
     }
 
+    public function delivery(): HasOne
+    {
+        return $this->hasOne(OrderDelivery::class);
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

@@ -24,7 +24,7 @@ function visibleConfiguration(line: CartLine): string {
   const promotion = line.price_context?.promotion
   return JSON.stringify({
     price: line.expected_unit_price,
-    preparation_destination:line.preparation_destination,
+    preparation_destination: line.preparation_destination,
     promotion: promotion
       ? {
           id: promotion.id,
@@ -76,27 +76,38 @@ export function useCartPricing({
           branch_id: target.branchId,
           channel: target.channel,
           currency,
-          items: serializeCart(target.channel==='dine_in'?lines:lines.map(line=>withDestination(line,'takeaway')), false),
+          items: serializeCart(
+            target.channel === 'dine_in'
+              ? lines
+              : lines.map((line) => withDestination(line, 'takeaway')),
+            false,
+          ),
         },
       }),
     onSuccess: ({ data }, { target, lines }) => {
-      const after = data.items.map((line, index) => withDestination({
-        ...line,
-        key: lines[index].key,
-        notes: lines[index].notes,
-        ...(line.components
-          ? {
-              components: line.components.map((part) => ({
-                ...part,
-                notes:
-                  lines[index].components?.find(
-                    (old) =>
-                      old.component_id === part.component_id && old.unit_index === part.unit_index,
-                  )?.notes ?? part.notes,
-              })),
-            }
-          : {}),
-      },line.preparation_destination ?? (target.channel==='dine_in'?'table':'takeaway')))
+      const after = data.items.map((line, index) =>
+        withDestination(
+          {
+            ...line,
+            key: lines[index].key,
+            notes: lines[index].notes,
+            ...(line.components
+              ? {
+                  components: line.components.map((part) => ({
+                    ...part,
+                    notes:
+                      lines[index].components?.find(
+                        (old) =>
+                          old.component_id === part.component_id &&
+                          old.unit_index === part.unit_index,
+                      )?.notes ?? part.notes,
+                  })),
+                }
+              : {}),
+          },
+          line.preparation_destination ?? (target.channel === 'dine_in' ? 'table' : 'takeaway'),
+        ),
+      )
       if (
         lines.some(
           (line, index) => visibleConfiguration(line) !== visibleConfiguration(after[index]),

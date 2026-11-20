@@ -9,7 +9,6 @@ import type { CatalogPage } from '../catalog/types'
 import type { DiningRoom } from './types'
 import { OccupancyPanel } from './OccupancyPanel'
 import './dining.css'
-import { posPermissions } from '../pos/pos-permissions'
 
 export function TerminalTablesPage() {
   const can = useCan()
@@ -57,13 +56,9 @@ export function TerminalTablesPage() {
       <div className="terminal-quick-actions">
         {can('cash.view') && <Link to="/caja">Caja rápida</Link>}
         {can('orders.manage') && can('catalog.view') && (
-          <Link to={posPermissions.every(can) ? '/pos' : '/pedidos/nuevo'}>
-            Para llevar / nuevo pedido
-          </Link>
+          <Link to="/terminal/recogidas">Para llevar / nuevo pedido</Link>
         )}
-        <button disabled title="Operación de domicilios pendiente de integración">
-          Domicilios · Pendiente
-        </button>
+        {can('orders.manage') && <Link to="/terminal/domicilios">Domicilios</Link>}
         {can('dining.reserve') && <Link to="/salones/reservas">Reservaciones</Link>}
       </div>
     </div>

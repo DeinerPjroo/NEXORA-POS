@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Kitchen\CorrectPreparation;
 use App\Domains\Orders\ChangeOrderState;
 use App\Domains\Orders\CreateOrder;
 use App\Domains\Orders\PreviewOrder;
@@ -9,16 +10,22 @@ use App\Http\Requests\OperationFiltersRequest;
 use App\Http\Requests\OrderPreviewRequest;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderStateRequest;
+use App\Http\Requests\PreparationCorrectionRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Support\Facades\Gate;
 
 final class OrderController extends Controller
 {
-    public function correctPreparation(\App\Http\Requests\PreparationCorrectionRequest $request, Order $order, \App\Domains\Kitchen\CorrectPreparation $service) { return new OrderResource($service->execute($request->user(),$order,$request->validated())->load('branch','items.preparationCorrections','events','sale')); }
+    public function correctPreparation(PreparationCorrectionRequest $request, Order $order, CorrectPreparation $service)
+    {
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items.preparationCorrections', 'events', 'sale'));
+    }
+
     public function index(OperationFiltersRequest $request)
     {
         $query = Order::with('branch', 'sale')->withCount('items')
+            ->when($request->validated('channel'), fn ($q, $channel) => $q->where('channel', $channel))
             ->when($request->validated('branch_id'), fn ($q, $id) => $q->where('branch_id', $id))
             ->when($request->validated('status'), fn ($q, $state) => $q->where('status', $state));
 

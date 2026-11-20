@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { formatMoney } from '../../lib/money'
 import { cartSubtotal } from '../orders/cart'
 import type { CartLine } from '../orders/cart'
@@ -20,7 +21,10 @@ export function PosOrderLines({
   onQuantity,
   onRemove,
   onNotes,
-  destinations = false, onDestination, onSplit, onCorrect,
+  destinations = false,
+  onDestination,
+  onSplit,
+  onCorrect,
 }: {
   lines: CartLine[]
   recordedItems?: OrderItem[]
@@ -32,12 +36,12 @@ export function PosOrderLines({
   onRemove: (key: string) => void
   onNotes: (key: string, notes: string) => void
   destinations?: boolean
-  onDestination?: (key:string,destination:'table'|'takeaway')=>void
-  onSplit?: (key:string,quantity:number)=>void
-  onCorrect?: (ids:number[])=>void
+  onDestination?: (key: string, destination: 'table' | 'takeaway') => void
+  onSplit?: (key: string, quantity: number) => void
+  onCorrect?: (ids: number[]) => void
 }) {
   const [editingNotes, setEditingNotes] = useState(false)
-  const [splitting,setSplitting]=useState(false)
+  const [splitting, setSplitting] = useState(false)
   const selected = lines.find((line) => line.key === selectedKey) ?? lines.at(-1)
   const displayLines = unifiedOrderLines(recordedItems, lines)
   const selectedDisplay = displayLines.find((line) => line.key === selected?.key)
@@ -85,10 +89,42 @@ export function PosOrderLines({
                   <ModifierDetails groups={line.modifier_labels} currency={currency} />
                   <CartComboDetails line={line} currency={currency} />
                   {line.notes && <small className="pos-line-note">Nota: {line.notes}</small>}
-                  {destinations && line.draftQuantity ? <div className="preparation-selector" role="group" aria-label={`Destino de ${line.product_name}`}>
-                    {(['table','takeaway'] as const).map(d=><button key={d} type="button" disabled={disabled} aria-pressed={line.preparation_destination===d} onClick={()=>onDestination?.(line.key,d)}>{d==='table'?'Para mesa':'Para llevar'}</button>)}
-                  </div> : <span className="preparation-badge" data-destination={line.preparation_destination}>{preparationLabels[line.preparation_destination ?? 'table']}</span>}
-                  {destinations && line.recordedItemIds.length>0 && onCorrect && <button className="text-button" type="button" disabled={disabled} onClick={()=>onCorrect(line.recordedItemIds)}>Corregir destino registrado</button>}
+                  {destinations && line.draftQuantity ? (
+                    <div
+                      className="preparation-selector"
+                      role="group"
+                      aria-label={`Destino de ${line.product_name}`}
+                    >
+                      {(['table', 'takeaway'] as const).map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          disabled={disabled}
+                          aria-pressed={line.preparation_destination === d}
+                          onClick={() => onDestination?.(line.key, d)}
+                        >
+                          {d === 'table' ? 'Para mesa' : 'Para llevar'}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span
+                      className="preparation-badge"
+                      data-destination={line.preparation_destination}
+                    >
+                      {preparationLabels[line.preparation_destination ?? 'table']}
+                    </span>
+                  )}
+                  {destinations && line.recordedItemIds.length > 0 && onCorrect && (
+                    <button
+                      className="text-button"
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onCorrect(line.recordedItemIds)}
+                    >
+                      Corregir destino registrado
+                    </button>
+                  )}
                 </td>
                 <td>{formatMoney(line.displaySubtotal, currency)}</td>
               </tr>
@@ -114,7 +150,15 @@ export function PosOrderLines({
             <Minus size={15} />
           </button>
           <output>{selectedDisplay?.quantity ?? selected.quantity}</output>
-          {destinations && onSplit && <button type="button" disabled={disabled || selected.quantity<2} onClick={()=>setSplitting(true)}>Separar destino</button>}
+          {destinations && onSplit && (
+            <button
+              type="button"
+              disabled={disabled || selected.quantity < 2}
+              onClick={() => setSplitting(true)}
+            >
+              Separar destino
+            </button>
+          )}
           <button
             type="button"
             disabled={disabled || selected.quantity >= 999}
@@ -154,7 +198,47 @@ export function PosOrderLines({
           placeholder="Indicación de preparación…"
         />
       )}
-      {selected && splitting && <Modal title="Separar cantidades por destino" onClose={()=>setSplitting(false)} locked={disabled}><form className="form-stack" onSubmit={e=>{e.preventDefault();const amount=Number(new FormData(e.currentTarget).get('quantity'));onSplit?.(selected.key,amount);setSplitting(false)}}><p>{selected.product_name}: {selected.quantity} unidades nuevas. La cantidad elegida irá al otro destino.</p><Field label="Cantidad a separar"><input name="quantity" type="number" inputMode="numeric" defaultValue={1} min={1} max={selected.quantity-1} required disabled={disabled}/></Field><button className="button primary" disabled={disabled} type="submit">Separar cantidad</button></form></Modal>}
+      {selected &&
+        splitting &&
+        createPortal(
+          <Modal
+            title="Separar cantidades por destino"
+            onClose={() => setSplitting(false)}
+            locked={disabled}
+          >
+            <form
+              className="form-stack"
+              onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const amount = Number(new FormData(e.currentTarget).get('quantity'))
+                onSplit?.(selected.key, amount)
+                setSplitting(false)
+              }}
+            >
+              <p>
+                {selected.product_name}: {selected.quantity} unidades nuevas. La cantidad elegida
+                irá al otro destino.
+              </p>
+              <Field label="Cantidad a separar">
+                <input
+                  name="quantity"
+                  type="number"
+                  inputMode="numeric"
+                  defaultValue={1}
+                  min={1}
+                  max={selected.quantity - 1}
+                  required
+                  disabled={disabled}
+                />
+              </Field>
+              <button className="button primary" disabled={disabled} type="submit">
+                Separar cantidad
+              </button>
+            </form>
+          </Modal>,
+          document.body,
+        )}
     </section>
   )
 }

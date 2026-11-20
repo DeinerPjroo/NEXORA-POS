@@ -7,6 +7,7 @@ use App\Models\Permission;
 final class PermissionCatalog
 {
     public const ALL = [
+        'deliveries.operate' => ['Operar entregas a domicilio', 'Domicilios'],
         'kitchen.view' => ['Consultar estaciones de cocina', 'Cocina'],
         'kitchen.manage' => ['Configurar estaciones de cocina', 'Cocina'],
         'kitchen.operate' => ['Operar comandas de cocina', 'Cocina'],

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -72,6 +72,7 @@ export function OrderComposer({
 }) {
   const context = useOperationContext(terminal)
   const { session } = useSession()
+  const [searchParams] = useSearchParams()
   const [currency] = useState(session!.company.currency)
   const [remembered] = useState(() =>
     terminal ? loadPosContext(session!) : { branchId: null, channel: 'takeaway' as OrderChannel },
@@ -80,7 +81,13 @@ export function OrderComposer({
     initialDining?.branch_id ?? remembered.branchId,
   )
   const [channel, setChannel] = useState<OrderChannel>(
-    initialDining ? 'dine_in' : remembered.channel,
+    initialDining
+      ? 'dine_in'
+      : searchParams.get('canal') === 'delivery'
+        ? 'delivery'
+        : searchParams.get('canal') === 'takeaway'
+          ? 'takeaway'
+          : remembered.channel,
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [details, setDetails] = useState(false)
@@ -91,8 +98,12 @@ export function OrderComposer({
     terminal && !session!.permissions.includes('sales.collect') ? 'save' : 'checkout',
   )
   const [kitchenOrderId, setKitchenOrderId] = useState<number | null>(null)
-  const [tableKitchen,setTableKitchen]=useState(false)
-  const [correction,setCorrection]=useState<{orderId:number;revision:number;itemIds:number[]}|null>(null)
+  const [tableKitchen, setTableKitchen] = useState(false)
+  const [correction, setCorrection] = useState<{
+    orderId: number
+    revision: number
+    itemIds: number[]
+  } | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
@@ -215,13 +226,14 @@ export function OrderComposer({
       toast('Pedido guardado en su mesa.')
       return
     }
-    if (terminal && orderIntent.current === 'kitchen') {
+    if (terminal && (orderIntent.current === 'kitchen' || !can('sales.collect'))) {
       setCart([])
       setActiveLine(null)
       setConfirmedOrder(null)
       setCheckoutOrderId(order.id)
       setCheckoutContext(currentCheckoutContext)
-      setKitchenOrderId(order.id)
+      if (orderIntent.current === 'kitchen') setKitchenOrderId(order.id)
+      else toast('Pedido guardado. Puedes enviarlo a cocina.')
       return
     }
     toast(
@@ -314,7 +326,7 @@ export function OrderComposer({
   }
   function addLine(line: CartLine) {
     if (locked) return
-    line=withDestination(line,channel==='dine_in'?'table':'takeaway')
+    line = withDestination(line, channel === 'dine_in' ? 'table' : 'takeaway')
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
       return existing
@@ -335,16 +347,57 @@ export function OrderComposer({
         ),
       )
   }
-  function destination(key:string, target:'table'|'takeaway', split?:number) {
-    if(locked) return
-    setCart(previous=>{
-      const selected=previous.find(l=>l.key===key)
-      if(!selected || (split!==undefined && (!Number.isInteger(split)||split<1||split>=selected.quantity))) return previous
-      const moved=withDestination({...selected,quantity:split??selected.quantity},target)
-      const rest=previous.flatMap(l=>l.key!==key?[l]:split?[{...l,quantity:l.quantity-split}]:[])
-      const existing=rest.find(l=>l.key===moved.key && l.notes===moved.notes && l.expected_unit_price===moved.expected_unit_price)
-      setActiveLine(moved.key)
-      return existing?rest.map(l=>l===existing?{...l,quantity:l.quantity+moved.quantity}:l):[...rest,moved]
+  function destination(key: string, target: 'table' | 'takeaway', split?: number) {
+    if (locked) return
+    const source = cart.find((l) => l.key === key)
+    if (
+      !source ||
+      (split !== undefined && (!Number.isInteger(split) || split < 1 || split >= source.quantity))
+    )
+      return
+    let movedKey = withDestination(source, target).key
+    if (
+      cart.some(
+        (l) =>
+          l.key === movedKey &&
+          (l.notes !== source.notes || l.expected_unit_price !== source.expected_unit_price),
+      )
+    )
+      movedKey = withDestination(
+        {
+          ...source,
+          key:
+            source.key.replace(/\|destination=(table|takeaway)$/, '') +
+            '|move=' +
+            crypto.randomUUID(),
+        },
+        target,
+      ).key
+    setActiveLine(movedKey)
+    setCart((previous) => {
+      const selected = previous.find((l) => l.key === key)
+      if (
+        !selected ||
+        (split !== undefined &&
+          (!Number.isInteger(split) || split < 1 || split >= selected.quantity))
+      )
+        return previous
+      const moved = {
+        ...withDestination({ ...selected, quantity: split ?? selected.quantity }, target),
+        key: movedKey,
+      }
+      const rest = previous.flatMap((l) =>
+        l.key !== key ? [l] : split ? [{ ...l, quantity: l.quantity - split }] : [],
+      )
+      const existing = rest.find(
+        (l) =>
+          l.key === moved.key &&
+          l.notes === moved.notes &&
+          l.expected_unit_price === moved.expected_unit_price,
+      )
+      return existing
+        ? rest.map((l) => (l === existing ? { ...l, quantity: l.quantity + moved.quantity } : l))
+        : [...rest, moved]
     })
   }
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -361,13 +414,39 @@ export function OrderComposer({
       (orderIntent.current === 'checkout' && terminal && (!posReady || !can('sales.collect')))
     )
       return
-    const data = Object.fromEntries(new FormData(event.currentTarget))
+    if (channel === 'dine_in' && !dining) {
+      setTablesOpen(true)
+      toast('Selecciona la mesa para este pedido.')
+      return
+    }
+    const { delivery_name, delivery_phone, delivery_address, delivery_instructions, ...data } =
+      Object.fromEntries(new FormData(event.currentTarget))
+    if (
+      channel === 'delivery' &&
+      (!String(delivery_name ?? '').trim() ||
+        String(delivery_phone ?? '').trim().length < 3 ||
+        String(delivery_address ?? '').trim().length < 5)
+    ) {
+      setDetails(true)
+      toast('Completa nombre, teléfono y dirección del domicilio.')
+      return
+    }
     operation.send({
       ...data,
       branch_id: selected,
       channel,
       currency,
       items: serializeCart(cart, true),
+      ...(channel === 'delivery'
+        ? {
+            delivery: {
+              recipient_name: delivery_name,
+              phone: delivery_phone,
+              address: delivery_address,
+              instructions: delivery_instructions || null,
+            },
+          }
+        : {}),
       ...(terminal && dining && activeTableOrder.data?.data[0]
         ? {
             append_order_id: activeTableOrder.data.data[0].id,
@@ -814,7 +893,16 @@ export function OrderComposer({
             {currentOrder && (
               <div className="pos-current-order-reference">Pedido #{currentOrder.id}</div>
             )}
-            {dining && <button type="button" className="text-button" disabled={locked} onClick={()=>setTableKitchen(true)}>Comandas de esta mesa</button>}
+            {dining && (
+              <button
+                type="button"
+                className="text-button"
+                disabled={locked}
+                onClick={() => setTableKitchen(true)}
+              >
+                Comandas de esta mesa
+              </button>
+            )}
             {terminal && dining && activeTableOrder.isPending && (
               <p className="notice">Cargando pedido de la mesa…</p>
             )}
@@ -826,10 +914,27 @@ export function OrderComposer({
                 currency={currency}
                 selectedKey={activeLine}
                 disabled={locked}
-                destinations={channel==='dine_in' && !!dining}
+                destinations={channel === 'dine_in' && !!dining}
                 onDestination={destination}
-                onSplit={(key,amount)=>{const line=cart.find(l=>l.key===key);if(line)destination(key,line.preparation_destination==='table'?'takeaway':'table',amount)}}
-                onCorrect={currentOrder && !['cancelled','delivered'].includes(currentOrder.status) ? (ids)=>setCorrection({orderId:currentOrder.id,revision:currentOrder.revision,itemIds:ids}) : undefined}
+                onSplit={(key, amount) => {
+                  const line = cart.find((l) => l.key === key)
+                  if (line)
+                    destination(
+                      key,
+                      line.preparation_destination === 'table' ? 'takeaway' : 'table',
+                      amount,
+                    )
+                }}
+                onCorrect={
+                  currentOrder && !['cancelled', 'delivered'].includes(currentOrder.status)
+                    ? (ids) =>
+                        setCorrection({
+                          orderId: currentOrder.id,
+                          revision: currentOrder.revision,
+                          itemIds: ids,
+                        })
+                    : undefined
+                }
                 onSelect={setActiveLine}
                 onQuantity={quantity}
                 onRemove={(key) =>
@@ -961,9 +1066,26 @@ export function OrderComposer({
                   }
                 >
                   <option value="takeaway">Para llevar</option>
-                  <option value="dine_in">En el restaurante</option>
+                  <option value="dine_in">Consumo en mesa</option>
+                  <option value="delivery">Domicilio</option>
                 </select>
               </Field>
+              {channel === 'delivery' && (
+                <>
+                  <Field label="Nombre de quien recibe">
+                    <input name="delivery_name" maxLength={100} />
+                  </Field>
+                  <Field label="Teléfono del domicilio">
+                    <input name="delivery_phone" type="tel" maxLength={30} />
+                  </Field>
+                  <Field label="Dirección de entrega">
+                    <textarea name="delivery_address" maxLength={300} rows={2} />
+                  </Field>
+                  <Field label="Indicaciones de entrega">
+                    <textarea name="delivery_instructions" maxLength={300} rows={2} />
+                  </Field>
+                </>
+              )}
               <Field label="Referencia del pedido">
                 <input
                   name="reference"
@@ -1133,8 +1255,10 @@ export function OrderComposer({
       {kitchenOrderId && (
         <KitchenSend orderId={kitchenOrderId} onClose={() => setKitchenOrderId(null)} />
       )}
-      {tableKitchen && dining && <TableKitchen sessionId={dining.id} onClose={()=>setTableKitchen(false)}/>}
-      {correction && <CorrectPreparation {...correction} onClose={()=>setCorrection(null)}/>}
+      {tableKitchen && dining && (
+        <TableKitchen sessionId={dining.id} onClose={() => setTableKitchen(false)} />
+      )}
+      {correction && <CorrectPreparation {...correction} onClose={() => setCorrection(null)} />}
       {checkoutOpen && checkoutOrderId && (
         <TerminalCheckout
           key={checkoutOrderId}

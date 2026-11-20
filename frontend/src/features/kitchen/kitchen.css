@@ -5,6 +5,49 @@
   height: 100%;
   min-height: 0;
 }
+.preparation-badge {
+  display: inline-flex;
+  margin: 5px 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #18725c;
+  background: #15977516;
+}
+.preparation-badge[data-destination='takeaway'] {
+  color: #926319;
+  background: #cb922f1c;
+}
+.preparation-selector {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.preparation-selector button {
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+}
+.preparation-selector button[aria-pressed='true'] {
+  background: var(--secondary);
+  color: white;
+  border-color: var(--secondary);
+}
+.table-kitchen-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.table-kitchen-history article {
+  margin: 0;
+  padding: 12px;
+  font-size: 13px;
+}
 .kitchen-heading,
 .kitchen-toolbar {
   display: flex;

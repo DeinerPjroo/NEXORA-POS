@@ -7,8 +7,8 @@
   "module": "Nexora Kitchen: sincronización privada",
   "status": "IN_PROGRESS",
   "active_task": "3.1-C",
-  "last_completed_task": "2.3-UX",
-  "next_task": "Retomar3.1-C: sincronización privada Kitchen con permisos/sucursales de empleados ya integrados; después3.1-D y pendientes operativos Terminal. Sin reiniciar fases ni auditar módulos terminados.",
+  "last_completed_task": "3.1-PREP",
+  "next_task": "Retomar3.1-C privado/Reverb y luego3.1-D; destinos por línea, correcciones, recogidas y domicilios operativos completados. Sin reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "2.3-UX COMPLETED: barra operativa común en POS/mesas/pedidos/caja, Admin explícito según permisos y retorno de /inicio para cajero. Filas de pedidos compactas con scroll interno; enlaces de nuevo pedido al POS. Barra bloqueada con adiciones e inert durante cobro/envío incierto, sin modificar backend financiero. Build/TS y Chromium3 cubiertos entre ejecuciones; flujo final cajero1.2min aprobado y capturas desktop/móvil revisadas. Corridas previas afectadas por ENOSPC, final trace=off; solo cachés propias limpiadas. Retomar3.1-C.",
+  "working_verification": "3.1-PREP COMPLETED: destinos por línea y cantidades pendientes, cuenta única de mesa, adiciones sin reenvío y correcciones trazables. Comandas por atención; recogidas takeaway y domicilios delivery con dirección/repartidor/estados reales separados de pagos. SQL6/115 cubiertos entre ejecuciones, nuevas pruebas nativas y dependencias2/52; Chromium2 cubiertos: flujo real1 aprobado2.1min y mesero sin cobro1 aprobado17.2s, trace=off, capturas KDS/domicilios revisadas y build/TS/Pint correctos. Handoff final SQL1/20 incluido. Migraciones31/32 aplicadas/DDL; sin fixtures en empresa real ni cambios al motor financiero. Seguir3.1-C.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

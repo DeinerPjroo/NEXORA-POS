@@ -4,6 +4,7 @@ import { api } from '../../lib/api'
 import { ErrorNotice, Loading, useToast } from '../../components/ui'
 import { useOperation } from '../operations/useOperation'
 import { OperationNotice } from '../operations/OperationNotice'
+import { preparationLabels } from './TableKitchen'
 type Preview = {
   order_id: number
   order_revision: number
@@ -12,6 +13,7 @@ type Preview = {
     id: number
     name: string
     quantity: number
+    preparation_destination?: 'table' | 'takeaway'
     station: { id: number; name: string } | null
   }[]
 }
@@ -72,6 +74,8 @@ export function KitchenSend({ orderId, onClose }: { orderId: number; onClose: ()
               </strong>
               <br />
               {line.station?.name ?? 'Sin estación: configura su ruta antes de enviar.'}
+              <br />
+              {preparationLabels[line.preparation_destination ?? 'table']}
             </p>
           ))}
           {!query.data?.data.lines.length && !query.error && (

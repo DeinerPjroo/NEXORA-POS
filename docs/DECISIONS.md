@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-021 · COMPLETED · Canal de atención y destino de preparación
+
+Conservar Order como identidad financiera. preparation_destination por línea no cambia el canal ni recotiza precios: una mesa admite servir/empacar y separa cantidades pendientes. PreparationCorrection agrega historia y reemplaza solo instrucciones efectivas; snapshots de línea/comanda permanecen inmutables. Revisión de pedido y tickets invalida acciones viejas. takeaway es recogida; delivery usa OrderDelivery/eventos con FK, revisiones/UUID, sucursal y repartidor autorizado. Contactos solo para gestor o asignado. Salida a reparto entrega tickets listos al repartidor en la misma transacción; entrega al cliente es otro estado y nunca un cobro. Reutilizar servicios de pedido/cocina/caja existentes.
+
 ## DEC-020 · COMPLETED · Empleados con identidad y sucursales existentes
 
 Extender users/roles con revisiones y employee_branches con FK compuestas. Cuentas nuevas requieren sucursales explícitas; acceso legado se conserva. Contexto BranchAccess autenticado limita modelos operativos y comandos, sin confiar en sucursal del cliente. Tenant lock serializa cambios y se revalida versión de sesión antes de comandos idempotentes. Proteger propietario/cuenta propia y negar concesiones superiores al actor. Cambios de acceso revocan sesiones, conservan MFA e historia; PIN6 existente solo desbloquea sesión personal. Admin gestiona empleados, Terminal/Kitchen reutilizan los mismos permisos y servicios.

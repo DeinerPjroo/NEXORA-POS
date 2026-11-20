@@ -48,6 +48,9 @@ final class CreateOrder
                 $previousStatus = null;
             }
             $combos = [];
+            if (! $appending && $order->channel === 'delivery') {
+                app(DeliveryWorkflow::class)->create($actor, $order, $data['delivery']);
+            }
             if ($dining && ! $appending) {
                 $order->dining_session_id = $dining->id;
                 $order->dining_snapshot = $occupancy->snapshot($dining);

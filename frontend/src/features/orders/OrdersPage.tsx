@@ -13,11 +13,12 @@ import { orderStates } from '../operations/types'
 import type { Order } from '../operations/types'
 import { posPermissions } from '../pos/pos-permissions'
 
-export function OrdersPage() {
+export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
   const context = useOperationContext()
   const { session } = useSession()
   const can = useCan()
-  const newOrderPath = posPermissions.every(can) ? '/pos' : '/pedidos/nuevo'
+  const newOrderPath =
+    (posPermissions.every(can) ? '/pos' : '/pedidos/nuevo') + (channel ? '?canal=takeaway' : '')
   const [branch, setBranch] = useState<number | null>(null)
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
@@ -32,6 +33,7 @@ export function OrdersPage() {
     per_page: '12',
   })
   if (status) params.set('status', status)
+  if (channel) params.set('channel', channel)
   const query = useQuery({
     queryKey: ['orders', params.toString()],
     queryFn: ({ signal }) => api<CatalogPage<Order>>(`orders?${params}`, { signal }),
@@ -42,7 +44,7 @@ export function OrdersPage() {
     <section className="terminal-orders" aria-label="Pedidos operativos">
       <PageTitle
         eyebrow="DEL PRIMER SABOR A LA ENTREGA"
-        title="Pedidos"
+        title={channel ? 'Para llevar · Recogidas' : 'Pedidos'}
         description="Consulta lo que está pendiente, sigue la preparación y conserva su historia."
         action={
           can('orders.manage') &&
@@ -107,8 +109,12 @@ export function OrdersPage() {
                       {order.reference || order.customer_name || 'Pedido del restaurante'}
                     </strong>
                     <small>
-                      {order.channel === 'takeaway' ? 'Para llevar' : 'En restaurante'} ·{' '}
-                      {order.items_count} líneas
+                      {order.channel === 'takeaway'
+                        ? 'Recogida en mostrador'
+                        : order.channel === 'delivery'
+                          ? 'Domicilio'
+                          : 'Consumo en mesa'}{' '}
+                      · {order.items_count} líneas
                       {order.dining_snapshot &&
                         ` · Ubicación inicial: ${order.dining_snapshot.tables.map((t) => t.name).join(', ')}`}
                     </small>

@@ -743,3 +743,29 @@ alter table `employee_branches` add constraint `employee_branches_tenant_id_user
 
 alter table `employee_branches` add constraint `employee_branches_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
 
+alter table `order_items` add `preparation_destination` varchar(16) null;
+
+create table `preparation_corrections` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `order_item_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `from_destination` varchar(16) not null, `to_destination` varchar(16) not null, `reason` varchar(300) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `preparation_corrections` add constraint `preparation_item_fk` foreign key (`tenant_id`, `order_id`, `order_item_id`) references `order_items` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `preparation_corrections` add constraint `preparation_corrections_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `order_deliveries` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `order_id` bigint unsigned not null, `courier_id` bigint unsigned null, `recipient_name` varchar(100) not null, `phone` varchar(30) not null, `address` varchar(300) not null, `instructions` varchar(300) null, `status` varchar(24) not null default 'pending', `revision` int unsigned not null default '1', `out_at` timestamp null, `delivered_at` timestamp null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `order_deliveries` add unique `order_deliveries_tenant_id_order_id_unique`(`tenant_id`, `order_id`);
+
+alter table `order_deliveries` add unique `delivery_order_identity`(`tenant_id`, `order_id`, `id`);
+
+alter table `order_deliveries` add constraint `delivery_order_fk` foreign key (`tenant_id`, `branch_id`, `order_id`) references `orders` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `order_deliveries` add constraint `order_deliveries_tenant_id_courier_id_foreign` foreign key (`tenant_id`, `courier_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `delivery_events` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `order_delivery_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `status` varchar(24) not null, `courier_id` bigint unsigned null, `reason` varchar(250) null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `delivery_events` add constraint `delivery_event_parent` foreign key (`tenant_id`, `order_id`, `order_delivery_id`) references `order_deliveries` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `delivery_events` add constraint `delivery_events_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `delivery_events` add constraint `delivery_events_tenant_id_courier_id_foreign` foreign key (`tenant_id`, `courier_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

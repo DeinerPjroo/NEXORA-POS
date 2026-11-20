@@ -46,7 +46,7 @@ final class KitchenWorkflow
     public function pending(Order $order)
     {
         $sent = KitchenTicketLine::where('order_id', $order->id)->pluck('order_item_id');
-        $items = $order->items()->whereNotIn('id', $sent)->orderBy('id')->get();
+        $items = $order->items()->whereNotIn('id', $sent)->with('preparationCorrections')->orderBy('id')->get();
         $routes = KitchenRoute::where('branch_id', $order->branch_id)->whereIn('product_id', $items->pluck('product_id'))->where('is_active', true)->with('station')->get()->keyBy('product_id');
 
         return $items->map(fn ($item) => ['item' => $item, 'station' => ($routes->get($item->product_id)?->station?->is_active ? $routes->get($item->product_id)->station : null)]);
@@ -72,7 +72,7 @@ final class KitchenWorkflow
                 $ticket = KitchenTicket::create(['branch_id' => $order->branch_id, 'order_id' => $order->id, 'kitchen_dispatch_id' => $dispatch->id, 'kitchen_station_id' => $station->id, 'station_name' => $station->name, 'station_color' => $station->color, 'target_minutes' => $station->target_minutes, 'order_snapshot' => ['channel' => $order->channel, 'reference' => $order->reference, 'notes' => $order->notes, 'dining' => $order->dining_snapshot], 'status' => 'new', 'revision' => 1]);
                 foreach ($rows as $row) {
                     $item = $row['item'];
-                    $snapshot = [...$item->only('product_name', 'variant_name', 'quantity', 'notes', 'order_combo_id'),'preparation_destination'=>$item->destination($order->channel)];
+                    $snapshot = [...$item->only('product_name', 'variant_name', 'quantity', 'notes', 'order_combo_id'), 'preparation_destination' => $item->destination($order->channel)];
                     $snapshot['preparations'] = collect($item->modifiers_snapshot ?? [])->map(fn ($group) => ['name' => $group['group_name'], 'options' => collect($group['options'])->pluck('name')->values()->all()])->all();
                     KitchenTicketLine::create(['order_id' => $order->id, 'kitchen_ticket_id' => $ticket->id, 'order_item_id' => $item->id, 'snapshot' => $snapshot]);
                 }
@@ -128,6 +128,19 @@ final class KitchenWorkflow
         $order->save();
         OrderEvent::create(['order_id' => $order->id, 'actor_id' => $actor->id, 'from_status' => $from, 'to_status' => $status, 'reason' => 'Actualización de comandas de cocina.', 'created_at' => now()]);
         Audit::record('order.kitchen.synchronized', 'Se sincronizó el estado de preparación.', $actor, ['order_id' => $order->id, 'status' => $status]);
+    }
+
+    // Called inside the authorized delivery transaction under Tenant/Order locks.
+    public function handOffForDelivery(User $actor, Order $order): void
+    {
+        foreach (KitchenTicket::where('order_id', $order->id)->where('status', 'ready')->lockForUpdate()->get() as $ticket) {
+            $ticket->status = 'delivered';
+            $ticket->delivered_at = now();
+            $ticket->revision++;
+            $ticket->save();
+            $this->event($actor, $ticket, 'ready', 'delivered', 'Entregada al repartidor del domicilio.');
+        }
+        $this->synchronize($actor, $order);
     }
 
     public function cancel(User $actor, Order $order, ?string $reason): void

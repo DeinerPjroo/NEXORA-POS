@@ -25,7 +25,13 @@ export type KitchenTicket = {
     variant_name: string | null
     quantity: number
     preparation_destination?: 'table' | 'takeaway'
-    corrections?: {id:number;reason:string;from_destination:string;to_destination:string;created_at:string}[]
+    corrections?: {
+      id: number
+      reason: string
+      from_destination: string
+      to_destination: string
+      created_at: string
+    }[]
     notes: string | null
     preparations: { name: string; options: string[] }[]
   }[]

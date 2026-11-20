@@ -49,6 +49,8 @@ export function TerminalEnvironment({
     { to: '/terminal/mesas', label: 'Mesas', permission: 'dining.view' },
     { to: '/pos', label: 'Terminal POS', permission: 'sales.collect' },
     { to: '/pedidos', label: 'Pedidos', permission: 'orders.view' },
+    { to: '/terminal/recogidas', label: 'Para llevar', permission: 'orders.view' },
+    { to: '/terminal/domicilios', label: 'Domicilios', permission: 'orders.view' },
     { to: '/caja', label: 'Caja rápida', permission: 'cash.view' },
     { to: '/terminal/cocina', label: 'Cocina', permission: 'kitchen.view' },
     { to: '/salones/reservas', label: 'Reservas', permission: 'dining.reserve' },
@@ -82,7 +84,12 @@ export function TerminalEnvironment({
           <nav aria-label="Navegación operativa">
             {links
               .filter(
-                (link) => can(link.permission) && (link.to !== '/pos' || posPermissions.every(can)),
+                (link) =>
+                  can(link.permission) &&
+                  (link.to !== '/pos' || posPermissions.every(can)) &&
+                  (link.to !== '/terminal/domicilios' ||
+                    can('orders.manage') ||
+                    can('deliveries.operate')),
               )
               .map((link) => (
                 <Link

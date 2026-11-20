@@ -25,7 +25,7 @@ final class PromotionRequest extends FormRequest
             'priority' => ['required', 'integer', 'between:0,999'], 'valid_from' => ['nullable', 'date_format:Y-m-d'], 'valid_until' => ['nullable', 'date_format:Y-m-d'], 'is_active' => ['required', 'boolean'],
             'variant_id' => [$create ? 'sometimes' : 'prohibited', 'nullable', 'integer', Rule::exists('product_variants', 'id')->where('tenant_id', $this->user()->tenant_id)->where('product_id', $this->route('product')->id)],
             'branch_id' => [$create ? 'sometimes' : 'prohibited', 'nullable', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $this->user()->tenant_id)],
-            'channel' => [$create ? 'required' : 'prohibited', Rule::in(['all', 'takeaway', 'dine_in'])], 'tenant_id' => ['prohibited'], 'product_id' => ['prohibited']];
+            'channel' => [$create ? 'required' : 'prohibited', Rule::in(['all', 'takeaway', 'dine_in', 'delivery'])], 'tenant_id' => ['prohibited'], 'product_id' => ['prohibited']];
     }
 
     public function after(): array

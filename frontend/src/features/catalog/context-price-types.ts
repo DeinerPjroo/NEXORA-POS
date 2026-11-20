@@ -1,8 +1,9 @@
-export type OrderChannel = 'takeaway' | 'dine_in'
+export type OrderChannel = 'takeaway' | 'dine_in' | 'delivery'
 export const channelLabels = {
   all: 'Todos los canales',
-  takeaway: 'Para llevar',
-  dine_in: 'En el restaurante',
+  takeaway: 'Para llevar / Recogida',
+  dine_in: 'Consumo en mesa',
+  delivery: 'Domicilio',
 }
 export type PriceContext = {
   usage?: 'combo_reference'

@@ -15,7 +15,7 @@ final class OrderPreviewRequest extends FormRequest
     public function rules(): array
     {
         return ['branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $this->user()->tenant_id)],
-            'currency' => ['required', Rule::in(['COP', 'USD', 'EUR'])], 'channel' => ['required', Rule::in(['takeaway', 'dine_in'])],
+            'currency' => ['required', Rule::in(['COP', 'USD', 'EUR'])], 'channel' => ['required', Rule::in(['takeaway', 'dine_in', 'delivery'])],
             'tenant_id' => ['prohibited'], 'idempotency_key' => ['prohibited'], 'subtotal' => ['prohibited'], ...OrderLineRules::rules(false)];
     }
 }

@@ -17,6 +17,7 @@ final class OperationFiltersRequest extends FormRequest
     {
         return [
             'branch_id' => ['sometimes', 'integer', Rule::exists('branches', 'id')->where('tenant_id', app(TenantContext::class)->id())],
+            'channel' => ['sometimes', 'in:dine_in,takeaway,delivery'],
             'status' => ['sometimes', Rule::in($this->is('api/v1/cash/*') ? ['open', 'closed'] : ['open', 'preparing', 'ready', 'delivered', 'cancelled'])],
             'page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];

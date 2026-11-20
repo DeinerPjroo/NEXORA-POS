@@ -40,6 +40,20 @@ body.terminal-active {
 .terminal-brand span {
   color: #a999ff;
 }
+.terminal-header .terminal-brand,
+.terminal-header > button,
+.terminal-header > a {
+  flex-shrink: 0;
+}
+.terminal-header nav {
+  flex: 1;
+}
+.terminal-header .terminal-operator {
+  flex-shrink: 0;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .terminal-header nav {
   display: flex;
   gap: 5px;
@@ -94,6 +108,28 @@ body.terminal-active {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+.delivery-card {
+  flex-shrink: 0;
+  padding: 14px;
+  margin: 0;
+}
+.delivery-card header,
+.delivery-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.delivery-card p,
+.delivery-card details {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.delivery-actions {
+  justify-content: flex-start;
+  margin: 10px 0;
 }
 .terminal-orders .page-title,
 .terminal-orders .operation-toolbar {

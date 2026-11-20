@@ -37,7 +37,7 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
       expected_unit_price: item.unit_price,
       notes: item.notes ?? '',
       preparation_destination: item.preparation_destination,
-      recordedItemIds:[item.id],
+      recordedItemIds: [item.id],
       modifier_labels: item.modifiers_snapshot ?? [],
       recordedQuantity: item.quantity,
       draftQuantity: 0,
@@ -68,7 +68,7 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
       rows.push({
         ...draft,
         recordedQuantity: 0,
-        recordedItemIds:[],
+        recordedItemIds: [],
         draftQuantity: draft.quantity,
         displaySubtotal: subtotal,
       })

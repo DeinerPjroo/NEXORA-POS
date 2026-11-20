@@ -24,8 +24,9 @@ final class OrderPlan
         $preview = [];
         $subtotal = '0.0000';
         foreach ($data['items'] as $line) {
-            $destination=$line['preparation_destination'] ?? ($data['channel']==='dine_in'?'table':'takeaway');
-            abort_if($destination==='table' && $data['channel']!=='dine_in',422,'Solo un pedido de restaurante admite servir en mesa.');
+            $destination = $line['preparation_destination'] ?? ($data['channel'] === 'dine_in' ? 'table' : 'takeaway');
+            abort_if($destination === 'table' && $data['channel'] !== 'dine_in', 422, 'Solo un pedido de restaurante admite servir en mesa.');
+            abort_if($expectations && isset($line['preparation_destination']) && $destination === 'table' && empty($data['dining_session_id']), 422, 'Selecciona una atención de mesa vigente.');
             $product = $catalog->products->get($line['product_id']);
             abort_unless($product, 409, 'Un producto ya no está disponible. Revisa el catálogo.');
             if ($product->kind === 'combo') {
@@ -33,14 +34,14 @@ final class OrderPlan
                 $index = count($combos);
                 $combos[] = $plan['header'];
                 foreach ($plan['items'] as $item) {
-                    $items[] = [...$item, '_combo_index' => $index,'preparation_destination'=>$destination];
+                    $items[] = [...$item, '_combo_index' => $index, 'preparation_destination' => $destination];
                 }
-                $preview[] = [...$plan['preview'],'preparation_destination'=>$destination];
+                $preview[] = [...$plan['preview'], 'preparation_destination' => $destination];
             } else {
                 abort_if(($line['kind'] ?? 'regular') !== 'regular' || array_key_exists('components', $line) || array_key_exists('selection_version', $line), 422, 'Un producto individual no recibe composición de combo.');
                 $plan = $catalog->resolve($product, $line['variant_id'] ?? null, $line, $expectations);
-                $items[] = [...$plan['item'],'preparation_destination'=>$destination];
-                $preview[] = [...$plan['preview'],'preparation_destination'=>$destination];
+                $items[] = [...$plan['item'], 'preparation_destination' => $destination];
+                $preview[] = [...$plan['preview'], 'preparation_destination' => $destination];
             }
             abort_if(count($items) > 100, 422, 'El pedido supera 100 posiciones facturables al expandir sus combos.');
         }

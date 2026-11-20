@@ -25,6 +25,7 @@ export function homePath(session: Session): string {
   )
     return '/inicio'
   if (posPermissions.every(can)) return '/pos'
+  if (can('deliveries.operate') && !can('orders.manage')) return '/terminal/domicilios'
   if (can('kitchen.view') && !can('orders.manage')) return '/terminal/cocina'
   if (can('dining.view') && can('dining.operate')) return '/terminal/mesas'
   const sections = [
@@ -48,6 +49,7 @@ export function homePath(session: Session): string {
 export function terminalPath(session: Session): string {
   const can = (key: string) => session.permissions.includes(key)
   if (posPermissions.every(can)) return '/pos'
+  if (can('deliveries.operate') && !can('orders.manage')) return '/terminal/domicilios'
   if (can('kitchen.view') && !can('orders.manage')) return '/terminal/cocina'
   if (can('dining.view')) return '/terminal/mesas'
   if (can('orders.view')) return '/pedidos'

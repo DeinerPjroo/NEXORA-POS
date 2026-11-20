@@ -19,7 +19,7 @@ final class CatalogFiltersRequest extends FormRequest
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
             'category_id' => ['sometimes', 'integer', 'min:1'],
             'branch_id' => ['nullable', 'required_with:channel', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $this->user()->tenant_id)],
-            'channel' => ['nullable', 'required_with:branch_id', Rule::in(['takeaway', 'dine_in'])],
+            'channel' => ['nullable', 'required_with:branch_id', Rule::in(['takeaway', 'dine_in', 'delivery'])],
             'parent_id' => ['sometimes', 'integer', Rule::exists('categories', 'id')->where('tenant_id', $this->user()->tenant_id)],
             'level' => ['sometimes', Rule::in(['root', 'child'])],
             'status' => ['sometimes', Rule::in(['active', 'inactive'])],

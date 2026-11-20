@@ -53,7 +53,13 @@ export type OrderCombo = {
 }
 export type OrderItem = {
   preparation_destination?: 'table' | 'takeaway'
-  preparation_corrections?: {id:number;from_destination:string;to_destination:string;reason:string;created_at:string}[]
+  preparation_corrections?: {
+    id: number
+    from_destination: string
+    to_destination: string
+    reason: string
+    created_at: string
+  }[]
   order_combo_id?: number | null
   combo_position?: number | null
   availability_snapshot?: import('../catalog/availability-types').AvailabilityContext | null
@@ -93,7 +99,7 @@ export type Order = {
   public_id: string
   branch_id: number
   branch_name?: string
-  channel: 'dine_in' | 'takeaway'
+  channel: 'dine_in' | 'takeaway' | 'delivery'
   reference: string | null
   customer_name: string | null
   notes: string | null

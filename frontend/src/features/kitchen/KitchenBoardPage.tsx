@@ -223,7 +223,9 @@ export function KitchenBoardPage() {
                           ticket.order_snapshot.reference ||
                           (ticket.order_snapshot.channel === 'dine_in'
                             ? 'En restaurante'
-                            : 'Para llevar / domicilio')}
+                            : ticket.order_snapshot.channel === 'delivery'
+                              ? 'Domicilio'
+                              : 'Recogida en mostrador')}
                       </p>
                       <ul>
                         {ticket.lines.map((line) => (
@@ -233,8 +235,17 @@ export function KitchenBoardPage() {
                               <span>{line.product_name}</span>
                             </strong>
                             {line.variant_name && <small>{line.variant_name}</small>}
-                            <span className="preparation-badge" data-destination={line.preparation_destination}>{preparationLabels[line.preparation_destination ?? 'table']}</span>
-                            {line.corrections?.map(c=><p className="kitchen-note" key={c.id}>Corrección: {c.reason}</p>)}
+                            <span
+                              className="preparation-badge"
+                              data-destination={line.preparation_destination}
+                            >
+                              {preparationLabels[line.preparation_destination ?? 'table']}
+                            </span>
+                            {line.corrections?.map((c) => (
+                              <p className="kitchen-note" key={c.id}>
+                                Corrección: {c.reason}
+                              </p>
+                            ))}
                             {line.preparations?.map((group, i) => (
                               <small key={i}>
                                 {group.name}: {group.options.join(', ')}

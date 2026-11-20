@@ -13,7 +13,12 @@ export function loadPosContext(session: Session): {
     const data = JSON.parse(sessionStorage.getItem(posContextKey(session)) ?? 'null')
     return {
       branchId: Number.isSafeInteger(data?.branchId) && data.branchId > 0 ? data.branchId : null,
-      channel: data?.channel === 'dine_in' ? 'dine_in' : 'takeaway',
+      channel:
+        data?.channel === 'dine_in'
+          ? 'dine_in'
+          : data?.channel === 'delivery'
+            ? 'delivery'
+            : 'takeaway',
     }
   } catch {
     return { branchId: null, channel: 'takeaway' }

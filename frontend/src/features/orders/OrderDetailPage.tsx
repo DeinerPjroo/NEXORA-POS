@@ -36,7 +36,7 @@ export function OrderDetailPage() {
       <PageTitle
         eyebrow="CADA PEDIDO TIENE SU HISTORIA"
         title={`Pedido #${order.id}`}
-        description={`${order.branch_name} · ${order.channel === 'takeaway' ? 'Para llevar' : 'En el restaurante'}`}
+        description={`${order.branch_name} · ${order.channel === 'takeaway' ? 'Recogida en mostrador' : order.channel === 'delivery' ? 'Domicilio' : 'Consumo en mesa'}`}
         action={
           can('orders.manage') &&
           can('catalog.view') && (
