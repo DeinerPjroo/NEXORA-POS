@@ -6,6 +6,7 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 
 | ID | Estado | Capacidad y criterio de aceptación | Dependencias |
 | --- | --- | --- | --- |
+| DIGITAL-SPLIT-ACCOUNTS | COMPLETED | División inicial táctil2–20 y tarjetas seleccionables con importes del servidor; resets/permisos/UUID preservados. Build/TS/formato y Chromium dirigido1 aprobados: centavos, móvil, cuenta elegida y reintento sin duplicar dinero | INLINE-TERMINAL-CHECKOUT |
 | INLINE-TERMINAL-CHECKOUT | COMPLETED | Cobro sin modal bajo barra POS, cuenta izquierda/pago derecha, menú conservado e inert, métricas y confirmación fijas. Build/TS/formato y Chromium dirigido3 aprobados; último ajuste de indicadores verificado con build/restringido1 y capturas claro/oscuro/móvil | DIGITAL-TERMINAL-CHECKOUT |
 | DIGITAL-TERMINAL-CHECKOUT | COMPLETED | Cobro y recibo dentro de Terminal, tabla compacta/total visible/métodos reales táctiles/teclado/cambio; ajustes desplegables. Cierre protegido, reintento exacto sin duplicar pago y contexto actualizado. Build/TS/formato y cinco casos Chromium dirigidos cubiertos entre ejecuciones; claro/oscuro/móvil revisados. Sin backend ni suites generales | POS/mesas/cobros existentes |
 | CONT-01 | COMPLETED | Documentos de continuidad, protocolo permanente y pruebas SQL sin DROP DATABASE; 82/591 en SQLite y MariaDB, esquema aislado conservado | Ninguna |

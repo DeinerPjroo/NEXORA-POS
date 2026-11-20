@@ -1,0 +1,145 @@
+.pos-split-accounts {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--canvas);
+  padding: 8px;
+  flex-shrink: 0;
+}
+.pos-split-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--text);
+  padding: 3px;
+  text-align: left;
+}
+.pos-split-toggle > span:first-of-type {
+  flex: 1;
+}
+.pos-split-toggle strong,
+.pos-split-toggle small {
+  display: block;
+}
+.pos-split-toggle strong {
+  font-size: 13px;
+}
+.pos-split-toggle small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+.pos-split-presets {
+  display: grid;
+  grid-template-columns: 1.8fr repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+}
+.pos-split-accounts button {
+  cursor: pointer;
+}
+.pos-split-presets button,
+.pos-split-stepper button,
+.pos-split-parts button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 38px;
+  font-weight: 750;
+}
+.pos-split-presets button {
+  font-size: 12px;
+  padding: 4px;
+}
+.pos-split-accounts button[aria-pressed='true'] {
+  border-color: var(--pos-primary);
+  background: color-mix(in srgb, var(--pos-primary) 18%, var(--surface));
+  box-shadow: inset 0 -2px var(--pos-primary);
+}
+.pos-split-stepper {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 8px 0;
+}
+.pos-split-stepper > span {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+}
+.pos-split-stepper button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+}
+.pos-split-stepper output {
+  width: 30px;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pos-split-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.pos-split-parts button {
+  padding: 9px;
+  text-align: left;
+}
+.pos-split-parts button > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.pos-split-parts button > strong {
+  display: block;
+  font-size: 16px;
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.pos-split-hint {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin: 8px 0 4px;
+}
+.pos-split-selected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px;
+  margin-top: 8px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--pos-primary) 12%, var(--surface));
+  font-size: 11px;
+}
+.pos-split-selected strong {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.pos-split-accounts button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pos-split-accounts button:focus-visible {
+  outline: 3px solid var(--pos-primary);
+  outline-offset: 1px;
+}
+.pos-split-accounts button:active:not(:disabled) {
+  filter: brightness(0.9);
+}
+.pos-split-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  flex-shrink: 0;
+}

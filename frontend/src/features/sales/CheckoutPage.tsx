@@ -23,6 +23,7 @@ import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 import { useSalesCash } from './useSalesCash'
 import { TaxBreakdownDetails } from './TaxBreakdownDetails'
 import { CashTenderKeypad } from '../pos/CashTenderKeypad'
+import { PosSplitAccounts } from '../pos/PosSplitAccounts'
 
 type EmbeddedCheckout = {
   orderId?: number
@@ -273,7 +274,10 @@ function CheckoutForm({
             {quote.data &&
               paymentValid &&
               moneyUnits(normalizedPayment) < moneyUnits(quote.data.data.total) && (
-                <b>Este abono: {formatMoney(normalizedPayment, order.currency)}</b>
+                <b>
+                  {account ? `Cobrar ${account.label}` : 'Este abono'}:{' '}
+                  {formatMoney(normalizedPayment, order.currency)}
+                </b>
               )}
           </div>
         )}
@@ -316,10 +320,10 @@ function CheckoutForm({
           <OptionsPanel className={digital ? 'digital-payment-options' : 'form-stack'}>
             {digital && (
               <summary>
-                <SlidersHorizontal size={16} /> Ajustes · dividir · abono · caja
+                <SlidersHorizontal size={16} /> Ajustes · abono · caja
               </summary>
             )}
-            {can('sales.view') && (
+            {!digital && can('sales.view') && (
               <>
                 <Field
                   label="Dividir cuenta"
@@ -509,7 +513,30 @@ function CheckoutForm({
           </h2>
           <span className="pill neutral">Pedido #{order.id}</span>
         </div>
-        {!!quote.data?.data.accounts_preview.length && (
+        {digital && can('sales.view') && (
+          <fieldset disabled={operation.locked} className="pos-split-fieldset">
+            <PosSplitAccounts
+              count={splitCount}
+              selected={accountNumber}
+              parts={quote.data?.data.accounts_preview ?? []}
+              currency={order.currency}
+              pending={quote.isPending || quote.isFetching}
+              error={quote.isError}
+              onCount={(count) => {
+                setSplitCount(count)
+                setAccountNumber('1')
+                setPaymentAmount(null)
+                setReceived('')
+              }}
+              onSelect={(number) => {
+                setAccountNumber(number)
+                setPaymentAmount(null)
+                setReceived('')
+              }}
+            />
+          </fieldset>
+        )}
+        {!digital && !!quote.data?.data.accounts_preview.length && (
           <div className="notice">
             <span>
               {quote.data.data.accounts_preview
