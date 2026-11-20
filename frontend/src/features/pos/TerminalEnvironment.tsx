@@ -24,6 +24,7 @@ export function TerminalEnvironment({
   const { session } = useSession()
   const can = useCan()
   const { pathname } = useLocation()
+  const isKitchen = pathname === '/terminal/cocina'
   useEffect(() => {
     document.body.classList.add('terminal-active')
     return () => document.body.classList.remove('terminal-active')
@@ -41,16 +42,18 @@ export function TerminalEnvironment({
       className="terminal-environment"
       data-environment="terminal"
       data-screen={
-        pathname.includes('cobrar')
-          ? 'payment'
-          : pathname.includes('mesas')
-            ? 'tables'
-            : 'operation'
+        isKitchen
+          ? 'kitchen'
+          : pathname.includes('cobrar')
+            ? 'payment'
+            : pathname.includes('mesas')
+              ? 'tables'
+              : 'operation'
       }
     >
       <header className="terminal-header">
-        <Link to="/terminal/mesas" className="terminal-brand">
-          NEXORA <span>TERMINAL</span>
+        <Link to={isKitchen ? '/terminal/cocina' : '/terminal/mesas'} className="terminal-brand">
+          NEXORA <span>{isKitchen ? 'KITCHEN' : 'TERMINAL'}</span>
         </Link>
         <nav aria-label="Navegación operativa">
           {links

@@ -101,6 +101,14 @@ test('Kitchen: configurar ruta, enviar POS sin duplicar, tiempos y estados sobre
   await expect(ticket).toContainText('2 × Pizza Kitchen')
   await expect(ticket).toContainText('Sin aceitunas')
   await expect(ticket).not.toContainText('$')
+  await expect(board.locator('.terminal-brand')).toHaveText('NEXORA KITCHEN')
+  const filter = await board.getByLabel('Sucursal de cocina').boundingBox()
+  expect(filter!.width).toBeLessThan(320)
+  await expect
+    .poll(() =>
+      board.locator('.terminal-content').evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+    )
+    .toBe(true)
   const time = await ticket.locator('time').innerText()
   await expect.poll(() => ticket.locator('time').innerText()).not.toBe(time)
   await board.screenshot({ path: 'test-results/kitchen-board-desktop.png' })
@@ -135,6 +143,7 @@ test('Kitchen: configurar ruta, enviar POS sin duplicar, tiempos y estados sobre
   await expect
     .poll(() => board.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     .toBe(true)
+  await board.screenshot({ path: 'test-results/kitchen-board-mobile.png' })
   const { data: history } = await readApi<{ data: { lines: unknown[]; events: unknown[] }[] }>(
     page,
     `kitchen-tickets?branch_id=${registers[0].branch_id}&history=1`,

@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  ChefHat,
+  Clock3,
+  History,
+  RefreshCw,
+  Settings2,
+  Flame,
+  CheckCheck,
+  Inbox,
+} from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { ErrorNotice, Loading } from '../../components/ui'
@@ -58,18 +68,29 @@ export function KitchenBoardPage() {
   return (
     <section className="kitchen-board" aria-label="Nexora Kitchen">
       <header className="kitchen-heading">
-        <div>
-          <span className="eyebrow">NEXORA KITCHEN</span>
-          <h1>Comandas de cocina</h1>
+        <div className="kitchen-title">
+          <span className="kitchen-title-icon">
+            <ChefHat size={24} aria-hidden="true" />
+          </span>
+          <div>
+            <span className="eyebrow">CENTRO DE PREPARACIÓN</span>
+            <h1>Comandas de cocina</h1>
+          </div>
         </div>
-        <span className={query.error ? 'kitchen-offline' : 'muted'} role="status">
+        <span className="kitchen-sync" data-error={!!query.error} role="status">
+          <span className="kitchen-sync-dot" />
           {query.error
             ? 'Sin actualizar · reintenta'
             : query.isPending
               ? 'Cargando cocina…'
               : 'Actualización automática · cada 5 s'}
         </span>
-        {can('kitchen.manage') && <Link to="/cocina/rutas">Configurar rutas</Link>}
+        {can('kitchen.manage') && (
+          <Link className="kitchen-config" to="/cocina/rutas">
+            <Settings2 size={16} aria-hidden="true" />
+            Configurar rutas
+          </Link>
+        )}
       </header>
       <div className="kitchen-toolbar">
         <select
@@ -115,9 +136,15 @@ export function KitchenBoardPage() {
             setPage(1)
           }}
         >
+          <History size={16} aria-hidden="true" />
           {history ? 'Ver activas' : 'Ver historial'}
         </button>
         <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
+          <RefreshCw
+            size={16}
+            aria-hidden="true"
+            className={query.isFetching ? 'kitchen-refreshing' : ''}
+          />
           Actualizar cocina
         </button>
       </div>
@@ -132,10 +159,38 @@ export function KitchenBoardPage() {
           {columns.map((status) => (
             <section key={status} className="kitchen-column" data-state={status}>
               <h2>
-                {labels[status]}{' '}
+                <span className="kitchen-column-label">
+                  {status === 'new' ? (
+                    <Inbox size={19} aria-hidden="true" />
+                  ) : status === 'preparing' ? (
+                    <Flame size={19} aria-hidden="true" />
+                  ) : (
+                    <CheckCheck size={19} aria-hidden="true" />
+                  )}
+                  {labels[status]}
+                </span>
                 <span>{query.data?.data.filter((t) => t.status === status).length ?? 0}</span>
               </h2>
               <div className="kitchen-ticket-list">
+                {!query.error && !query.data?.data.some((ticket) => ticket.status === status) && (
+                  <div className="kitchen-empty">
+                    <ChefHat size={32} aria-hidden="true" />
+                    <strong>
+                      {history
+                        ? 'Sin comandas en esta página'
+                        : status === 'new'
+                          ? 'Todo recibido'
+                          : status === 'preparing'
+                            ? 'Sin preparaciones en curso'
+                            : 'Sin entregas pendientes'}
+                    </strong>
+                    <span>
+                      {history
+                        ? 'Prueba otra estación o página.'
+                        : 'Las comandas aparecerán aquí al cambiar de estado.'}
+                    </span>
+                  </div>
+                )}
                 {query.data?.data
                   .filter((ticket) => ticket.status === status)
                   .map((ticket) => (
@@ -152,12 +207,15 @@ export function KitchenBoardPage() {
                         <strong>
                           Pedido #{ticket.order_id} · Comanda #{ticket.id}
                         </strong>
-                        <time>{elapsed(ticket, serverClock)}</time>
+                        <time aria-label="Tiempo transcurrido">
+                          <Clock3 size={14} aria-hidden="true" />
+                          {elapsed(ticket, serverClock)}
+                        </time>
                       </header>
                       <p className="kitchen-station">
                         {ticket.station_name} · objetivo {ticket.target_minutes} min
                       </p>
-                      <p>
+                      <p className="kitchen-destination">
                         {ticket.order_snapshot.dining?.tables
                           ?.map((table) => table.name ?? table.table_name)
                           .join(' · ') ||
@@ -169,8 +227,9 @@ export function KitchenBoardPage() {
                       <ul>
                         {ticket.lines.map((line) => (
                           <li key={line.id}>
-                            <strong>
-                              {line.quantity} × {line.product_name}
+                            <strong className="kitchen-food">
+                              <span className="kitchen-quantity">{line.quantity} ×</span>{' '}
+                              <span>{line.product_name}</span>
                             </strong>
                             {line.variant_name && <small>{line.variant_name}</small>}
                             {line.preparations?.map((group, i) => (
