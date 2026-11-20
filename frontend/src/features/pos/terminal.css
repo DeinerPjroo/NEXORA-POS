@@ -82,9 +82,6 @@
 .pos-pickup-card > * {
   flex-shrink: 0;
 }
-.pos-pickup-card[data-state='ready'] {
-  border-left-color: var(--pos-pay);
-}
 .pos-pickup-card[data-state='cancelled'] {
   opacity: 0.65;
 }

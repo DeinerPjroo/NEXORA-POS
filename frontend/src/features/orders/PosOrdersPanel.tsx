@@ -6,6 +6,7 @@ import { ErrorNotice, Loading } from '../../components/ui'
 import { useCan } from '../auth/SessionProvider'
 import { orderStates, type Order } from '../operations/types'
 import { PosPickupsPanel } from './PosPickupsPanel'
+import { OrderIdentity } from './OrderIdentity'
 
 export function PosOrdersPanel({
   branchId,
@@ -54,17 +55,9 @@ export function PosOrdersPanel({
       ) : (
         order && (
           <>
-            <div className="pos-dining-selection">
-              <strong>{order.customer_name || 'Pedido del restaurante'}</strong>
-              <div>
-                {orderStates[order.status]} ·{' '}
-                {order.channel === 'takeaway'
-                  ? 'Para llevar'
-                  : order.channel === 'delivery'
-                    ? 'Domicilio'
-                    : order.dining_snapshot?.tables.map((table) => table.name).join(', ') ||
-                      'Consumo en mesa'}
-              </div>
+            <div className="pos-dining-selection order-channel-card" data-channel={order.channel}>
+              <OrderIdentity order={order} />
+              <div>{orderStates[order.status]}</div>
               {order.reference && <div>Referencia: {order.reference}</div>}
             </div>
             <div className="pos-order-preview-lines">

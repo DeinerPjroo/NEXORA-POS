@@ -1,0 +1,79 @@
+.order-channel-card[data-channel='dine_in'],
+.order-channel-filters [data-channel='dine_in'] {
+  --order-channel: #168bc1;
+}
+.order-channel-card[data-channel='takeaway'],
+.order-channel-filters [data-channel='takeaway'] {
+  --order-channel: #8b5cf6;
+}
+.order-channel-card[data-channel='delivery'],
+.order-channel-filters [data-channel='delivery'] {
+  --order-channel: #d58a16;
+}
+.order-channel-card[data-channel] {
+  border-left: 5px solid var(--order-channel);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--order-channel) 12%, var(--surface)),
+    var(--surface)
+  );
+}
+.order-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+}
+.order-channel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--order-channel) 45%, var(--line));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--order-channel) 15%, var(--surface));
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 750;
+}
+.order-channel-card .order-identity .order-identity-title {
+  font-size: clamp(23px, 2.2vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.order-identity > small {
+  font-size: 10px;
+}
+.order-channel-card .order-card-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+.order-channel-filters {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.order-channel-filters button {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 8px 10px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--order-channel, var(--line));
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+.order-channel-filters button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--order-channel, #7258df) 20%, var(--surface));
+  outline: 1px solid var(--order-channel, #7258df);
+}
+.order-channel-card[data-state='cancelled'] {
+  opacity: 0.65;
+}

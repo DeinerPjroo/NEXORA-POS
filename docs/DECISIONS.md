@@ -2,6 +2,8 @@
 
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación
 
+La identificación visual usa canal, no destino de una línea: mesa azul, recogida violeta y domicilio ámbar, siempre con texto/icono. Mesa histórica se identifica como ubicación al registrar; nombre de cliente tiene prioridad sobre referencia en pedidos sin mesa. Filtros reutilizan channel del API.
+
 Pedidos consultados desde POS se muestran en el panel izquierdo, también desde el encabezado común mediante callback de la terminal montada. Consulta/cobro conservan contexto del pedido original; no rehidratar líneas registradas como borrador ni duplicar servicios financieros.
 
 Recogidas operativas reutilizan la Terminal POS mediante canal inicial fijo y selector interno de pedidos persistidos. Líneas registradas se consultan, no se reconstruyen como adiciones. Cocina/cobro conservan el mismo Order; Nueva recogida es explícita y bloqueada con borrador o envío incierto. No ampliar append fuera de mesa en este cambio visual. Lectores conservan consulta sin conceder gestión.

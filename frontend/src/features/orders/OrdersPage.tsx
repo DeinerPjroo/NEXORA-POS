@@ -12,6 +12,7 @@ import { OperationalBranchPicker, useOperationContext } from '../operations/Oper
 import { orderStates } from '../operations/types'
 import type { Order } from '../operations/types'
 import { posPermissions } from '../pos/pos-permissions'
+import { OrderIdentity } from './OrderIdentity'
 
 export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
   const context = useOperationContext()
@@ -102,17 +103,16 @@ export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
           {query.data.data.length ? (
             <div className="terminal-order-list" aria-label="Lista de pedidos">
               {query.data.data.map((order) => (
-                <Link className="terminal-order-row" to={`/pedidos/${order.id}`} key={order.id}>
+                <Link
+                  className="terminal-order-row order-channel-card"
+                  data-channel={order.channel}
+                  to={`/pedidos/${order.id}`}
+                  key={order.id}
+                >
                   <span className="terminal-order-id">#{order.id}</span>
                   <div className="terminal-order-info">
-                    <strong>
-                      {order.channel === 'takeaway'
-                        ? order.customer_name || 'Recogida en mostrador'
-                        : order.reference || order.customer_name || 'Pedido del restaurante'}
-                    </strong>
-                    {order.channel === 'takeaway' && order.reference && (
-                      <small>Referencia: {order.reference}</small>
-                    )}
+                    <OrderIdentity order={order} />
+                    {order.reference && <small>Referencia: {order.reference}</small>}
                     <small>
                       {order.channel === 'takeaway'
                         ? 'Recogida en mostrador'

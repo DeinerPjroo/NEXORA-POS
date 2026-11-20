@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-20
 
+3.1-CHANNEL-UX: identidad compartida de pedidos en panel, detalle y lista operativa. Mesa azul, recogida violeta, domicilio ámbar con icono/texto; título grande usa mesas del snapshot (etiqueta ubicación al registrar) o cliente, referencia independiente. Filtros táctiles por canal usan API/paginación existentes; estado no reemplaza color de canal. Chromium dirigido1 aprobado34.1s: tres pedidos reales, títulos/colores/filtros y detalle, capturas escritorio/móvil revisadas. Sin backend/BD ni cambios financieros. Seguir3.1-C.
+
 3.1-ORDERS-UX COMPLETED: Pedidos lateral y superior abren lista/detalle dentro del panel izquierdo del POS, con estados/filtro/paginación y datos persistidos de la sucursal autorizada. Reutiliza selector de recogidas y KitchenSend/TerminalCheckout; cobrar desde consulta conserva contexto original y vuelve al detalle, sin otro pedido/venta. Guardas impiden abrir con borrador/incertidumbre; productos bloqueados mientras consulta. Callback del encabezado admite clic antes de terminar contexto. Chromium3 cubiertos: cobro real desde detalle42.4s, continuidad de cajero52s tras corregir clic temprano y cliente/tarjetas móviles19.3s tras corregir recorte de contenido. Capturas escritorio/móvil revisadas; TS/build aprobados. Sin cambios backend/BD. Seguir3.1-C.
 
 Corrección CLIENT-UX: recogidas muestran customer_name como título y reference en línea secundaria, también en consulta de lectores. Referencia telefónica nunca sustituye el nombre. Chromium terminal-client1 aprobado29.4s: persiste ambos campos y conserva nombre al guardar/listar/reabrir; sin cambios backend/BD.

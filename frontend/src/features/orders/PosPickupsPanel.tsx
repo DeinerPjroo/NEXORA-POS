@@ -6,6 +6,7 @@ import { ErrorNotice, Loading } from '../../components/ui'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import { orderStates, type Order } from '../operations/types'
+import { OrderIdentity, orderChannels } from './OrderIdentity'
 
 export function PosPickupsPanel({
   branchId,
@@ -20,11 +21,13 @@ export function PosPickupsPanel({
 }) {
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('')
+  const [channel, setChannel] = useState<Order['channel'] | ''>('')
+  const filterChannel = allOrders ? channel : 'takeaway'
   const query = useQuery({
-    queryKey: ['orders', 'pos-pickups', branchId, status, page, allOrders],
+    queryKey: ['orders', 'pos-pickups', branchId, status, page, allOrders, filterChannel],
     queryFn: ({ signal }) =>
       api<CatalogPage<Order>>(
-        `orders?${allOrders ? '' : 'channel=takeaway&'}branch_id=${branchId}${status ? `&status=${status}` : ''}&page=${page}&per_page=12`,
+        `orders?${filterChannel ? `channel=${filterChannel}&` : ''}branch_id=${branchId}${status ? `&status=${status}` : ''}&page=${page}&per_page=12`,
         { signal },
       ),
     refetchInterval: 15000,
@@ -41,6 +44,35 @@ export function PosPickupsPanel({
         </button>
       </header>
       <div className="pos-tables-picker">
+        {allOrders && (
+          <div className="order-channel-filters" role="group" aria-label="Filtrar tipo de pedido">
+            <button
+              type="button"
+              aria-pressed={!channel}
+              onClick={() => {
+                setChannel('')
+                setPage(1)
+              }}
+            >
+              Todos
+            </button>
+            {Object.entries(orderChannels).map(([value, { label, icon: Icon }]) => (
+              <button
+                key={value}
+                type="button"
+                data-channel={value}
+                aria-pressed={channel === value}
+                onClick={() => {
+                  setChannel(value as Order['channel'])
+                  setPage(1)
+                }}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <select
           aria-label={allOrders ? 'Estado de pedidos' : 'Estado de recogidas'}
           value={status}
@@ -71,32 +103,16 @@ export function PosPickupsPanel({
                 {query.data.data.map((order) => (
                   <button
                     type="button"
-                    className="pos-pickup-card"
+                    className="pos-pickup-card order-channel-card"
+                    data-channel={order.channel}
                     key={order.id}
                     data-state={order.status}
                     onClick={() => onSelect(order.id)}
                   >
-                    <span>
+                    <span className="order-card-meta">
                       #{order.id} · {orderStates[order.status]}
                     </span>
-                    <strong>
-                      {order.customer_name ||
-                        (order.channel === 'takeaway'
-                          ? 'Recogida en mostrador'
-                          : order.channel === 'delivery'
-                            ? 'Domicilio'
-                            : 'Consumo en mesa')}
-                    </strong>
-                    {allOrders && (
-                      <small>
-                        {order.channel === 'takeaway'
-                          ? 'Para llevar'
-                          : order.channel === 'delivery'
-                            ? 'Domicilio'
-                            : order.dining_snapshot?.tables.map((table) => table.name).join(', ') ||
-                              'Consumo en mesa'}
-                      </small>
-                    )}
+                    <OrderIdentity order={order} />
                     {order.reference && <small>Referencia: {order.reference}</small>}
                     <small>
                       {order.items_count} líneas · Subtotal{' '}
