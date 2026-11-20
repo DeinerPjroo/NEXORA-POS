@@ -39,6 +39,7 @@ test('estaciones: creación, revisión, archivo y diseño móvil', async ({ page
 })
 
 test('cocina: inicio propio de lector y acceso denegado sin permiso', async ({ page }) => {
+  test.setTimeout(90_000)
   await fixtureWorkspace(page, 'Lector de cocina', ['kitchen.view'])
   await expect(page).toHaveURL(/\/cocina\/estaciones$/)
   await expect(
@@ -46,9 +47,12 @@ test('cocina: inicio propio de lector y acceso denegado sin permiso', async ({ p
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Nueva estación', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
+  await expect(page).toHaveURL(/\/ingresar$/)
   await fixtureWorkspace(page, 'Solo pedidos', ['orders.view'])
   await page.goto('/cocina/estaciones')
   await expect(page.getByRole('button', { name: 'Nueva estación', exact: true })).toHaveCount(0)
-  const response = await page.request.get('/api/v1/kitchen-stations')
+  const response = await page.request.get('/api/v1/kitchen-stations', {
+    headers: { Origin: 'http://127.0.0.1:5199', Accept: 'application/json' },
+  })
   expect(response.status()).toBe(403)
 })

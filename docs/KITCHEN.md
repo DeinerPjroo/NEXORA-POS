@@ -8,4 +8,4 @@ POST/PUT kitchen-stations reutilizan IdempotentOperation, bloqueo de empresa, au
 
 El tiempo configurado es un objetivo de preparación, no una duración real ya medida. Los temporizadores y el flujo de comandas se incorporan en B/D; Reverb no está instalado ni anunciado en A. La configuración de cocina no modifica pedidos, impuestos, pagos ni movimientos de caja.
 
-Verificación A en curso: SQLite módulo/fundamento31/158 y MariaDB módulo5/47 aprobados; compilación/TypeScript y migración000028 correctos. Navegador y revisión visual dirigidos pendientes al preparar este documento. No se ha completado el padre3.1 ni la fase3.
+Verificación A cerrada: cobertura backend/SQL/build anterior conservada. Chromium creación/archivo/móvil y lector/403 aprobados entre ejecuciones dirigidas (20.5s/20.1s), con capturas de configuración. El test espera logout y envía Origin para Sanctum. Padre3.1 y fase3 continúan en progreso; siguiente rutas/comandas.
