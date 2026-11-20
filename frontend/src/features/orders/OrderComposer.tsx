@@ -47,6 +47,7 @@ import '../pos/digital-menu.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { KitchenSend } from '../kitchen/KitchenSend'
+import { useTerminalGuard } from '../pos/TerminalEnvironment'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -259,6 +260,10 @@ export function OrderComposer({
     },
   })
   const locked = operation.locked || pricing.locked
+  useTerminalGuard(
+    terminal && (cart.length > 0 || locked || checkoutOpen),
+    terminal && (locked || checkoutOpen),
+  )
   useEffect(() => {
     if (pricing.error) pendingDining.current = null
   }, [pricing.error])
@@ -383,9 +388,6 @@ export function OrderComposer({
     >
       {terminal && (
         <header className="pos-topbar" data-pos-slot="header" inert={checkoutOpen}>
-          <strong>
-            NEXORA <em>POS</em>
-          </strong>
           <span className="pos-ready">
             {!can('sales.collect')
               ? '● Toma de pedidos'
@@ -399,7 +401,6 @@ export function OrderComposer({
             onChange={(branchId) => pricing.request({ branchId, channel })}
             disabled={locked}
           />
-          <span className="pos-employee">{session!.user.name}</span>
           {can('sales.collect') && (
             <button
               type="button"
@@ -431,21 +432,6 @@ export function OrderComposer({
           >
             Fotos
           </button>
-          <button
-            type="button"
-            aria-label="Pantalla completa"
-            onClick={() => {
-              const request = document.fullscreenElement
-                ? document.exitFullscreen()
-                : document.documentElement.requestFullscreen()
-              void request.catch(() => toast('Pantalla completa no disponible en este navegador.'))
-            }}
-          >
-            ⛶
-          </button>
-          <Link to="/inicio" aria-label="Salir del terminal">
-            Salir
-          </Link>
         </header>
       )}
       <Link className="text-button product-back" to="/pedidos">

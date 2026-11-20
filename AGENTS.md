@@ -4,6 +4,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Navegación operativa continua: cajeros y roles exclusivamente operativos permanecen en Terminal, con barra común también dentro del POS. Admin aparece solo con una entrada administrativa autorizada y el cambio es explícito. /inicio heredado devuelve al inicio permitido; marca y enlaces de nuevo pedido no envían al cajero a Admin. Bloquear enlaces de sección con adiciones sin guardar y deshabilitar la barra durante cobro/envío incierto, conservando formularios/UUID.
+
 - Mesas: al abrir una mesa libre desde Terminal, la mesa elegida queda fijada; no solicitar marcarla de nuevo ni mostrar un listado de otras mesas. El número de personas no implica disponibilidad parcial: una atención ocupa la mesa completa hasta liberarla. Unir/separar es una operación explícita de gestión de atención, nunca sentar grupos ajenos automáticamente en sillas sobrantes.
 - Cobrar no libera automáticamente una mesa. Mostrar «Pagada · todavía ocupada» según saldos reales y ofrecer Liberar mesa con permiso dining.operate y confirmación de salida física. Reutilizar cierre de atención con revisión/UUID y validación de pedidos/deuda en servidor; conservar reintento exacto. Las mesas unidas se liberan como atención, sin borrar historia.
 - Pedidos por mesa: consultar pedidos persistidos de la atención vigente, con tenant/permisos en servidor. Guardar antes de cambiar a otra mesa; nunca arrastrar líneas pendientes a otro grupo ni reinsertar pedidos guardados en el formulario como si fueran nuevos. Conservar UUID/payload exactos si el guardado es incierto. Seleccionar otra mesa debe mostrar solo sus pedidos; las mesas unidas explícitamente comparten atención.

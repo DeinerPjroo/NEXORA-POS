@@ -31,7 +31,7 @@ import { Brand, ErrorNotice, Loading, useToast } from './ui'
 import { useCan, useSession } from '../features/auth/SessionProvider'
 import { posPermissions } from '../features/pos/pos-permissions'
 import { clearPosContext } from '../features/pos/pos-context'
-import { homePath } from '../features/auth/home'
+import { adminPath, homePath } from '../features/auth/home'
 import { ScreenLock } from '../features/auth/ScreenLock'
 import { TerminalEnvironment, isTerminalRoute } from '../features/pos/TerminalEnvironment'
 import { screenChanged } from '../features/auth/screen-events'
@@ -115,6 +115,14 @@ export function AppShell() {
       />
     )
   }
+  const operationalOnly = adminPath(session) === null
+  const terminalMode = isTerminalRoute(location.pathname) || operationalOnly
+  if (operationalOnly && location.pathname === '/inicio')
+    return <Navigate to={homePath(session)} replace />
+  if (operationalOnly && location.pathname === '/salones' && can('dining.view'))
+    return <Navigate to="/terminal/mesas" replace />
+  if (operationalOnly && location.pathname === '/cocina/estaciones' && can('kitchen.view'))
+    return <Navigate to="/terminal/cocina" replace />
   async function logout() {
     setLoggingOut(true)
     try {
@@ -153,7 +161,7 @@ export function AppShell() {
       <div
         data-screen-blocked={screenBlocked || locking}
         inert={screenBlocked || locking}
-        className={`app-shell ${isTerminalRoute(location.pathname) ? 'terminal-mode' : ''} ${collapsed ? 'collapsed' : ''} ${mobile ? 'mobile-open' : ''}`}
+        className={`app-shell ${terminalMode ? 'terminal-mode' : ''} ${collapsed ? 'collapsed' : ''} ${mobile ? 'mobile-open' : ''}`}
       >
         <a className="skip-link" href="#contenido">
           Saltar al contenido
@@ -310,7 +318,7 @@ export function AppShell() {
             </div>
           )}
           <main id="contenido" tabIndex={-1} className="page-content">
-            {isTerminalRoute(location.pathname) ? (
+            {terminalMode ? (
               <TerminalEnvironment onLock={() => void lock()} onLogout={() => void logout()}>
                 <Outlet />
               </TerminalEnvironment>

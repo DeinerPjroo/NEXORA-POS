@@ -13,6 +13,7 @@ import { CatalogError } from '../catalog/catalog-ui'
 import { orderStates } from '../operations/types'
 import type { Order } from '../operations/types'
 import { OrderActions } from './OrderActions'
+import { posPermissions } from '../pos/pos-permissions'
 
 export function OrderDetailPage() {
   const { orderId = '' } = useParams()
@@ -39,7 +40,10 @@ export function OrderDetailPage() {
         action={
           can('orders.manage') &&
           can('catalog.view') && (
-            <Link className="button secondary" to="/pedidos/nuevo">
+            <Link
+              className="button secondary"
+              to={posPermissions.every(can) ? '/pos' : '/pedidos/nuevo'}
+            >
               <Plus size={17} />
               Otro pedido
             </Link>

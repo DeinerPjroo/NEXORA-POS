@@ -166,7 +166,7 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     .getByRole('navigation')
     .getByRole('link', { name: 'Terminal POS', exact: true })
     .click()
-  await expect(page.locator('.pos-topbar')).toContainText('NEXORA')
+  await expect(page.locator('.terminal-header')).toContainText('NEXORA')
   await page
     .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
     .selectOption(String(branch))

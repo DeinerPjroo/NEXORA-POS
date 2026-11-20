@@ -148,8 +148,6 @@ test('POS: inicio operativo, paneles móviles, atajos y contexto conservado sin 
   await expect(
     page.getByRole('button', { name: 'Agregar Producto contexto', exact: true }),
   ).toBeEnabled()
-  await page.getByRole('link', { name: 'Salir del terminal', exact: true }).click()
-  await page.getByRole('button', { name: 'Abrir menú', exact: true }).click()
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await expect(page).toHaveURL(/\/ingresar$/)
   expect(await page.evaluate((key) => sessionStorage.getItem(key), key)).toBeNull()
@@ -162,12 +160,8 @@ test('inicio por permisos: operador de pedidos evita resumen y vuelve a su secci
   await fixtureWorkspace(page, 'Oliva Pedidos', ['catalog.view', 'orders.view', 'orders.manage'])
   await expect(page).toHaveURL(/\/pedidos$/)
   await page.goto('/inicio')
-  await expect(page.getByRole('heading', { name: 'Acceso restringido', exact: true })).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: 'Volver a mi espacio', exact: true }),
-  ).toHaveAttribute('href', '/pedidos')
-  await page.getByRole('link', { name: 'Volver a mi espacio', exact: true }).click()
   await expect(page).toHaveURL(/\/pedidos$/)
+  await expect(page.locator('.terminal-header')).toBeVisible()
 })
 
 test('inicio sin permisos: información general protegida por sesión sin bucle ni acceso operativo', async ({
