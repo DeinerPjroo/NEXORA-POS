@@ -11,33 +11,38 @@ export function PosPickupsPanel({
   branchId,
   onSelect,
   onClose,
+  allOrders = false,
 }: {
   branchId: number
   onSelect: (id: number) => void
   onClose: () => void
+  allOrders?: boolean
 }) {
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('')
   const query = useQuery({
-    queryKey: ['orders', 'pos-pickups', branchId, status, page],
+    queryKey: ['orders', 'pos-pickups', branchId, status, page, allOrders],
     queryFn: ({ signal }) =>
       api<CatalogPage<Order>>(
-        `orders?channel=takeaway&branch_id=${branchId}${status ? `&status=${status}` : ''}&page=${page}&per_page=12`,
+        `orders?${allOrders ? '' : 'channel=takeaway&'}branch_id=${branchId}${status ? `&status=${status}` : ''}&page=${page}&per_page=12`,
         { signal },
       ),
     refetchInterval: 15000,
   })
   return (
-    <section className="pos-tables-inline pos-pickups" aria-label="Recogidas del terminal">
+    <section
+      className="pos-tables-inline pos-pickups"
+      aria-label={allOrders ? 'Pedidos del terminal' : 'Recogidas del terminal'}
+    >
       <header className="pos-tables-inline-heading">
-        <h2>Recogidas</h2>
+        <h2>{allOrders ? 'Pedidos' : 'Recogidas'}</h2>
         <button type="button" onClick={onClose}>
           Volver al pedido
         </button>
       </header>
       <div className="pos-tables-picker">
         <select
-          aria-label="Estado de recogidas"
+          aria-label={allOrders ? 'Estado de pedidos' : 'Estado de recogidas'}
           value={status}
           onChange={(event) => {
             setStatus(event.target.value)
@@ -74,7 +79,24 @@ export function PosPickupsPanel({
                     <span>
                       #{order.id} · {orderStates[order.status]}
                     </span>
-                    <strong>{order.customer_name || 'Recogida en mostrador'}</strong>
+                    <strong>
+                      {order.customer_name ||
+                        (order.channel === 'takeaway'
+                          ? 'Recogida en mostrador'
+                          : order.channel === 'delivery'
+                            ? 'Domicilio'
+                            : 'Consumo en mesa')}
+                    </strong>
+                    {allOrders && (
+                      <small>
+                        {order.channel === 'takeaway'
+                          ? 'Para llevar'
+                          : order.channel === 'delivery'
+                            ? 'Domicilio'
+                            : order.dining_snapshot?.tables.map((table) => table.name).join(', ') ||
+                              'Consumo en mesa'}
+                      </small>
+                    )}
                     {order.reference && <small>Referencia: {order.reference}</small>}
                     <small>
                       {order.items_count} líneas · Subtotal{' '}
@@ -90,7 +112,13 @@ export function PosPickupsPanel({
                   </button>
                 ))}
               </div>
-              {!query.data.data.length && <p>No hay recogidas con este filtro.</p>}
+              {!query.data.data.length && (
+                <p>
+                  {allOrders
+                    ? 'No hay pedidos con este filtro.'
+                    : 'No hay recogidas con este filtro.'}
+                </p>
+              )}
               {query.data.meta.last_page > 1 && (
                 <Pagination meta={query.data.meta} onPage={setPage} pending={query.isFetching} />
               )}

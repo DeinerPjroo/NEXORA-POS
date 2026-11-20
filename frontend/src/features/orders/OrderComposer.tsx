@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -51,8 +51,9 @@ import { PosTablesPanel } from '../dining/PosTablesPanel'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { KitchenSend } from '../kitchen/KitchenSend'
 import { TableKitchen, CorrectPreparation } from '../kitchen/TableKitchen'
-import { useTerminalGuard } from '../pos/TerminalEnvironment'
+import { useTerminalGuard, useTerminalOrders } from '../pos/TerminalEnvironment'
 import { PosPickupsPanel } from './PosPickupsPanel'
+import { PosOrdersPanel } from './PosOrdersPanel'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -100,6 +101,8 @@ export function OrderComposer({
   const [details, setDetails] = useState(false)
   const [tablesOpen, setTablesOpen] = useState(false)
   const [pickupsOpen, setPickupsOpen] = useState(false)
+  const [ordersOpen, setOrdersOpen] = useState(false)
+  const [ordersCheckoutId, setOrdersCheckoutId] = useState<number | null>(null)
   const [pickupId, setPickupId] = useState<number | null>(null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
@@ -307,6 +310,15 @@ export function OrderComposer({
     },
   })
   const locked = operation.locked || pricing.locked
+  const openOrdersPanel = useCallback(() => {
+    if (locked || cart.length) return
+    setOrdersOpen(true)
+    setPickupsOpen(false)
+    setTablesOpen(false)
+    setDetails(false)
+    setPanel('cart')
+  }, [locked, cart.length])
+  useTerminalOrders(terminal ? openOrdersPanel : null)
   useTerminalGuard(
     terminal && (cart.length > 0 || locked || checkoutOpen),
     terminal && (locked || checkoutOpen),
@@ -528,7 +540,7 @@ export function OrderComposer({
             branches={activeBranches}
             value={selected}
             onChange={(branchId) => pricing.request({ branchId, channel })}
-            disabled={locked || savedPickup || pickupsOpen}
+            disabled={locked || savedPickup || pickupsOpen || ordersOpen}
           />
           {can('sales.collect') && (
             <button
@@ -669,6 +681,7 @@ export function OrderComposer({
                     aria-expanded={pickupsOpen}
                     onClick={() => {
                       setTablesOpen(false)
+                      setOrdersOpen(false)
                       setPickupsOpen(!pickupsOpen)
                       setPanel('cart')
                     }}
@@ -683,6 +696,7 @@ export function OrderComposer({
                       setCheckoutOrderId(null)
                       setCheckoutContext('')
                       setPickupsOpen(false)
+                      setOrdersOpen(false)
                       setDetails(false)
                       orderForm.current?.reset()
                       operation.reset()
@@ -710,6 +724,8 @@ export function OrderComposer({
                 }
                 onClick={() => {
                   setTablesOpen((value) => !value)
+                  setOrdersOpen(false)
+                  setPickupsOpen(false)
                   setPanel('cart')
                 }}
               >
@@ -720,20 +736,35 @@ export function OrderComposer({
                 disabled={locked || savedPickup}
                 onClick={() => {
                   setTablesOpen(false)
+                  setOrdersOpen(false)
+                  setPickupsOpen(false)
                   setDetails(true)
                   setPanel('cart')
                 }}
               >
                 Cliente
               </button>
-              <Link to="/pedidos" target="_blank" rel="noopener noreferrer">
+              <button
+                type="button"
+                disabled={locked || !!cart.length || !selected}
+                aria-expanded={ordersOpen}
+                onClick={() => {
+                  setOrdersOpen(!ordersOpen)
+                  setPickupsOpen(false)
+                  setTablesOpen(false)
+                  setDetails(false)
+                  setPanel('cart')
+                }}
+              >
                 Pedidos
-              </Link>
+              </button>
               <button
                 type="button"
                 disabled={locked || savedPickup}
                 onClick={() => {
                   setTablesOpen(false)
+                  setOrdersOpen(false)
+                  setPickupsOpen(false)
                   setDetails(true)
                   setPanel('cart')
                 }}
@@ -853,6 +884,7 @@ export function OrderComposer({
                         locked ||
                         savedPickup ||
                         pickupsOpen ||
+                        ordersOpen ||
                         products.isFetching ||
                         !posReady ||
                         !!currentOrder?.sale_id
@@ -926,15 +958,15 @@ export function OrderComposer({
         </section>
         <div
           className={terminal ? 'pos-order-workspace' : 'order-workspace'}
-          data-view={terminal && (tablesOpen || pickupsOpen) ? 'tables' : 'order'}
+          data-view={terminal && (tablesOpen || pickupsOpen || ordersOpen) ? 'tables' : 'order'}
         >
           <form
             className="panel order-cart"
             onSubmit={submit}
             ref={orderForm}
             data-pos-slot="order"
-            inert={terminal && (tablesOpen || pickupsOpen)}
-            aria-hidden={terminal && (tablesOpen || pickupsOpen) ? true : undefined}
+            inert={terminal && (tablesOpen || pickupsOpen || ordersOpen)}
+            aria-hidden={terminal && (tablesOpen || pickupsOpen || ordersOpen) ? true : undefined}
           >
             <div className="panel-heading">
               <div className="pos-digital-heading-text">
@@ -1427,6 +1459,18 @@ export function OrderComposer({
               }}
             />
           )}
+          {ordersOpen && selected && (
+            <PosOrdersPanel
+              key={selected}
+              branchId={selected}
+              onClose={() => setOrdersOpen(false)}
+              onKitchen={setKitchenOrderId}
+              onCheckout={(id) => {
+                setOrdersCheckoutId(id)
+                setCheckoutOpen(true)
+              }}
+            />
+          )}
         </div>
       </div>
       {kitchenOrderId && (
@@ -1436,12 +1480,17 @@ export function OrderComposer({
         <TableKitchen sessionId={dining.id} onClose={() => setTableKitchen(false)} />
       )}
       {correction && <CorrectPreparation {...correction} onClose={() => setCorrection(null)} />}
-      {checkoutOpen && checkoutOrderId && (
+      {checkoutOpen && (ordersCheckoutId || checkoutOrderId) && (
         <TerminalCheckout
-          key={checkoutOrderId}
-          orderId={checkoutOrderId}
+          key={ordersCheckoutId ?? checkoutOrderId!}
+          orderId={ordersCheckoutId ?? checkoutOrderId!}
           onClose={(completed) => {
             setCheckoutOpen(false)
+            if (ordersCheckoutId) {
+              setOrdersCheckoutId(null)
+              void client.invalidateQueries({ queryKey: ['orders'] })
+              return
+            }
             requestAnimationFrame(() => submitButton.current?.focus())
             if (completed) {
               if (savedPickup) void pickupOrder.refetch()

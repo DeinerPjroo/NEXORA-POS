@@ -66,7 +66,15 @@ test('Recogidas usa POS, conserva el pedido y cobra sin cambiar de pantalla', as
   expect(
     await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1),
   ).toBe(true)
-  await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
+  await page.getByRole('button', { name: 'Pedidos', exact: true }).click()
+  await expect(
+    page.getByRole('region', { name: 'Pedidos del terminal', exact: true }),
+  ).toBeVisible()
+  await expect(page).toHaveURL(/\/terminal\/recogidas$/)
+  await page.locator('.pos-pickup-card').click()
+  const preview = page.getByRole('region', { name: 'Detalle de pedido en terminal', exact: true })
+  await expect(preview).toContainText('Pizza recogida')
+  await preview.getByRole('button', { name: 'Cobrar pedido', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Cobro en terminal' })).toBeVisible()
   await expect(page).toHaveURL(/\/terminal\/recogidas$/)
   await page.getByLabel('Efectivo recibido', { exact: true }).fill('20000')
@@ -80,6 +88,11 @@ test('Recogidas usa POS, conserva el pedido y cobra sin cambiar de pantalla', as
       return data.sale_status
     })
     .toBe('paid')
+  await page.getByRole('button', { name: 'Volver a terminal', exact: true }).click()
+  await expect(preview).toBeVisible()
+  await expect(preview.getByRole('button', { name: 'Pagada', exact: true })).toBeDisabled()
+  await preview.getByRole('button', { name: 'Volver al pedido', exact: true }).click()
+  await expect(page.locator('.pos-order-table tbody tr')).toHaveCount(1)
   expect((await readApi<{ data: unknown[] }>(page, 'orders')).data).toHaveLength(1)
   expect(errors).toEqual([])
 })

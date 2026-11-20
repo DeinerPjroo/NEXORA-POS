@@ -72,11 +72,15 @@
   text-align: left;
   padding: 14px;
   min-height: 125px;
+  height: max-content;
   border: 1px solid var(--line);
   border-left: 4px solid var(--pos-primary);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
+}
+.pos-pickup-card > * {
+  flex-shrink: 0;
 }
 .pos-pickup-card[data-state='ready'] {
   border-left-color: var(--pos-pay);
@@ -87,6 +91,39 @@
 .pos-pickup-card:hover,
 .pos-pickup-card:focus-visible {
   outline: 2px solid var(--pos-primary);
+}
+.pos-order-preview-lines {
+  min-height: 0;
+  overflow: auto;
+  flex: 1;
+}
+.pos-order-preview-lines table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.pos-order-preview-lines :is(th, td) {
+  text-align: left;
+  padding: 10px 7px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.pos-order-preview-lines :is(th, td):last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.pos-order-preview-lines small {
+  display: block;
+  margin-top: 5px;
+}
+.pos-order-preview-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pos-order-preview-actions > button {
+  flex: 1;
+  min-height: 48px;
 }
 .pos-topbar strong em {
   font-style: normal;

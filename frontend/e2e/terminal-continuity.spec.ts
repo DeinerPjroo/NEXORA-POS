@@ -79,22 +79,20 @@ test('Cajero conserva Terminal entre POS, mesas, pedidos y caja; Admin es explí
   const posBox = await cashier.locator('.pos-terminal').boundingBox()
   expect(posBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height)
   await nav.getByRole('link', { name: 'Pedidos', exact: true }).click()
-  await expect(cashier.locator('.terminal-order-row')).toHaveCount(9)
-  const rowBox = await cashier.locator('.terminal-order-row').first().boundingBox()
-  expect(rowBox!.height).toBeLessThan(110)
+  await expect(cashier.locator('.pos-pickup-card')).toHaveCount(9)
+  await expect(cashier).toHaveURL(/\/pos$/)
   await expect
     .poll(() =>
       cashier.locator('.terminal-content').evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
     )
     .toBe(true)
   await cashier.screenshot({ path: 'test-results/terminal-orders-desktop.png' })
-  await cashier.locator('.terminal-order-row').first().click()
+  await cashier.locator('.pos-pickup-card').first().click()
   await expect(header).toBeVisible()
-  await expect(cashier).toHaveURL(/\/pedidos\/\d+$/)
-  await expect(cashier.getByRole('link', { name: 'Otro pedido', exact: true })).toHaveAttribute(
-    'href',
-    '/pos',
-  )
+  await expect(cashier).toHaveURL(/\/pos$/)
+  await expect(
+    cashier.getByRole('region', { name: 'Detalle de pedido en terminal', exact: true }),
+  ).toContainText('Pizza operativa')
   await nav.getByRole('link', { name: 'Caja rápida', exact: true }).click()
   await expect(cashier).toHaveURL(/\/caja$/)
   await expect(header).toBeVisible()
@@ -120,7 +118,7 @@ test('Cajero conserva Terminal entre POS, mesas, pedidos y caja; Admin es explí
   await cashier.getByRole('button', { name: 'Volver al pedido', exact: true }).click()
   await expect(header).not.toHaveAttribute('inert', '')
   await nav.getByRole('link', { name: 'Pedidos', exact: true }).click()
-  await expect(cashier.locator('.terminal-order-row')).toHaveCount(10)
+  await expect(cashier.locator('.pos-pickup-card')).toHaveCount(10)
   await cashier.setViewportSize({ width: 390, height: 844 })
   await expect
     .poll(() => cashier.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

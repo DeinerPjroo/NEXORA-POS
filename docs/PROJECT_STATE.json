@@ -7,7 +7,7 @@
   "module": "Nexora Kitchen: sincronización privada",
   "status": "IN_PROGRESS",
   "active_task": "3.1-C",
-  "last_completed_task": "3.1-CLIENT-UX",
+  "last_completed_task": "3.1-ORDERS-UX",
   "next_task": "Retomar3.1-C privado/Reverb y luego3.1-D; destinos por línea, correcciones, recogidas y domicilios operativos completados. Sin reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",

@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-20
 
+3.1-ORDERS-UX COMPLETED: Pedidos lateral y superior abren lista/detalle dentro del panel izquierdo del POS, con estados/filtro/paginación y datos persistidos de la sucursal autorizada. Reutiliza selector de recogidas y KitchenSend/TerminalCheckout; cobrar desde consulta conserva contexto original y vuelve al detalle, sin otro pedido/venta. Guardas impiden abrir con borrador/incertidumbre; productos bloqueados mientras consulta. Callback del encabezado admite clic antes de terminar contexto. Chromium3 cubiertos: cobro real desde detalle42.4s, continuidad de cajero52s tras corregir clic temprano y cliente/tarjetas móviles19.3s tras corregir recorte de contenido. Capturas escritorio/móvil revisadas; TS/build aprobados. Sin cambios backend/BD. Seguir3.1-C.
+
 Corrección CLIENT-UX: recogidas muestran customer_name como título y reference en línea secundaria, también en consulta de lectores. Referencia telefónica nunca sustituye el nombre. Chromium terminal-client1 aprobado29.4s: persiste ambos campos y conserva nombre al guardar/listar/reabrir; sin cambios backend/BD.
 
 3.1-CLIENT-UX COMPLETED: panel Cliente integrado visualmente en pedido izquierdo, cabecera/icono/contexto, nombre primero con foco automático, campos táctiles y pie fijo Listo. Scroll interno, temas por variables; mantiene nombres/DTO y guardado existentes. Chromium dirigido1 aprobado28.4s: cerrar/reabrir conserva campos, escritorio/móvil y persistencia real de nombre/referencia/notas en una recogida. Capturas revisadas y TS/build aprobados; sin cambios backend/BD. Seguir3.1-C.
