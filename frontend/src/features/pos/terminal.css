@@ -335,6 +335,11 @@ body.pos-active {
   flex-direction: column;
   gap: 12px;
 }
+.pos-client-customer-fields:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .pos-terminal .pos-client-fields {
   overflow: auto;
   min-height: 0;

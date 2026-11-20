@@ -85,7 +85,22 @@ test('Pedidos distingue canales por color y destaca mesa o cliente con filtros r
         : {}),
     })
   }
-  await page.goto('/pos')
+  await page.goto('/pos?canal=dine_in')
+  await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
+  await page.goto(`/pos/atenciones/${session.id}`)
+  await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Nota', exact: true }).click()
+  const notes = page.getByRole('group', { name: 'Notas del pedido', exact: true })
+  await expect(notes.getByLabel('Observación general', { exact: true })).toBeVisible()
+  await expect(notes.getByLabel('Observación general', { exact: true })).toHaveAttribute(
+    'readonly',
+    '',
+  )
+  await expect(notes.getByLabel('Nombre del cliente', { exact: true })).toBeHidden()
+  await page.goto('/pos?canal=delivery')
+  await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
+  await page.goto('/terminal/recogidas')
+  await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeEnabled()
   await page.locator('.pos-actions').getByRole('button', { name: 'Pedidos', exact: true }).click()
   const panel = page.getByRole('region', { name: 'Pedidos del terminal', exact: true })
   const cards = panel.locator('.pos-pickup-card')

@@ -11,6 +11,7 @@ import {
   Search,
   Send,
   ShoppingBag,
+  StickyNote,
   Trash2,
   UtensilsCrossed,
   UserRound,
@@ -98,7 +99,7 @@ export function OrderComposer({
               : remembered.channel)),
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
-  const [details, setDetails] = useState(false)
+  const [details, setDetails] = useState<false | 'client' | 'notes'>(false)
   const [tablesOpen, setTablesOpen] = useState(false)
   const [pickupsOpen, setPickupsOpen] = useState(false)
   const [ordersOpen, setOrdersOpen] = useState(false)
@@ -119,7 +120,11 @@ export function OrderComposer({
   const orderForm = useRef<HTMLFormElement>(null)
   useEffect(() => {
     if (terminal && details)
-      orderForm.current?.querySelector<HTMLInputElement>('[name="customer_name"]')?.focus()
+      orderForm.current
+        ?.querySelector<HTMLElement>(
+          details === 'notes' ? '[name="notes"]' : '[name="customer_name"]',
+        )
+        ?.focus()
   }, [terminal, details])
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
@@ -310,6 +315,14 @@ export function OrderComposer({
     },
   })
   const locked = operation.locked || pricing.locked
+  const notesAvailable =
+    !!selected &&
+    !savedPickup &&
+    !currentOrder?.sale_id &&
+    !ordersOpen &&
+    !tablesOpen &&
+    !pickupsOpen &&
+    (channel === 'takeaway' || (channel === 'dine_in' && !!dining))
   const openOrdersPanel = useCallback(() => {
     if (locked || cart.length) return
     setOrdersOpen(true)
@@ -473,7 +486,7 @@ export function OrderComposer({
         String(delivery_phone ?? '').trim().length < 3 ||
         String(delivery_address ?? '').trim().length < 5)
     ) {
-      setDetails(true)
+      setDetails('client')
       toast('Completa nombre, teléfono y dirección del domicilio.')
       return
     }
@@ -738,7 +751,7 @@ export function OrderComposer({
                   setTablesOpen(false)
                   setOrdersOpen(false)
                   setPickupsOpen(false)
-                  setDetails(true)
+                  setDetails('client')
                   setPanel('cart')
                 }}
               >
@@ -760,12 +773,14 @@ export function OrderComposer({
               </button>
               <button
                 type="button"
-                disabled={locked || savedPickup}
+                disabled={locked || !notesAvailable}
+                title="Notas para una mesa seleccionada o una nueva recogida"
+                aria-expanded={details === 'notes'}
                 onClick={() => {
                   setTablesOpen(false)
                   setOrdersOpen(false)
                   setPickupsOpen(false)
-                  setDetails(true)
+                  setDetails('notes')
                   setPanel('cart')
                 }}
               >
@@ -1162,8 +1177,8 @@ export function OrderComposer({
               <button
                 type="button"
                 className="button secondary"
-                aria-expanded={details}
-                onClick={() => setDetails(!details)}
+                aria-expanded={!!details}
+                onClick={() => setDetails(details ? false : 'client')}
               >
                 Datos del pedido · cliente y notas
               </button>
@@ -1171,17 +1186,19 @@ export function OrderComposer({
             <fieldset
               disabled={locked || savedPickup}
               className="form-stack pos-order-details"
-              data-open={details}
-              aria-label="Datos del cliente y pedido"
+              data-open={!!details}
+              aria-label={details === 'notes' ? 'Notas del pedido' : 'Datos del cliente y pedido'}
             >
               {terminal && (
                 <header className="pos-client-heading">
                   <span className="pos-client-icon">
-                    <UserRound size={22} />
+                    {details === 'notes' ? <StickyNote size={22} /> : <UserRound size={22} />}
                   </span>
                   <div>
-                    <span className="pos-digital-eyebrow">ATENCIÓN PERSONALIZADA</span>
-                    <h3>Cliente y pedido</h3>
+                    <span className="pos-digital-eyebrow">
+                      {details === 'notes' ? 'INDICACIONES DEL PEDIDO' : 'ATENCIÓN PERSONALIZADA'}
+                    </span>
+                    <h3>{details === 'notes' ? 'Notas del pedido' : 'Cliente y pedido'}</h3>
                   </div>
                   <button
                     type="button"
@@ -1204,81 +1221,103 @@ export function OrderComposer({
                         : dining?.label || 'Consumo en mesa'}
                   </div>
                 )}
-                <Field label="Nombre del cliente">
-                  <input
-                    name="customer_name"
-                    maxLength={100}
-                    placeholder="¿A nombre de quién es el pedido?"
-                    autoComplete="off"
-                  />
-                </Field>
-                <Field label="Tipo de pedido">
-                  <select
-                    name="channel"
-                    disabled={!!initialChannel}
-                    value={channel}
-                    onChange={(event) =>
-                      selected &&
-                      pricing.request({
-                        branchId: selected,
-                        channel: event.target.value as OrderChannel,
-                      })
-                    }
-                  >
-                    <option value="takeaway">Para llevar</option>
-                    <option value="dine_in">Consumo en mesa</option>
-                    <option value="delivery">Domicilio</option>
-                  </select>
-                </Field>
-                {channel === 'delivery' && (
-                  <>
-                    <Field label="Nombre de quien recibe">
-                      <input name="delivery_name" maxLength={100} />
-                    </Field>
-                    <Field label="Teléfono del domicilio">
-                      <input name="delivery_phone" type="tel" maxLength={30} />
-                    </Field>
-                    <Field label="Dirección de entrega">
-                      <textarea name="delivery_address" maxLength={300} rows={2} />
-                    </Field>
-                    <Field label="Indicaciones de entrega">
-                      <textarea name="delivery_instructions" maxLength={300} rows={2} />
-                    </Field>
-                  </>
-                )}
-                <Field label="Referencia del pedido">
-                  <input
-                    name="reference"
-                    maxLength={80}
-                    placeholder="Ej. Mesa 4 o nombre de recogida"
-                  />
-                </Field>
-                {selected &&
-                  channel === 'dine_in' &&
-                  can('dining.view') &&
-                  can('dining.operate') && (
-                    <Suspense fallback={<Loading />}>
-                      <DiningSessionPicker
-                        key={selected}
-                        branchId={selected}
-                        selected={dining}
-                        disabled={locked}
-                        onChange={setDining}
-                      />
-                    </Suspense>
+                <div
+                  className="pos-client-customer-fields"
+                  hidden={terminal && details === 'notes'}
+                >
+                  <Field label="Nombre del cliente">
+                    <input
+                      name="customer_name"
+                      maxLength={100}
+                      placeholder="¿A nombre de quién es el pedido?"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field label="Tipo de pedido">
+                    <select
+                      name="channel"
+                      disabled={!!initialChannel}
+                      value={channel}
+                      onChange={(event) =>
+                        selected &&
+                        pricing.request({
+                          branchId: selected,
+                          channel: event.target.value as OrderChannel,
+                        })
+                      }
+                    >
+                      <option value="takeaway">Para llevar</option>
+                      <option value="dine_in">Consumo en mesa</option>
+                      <option value="delivery">Domicilio</option>
+                    </select>
+                  </Field>
+                  {channel === 'delivery' && (
+                    <>
+                      <Field label="Nombre de quien recibe">
+                        <input name="delivery_name" maxLength={100} />
+                      </Field>
+                      <Field label="Teléfono del domicilio">
+                        <input name="delivery_phone" type="tel" maxLength={30} />
+                      </Field>
+                      <Field label="Dirección de entrega">
+                        <textarea name="delivery_address" maxLength={300} rows={2} />
+                      </Field>
+                      <Field label="Indicaciones de entrega">
+                        <textarea name="delivery_instructions" maxLength={300} rows={2} />
+                      </Field>
+                    </>
                   )}
-                <Field label="Observación general">
-                  <textarea
-                    name="notes"
-                    maxLength={1000}
-                    rows={2}
-                    placeholder="Indicaciones para este pedido"
-                  />
-                </Field>
+                  <Field label="Referencia del pedido">
+                    <input
+                      name="reference"
+                      maxLength={80}
+                      placeholder="Ej. Mesa 4 o nombre de recogida"
+                    />
+                  </Field>
+                  {selected &&
+                    channel === 'dine_in' &&
+                    can('dining.view') &&
+                    can('dining.operate') && (
+                      <Suspense fallback={<Loading />}>
+                        <DiningSessionPicker
+                          key={selected}
+                          branchId={selected}
+                          selected={dining}
+                          disabled={locked}
+                          onChange={setDining}
+                        />
+                      </Suspense>
+                    )}
+                </div>
+                <div hidden={terminal && details !== 'notes'}>
+                  <Field label="Observación general">
+                    {terminal && currentOrder ? (
+                      <textarea
+                        key={`recorded-${currentOrder.id}`}
+                        readOnly
+                        value={currentOrder.notes ?? ''}
+                        rows={5}
+                        aria-label="Observación general"
+                      />
+                    ) : (
+                      <textarea
+                        key="draft-notes"
+                        name="notes"
+                        maxLength={1000}
+                        rows={terminal ? 5 : 2}
+                        placeholder="Indicaciones para este pedido"
+                      />
+                    )}
+                  </Field>
+                </div>
               </div>
               {terminal && (
                 <footer className="pos-client-footer">
-                  <small>Estos datos se guardan al registrar el pedido.</small>
+                  <small>
+                    {details === 'notes' && currentOrder
+                      ? 'Nota del pedido registrado · solo lectura.'
+                      : 'Estos datos se guardan al registrar el pedido.'}
+                  </small>
                   <button type="button" onClick={() => setDetails(false)}>
                     <Check size={18} />
                     Listo · volver al pedido

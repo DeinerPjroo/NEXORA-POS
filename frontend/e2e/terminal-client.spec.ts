@@ -31,7 +31,16 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   await expect(panel.getByLabel('Nombre del cliente', { exact: true })).toBeFocused()
   await panel.getByLabel('Nombre del cliente', { exact: true }).fill('Laura Gómez')
   await panel.getByLabel('Referencia del pedido', { exact: true }).fill('3001234567')
-  await panel.getByLabel('Observación general', { exact: true }).fill('Empacar salsas aparte')
+  await expect(panel.getByLabel('Observación general', { exact: true })).toBeHidden()
+  await panel.getByRole('button', { name: 'Listo · volver al pedido', exact: true }).click()
+  await page.getByRole('button', { name: 'Nota', exact: true }).click()
+  const notes = page.getByRole('group', { name: 'Notas del pedido', exact: true })
+  await expect(notes.getByLabel('Nombre del cliente', { exact: true })).toBeHidden()
+  await expect(notes.getByLabel('Observación general', { exact: true })).toBeFocused()
+  await notes.getByLabel('Observación general', { exact: true }).fill('Empacar salsas aparte')
+  await page.screenshot({ path: 'test-results/terminal-notes.png' })
+  await notes.getByRole('button', { name: 'Listo · volver al pedido', exact: true }).click()
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
   await expect(
     panel.getByRole('button', { name: 'Listo · volver al pedido', exact: true }),
   ).toBeInViewport()
@@ -51,6 +60,7 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   await page.getByRole('button', { name: 'Agregar Pizza cliente', exact: true }).click()
   await page.getByRole('button', { name: 'GUARDAR RECOGIDA', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Nueva recogida', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
   const { data: orders } = await readApi<{
     data: { customer_name: string; reference: string; notes: string }[]
   }>(page, 'orders')
