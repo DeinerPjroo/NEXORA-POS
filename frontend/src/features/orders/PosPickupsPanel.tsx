@@ -74,9 +74,8 @@ export function PosPickupsPanel({
                     <span>
                       #{order.id} · {orderStates[order.status]}
                     </span>
-                    <strong>
-                      {order.reference || order.customer_name || 'Recogida en mostrador'}
-                    </strong>
+                    <strong>{order.customer_name || 'Recogida en mostrador'}</strong>
+                    {order.reference && <small>Referencia: {order.reference}</small>}
                     <small>
                       {order.items_count} líneas · Subtotal{' '}
                       {formatMoney(order.subtotal, order.currency)}

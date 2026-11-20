@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-20
 
+Corrección CLIENT-UX: recogidas muestran customer_name como título y reference en línea secundaria, también en consulta de lectores. Referencia telefónica nunca sustituye el nombre. Chromium terminal-client1 aprobado29.4s: persiste ambos campos y conserva nombre al guardar/listar/reabrir; sin cambios backend/BD.
+
 3.1-CLIENT-UX COMPLETED: panel Cliente integrado visualmente en pedido izquierdo, cabecera/icono/contexto, nombre primero con foco automático, campos táctiles y pie fijo Listo. Scroll interno, temas por variables; mantiene nombres/DTO y guardado existentes. Chromium dirigido1 aprobado28.4s: cerrar/reabrir conserva campos, escritorio/móvil y persistencia real de nombre/referencia/notas en una recogida. Capturas revisadas y TS/build aprobados; sin cambios backend/BD. Seguir3.1-C.
 
 3.1-PICKUP-UX COMPLETED: recogidas operativas reutilizan OrderComposer terminal, categorías/productos/teclado/cocina/cobro integrado. Selector digital en panel del pedido, filtro y paginación; guardar y reabrir conserva líneas registradas, sin reinsertarlas ni crear otra venta. Nueva recogida explícita; cambio bloqueado con borrador/incertidumbre. Las registradas quedan de consulta/cocina/cobro, sin ampliar append fuera de mesa. Lectores sin permisos de toma conservan consulta. Chromium dirigido2 cubiertos: mesero sin cobro y guardado/reapertura/cobro real con1 pedido; fallo inicial de filtro vacío corregido y caso afectado aprobado49.7s. Captura escritorio revisada; TS/build aprobados. Siguiente sigue3.1-C, sin reconstruir dominios.

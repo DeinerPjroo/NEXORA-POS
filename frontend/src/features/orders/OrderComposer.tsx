@@ -962,13 +962,14 @@ export function OrderComposer({
                   </button>
                 )}
                 {currentOrder && (
-                  <p className="pos-dining-selection">
-                    {currentOrder.reference ||
-                      currentOrder.customer_name ||
-                      'Recogida en mostrador'}
+                  <div className="pos-dining-selection">
+                    <strong>{currentOrder.customer_name || 'Recogida en mostrador'}</strong>
                     {' · '}
                     {currentOrder.sale_status === 'paid' ? 'Pagada' : 'Pedido registrado'}
-                  </p>
+                    {currentOrder.reference && (
+                      <div className="small">Referencia: {currentOrder.reference}</div>
+                    )}
+                  </div>
                 )}
                 <p className="muted small">
                   Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva

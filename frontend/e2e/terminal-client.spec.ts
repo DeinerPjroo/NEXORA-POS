@@ -30,7 +30,7 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   await expect(panel).toBeVisible()
   await expect(panel.getByLabel('Nombre del cliente', { exact: true })).toBeFocused()
   await panel.getByLabel('Nombre del cliente', { exact: true }).fill('Laura Gómez')
-  await panel.getByLabel('Referencia del pedido', { exact: true }).fill('Recoge Carlos')
+  await panel.getByLabel('Referencia del pedido', { exact: true }).fill('3001234567')
   await panel.getByLabel('Observación general', { exact: true }).fill('Empacar salsas aparte')
   await expect(
     panel.getByRole('button', { name: 'Listo · volver al pedido', exact: true }),
@@ -57,7 +57,16 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   expect(orders).toHaveLength(1)
   expect(orders[0]).toMatchObject({
     customer_name: 'Laura Gómez',
-    reference: 'Recoge Carlos',
+    reference: '3001234567',
     notes: 'Empacar salsas aparte',
   })
+  await expect(page.locator('.pos-dining-selection strong')).toHaveText('Laura Gómez')
+  await expect(page.locator('.pos-dining-selection')).toContainText('Referencia: 3001234567')
+  await page.getByRole('button', { name: 'Recogidas', exact: true }).click()
+  const card = page.locator('.pos-pickup-card')
+  await expect(card.locator('strong')).toHaveText('Laura Gómez')
+  await expect(card).toContainText('Referencia: 3001234567')
+  await card.click()
+  await expect(page.locator('.pos-dining-selection strong')).toHaveText('Laura Gómez')
+  await expect(page.locator('.pos-dining-selection')).toContainText('Referencia: 3001234567')
 })

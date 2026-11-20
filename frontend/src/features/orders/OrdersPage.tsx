@@ -106,8 +106,13 @@ export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
                   <span className="terminal-order-id">#{order.id}</span>
                   <div className="terminal-order-info">
                     <strong>
-                      {order.reference || order.customer_name || 'Pedido del restaurante'}
+                      {order.channel === 'takeaway'
+                        ? order.customer_name || 'Recogida en mostrador'
+                        : order.reference || order.customer_name || 'Pedido del restaurante'}
                     </strong>
+                    {order.channel === 'takeaway' && order.reference && (
+                      <small>Referencia: {order.reference}</small>
+                    )}
                     <small>
                       {order.channel === 'takeaway'
                         ? 'Recogida en mostrador'
