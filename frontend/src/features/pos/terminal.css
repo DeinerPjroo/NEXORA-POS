@@ -340,6 +340,21 @@ body.pos-active {
   flex-direction: column;
   gap: 12px;
 }
+.pos-customer-edit {
+  padding: 0;
+  gap: 0;
+}
+.pos-customer-edit > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.pos-customer-edit fieldset {
+  flex: 1;
+  margin: 0;
+  border: 0;
+}
 .pos-terminal .pos-client-fields {
   overflow: auto;
   min-height: 0;

@@ -2,6 +2,8 @@
 
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación
 
+Modificar cliente es una operación separada de agregar productos: solo metadatos de Order y contactos de OrderDelivery, con motivo/revisiones/UUID y auditoría/eventos. No cambia snapshots, dinero ni notas; se impide tras venta/finalización y, para entrega, tras salida. Frontend mantiene snapshot y payload exactos ante incertidumbre y no vuelve a crear pedidos para corregir nombres.
+
 La identificación visual usa canal, no destino de una línea: mesa azul, recogida violeta y domicilio ámbar, siempre con texto/icono. Mesa histórica se identifica como ubicación al registrar; nombre de cliente tiene prioridad sobre referencia en pedidos sin mesa. Filtros reutilizan channel del API.
 
 Pedidos consultados desde POS se muestran en el panel izquierdo, también desde el encabezado común mediante callback de la terminal montada. Consulta/cobro conservan contexto del pedido original; no rehidratar líneas registradas como borrador ni duplicar servicios financieros.

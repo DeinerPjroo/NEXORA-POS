@@ -6,17 +6,34 @@ use App\Domains\Kitchen\CorrectPreparation;
 use App\Domains\Orders\ChangeOrderState;
 use App\Domains\Orders\CreateOrder;
 use App\Domains\Orders\PreviewOrder;
+use App\Domains\Orders\UpdateOrderCustomer;
 use App\Http\Requests\OperationFiltersRequest;
+use App\Http\Requests\OrderCustomerRequest;
 use App\Http\Requests\OrderPreviewRequest;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderStateRequest;
 use App\Http\Requests\PreparationCorrectionRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\OrderDelivery;
 use Illuminate\Support\Facades\Gate;
 
 final class OrderController extends Controller
 {
+    public function customer(Order $order)
+    {
+        Gate::authorize('orders.view');
+        Gate::authorize('orders.manage');
+        $delivery = $order->channel === 'delivery' ? OrderDelivery::where('order_id', $order->id)->firstOrFail() : null;
+
+        return response()->json(['data' => ['revision' => $order->revision, 'customer_name' => $order->customer_name, 'reference' => $order->reference, 'delivery' => $delivery?->only('revision', 'recipient_name', 'phone', 'address', 'instructions')]]);
+    }
+
+    public function updateCustomer(OrderCustomerRequest $request, Order $order, UpdateOrderCustomer $service)
+    {
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale'));
+    }
+
     public function correctPreparation(PreparationCorrectionRequest $request, Order $order, CorrectPreparation $service)
     {
         return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items.preparationCorrections', 'events', 'sale'));

@@ -13,11 +13,15 @@ export function PosOrdersPanel({
   onClose,
   onKitchen,
   onCheckout,
+  onEditCustomer,
+  inactive = false,
 }: {
   branchId: number
   onClose: () => void
   onKitchen: (id: number) => void
   onCheckout: (id: number) => void
+  onEditCustomer: (id: number) => void
+  inactive?: boolean
 }) {
   const [orderId, setOrderId] = useState<number | null>(null)
   const can = useCan()
@@ -34,6 +38,8 @@ export function PosOrdersPanel({
     <section
       className="pos-tables-inline pos-order-preview"
       aria-label="Detalle de pedido en terminal"
+      inert={inactive}
+      aria-hidden={inactive || undefined}
     >
       <header className="pos-tables-inline-heading">
         <h2>Pedido #{orderId}</h2>
@@ -98,6 +104,17 @@ export function PosOrdersPanel({
               <strong>{formatMoney(order.subtotal, order.currency)}</strong>
             </div>
             <div className="pos-order-preview-actions">
+              {can('orders.manage') &&
+                !order.sale_id &&
+                !['cancelled', 'delivered'].includes(order.status) && (
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => onEditCustomer(order.id)}
+                  >
+                    Editar cliente
+                  </button>
+                )}
               {can('orders.manage') && (
                 <button
                   type="button"

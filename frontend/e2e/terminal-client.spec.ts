@@ -72,10 +72,55 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   })
   await expect(page.locator('.pos-dining-selection strong')).toHaveText('Laura Gómez')
   await expect(page.locator('.pos-dining-selection')).toContainText('Referencia: 3001234567')
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
+  const editor = page.getByRole('region', { name: 'Editar cliente del pedido', exact: true })
+  await expect(editor.getByLabel('Nombre del cliente', { exact: true })).toHaveValue('Laura Gómez')
+  await editor.getByLabel('Nombre del cliente', { exact: true }).fill('Carlos Gómez')
+  await editor.getByLabel('Referencia del pedido', { exact: true }).fill('3101234567')
+  await editor.getByLabel('Motivo del cambio', { exact: true }).fill('Recoge otra persona')
+  await page.screenshot({ path: 'test-results/order-customer-editor.png' })
+  let firstBody: unknown
+  const path = '**/api/v1/orders/*/customer'
+  await page.route(path, async (route) => {
+    if (route.request().method() !== 'PUT') {
+      await route.continue()
+      return
+    }
+    firstBody = route.request().postDataJSON()
+    await route.fetch()
+    await route.abort('failed')
+  })
+  await editor.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(editor.getByRole('button', { name: 'Reintentar cambio', exact: true })).toBeVisible()
+  await expect(
+    editor.getByRole('button', { name: 'Cerrar edición de cliente', exact: true }),
+  ).toBeDisabled()
+  await expect(page.locator('.terminal-header')).toHaveAttribute('inert', '')
+  await page.unroute(path)
+  const retry = page.waitForRequest(
+    (request) => request.method() === 'PUT' && request.url().endsWith('/customer'),
+  )
+  await editor.getByRole('button', { name: 'Reintentar cambio', exact: true }).click()
+  expect((await retry).postDataJSON()).toEqual(firstBody)
+  await expect(editor).toHaveCount(0)
+  await expect(page.locator('.pos-dining-selection strong')).toHaveText('Carlos Gómez')
+  const { data: updatedOrders } = await readApi<{
+    data: { customer_name: string; reference: string; notes: string; subtotal: string }[]
+  }>(page, 'orders')
+  expect(updatedOrders).toHaveLength(1)
+  expect(updatedOrders[0]).toMatchObject({
+    customer_name: 'Carlos Gómez',
+    reference: '3101234567',
+    notes: 'Empacar salsas aparte',
+    subtotal: '18000.0000',
+  })
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
+  await expect(editor.getByLabel('Nombre del cliente', { exact: true })).toHaveValue('Carlos Gómez')
+  await editor.getByRole('button', { name: 'Cerrar edición de cliente', exact: true }).click()
   await page.getByRole('button', { name: 'Recogidas', exact: true }).click()
   const card = page.locator('.pos-pickup-card')
-  await expect(card.locator('strong')).toHaveText('Laura Gómez')
-  await expect(card).toContainText('Referencia: 3001234567')
+  await expect(card.locator('strong')).toHaveText('Carlos Gómez')
+  await expect(card).toContainText('Referencia: 3101234567')
   await page.setViewportSize({ width: 390, height: 844 })
   const cardBox = await card.boundingBox()
   const lastFieldBox = await card.locator('small').last().boundingBox()
@@ -83,6 +128,6 @@ test('Cliente integrado en Terminal conserva los campos y los registra en la rec
   await page.screenshot({ path: 'test-results/terminal-orders-cards.png' })
   await page.setViewportSize({ width: 1280, height: 720 })
   await card.click()
-  await expect(page.locator('.pos-dining-selection strong')).toHaveText('Laura Gómez')
-  await expect(page.locator('.pos-dining-selection')).toContainText('Referencia: 3001234567')
+  await expect(page.locator('.pos-dining-selection strong')).toHaveText('Carlos Gómez')
+  await expect(page.locator('.pos-dining-selection')).toContainText('Referencia: 3101234567')
 })

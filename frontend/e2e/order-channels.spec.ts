@@ -87,8 +87,10 @@ test('Pedidos distingue canales por color y destaca mesa o cliente con filtros r
   }
   await page.goto('/pos?canal=dine_in')
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Cliente', exact: true })).toBeDisabled()
   await page.goto(`/pos/atenciones/${session.id}`)
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Cliente', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Nota', exact: true }).click()
   const notes = page.getByRole('group', { name: 'Notas del pedido', exact: true })
   await expect(notes.getByLabel('Observación general', { exact: true })).toBeVisible()
@@ -140,4 +142,28 @@ test('Pedidos distingue canales por color y destaca mesa o cliente con filtros r
       .getByRole('region', { name: 'Detalle de pedido en terminal' })
       .locator('.order-identity-title'),
   ).toHaveText('Mesa 12')
+  const detail = page.getByRole('region', { name: 'Detalle de pedido en terminal', exact: true })
+  await detail.getByRole('button', { name: 'Ver otros pedidos', exact: true }).click()
+  await panel.locator('.pos-pickup-card[data-channel="delivery"]').click()
+  await detail.getByRole('button', { name: 'Editar cliente', exact: true }).click()
+  const editor = page.getByRole('region', { name: 'Editar cliente del pedido', exact: true })
+  await expect(editor.getByLabel('Nombre de quien recibe', { exact: true })).toHaveValue(
+    'Carlos Ríos',
+  )
+  await editor.getByLabel('Nombre de quien recibe', { exact: true }).fill('Lucía Ríos')
+  await editor.getByLabel('Dirección de entrega', { exact: true }).fill('Carrera 20 número 30-40')
+  await editor
+    .getByLabel('Motivo del cambio', { exact: true })
+    .fill('Recibe un familiar en otra dirección')
+  await editor.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(editor).toHaveCount(0)
+  await expect(detail).toBeVisible()
+  await detail.getByRole('button', { name: 'Editar cliente', exact: true }).click()
+  await expect(editor.getByLabel('Nombre de quien recibe', { exact: true })).toHaveValue(
+    'Lucía Ríos',
+  )
+  await expect(editor.getByLabel('Dirección de entrega', { exact: true })).toHaveValue(
+    'Carrera 20 número 30-40',
+  )
+  await editor.getByRole('button', { name: 'Cerrar edición de cliente', exact: true }).click()
 })

@@ -55,6 +55,7 @@ import { TableKitchen, CorrectPreparation } from '../kitchen/TableKitchen'
 import { useTerminalGuard, useTerminalOrders } from '../pos/TerminalEnvironment'
 import { PosPickupsPanel } from './PosPickupsPanel'
 import { PosOrdersPanel } from './PosOrdersPanel'
+import { OrderCustomerEditor } from './OrderCustomerEditor'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -104,6 +105,8 @@ export function OrderComposer({
   const [pickupsOpen, setPickupsOpen] = useState(false)
   const [ordersOpen, setOrdersOpen] = useState(false)
   const [ordersCheckoutId, setOrdersCheckoutId] = useState<number | null>(null)
+  const [customerEditId, setCustomerEditId] = useState<number | null>(null)
+  const [customerEditBusy, setCustomerEditBusy] = useState(false)
   const [pickupId, setPickupId] = useState<number | null>(null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
@@ -314,7 +317,16 @@ export function OrderComposer({
       void client.invalidateQueries({ queryKey: ['products', 'order-menu'] })
     },
   })
-  const locked = operation.locked || pricing.locked
+  const locked = operation.locked || pricing.locked || !!customerEditId
+  const customerAvailable =
+    !!selected &&
+    !tableOrderUnavailable &&
+    !ordersOpen &&
+    !tablesOpen &&
+    !pickupsOpen &&
+    (currentOrder
+      ? !currentOrder.sale_id && !['cancelled', 'delivered'].includes(currentOrder.status)
+      : !savedPickup && (channel !== 'dine_in' || !!dining))
   const notesAvailable =
     !!selected &&
     !savedPickup &&
@@ -334,7 +346,7 @@ export function OrderComposer({
   useTerminalOrders(terminal ? openOrdersPanel : null)
   useTerminalGuard(
     terminal && (cart.length > 0 || locked || checkoutOpen),
-    terminal && (locked || checkoutOpen),
+    terminal && (operation.locked || pricing.locked || checkoutOpen || customerEditBusy),
   )
   useEffect(() => {
     if (pricing.error) pendingDining.current = null
@@ -343,7 +355,7 @@ export function OrderComposer({
     if (terminal && selected && !locked) savePosContext(session!, selected, channel)
   }, [terminal, selected, channel, locked, session])
   useEffect(() => {
-    if (!terminal || checkoutOpen) return
+    if (!terminal || checkoutOpen || customerEditId) return
     const shortcut = (event: KeyboardEvent) => {
       if (
         event.repeat ||
@@ -370,7 +382,7 @@ export function OrderComposer({
     }
     window.addEventListener('keydown', shortcut)
     return () => window.removeEventListener('keydown', shortcut)
-  }, [terminal, checkoutOpen, picking, bundling, customizing, pricing.review])
+  }, [terminal, checkoutOpen, customerEditId, picking, bundling, customizing, pricing.review])
   function configure(product: Product, variant?: Variant) {
     if (savedPickup) return
     setPicking(null)
@@ -746,11 +758,15 @@ export function OrderComposer({
               </button>
               <button
                 type="button"
-                disabled={locked || savedPickup}
+                disabled={locked || !customerAvailable}
                 onClick={() => {
                   setTablesOpen(false)
                   setOrdersOpen(false)
                   setPickupsOpen(false)
+                  if (currentOrder) {
+                    setCustomerEditId(currentOrder.id)
+                    return
+                  }
                   setDetails('client')
                   setPanel('cart')
                 }}
@@ -973,15 +989,23 @@ export function OrderComposer({
         </section>
         <div
           className={terminal ? 'pos-order-workspace' : 'order-workspace'}
-          data-view={terminal && (tablesOpen || pickupsOpen || ordersOpen) ? 'tables' : 'order'}
+          data-view={
+            terminal && (tablesOpen || pickupsOpen || ordersOpen || customerEditId)
+              ? 'tables'
+              : 'order'
+          }
         >
           <form
             className="panel order-cart"
             onSubmit={submit}
             ref={orderForm}
             data-pos-slot="order"
-            inert={terminal && (tablesOpen || pickupsOpen || ordersOpen)}
-            aria-hidden={terminal && (tablesOpen || pickupsOpen || ordersOpen) ? true : undefined}
+            inert={terminal && (tablesOpen || pickupsOpen || ordersOpen || !!customerEditId)}
+            aria-hidden={
+              terminal && (tablesOpen || pickupsOpen || ordersOpen || !!customerEditId)
+                ? true
+                : undefined
+            }
           >
             <div className="panel-heading">
               <div className="pos-digital-heading-text">
@@ -1504,10 +1528,20 @@ export function OrderComposer({
               branchId={selected}
               onClose={() => setOrdersOpen(false)}
               onKitchen={setKitchenOrderId}
+              onEditCustomer={setCustomerEditId}
+              inactive={!!customerEditId}
               onCheckout={(id) => {
                 setOrdersCheckoutId(id)
                 setCheckoutOpen(true)
               }}
+            />
+          )}
+          {customerEditId && (
+            <OrderCustomerEditor
+              key={customerEditId}
+              orderId={customerEditId}
+              onClose={() => setCustomerEditId(null)}
+              onBusy={setCustomerEditBusy}
             />
           )}
         </div>

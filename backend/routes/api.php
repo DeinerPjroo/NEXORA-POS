@@ -67,6 +67,8 @@ Route::prefix('v1')->group(function () {
         Route::get('deliveries/couriers', [DeliveryController::class, 'couriers']);
         Route::post('deliveries/{orderDelivery}/status', [DeliveryController::class, 'change']);
         Route::post('orders/{order}/preparation-corrections', [OrderController::class, 'correctPreparation']);
+        Route::get('orders/{order}/customer', [OrderController::class, 'customer']);
+        Route::put('orders/{order}/customer', [OrderController::class, 'updateCustomer']);
         Route::get('dining-sessions/{diningSession}/kitchen-tickets', [KitchenController::class, 'sessionTickets']);
         Route::get('kitchen-stations', [KitchenStationController::class, 'index']);
         Route::post('kitchen-stations', [KitchenStationController::class, 'store']);
