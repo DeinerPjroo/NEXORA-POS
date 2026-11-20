@@ -14,6 +14,11 @@ use Illuminate\Validation\Rule;
 
 final class KitchenController extends Controller
 {
+    public function sessionTickets(Request $request, \App\Models\DiningSession $diningSession) {
+        Gate::authorize('dining.view'); Gate::authorize('orders.view');
+        $request->validate(['page'=>['sometimes','integer','min:1']]);
+        return KitchenTicketResource::collection(KitchenTicket::whereIn('order_id',Order::where('dining_session_id',$diningSession->id)->select('id'))->with('lines','events')->latest('id')->paginate(30))->additional(['server_now'=>now()->toISOString()]);
+    }
     private function own(Request $request, string $table)
     {
         return Rule::exists($table, 'id')->where('tenant_id', $request->user()->tenant_id);

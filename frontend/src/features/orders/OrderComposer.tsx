@@ -28,7 +28,7 @@ import type { Order } from '../operations/types'
 import { VariantOrderPicker } from './VariantOrderPicker'
 import { ModifierOrderPicker } from './ModifierOrderPicker'
 import { ModifierDetails } from './ModifierDetails'
-import { cartSubtotal, contextualPrice, makeLine, serializeCart } from './cart'
+import { cartSubtotal, contextualPrice, makeLine, serializeCart, withDestination } from './cart'
 import type { CartLine, CartConfiguration } from './cart'
 import type { OrderChannel } from '../catalog/context-price-types'
 import { useCartPricing } from './useCartPricing'
@@ -47,6 +47,7 @@ import '../pos/digital-menu.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { KitchenSend } from '../kitchen/KitchenSend'
+import { TableKitchen, CorrectPreparation } from '../kitchen/TableKitchen'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 
 const DiningSessionPicker = lazy(() =>
@@ -90,6 +91,8 @@ export function OrderComposer({
     terminal && !session!.permissions.includes('sales.collect') ? 'save' : 'checkout',
   )
   const [kitchenOrderId, setKitchenOrderId] = useState<number | null>(null)
+  const [tableKitchen,setTableKitchen]=useState(false)
+  const [correction,setCorrection]=useState<{orderId:number;revision:number;itemIds:number[]}|null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
@@ -311,6 +314,7 @@ export function OrderComposer({
   }
   function addLine(line: CartLine) {
     if (locked) return
+    line=withDestination(line,channel==='dine_in'?'table':'takeaway')
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
       return existing
@@ -330,6 +334,18 @@ export function OrderComposer({
           line.key === key ? { ...line, quantity: Math.max(1, Math.min(999, value)) } : line,
         ),
       )
+  }
+  function destination(key:string, target:'table'|'takeaway', split?:number) {
+    if(locked) return
+    setCart(previous=>{
+      const selected=previous.find(l=>l.key===key)
+      if(!selected || (split!==undefined && (!Number.isInteger(split)||split<1||split>=selected.quantity))) return previous
+      const moved=withDestination({...selected,quantity:split??selected.quantity},target)
+      const rest=previous.flatMap(l=>l.key!==key?[l]:split?[{...l,quantity:l.quantity-split}]:[])
+      const existing=rest.find(l=>l.key===moved.key && l.notes===moved.notes && l.expected_unit_price===moved.expected_unit_price)
+      setActiveLine(moved.key)
+      return existing?rest.map(l=>l===existing?{...l,quantity:l.quantity+moved.quantity}:l):[...rest,moved]
+    })
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -798,6 +814,7 @@ export function OrderComposer({
             {currentOrder && (
               <div className="pos-current-order-reference">Pedido #{currentOrder.id}</div>
             )}
+            {dining && <button type="button" className="text-button" disabled={locked} onClick={()=>setTableKitchen(true)}>Comandas de esta mesa</button>}
             {terminal && dining && activeTableOrder.isPending && (
               <p className="notice">Cargando pedido de la mesa…</p>
             )}
@@ -809,6 +826,10 @@ export function OrderComposer({
                 currency={currency}
                 selectedKey={activeLine}
                 disabled={locked}
+                destinations={channel==='dine_in' && !!dining}
+                onDestination={destination}
+                onSplit={(key,amount)=>{const line=cart.find(l=>l.key===key);if(line)destination(key,line.preparation_destination==='table'?'takeaway':'table',amount)}}
+                onCorrect={currentOrder && !['cancelled','delivered'].includes(currentOrder.status) ? (ids)=>setCorrection({orderId:currentOrder.id,revision:currentOrder.revision,itemIds:ids}) : undefined}
                 onSelect={setActiveLine}
                 onQuantity={quantity}
                 onRemove={(key) =>
@@ -1112,6 +1133,8 @@ export function OrderComposer({
       {kitchenOrderId && (
         <KitchenSend orderId={kitchenOrderId} onClose={() => setKitchenOrderId(null)} />
       )}
+      {tableKitchen && dining && <TableKitchen sessionId={dining.id} onClose={()=>setTableKitchen(false)}/>}
+      {correction && <CorrectPreparation {...correction} onClose={()=>setCorrection(null)}/>}
       {checkoutOpen && checkoutOrderId && (
         <TerminalCheckout
           key={checkoutOrderId}

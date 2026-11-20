@@ -5,6 +5,7 @@ import { moneyUnits, unitsToMoney } from '../../lib/money'
 
 // Modelo exclusivamente visual. Solo el carrito original se envía al servidor.
 export type DisplayOrderLine = CartLine & {
+  recordedItemIds: number[]
   recordedQuantity: number
   draftQuantity: number
   displaySubtotal: string
@@ -17,6 +18,7 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
       line.variant_id,
       moneyUnits(line.expected_unit_price).toString(),
       line.notes,
+      line.preparation_destination ?? 'table',
       line.modifier_labels ?? [],
     ])
   const find = (line: CartLine, combine: boolean) =>
@@ -34,6 +36,8 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
       product_revision: 0,
       expected_unit_price: item.unit_price,
       notes: item.notes ?? '',
+      preparation_destination: item.preparation_destination,
+      recordedItemIds:[item.id],
       modifier_labels: item.modifiers_snapshot ?? [],
       recordedQuantity: item.quantity,
       draftQuantity: 0,
@@ -44,6 +48,7 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
     if (existing) {
       existing.quantity += line.quantity
       existing.recordedQuantity += line.recordedQuantity
+      existing.recordedItemIds.push(item.id)
       existing.displaySubtotal = unitsToMoney(
         moneyUnits(existing.displaySubtotal) + moneyUnits(line.displaySubtotal),
       )
@@ -63,6 +68,7 @@ export function unifiedOrderLines(recorded: OrderItem[], drafts: CartLine[]): Di
       rows.push({
         ...draft,
         recordedQuantity: 0,
+        recordedItemIds:[],
         draftQuantity: draft.quantity,
         displaySubtotal: subtotal,
       })

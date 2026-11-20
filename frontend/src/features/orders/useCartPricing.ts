@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import type { OrderChannel } from '../catalog/context-price-types'
 import type { CartLine } from './cart'
-import { serializeCart } from './cart'
+import { serializeCart, withDestination } from './cart'
 
 export type CartContext = { branchId: number; channel: OrderChannel }
 type PreviewLine = Omit<CartLine, 'key'>
@@ -24,6 +24,7 @@ function visibleConfiguration(line: CartLine): string {
   const promotion = line.price_context?.promotion
   return JSON.stringify({
     price: line.expected_unit_price,
+    preparation_destination:line.preparation_destination,
     promotion: promotion
       ? {
           id: promotion.id,
@@ -75,11 +76,11 @@ export function useCartPricing({
           branch_id: target.branchId,
           channel: target.channel,
           currency,
-          items: serializeCart(lines, false),
+          items: serializeCart(target.channel==='dine_in'?lines:lines.map(line=>withDestination(line,'takeaway')), false),
         },
       }),
     onSuccess: ({ data }, { target, lines }) => {
-      const after = data.items.map((line, index) => ({
+      const after = data.items.map((line, index) => withDestination({
         ...line,
         key: lines[index].key,
         notes: lines[index].notes,
@@ -95,7 +96,7 @@ export function useCartPricing({
               })),
             }
           : {}),
-      }))
+      },line.preparation_destination ?? (target.channel==='dine_in'?'table':'takeaway')))
       if (
         lines.some(
           (line, index) => visibleConfiguration(line) !== visibleConfiguration(after[index]),

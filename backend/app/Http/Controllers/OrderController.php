@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 
 final class OrderController extends Controller
 {
+    public function correctPreparation(\App\Http\Requests\PreparationCorrectionRequest $request, Order $order, \App\Domains\Kitchen\CorrectPreparation $service) { return new OrderResource($service->execute($request->user(),$order,$request->validated())->load('branch','items.preparationCorrections','events','sale')); }
     public function index(OperationFiltersRequest $request)
     {
         $query = Order::with('branch', 'sale')->withCount('items')

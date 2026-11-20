@@ -52,6 +52,8 @@ export type OrderCombo = {
   }
 }
 export type OrderItem = {
+  preparation_destination?: 'table' | 'takeaway'
+  preparation_corrections?: {id:number;from_destination:string;to_destination:string;reason:string;created_at:string}[]
   order_combo_id?: number | null
   combo_position?: number | null
   availability_snapshot?: import('../catalog/availability-types').AvailabilityContext | null

@@ -21,6 +21,7 @@ import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { KitchenTicket } from './types'
 import './kitchen.css'
+import { preparationLabels } from './TableKitchen'
 const labels = {
   new: 'Nuevas',
   preparing: 'En preparación',
@@ -232,6 +233,8 @@ export function KitchenBoardPage() {
                               <span>{line.product_name}</span>
                             </strong>
                             {line.variant_name && <small>{line.variant_name}</small>}
+                            <span className="preparation-badge" data-destination={line.preparation_destination}>{preparationLabels[line.preparation_destination ?? 'table']}</span>
+                            {line.corrections?.map(c=><p className="kitchen-note" key={c.id}>Corrección: {c.reason}</p>)}
                             {line.preparations?.map((group, i) => (
                               <small key={i}>
                                 {group.name}: {group.options.join(', ')}

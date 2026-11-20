@@ -62,6 +62,8 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/overview', [WorkspaceController::class, 'overview']);
         Route::get('workspace/commercial-dashboard', [CommercialDashboardController::class, 'show']);
         Route::get('operations/context', [OperationsController::class, 'context']);
+        Route::post('orders/{order}/preparation-corrections',[OrderController::class,'correctPreparation']);
+        Route::get('dining-sessions/{diningSession}/kitchen-tickets',[\App\Http\Controllers\KitchenController::class,'sessionTickets']);
         Route::get('kitchen-stations', [KitchenStationController::class, 'index']);
         Route::post('kitchen-stations', [KitchenStationController::class, 'store']);
         Route::put('kitchen-stations/{kitchenStation}', [KitchenStationController::class, 'update']);

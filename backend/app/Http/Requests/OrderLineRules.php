@@ -8,8 +8,9 @@ final class OrderLineRules
 {
     public static function rules(bool $expectations = true): array
     {
-        $keys = 'product_id,variant_id,quantity,notes,modifiers,kind,components,selection_version'.($expectations ? ',product_revision,expected_unit_price,expected_tax_revision' : '');
+        $keys = 'product_id,variant_id,quantity,notes,modifiers,kind,components,selection_version,preparation_destination'.($expectations ? ',product_revision,expected_unit_price,expected_tax_revision' : '');
         $rules = ['items' => ['required', 'array', 'list', 'min:1', 'max:100'], 'items.*' => ['required', 'array:'.$keys],
+            'items.*.preparation_destination'=>['sometimes','in:table,takeaway'],
             'items.*.product_id' => ['required', 'integer', 'min:1'], 'items.*.variant_id' => ['nullable', 'integer', 'min:1'],
             'items.*.quantity' => ['required', 'integer', 'between:1,999'], 'items.*.notes' => ['nullable', 'string', 'max:300'],
             'items.*.modifiers' => ['sometimes', 'array', 'list', 'max:8'], 'items.*.modifiers.*' => ['required', 'array:group_id,option_ids'],
