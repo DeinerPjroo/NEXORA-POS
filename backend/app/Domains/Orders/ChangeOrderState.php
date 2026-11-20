@@ -3,7 +3,9 @@
 namespace App\Domains\Orders;
 
 use App\Domains\Identity\Audit;
+use App\Domains\Kitchen\KitchenWorkflow;
 use App\Domains\Operations\IdempotentOperation;
+use App\Models\KitchenTicket;
 use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\User;
@@ -22,6 +24,11 @@ final class ChangeOrderState
             $next = ['open' => 'preparing', 'preparing' => 'ready', 'ready' => 'delivered'];
             $allowed = $data['status'] === 'cancelled' ? in_array($order->status, ['open', 'preparing', 'ready'], true) : ($next[$order->status] ?? null) === $data['status'];
             abort_unless($allowed, 409, 'No se permite ese cambio de estado.');
+            if ($data['status'] !== 'cancelled') {
+                abort_if(KitchenTicket::where('order_id', $order->id)->exists(), 409, 'Este pedido se prepara en cocina. Actualiza sus comandas desde Nexora Kitchen.');
+            } else {
+                app(KitchenWorkflow::class)->cancel($actor, $order, $data['reason'] ?? null);
+            }
             $from = $order->status;
             $order->status = $data['status'];
             $order->revision++;

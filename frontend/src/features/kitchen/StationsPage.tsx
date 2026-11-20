@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
@@ -50,6 +51,14 @@ export function StationsPage() {
         }
       />
       <div className="operation-toolbar">
+        <Link className="button secondary" to="/terminal/cocina">
+          Abrir cocina
+        </Link>
+        {can('kitchen.manage') && can('catalog.view') && (
+          <Link className="button secondary" to="/cocina/rutas">
+            Rutas de preparación
+          </Link>
+        )}
         <input
           aria-label="Buscar estaciones"
           placeholder="Buscar estación…"

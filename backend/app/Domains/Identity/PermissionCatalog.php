@@ -9,6 +9,7 @@ final class PermissionCatalog
     public const ALL = [
         'kitchen.view' => ['Consultar estaciones de cocina', 'Cocina'],
         'kitchen.manage' => ['Configurar estaciones de cocina', 'Cocina'],
+        'kitchen.operate' => ['Operar comandas de cocina', 'Cocina'],
         'dining.view' => ['Consultar salones y mesas', 'Salones y mesas'],
         'dining.manage' => ['Configurar salones y mesas', 'Salones y mesas'],
         'dining.operate' => ['Operar mesas y atenciones', 'Salones y mesas'],

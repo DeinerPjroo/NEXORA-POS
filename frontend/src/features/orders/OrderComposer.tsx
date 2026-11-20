@@ -46,6 +46,7 @@ import '../pos/digital-order.css'
 import '../pos/digital-menu.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
+import { KitchenSend } from '../kitchen/KitchenSend'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -84,7 +85,8 @@ export function OrderComposer({
   const [tablesOpen, setTablesOpen] = useState(false)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
-  const orderIntent = useRef<'save' | 'checkout'>('checkout')
+  const orderIntent = useRef<'save' | 'checkout' | 'kitchen'>('checkout')
+  const [kitchenOrderId, setKitchenOrderId] = useState<number | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
@@ -185,7 +187,7 @@ export function OrderComposer({
     if (order.dining_session_id) await client.invalidateQueries({ queryKey: ['dining-occupancy'] })
     if (order.dining_session_id)
       await client.invalidateQueries({ queryKey: ['table-active-order', order.dining_session_id] })
-    if (orderIntent.current === 'save' && order.dining_session_id) {
+    if (orderIntent.current !== 'checkout' && order.dining_session_id) {
       const fresh = await api<{ data: DiningSession }>('dining-sessions/' + order.dining_session_id)
       await client.invalidateQueries({ queryKey: ['table-orders', order.dining_session_id] })
       setCart([])
@@ -202,7 +204,17 @@ export function OrderComposer({
         setDining((current) =>
           current?.id === fresh.data.id ? { ...current, revision: fresh.data.revision } : current,
         )
+      if (orderIntent.current === 'kitchen') setKitchenOrderId(order.id)
       toast('Pedido guardado en su mesa.')
+      return
+    }
+    if (terminal && orderIntent.current === 'kitchen') {
+      setCart([])
+      setActiveLine(null)
+      setConfirmedOrder(null)
+      setCheckoutOrderId(order.id)
+      setCheckoutContext(currentCheckoutContext)
+      setKitchenOrderId(order.id)
       return
     }
     toast(
@@ -1019,10 +1031,19 @@ export function OrderComposer({
                 <button
                   type="button"
                   className="pos-kitchen"
-                  disabled
-                  title="El envío a estaciones se habilitará al integrar comandas de cocina"
+                  disabled={
+                    locked ||
+                    tableOrderUnavailable ||
+                    (!cart.length && !currentOrder && !resumableCheckoutId)
+                  }
+                  onClick={() => {
+                    if (cart.length) {
+                      orderIntent.current = 'kitchen'
+                      orderForm.current?.requestSubmit()
+                    } else setKitchenOrderId(currentOrder?.id ?? resumableCheckoutId)
+                  }}
                 >
-                  ENVIAR A COCINA · No disponible
+                  ENVIAR A COCINA
                 </button>
               )}
               <button
@@ -1089,6 +1110,9 @@ export function OrderComposer({
           )}
         </div>
       </div>
+      {kitchenOrderId && (
+        <KitchenSend orderId={kitchenOrderId} onClose={() => setKitchenOrderId(null)} />
+      )}
       {checkoutOpen && checkoutOrderId && (
         <TerminalCheckout
           key={checkoutOrderId}

@@ -33,6 +33,7 @@ export function TerminalEnvironment({
     { to: '/pos', label: 'Terminal POS', permission: 'sales.collect' },
     { to: '/pedidos', label: 'Pedidos', permission: 'orders.view' },
     { to: '/caja', label: 'Caja rápida', permission: 'cash.view' },
+    { to: '/terminal/cocina', label: 'Cocina', permission: 'kitchen.view' },
     { to: '/salones/reservas', label: 'Reservas', permission: 'dining.reserve' },
   ]
   return (

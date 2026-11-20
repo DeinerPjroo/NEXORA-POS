@@ -8,9 +8,11 @@ import type { CatalogPage, Product } from './types'
 export function ComboProductPicker({
   onPick,
   onClose,
+  title = 'Elegir producto del componente',
 }: {
   onPick: (product: Product) => void
   onClose: () => void
+  title?: string
 }) {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -29,7 +31,7 @@ export function ComboProductPicker({
     gcTime: 0,
   })
   return (
-    <Modal title="Elegir producto del componente" onClose={onClose}>
+    <Modal title={title} onClose={onClose}>
       <div className="form-stack">
         <input
           aria-label="Buscar componente"

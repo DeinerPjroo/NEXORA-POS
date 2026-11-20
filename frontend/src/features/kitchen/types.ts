@@ -1,0 +1,37 @@
+export type KitchenTicket = {
+  id: number
+  order_id: number
+  branch_id: number
+  kitchen_station_id: number
+  station_name: string
+  station_color: string
+  target_minutes: number
+  revision: number
+  status: 'new' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+  created_at: string
+  started_at: string | null
+  ready_at: string | null
+  delivered_at: string | null
+  order_snapshot: {
+    channel: string
+    reference: string | null
+    notes: string | null
+    dining: { tables?: { name?: string; table_name?: string }[] } | null
+  }
+  lines: {
+    id: number
+    order_item_id: number
+    product_name: string
+    variant_name: string | null
+    quantity: number
+    notes: string | null
+    preparations: { name: string; options: string[] }[]
+  }[]
+  events: {
+    id: number
+    from_status: string | null
+    to_status: string
+    reason: string | null
+    created_at: string
+  }[]
+}

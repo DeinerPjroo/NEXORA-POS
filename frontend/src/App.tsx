@@ -21,6 +21,8 @@ import { SalesPage } from './features/sales/SalesPage'
 import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { CheckoutPage } from './features/sales/CheckoutPage'
+import { KitchenBoardPage } from './features/kitchen/KitchenBoardPage'
+import { KitchenRoutesPage } from './features/kitchen/KitchenRoutesPage'
 import { PaymentMethodsPage } from './features/sales/PaymentMethodsPage'
 import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
@@ -96,6 +98,22 @@ export default function App() {
               <Suspense fallback={<Loading />}>
                 <StationsPage />
               </Suspense>
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/terminal/cocina"
+          element={
+            <PermissionBoundary permission="kitchen.view">
+              <KitchenBoardPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/cocina/rutas"
+          element={
+            <PermissionBoundary permission="kitchen.manage">
+              <KitchenRoutesPage />
             </PermissionBoundary>
           }
         />

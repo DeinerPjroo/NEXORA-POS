@@ -10,6 +10,7 @@ use App\Http\Controllers\DiningController;
 use App\Http\Controllers\DiningReservationController;
 use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\KitchenStationController;
 use App\Http\Controllers\MultiFactorController;
 use App\Http\Controllers\OperationsController;
@@ -63,6 +64,12 @@ Route::prefix('v1')->group(function () {
         Route::get('kitchen-stations', [KitchenStationController::class, 'index']);
         Route::post('kitchen-stations', [KitchenStationController::class, 'store']);
         Route::put('kitchen-stations/{kitchenStation}', [KitchenStationController::class, 'update']);
+        Route::get('kitchen-routes', [KitchenController::class, 'routes']);
+        Route::post('kitchen-routes', [KitchenController::class, 'saveRoute']);
+        Route::get('kitchen-tickets', [KitchenController::class, 'index']);
+        Route::post('kitchen-tickets/{kitchenTicket}/status', [KitchenController::class, 'transition']);
+        Route::get('orders/{order}/kitchen-preview', [KitchenController::class, 'preview']);
+        Route::post('orders/{order}/kitchen-dispatch', [KitchenController::class, 'dispatch']);
         Route::controller(DiningReservationController::class)->group(function () {
             Route::get('dining/reservation-tables', 'tables');
             Route::get('dining-reservations', 'index');
