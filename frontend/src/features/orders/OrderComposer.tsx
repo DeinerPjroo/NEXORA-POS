@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  Check,
   Minus,
   Plus,
   RefreshCw,
@@ -12,6 +13,8 @@ import {
   ShoppingBag,
   Trash2,
   UtensilsCrossed,
+  UserRound,
+  X,
 } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
 import { formatMoney } from '../../lib/money'
@@ -111,6 +114,10 @@ export function OrderComposer({
     itemIds: number[]
   } | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    if (terminal && details)
+      orderForm.current?.querySelector<HTMLInputElement>('[name="customer_name"]')?.focus()
+  }, [terminal, details])
   const [statusOpen, setStatusOpen] = useState(false)
   const [photos, setPhotos] = useState(false)
   const [activeLine, setActiveLine] = useState<string | null>(null)
@@ -1132,79 +1139,119 @@ export function OrderComposer({
               disabled={locked || savedPickup}
               className="form-stack pos-order-details"
               data-open={details}
+              aria-label="Datos del cliente y pedido"
             >
-              {
-                <button
-                  type="button"
-                  className="pos-detail-close"
-                  onClick={() => setDetails(false)}
-                >
-                  Cerrar detalles
-                </button>
-              }
-              <Field label="Tipo de pedido">
-                <select
-                  name="channel"
-                  disabled={!!initialChannel}
-                  value={channel}
-                  onChange={(event) =>
-                    selected &&
-                    pricing.request({
-                      branchId: selected,
-                      channel: event.target.value as OrderChannel,
-                    })
-                  }
-                >
-                  <option value="takeaway">Para llevar</option>
-                  <option value="dine_in">Consumo en mesa</option>
-                  <option value="delivery">Domicilio</option>
-                </select>
-              </Field>
-              {channel === 'delivery' && (
-                <>
-                  <Field label="Nombre de quien recibe">
-                    <input name="delivery_name" maxLength={100} />
-                  </Field>
-                  <Field label="Teléfono del domicilio">
-                    <input name="delivery_phone" type="tel" maxLength={30} />
-                  </Field>
-                  <Field label="Dirección de entrega">
-                    <textarea name="delivery_address" maxLength={300} rows={2} />
-                  </Field>
-                  <Field label="Indicaciones de entrega">
-                    <textarea name="delivery_instructions" maxLength={300} rows={2} />
-                  </Field>
-                </>
+              {terminal && (
+                <header className="pos-client-heading">
+                  <span className="pos-client-icon">
+                    <UserRound size={22} />
+                  </span>
+                  <div>
+                    <span className="pos-digital-eyebrow">ATENCIÓN PERSONALIZADA</span>
+                    <h3>Cliente y pedido</h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="pos-detail-close"
+                    aria-label="Cerrar detalles"
+                    onClick={() => setDetails(false)}
+                  >
+                    <X size={19} />
+                  </button>
+                </header>
               )}
-              <Field label="Referencia del pedido">
-                <input
-                  name="reference"
-                  maxLength={80}
-                  placeholder="Ej. Mesa 4 o nombre de recogida"
-                />
-              </Field>
-              {selected && channel === 'dine_in' && can('dining.view') && can('dining.operate') && (
-                <Suspense fallback={<Loading />}>
-                  <DiningSessionPicker
-                    key={selected}
-                    branchId={selected}
-                    selected={dining}
-                    disabled={locked}
-                    onChange={setDining}
+              <div className="pos-client-fields">
+                {terminal && (
+                  <div className="pos-client-context">
+                    <span className="pos-client-dot" />
+                    {channel === 'takeaway'
+                      ? 'Recogida en mostrador'
+                      : channel === 'delivery'
+                        ? 'Domicilio'
+                        : dining?.label || 'Consumo en mesa'}
+                  </div>
+                )}
+                <Field label="Nombre del cliente">
+                  <input
+                    name="customer_name"
+                    maxLength={100}
+                    placeholder="¿A nombre de quién es el pedido?"
+                    autoComplete="off"
                   />
-                </Suspense>
+                </Field>
+                <Field label="Tipo de pedido">
+                  <select
+                    name="channel"
+                    disabled={!!initialChannel}
+                    value={channel}
+                    onChange={(event) =>
+                      selected &&
+                      pricing.request({
+                        branchId: selected,
+                        channel: event.target.value as OrderChannel,
+                      })
+                    }
+                  >
+                    <option value="takeaway">Para llevar</option>
+                    <option value="dine_in">Consumo en mesa</option>
+                    <option value="delivery">Domicilio</option>
+                  </select>
+                </Field>
+                {channel === 'delivery' && (
+                  <>
+                    <Field label="Nombre de quien recibe">
+                      <input name="delivery_name" maxLength={100} />
+                    </Field>
+                    <Field label="Teléfono del domicilio">
+                      <input name="delivery_phone" type="tel" maxLength={30} />
+                    </Field>
+                    <Field label="Dirección de entrega">
+                      <textarea name="delivery_address" maxLength={300} rows={2} />
+                    </Field>
+                    <Field label="Indicaciones de entrega">
+                      <textarea name="delivery_instructions" maxLength={300} rows={2} />
+                    </Field>
+                  </>
+                )}
+                <Field label="Referencia del pedido">
+                  <input
+                    name="reference"
+                    maxLength={80}
+                    placeholder="Ej. Mesa 4 o nombre de recogida"
+                  />
+                </Field>
+                {selected &&
+                  channel === 'dine_in' &&
+                  can('dining.view') &&
+                  can('dining.operate') && (
+                    <Suspense fallback={<Loading />}>
+                      <DiningSessionPicker
+                        key={selected}
+                        branchId={selected}
+                        selected={dining}
+                        disabled={locked}
+                        onChange={setDining}
+                      />
+                    </Suspense>
+                  )}
+                <Field label="Observación general">
+                  <textarea
+                    name="notes"
+                    maxLength={1000}
+                    rows={2}
+                    placeholder="Indicaciones para este pedido"
+                  />
+                </Field>
+              </div>
+              {terminal && (
+                <footer className="pos-client-footer">
+                  <small>Estos datos se guardan al registrar el pedido.</small>
+                  <button type="button" onClick={() => setDetails(false)}>
+                    <Check size={18} />
+                    Listo · volver al pedido
+                  </button>
+                </footer>
               )}
-              <Field label="Nombre del cliente">
-                <input name="customer_name" maxLength={100} placeholder="Opcional" />
-              </Field>
-              <Field label="Observación general">
-                <textarea
-                  name="notes"
-                  maxLength={1000}
-                  rows={2}
-                  placeholder="Indicaciones para este pedido"
-                />
-              </Field>
             </fieldset>
             <div className="order-subtotal">
               <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
