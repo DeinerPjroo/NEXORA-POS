@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Pedido en curso ahora muestra una sola lista por mesa, sin bloques guardados/nuevos. Agrupa cantidades de productos equivalentes y subtotal registrado+adiciones con BigInt; solo las adiciones originales se envían al guardar. Confirmación local evita doble visualización durante refresco; cobro existente accesible sin nuevos productos. Build/TypeScript/Prettier y Chromium pos-table-orders aprobados (cantidades/subtotal antes y después de guardar/recargar, mismo ID, mesas aisladas, reintento sin duplicar y cobro). Sin backend/migraciones/suites generales. Esta presentación sustituye la separación descrita en entradas históricas.
+
 Pedido en curso digitalizado según confirmación explícita del usuario: cabecera, mesa, número/estado real, cantidades e iconos táctiles, tabla y subtotal; digital-order.css conserva semántica de comanda y reduce movimiento si se solicita. Sin modificar guardado/montos/cobros. Build/TypeScript aprobados; no repetir suites ni declarar nueva prueba funcional/visual ejecutada.
 
 Nueva regla: productos adicionales actualizan MISMO pedido de mesa sin cobros; no crear otro por cada guardado. CreateOrder append mantiene ID/snapshots, revisiones/UUID/Tenant lock/BCMath/auditoría y rechaza ventas existentes. POS consulta pendiente y metadato session_revision, actualiza su ID y no duplica líneas. Native12/105, SQL carreras3/47 (b0127201de5d5b75), Chromium pos-table-orders1 aprobado1.3min con mismo ID tras agregar/recargar y mesas aisladas; build/TypeScript/Pint correctos. Sin migración, sin fusionar datos históricos ni modificar ventas cobradas.

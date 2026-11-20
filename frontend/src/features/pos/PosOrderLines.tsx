@@ -5,9 +5,12 @@ import type { CartLine } from '../orders/cart'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { CartComboDetails } from '../orders/CartComboDetails'
 import { ListPlus, Minus, Plus, StickyNote, Trash2 } from 'lucide-react'
+import type { OrderItem } from '../operations/types'
+import { unifiedOrderLines } from './unified-order'
 
 export function PosOrderLines({
   lines,
+  recordedItems = [],
   currency,
   selectedKey,
   disabled,
@@ -17,6 +20,7 @@ export function PosOrderLines({
   onNotes,
 }: {
   lines: CartLine[]
+  recordedItems?: OrderItem[]
   currency: string
   selectedKey: string | null
   disabled: boolean
@@ -27,6 +31,8 @@ export function PosOrderLines({
 }) {
   const [editingNotes, setEditingNotes] = useState(false)
   const selected = lines.find((line) => line.key === selectedKey) ?? lines.at(-1)
+  const displayLines = unifiedOrderLines(recordedItems, lines)
+  const selectedDisplay = displayLines.find((line) => line.key === selected?.key)
   return (
     <section className="pos-order-ledger" aria-label="Comanda del pedido">
       <div className="pos-order-lines-scroll cart-lines">
@@ -39,25 +45,31 @@ export function PosOrderLines({
             </tr>
           </thead>
           <tbody>
-            {lines.map((line) => (
+            {displayLines.map((line) => (
               <tr
                 key={line.key}
                 data-selected={selected?.key === line.key}
-                onClick={() => onSelect(line.key)}
+                onClick={() => {
+                  if (line.draftQuantity) onSelect(line.key)
+                }}
               >
                 <td>
                   <span className="pos-digital-quantity">{line.quantity}</span>
                 </td>
                 <td>
-                  <button
-                    type="button"
-                    className="pos-line-select"
-                    disabled={disabled}
-                    aria-label={`Seleccionar ${line.product_name}`}
-                    onClick={() => onSelect(line.key)}
-                  >
-                    {line.product_name}
-                  </button>
+                  {line.draftQuantity ? (
+                    <button
+                      type="button"
+                      className="pos-line-select"
+                      disabled={disabled}
+                      aria-label={`Seleccionar ${line.product_name}`}
+                      onClick={() => onSelect(line.key)}
+                    >
+                      {line.product_name}
+                    </button>
+                  ) : (
+                    <strong className="pos-line-select">{line.product_name}</strong>
+                  )}
                   {line.variant_name && <small>{line.variant_name}</small>}
                   <small>
                     {formatMoney(cartSubtotal([{ ...line, quantity: 1 }]), currency)} c/u
@@ -66,12 +78,12 @@ export function PosOrderLines({
                   <CartComboDetails line={line} currency={currency} />
                   {line.notes && <small className="pos-line-note">Nota: {line.notes}</small>}
                 </td>
-                <td>{formatMoney(cartSubtotal([line]), currency)}</td>
+                <td>{formatMoney(line.displaySubtotal, currency)}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!lines.length && (
+        {!displayLines.length && (
           <div className="pos-order-empty cart-empty">
             <ListPlus size={25} aria-hidden="true" />
             <p>Pedido sin líneas</p>
@@ -89,7 +101,7 @@ export function PosOrderLines({
           >
             <Minus size={15} />
           </button>
-          <output>{selected.quantity}</output>
+          <output>{selectedDisplay?.quantity ?? selected.quantity}</output>
           <button
             type="button"
             disabled={disabled || selected.quantity >= 999}

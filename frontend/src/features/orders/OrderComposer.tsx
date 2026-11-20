@@ -38,7 +38,7 @@ import type { CashOption, SalesSettings } from '../sales/types'
 import { PosCategories, PosKeypad, defaultPosLayout } from '../pos/PosPanels'
 import '../pos/terminal.css'
 import { loadPosContext, savePosContext } from '../pos/pos-context'
-import { TableOrders } from '../dining/TableOrders'
+import { unifiedOrderSubtotal } from '../pos/unified-order'
 import type { DiningSession } from '../dining/session-types'
 import type { DiningSelection } from '../dining/session-types'
 import { PosOrderLines } from '../pos/PosOrderLines'
@@ -100,6 +100,7 @@ export function OrderComposer({
     null,
   )
   const [cart, setCart] = useState<CartLine[]>([])
+  const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null)
   useEffect(() => {
     if (!terminal) return
     document.body.classList.add('pos-active')
@@ -164,7 +165,15 @@ export function OrderComposer({
   })
   const tableOrderUnavailable =
     terminal && !!dining && (activeTableOrder.isPending || !!activeTableOrder.error)
+  const acknowledged =
+    terminal && dining && confirmedOrder?.dining_session_id === dining.id ? confirmedOrder : null
+  const currentOrder =
+    terminal && dining && channel === 'dine_in'
+      ? (acknowledged ?? activeTableOrder.data?.data[0])
+      : undefined
+  const displayCart = acknowledged ? [] : cart
   const operation = useOperation<Order>('orders', async (order) => {
+    if (terminal && order.dining_session_id) setConfirmedOrder(order)
     await client.invalidateQueries({ queryKey: ['orders'] })
     if (order.dining_session_id) await client.invalidateQueries({ queryKey: ['dining-occupancy'] })
     if (order.dining_session_id)
@@ -174,6 +183,7 @@ export function OrderComposer({
       await client.invalidateQueries({ queryKey: ['table-orders', order.dining_session_id] })
       setCart([])
       setActiveLine(null)
+      setConfirmedOrder(null)
       const next = pendingTableSwitch.current
       pendingTableSwitch.current = null
       if (next) {
@@ -734,8 +744,10 @@ export function OrderComposer({
                 </h2>
               </div>
               <span className="pill neutral">
-                {cart.reduce((total, line) => total + line.quantity, 0)}{' '}
-                {terminal ? 'nuevas' : 'unidades'}
+                {displayCart.reduce((total, line) => total + line.quantity, 0) +
+                  (currentOrder?.items?.reduce((total, line) => total + line.quantity, 0) ??
+                    0)}{' '}
+                unidades
               </span>
             </div>
             <ErrorNotice error={operation.error} />
@@ -749,15 +761,17 @@ export function OrderComposer({
                 Mesa seleccionada: {dining.label}
               </p>
             )}
-            {terminal && dining && channel === 'dine_in' && (
-              <TableOrders key={dining.id} selection={dining} />
+            {currentOrder && (
+              <div className="pos-current-order-reference">Pedido #{currentOrder.id}</div>
             )}
-            {terminal && dining && (
-              <p className="pos-new-lines-label">Nuevos productos · pendientes de guardar</p>
+            {terminal && dining && activeTableOrder.isPending && (
+              <p className="notice">Cargando pedido de la mesa…</p>
             )}
+            {terminal && dining && <ErrorNotice error={activeTableOrder.error} />}
             {terminal ? (
               <PosOrderLines
-                lines={cart}
+                lines={displayCart}
+                recordedItems={currentOrder?.items}
                 currency={currency}
                 selectedKey={activeLine}
                 disabled={locked}
@@ -927,7 +941,14 @@ export function OrderComposer({
             </fieldset>
             <div className="order-subtotal">
               <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
-              <strong>{formatMoney(cartSubtotal(cart), currency)}</strong>
+              <strong>
+                {formatMoney(
+                  terminal
+                    ? unifiedOrderSubtotal(currentOrder?.subtotal, displayCart)
+                    : cartSubtotal(cart),
+                  currency,
+                )}
+              </strong>
             </div>
             <p className="muted small">
               Este registro no incluye cobro ni factura. El descuento, impuesto adicional y redondeo
@@ -982,8 +1003,12 @@ export function OrderComposer({
               <button
                 className="button primary wide"
                 aria-label={terminal ? 'Continuar al cobro' : undefined}
-                onClick={() => {
+                onClick={(event) => {
                   if (!operation.uncertain) orderIntent.current = 'checkout'
+                  if (!operation.uncertain && !cart.length && currentOrder) {
+                    event.preventDefault()
+                    navigate(`/pos/pedidos/${currentOrder.id}/cobrar`)
+                  }
                 }}
                 ref={submitButton}
                 type="submit"
@@ -991,7 +1016,11 @@ export function OrderComposer({
                   operation.isPending ||
                   pricing.locked ||
                   (!operation.uncertain &&
-                    (!cart.length || !selected || conflict || !posReady || tableOrderUnavailable))
+                    ((!cart.length && !currentOrder) ||
+                      !selected ||
+                      conflict ||
+                      !posReady ||
+                      tableOrderUnavailable))
                 }
               >
                 <Send size={17} />

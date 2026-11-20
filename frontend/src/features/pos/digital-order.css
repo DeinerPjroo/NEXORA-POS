@@ -8,6 +8,14 @@
   padding: 4px 7px 9px;
   border-bottom: 1px solid var(--line);
 }
+.pos-current-order-reference {
+  padding: 7px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  border-left: 3px solid var(--secondary);
+  background: color-mix(in srgb, var(--secondary) 7%, var(--surface));
+  border-radius: 5px;
+}
 .pos-digital-heading-text {
   display: flex;
   flex-direction: column;
