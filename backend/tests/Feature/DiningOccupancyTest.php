@@ -105,6 +105,64 @@ class DiningOccupancyTest extends TestCase
         $this->assertDatabaseCount('payments', 0);
     }
 
+    public function test_table_append_keeps_one_order_snapshots_decimal_totals_and_exact_replay(): void
+    {
+        $session = $this->open();
+        $input = $this->orderInput($session);
+        $order = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data');
+        $session = $this->detail($session['id']);
+        $append = [...$input, ...$this->key(), 'dining_session_revision' => $session['revision'], 'append_order_id' => $order['id'], 'order_revision' => 1];
+        $this->postJson('/api/v1/orders', $append)->assertCreated()->assertJsonPath('data.id', $order['id'])->assertJsonPath('data.revision', 2)->assertJsonPath('data.subtotal', '40.5000')->assertJsonCount(2, 'data.items')->assertJsonPath('data.items.0.id', $order['items'][0]['id'])->assertJsonPath('data.items.0.unit_price', '10.1250');
+        $this->postJson('/api/v1/orders', $append)->assertCreated()->assertJsonPath('data.id', $order['id'])->assertJsonCount(2, 'data.items');
+        $this->assertDatabaseCount('orders', 1);
+        $session = $this->detail($session['id']);
+        $this->postJson('/api/v1/orders', [...$append, ...$this->key(), 'dining_session_revision' => $session['revision']])->assertConflict();
+        $other = $this->open([1]);
+        $this->postJson('/api/v1/orders', [...$append, ...$this->key(), 'dining_session_id' => $other['id'], 'dining_session_revision' => $other['revision'], 'order_revision' => 2])->assertConflict();
+        DB::table('role_permission')->where('role_id', $this->owner->role_id)->where('permission_id', DB::table('permissions')->where('key', 'orders.manage')->value('id'))->delete();
+        $this->owner->unsetRelation('role');
+        $this->postJson('/api/v1/orders', $append)->assertForbidden();
+        $this->assertDatabaseCount('order_items', 2);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
+    public function test_table_append_cannot_change_a_collected_order_or_its_cash(): void
+    {
+        $session = $this->open();
+        $input = $this->orderInput($session);
+        $order = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data');
+        $this->putJson('/api/v1/sales/settings', ['revision' => 1, 'confirmed' => true, 'tax_mode' => 'none', 'tax_name' => 'Prueba', 'tax_rate' => '0'])->assertOk();
+        $register = $this->getJson('/api/v1/cash/registers')->json('data.0.id');
+        $cash = $this->postJson('/api/v1/cash/registers/'.$register.'/open', [...$this->key(), 'opening_amount' => '100', 'currency' => 'COP'])->assertCreated()->json('data');
+        $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'order_revision' => 1, 'settings_revision' => 2, 'discount_amount' => '0', 'expected_total' => '20.25', 'received_amount' => '20.25'])->assertCreated();
+        $session = $this->detail($session['id']);
+        $revision = $this->getJson('/api/v1/orders/'.$order['id'])->json('data.revision');
+        $this->postJson('/api/v1/orders', [...$input, ...$this->key(), 'dining_session_revision' => $session['revision'], 'append_order_id' => $order['id'], 'order_revision' => $revision])->assertConflict();
+        $this->assertDatabaseCount('order_items', 1);
+        $this->assertDatabaseHas('sales', ['order_id' => $order['id'], 'total' => '20.2500']);
+        $this->assertDatabaseHas('cash_sessions', ['id' => $cash['id'], 'expected_amount' => '120.2500']);
+        $this->assertDatabaseCount('payments', 1);
+    }
+
+    public function test_table_append_audit_failure_rolls_back_new_items_total_and_revisions(): void
+    {
+        $session = $this->open();
+        $input = $this->orderInput($session);
+        $order = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data');
+        $session = $this->detail($session['id']);
+        $append = [...$input, ...$this->key(), 'dining_session_revision' => $session['revision'], 'append_order_id' => $order['id'], 'order_revision' => 1];
+        Event::listen('eloquent.creating: '.AuditLog::class, function ($log) {
+            if ($log->action === 'order.items_added') {
+                throw new \RuntimeException('audit unavailable');
+            }
+        });
+        $this->postJson('/api/v1/orders', $append)->assertStatus(500);
+        $this->assertDatabaseCount('order_items', 1);
+        $this->assertDatabaseHas('orders', ['id' => $order['id'], 'revision' => 1, 'subtotal' => '20.2500']);
+        $this->assertDatabaseHas('dining_sessions', ['id' => $session['id'], 'revision' => $session['revision']]);
+        $this->assertDatabaseMissing('idempotency_records', ['key' => $append['idempotency_key']]);
+    }
+
     public function test_occupancy_join_separate_waiter_history_close_and_exact_replay(): void
     {
         $input = $this->payload();

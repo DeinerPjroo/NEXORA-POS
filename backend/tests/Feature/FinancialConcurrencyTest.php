@@ -69,6 +69,58 @@ class FinancialConcurrencyTest extends SqlConcurrencyTestCase
         $this->assertSame([200, 409], $statuses);
     }
 
+    private function appendWork(): array
+    {
+        $work = $this->work();
+        $room = $this->postJson('/api/v1/dining-rooms', [...$this->key(), 'branch_id' => $work['branch'], 'name' => 'Salón', 'color' => '#8271FF', 'is_active' => true])->assertCreated()->json('data');
+        $table = $this->postJson('/api/v1/dining-rooms/'.$room['id'].'/tables', [...$this->key(), 'room_revision' => 1, 'name' => 'Mesa', 'shape' => 'square', 'capacity' => 4, 'color' => '#8271FF', 'is_active' => true])->assertCreated()->json('data');
+        $session = $this->postJson('/api/v1/dining-sessions', [...$this->key(), 'branch_id' => $work['branch'], 'tables' => [['id' => $table['id'], 'revision' => 1]], 'guest_count' => 2, 'waiter_id' => null, 'notes' => ''])->assertCreated()->json('data');
+        $input = [...$this->key(), 'branch_id' => $work['branch'], 'channel' => 'dine_in', 'currency' => 'COP', 'dining_session_id' => $session['id'], 'dining_session_revision' => 1, 'items' => [['product_id' => $work['product'], 'quantity' => 1, 'product_revision' => 1, 'expected_unit_price' => '100.01']]];
+        $order = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data');
+        $append = [...$input, ...$this->key(), 'dining_session_revision' => 2, 'append_order_id' => $order['id'], 'order_revision' => 1];
+
+        return [$work, $order, $append];
+    }
+
+    public function test_table_append_same_uuid_only_adds_products_once(): void
+    {
+        [$work, $order, $append] = $this->appendWork();
+        $job = $this->job($work, 'order.append', $order['id'], $append);
+        $results = $this->race([$job, $job]);
+        $this->assertSame([true, true], array_column($results, 'accepted'));
+        $this->assertSame($order['id'], $results[0]['id']);
+        $this->assertSame($order['id'], $results[1]['id']);
+        $this->assertSame(2, DB::table('order_items')->where('order_id', $order['id'])->count());
+        $this->assertDatabaseHas('orders', ['id' => $order['id'], 'revision' => 2, 'subtotal' => '200.0200']);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
+    public function test_table_append_different_uuids_rejects_stale_concurrent_addition(): void
+    {
+        [$work, $order, $append] = $this->appendWork();
+        $this->oneAccepted($this->race([$this->job($work, 'order.append', $order['id'], $append), $this->job($work, 'order.append', $order['id'], [...$append, ...$this->key()])]));
+        $this->assertSame(2, DB::table('order_items')->where('order_id', $order['id'])->count());
+        $this->assertDatabaseHas('orders', ['id' => $order['id'], 'revision' => 2, 'subtotal' => '200.0200']);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
+    public function test_table_append_racing_collection_never_changes_a_collected_total(): void
+    {
+        [$work, $order, $append] = $this->appendWork();
+        $results = $this->race([$this->job($work, 'order.append', $order['id'], $append), $this->job($work, 'sale.collect', $order['id'], $this->collect($work))]);
+        $this->oneAccepted($results);
+        if ($results[0]['accepted']) {
+            $this->assertDatabaseCount('sales', 0);
+            $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '200.0200']);
+            $this->assertDatabaseHas('cash_sessions', ['id' => $work['session']['id'], 'expected_amount' => '100.0000']);
+        } else {
+            $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '100.0100']);
+            $this->assertDatabaseHas('sales', ['order_id' => $order['id'], 'total' => '100.0100']);
+            $this->assertDatabaseHas('cash_sessions', ['id' => $work['session']['id'], 'expected_amount' => '200.0100']);
+            $this->assertSame(1, DB::table('order_items')->where('order_id', $order['id'])->count());
+        }
+    }
+
     public function test_identical_collect_uuid_replays_one_sale_receipt_payment_and_cash_effect(): void
     {
         $work = $this->work();

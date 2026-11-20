@@ -4,9 +4,9 @@
   "reference_date": "2026-11-19",
   "version": "0.33.0",
   "phase": 3,
-  "module": "POS: pedidos persistidos por mesa",
+  "module": "Mesa: agregar productos al mismo pedido sin cobro",
   "status": "COMPLETED",
-  "active_task": "TABLE-ORDERS",
+  "active_task": "APPEND-TABLE-ORDER",
   "last_completed_task": "1-OPS-A/B/C/D núcleo local; backup/restauración MySQL8.4 CI6/39; verificación de último ajuste en rama antes de integrar",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Pedidos por atención vigente: endpoint paginado con dining.view/orders.view y binding tenant; TableOrders muestra líneas guardadas como registros separados de nuevos productos, sin reinsertarlas ni recobrarlas. Guardar en mesa y guardado automático antes de seleccionar otra, usando CreateOrder/useOperation existentes; refresca revisión de atención tras guardar, conserva UUID/DTO incierto y limpia datos secundarios al cambiar de grupo. Build/TypeScript y backend dirigido1/21 aprobados; Chromium pos-table-orders1 aprobó1.2min: picada Mesa1/hamburguesa Mesa2, cambio y recarga sin mezcla, fallo de respuesta/reintento con mismo cuerpo y un solo pedido por mesa. Sin migraciones/suites completas.",
+  "working_verification": "CreateOrder admite append_order_id/order_revision con atención/revisión/tenant/sucursal/moneda validados; suma nuevas líneas en mismo ID con BCMath, conserva snapshots previos, máximo100 y rollback/auditoría. Rechaza cancelados y cualquier venta/cobro; actualiza estado listo/entregado a preparando. POS consulta pedido pendiente y revisión de atención, bloquea guardar hasta resolver consulta, muestra ACTUALIZAR PEDIDO y conserva UUID/DTO incierto. Native12/105 (append, dinero/rollback/permisos y OrderTest); SQL multiproceso3/47 (UUID igual/distintos, carrera con cobro) en nexora_test_b0127201de5d5b75 conservado. Chromium pos-table-orders1 aprobó1.3min: mismo ID/pedido único tras agregar y recargar, mesas aisladas y retry exacto. Build/TypeScript/Pint aprobados. Sin migraciones ni suites completas.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",
@@ -85,7 +85,8 @@
     "nexora_test_7437a4948dbcde3d",
     "nexora_test_da2ea354dfa25a83",
     "nexora_test_34e4b943644faf6c",
-    "nexora_test_8d08d59bfd2a6f2e"
+    "nexora_test_8d08d59bfd2a6f2e",
+    "nexora_test_b0127201de5d5b75"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

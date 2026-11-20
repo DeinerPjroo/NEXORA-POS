@@ -51,6 +51,7 @@ try {
                 'sale.payments' => app(App\Domains\Sales\AddPayments::class)->execute($actor, App\Models\Sale::findOrFail($resource), $data),
                 'sale.refunds' => app(App\Domains\Sales\PartialRefund::class)->execute($actor, App\Models\Sale::findOrFail($resource), $data),
                 'cash.open' => app(App\Domains\Cash\CashOperations::class)->open($actor, App\Models\CashRegister::findOrFail($resource), $data),
+                'order.append' => app(App\Domains\Orders\CreateOrder::class)->execute($actor, $data),
                 default => throw new LogicException('Operación de prueba no permitida.'),
             };
 

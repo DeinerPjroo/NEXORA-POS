@@ -17,7 +17,9 @@ final class OrderRequest extends FormRequest
     {
         return [
             'idempotency_key' => ['required', 'uuid'], 'tenant_id' => ['prohibited'],
-            'dining_session_id' => ['nullable', 'integer', Rule::exists('dining_sessions', 'id')->where('tenant_id', $this->user()->tenant_id)],
+            'append_order_id' => ['nullable', 'integer', Rule::exists('orders', 'id')->where('tenant_id', $this->user()->tenant_id)],
+            'order_revision' => ['required_with:append_order_id', 'integer', 'min:1'],
+            'dining_session_id' => ['required_with:append_order_id', 'nullable', 'integer', Rule::exists('dining_sessions', 'id')->where('tenant_id', $this->user()->tenant_id)],
             'dining_session_revision' => ['required_with:dining_session_id', 'integer', 'min:1'],
             'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', app(TenantContext::class)->id())],
             'currency' => ['required', Rule::in(['COP', 'USD', 'EUR'])],

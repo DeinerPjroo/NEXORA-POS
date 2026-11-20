@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Nueva regla: productos adicionales actualizan MISMO pedido de mesa sin cobros; no crear otro por cada guardado. CreateOrder append mantiene ID/snapshots, revisiones/UUID/Tenant lock/BCMath/auditoría y rechaza ventas existentes. POS consulta pendiente y metadato session_revision, actualiza su ID y no duplica líneas. Native12/105, SQL carreras3/47 (b0127201de5d5b75), Chromium pos-table-orders1 aprobado1.3min con mismo ID tras agregar/recargar y mesas aisladas; build/TypeScript/Pint correctos. Sin migración, sin fusionar datos históricos ni modificar ventas cobradas.
+
 Pedidos por mesa implementados: lectura paginada /dining-sessions/{id}/orders con permisos/tenant; guardados separados de productos nuevos. GUARDAR EN MESA y autosave antes de cambiar atención, sin copiar guardados al formulario; revisión fresca y UUID/DTO de reintento existentes. Build y backend1/21 aprobados; Chromium pos-table-orders1 aprobó1.2min: Mesa1 picada/Mesa2 hamburguesa, recarga, respuesta perdida y reintento sin duplicar. Sin migración ni suites generales. No implica cobro conjunto de varios pedidos ni envío KDS.
 
 Mesas: apertura desde mesa elegida ya no muestra casillas/listado; initialTable queda fija y se confirma número de personas/capacidad. La mesa se ocupa completa aunque sobren sillas (regla permanente AGENTS); unión/separación solo mediante editar atención. TypeScript y pos-tables1 aprobados42.0s, comprobando2 personas/4 plazas, exclusión de disponibles y rechazo409 a segunda atención. Sin backend/migraciones. Test histórico de unión adaptado al paso explícito, sin repetir su caso completo.

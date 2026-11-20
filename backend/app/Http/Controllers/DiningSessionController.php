@@ -46,9 +46,9 @@ final class DiningSessionController extends Controller
     {
         Gate::authorize('dining.view');
         Gate::authorize('orders.view');
-        $data = $request->validate(['page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'between:1,30']]);
+        $data = $request->validate(['page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'between:1,30'], 'pending' => ['sometimes', 'boolean']]);
 
-        return OrderResource::collection($diningSession->orders()->with('branch', 'items', 'sale')->latest('id')->paginate($data['per_page'] ?? 20));
+        return OrderResource::collection($diningSession->orders()->when($data['pending'] ?? false, fn ($q) => $q->where('status', '!=', 'cancelled')->whereDoesntHave('sale'))->with('branch', 'items', 'sale')->latest('id')->paginate($data['per_page'] ?? 20))->additional(['session_revision' => $diningSession->revision]);
     }
 
     public function update(DiningSessionRequest $request, DiningSession $diningSession, DiningOccupancy $service)

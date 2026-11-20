@@ -149,8 +149,25 @@ export function OrderComposer({
     enabled: can('catalog.view') && !!selected,
     refetchInterval: 30_000,
   })
+  const activeTableOrder = useQuery({
+    queryKey: ['table-active-order', dining?.id],
+    queryFn: ({ signal }) =>
+      api<CatalogPage<Order> & { session_revision: number }>(
+        `dining-sessions/${dining!.id}/orders?pending=1&per_page=1`,
+        {
+          signal,
+        },
+      ),
+    enabled: terminal && !!dining && channel === 'dine_in',
+    refetchInterval: 15000,
+  })
+  const tableOrderUnavailable =
+    terminal && !!dining && (activeTableOrder.isPending || !!activeTableOrder.error)
   const operation = useOperation<Order>('orders', async (order) => {
     await client.invalidateQueries({ queryKey: ['orders'] })
+    if (order.dining_session_id) await client.invalidateQueries({ queryKey: ['dining-occupancy'] })
+    if (order.dining_session_id)
+      await client.invalidateQueries({ queryKey: ['table-active-order', order.dining_session_id] })
     if (orderIntent.current === 'save' && order.dining_session_id) {
       const fresh = await api<{ data: DiningSession }>('dining-sessions/' + order.dining_session_id)
       await client.invalidateQueries({ queryKey: ['table-orders', order.dining_session_id] })
@@ -280,6 +297,7 @@ export function OrderComposer({
       !selected ||
       !cart.length ||
       pricing.locked ||
+      tableOrderUnavailable ||
       (orderIntent.current === 'checkout' && !posReady)
     )
       return
@@ -290,8 +308,19 @@ export function OrderComposer({
       channel,
       currency,
       items: serializeCart(cart, true),
+      ...(terminal && dining && activeTableOrder.data?.data[0]
+        ? {
+            append_order_id: activeTableOrder.data.data[0].id,
+            order_revision: activeTableOrder.data.data[0].revision,
+          }
+        : {}),
       ...(dining && dining.branch_id === selected && channel === 'dine_in'
-        ? { dining_session_id: dining.id, dining_session_revision: dining.revision }
+        ? {
+            dining_session_id: dining.id,
+            dining_session_revision: terminal
+              ? (activeTableOrder.data?.session_revision ?? dining.revision)
+              : dining.revision,
+          }
         : {}),
     })
   }
@@ -468,7 +497,13 @@ export function OrderComposer({
             <aside className="pos-actions" data-pos-slot="actions">
               <button
                 type="button"
-                disabled={locked || !selected || !can('dining.view') || !can('dining.operate')}
+                disabled={
+                  locked ||
+                  (tableOrderUnavailable && !!cart.length) ||
+                  !selected ||
+                  !can('dining.view') ||
+                  !can('dining.operate')
+                }
                 title={
                   !can('dining.view') || !can('dining.operate')
                     ? 'Necesitas permisos para consultar y operar mesas'
@@ -914,7 +949,7 @@ export function OrderComposer({
                   disabled={
                     operation.isPending ||
                     pricing.locked ||
-                    (!operation.uncertain && !cart.length) ||
+                    (!operation.uncertain && (!cart.length || tableOrderUnavailable)) ||
                     (operation.uncertain && orderIntent.current !== 'save')
                   }
                   onClick={() => {
@@ -924,7 +959,9 @@ export function OrderComposer({
                 >
                   {operation.uncertain && orderIntent.current === 'save'
                     ? 'Reintentar guardado'
-                    : 'GUARDAR EN MESA'}
+                    : activeTableOrder.data?.data[0]
+                      ? 'ACTUALIZAR PEDIDO'
+                      : 'GUARDAR EN MESA'}
                 </button>
               )}
               {terminal && (
@@ -948,7 +985,8 @@ export function OrderComposer({
                 disabled={
                   operation.isPending ||
                   pricing.locked ||
-                  (!operation.uncertain && (!cart.length || !selected || conflict || !posReady))
+                  (!operation.uncertain &&
+                    (!cart.length || !selected || conflict || !posReady || tableOrderUnavailable))
                 }
               >
                 <Send size={17} />

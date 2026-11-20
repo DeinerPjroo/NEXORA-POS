@@ -113,11 +113,17 @@ test('POS: guarda por mesa al cambiar, reintenta sin duplicar y recupera solo su
   await picker.getByRole('button', { name: 'Seleccionar Mesa 1', exact: true }).click()
   await expect(saved).toContainText('Picada de prueba')
   await expect(saved).not.toContainText('Hamburguesa de prueba')
+  const headingBefore = await saved.locator('.pos-saved-order>div strong').innerText()
+  await page.getByRole('button', { name: 'Agregar Hamburguesa de prueba', exact: true }).click()
+  await page.getByRole('button', { name: 'ACTUALIZAR PEDIDO', exact: true }).click()
+  await expect(saved).toContainText('Hamburguesa de prueba')
+  await expect(saved.locator('.pos-saved-order')).toHaveCount(1)
+  await expect(saved.locator('.pos-saved-order>div strong')).toHaveText(headingBefore)
   await page.reload()
   await page.getByRole('button', { name: 'Mesas', exact: true }).click()
   await picker.getByRole('button', { name: 'Seleccionar Mesa 1', exact: true }).click()
   await expect(saved).toContainText('Picada de prueba')
-  await expect(saved).not.toContainText('Hamburguesa de prueba')
+  await expect(saved).toContainText('Hamburguesa de prueba')
   const { data: sessions } = await readApi<{
     data: { id: number; tables: { table_name: string }[] }[]
   }>(page, `dining-sessions?branch_id=${branch}&status=open`)
@@ -132,5 +138,6 @@ test('POS: guarda por mesa al cambiar, reintenta sin duplicar y recupera solo su
     )
     expect(orders).toHaveLength(1)
     expect(orders[0].items[0].product_name).toBe(product)
+    expect(orders[0].items).toHaveLength(name === 'Mesa 1' ? 2 : 1)
   }
 })

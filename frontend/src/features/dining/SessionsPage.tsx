@@ -90,6 +90,7 @@ export function SessionDetailPage() {
     updated: 'Mesas, personas o mesero actualizados',
     closed: 'Atención cerrada',
     'order.added': 'Pedido asociado',
+    'order.items_added': 'Productos agregados al pedido',
     'order.transferred': 'Pedido trasladado',
   }
   return (

@@ -106,7 +106,7 @@ final class DiningOccupancy
         Gate::authorize('dining.operate');
         abort_unless($data['channel'] === 'dine_in', 422, 'Una atención de mesa requiere pedido en restaurante.');
         $session = $this->lock((int) $data['dining_session_id'], (int) $data['dining_session_revision']);
-        abort_if($session->orders()->count() >= 100, 422, 'Una atención admite hasta 100 pedidos.');
+        abort_if(! ($data['append_order_id'] ?? null) && $session->orders()->count() >= 100, 422, 'Una atención admite hasta 100 pedidos.');
         abort_unless($session->branch_id === (int) $data['branch_id'], 409, 'La atención pertenece a otra sucursal.');
 
         return $session;
@@ -117,11 +117,11 @@ final class DiningOccupancy
         return ['version' => 1, 'session_id' => $session->id, 'session_revision' => $session->revision, 'tables' => $session->memberships()->whereNull('released_at')->orderBy('id')->get()->map(fn ($m) => ['id' => $m->dining_table_id, 'name' => $m->table_name])->all(), 'waiter_id' => $session->waiter_id];
     }
 
-    public function recordOrder(User $actor, DiningSession $session, Order $order): void
+    public function recordOrder(User $actor, DiningSession $session, Order $order, bool $appended = false): void
     {
         $session->revision++;
         $session->save();
-        $this->event($actor, $session, 'order.added', ['order_id' => $order->id]);
+        $this->event($actor, $session, $appended ? 'order.items_added' : 'order.added', ['order_id' => $order->id]);
     }
 
     public function transfer(User $actor, Order $order, array $data): Order
