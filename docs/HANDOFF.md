@@ -2,6 +2,8 @@
 
 ## Protocolo y continuidad vigentes · 2026-11-19
 
+Categorías/productos de Terminal modernizados: iconos, acentos del catálogo, selección destacada, feedback táctil/foco/reduced-motion. digital-menu.css limita estilos a POS, fija tamaños y separa nombre/precio/agregar; elimina padding heredado/contracción que recortaba títulos sin fotos. Fotografías opcionales con espacio propio y carga diferida. Build/TypeScript y Chromium pos-digital-menu1 aprobados32.3s (filtros y títulos dentro del botón, fotos on/off, claro/oscuro); captura escritorio revisada. Primer intento falló por selector Fotos en vez del nombre accesible Mostrar fotografías, corregido. Sin backend ni suites generales.
+
 Pedido en curso ahora muestra una sola lista por mesa, sin bloques guardados/nuevos. Agrupa cantidades de productos equivalentes y subtotal registrado+adiciones con BigInt; solo las adiciones originales se envían al guardar. Confirmación local evita doble visualización durante refresco; cobro existente accesible sin nuevos productos. Build/TypeScript/Prettier y Chromium pos-table-orders aprobados (cantidades/subtotal antes y después de guardar/recargar, mismo ID, mesas aisladas, reintento sin duplicar y cobro). Sin backend/migraciones/suites generales. Esta presentación sustituye la separación descrita en entradas históricas.
 
 Pedido en curso digitalizado según confirmación explícita del usuario: cabecera, mesa, número/estado real, cantidades e iconos táctiles, tabla y subtotal; digital-order.css conserva semántica de comanda y reduce movimiento si se solicita. Sin modificar guardado/montos/cobros. Build/TypeScript aprobados; no repetir suites ni declarar nueva prueba funcional/visual ejecutada.

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
+import { LayoutGrid, UtensilsCrossed } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import type { CatalogPage, CategorySummary } from '../catalog/types'
@@ -37,7 +39,10 @@ export function PosCategories({
         aria-pressed={!value}
         onClick={() => onChange(null)}
       >
-        Todos
+        <span className="pos-category-symbol" aria-hidden="true">
+          <LayoutGrid size={18} />
+        </span>
+        <span className="pos-category-name">Todos</span>
       </button>
       <ErrorNotice error={query.error} />
       {query.data?.data.map((category) => (
@@ -46,10 +51,13 @@ export function PosCategories({
           key={category.id}
           disabled={disabled || !category.effective_active}
           aria-pressed={category.id === value?.id}
-          style={{ borderLeftColor: category.color }}
+          style={{ '--category-accent': category.color } as CSSProperties}
           onClick={() => onChange(category)}
         >
-          {category.name}
+          <span className="pos-category-symbol" aria-hidden="true">
+            <UtensilsCrossed size={18} />
+          </span>
+          <span className="pos-category-name">{category.name}</span>
         </button>
       ))}
       {(query.data?.meta.last_page ?? 1) > 1 && (

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -43,6 +43,7 @@ import type { DiningSession } from '../dining/session-types'
 import type { DiningSelection } from '../dining/session-types'
 import { PosOrderLines } from '../pos/PosOrderLines'
 import '../pos/digital-order.css'
+import '../pos/digital-menu.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
 
 const DiningSessionPicker = lazy(() =>
@@ -655,6 +656,11 @@ export function OrderComposer({
                     <button
                       className={`panel order-product${product.availability_context?.allowed === false ? ' schedule-closed' : ''}`}
                       key={product.id}
+                      style={
+                        terminal
+                          ? ({ '--product-accent': product.category.color } as CSSProperties)
+                          : undefined
+                      }
                       disabled={!product.sellable || locked || products.isFetching || !posReady}
                       onClick={() =>
                         product.kind === 'combo'
@@ -667,7 +673,7 @@ export function OrderComposer({
                     >
                       <span className="order-product-image">
                         {product.image_url ? (
-                          <img src={product.image_url} alt="" />
+                          <img src={product.image_url} alt="" loading="lazy" />
                         ) : (
                           <UtensilsCrossed size={29} strokeWidth={1.3} />
                         )}
