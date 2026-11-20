@@ -155,7 +155,19 @@ test('POS: guarda por mesa al cambiar, reintenta sin duplicar y recupera solo su
     expect(orders[0].items).toHaveLength(name === 'Mesa 1' ? 3 : 1)
   }
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page).toHaveURL(
-    new RegExp('/pos/pedidos/' + headingBefore.replace(/\D/g, '') + '/cobrar$'),
-  )
+  const checkout = page.getByRole('dialog', { name: 'Cobro en terminal', exact: true })
+  await expect(checkout).toBeVisible()
+  await expect(
+    checkout.getByRole('heading', {
+      name: 'Cobrar pedido #' + headingBefore.replace(/\D/g, ''),
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(page).toHaveURL(/\/pos$/)
+  await checkout.getByRole('button', { name: 'Volver al pedido', exact: true }).click()
+  await expect(checkout).toHaveCount(0)
+  await expect(saved).toContainText('Picada de prueba')
+  await expect(picadaRow.getByRole('cell').first()).toHaveText('2')
+  await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
+  await expect(checkout).toBeVisible()
 })

@@ -66,14 +66,20 @@ test('POS: inicio operativo, paneles móviles, atajos y contexto conservado sin 
     })
   await page.goto('/')
   await expect(page).toHaveURL(/\/pos$/)
-  await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(north.id))
+  await page
+    .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
+    .selectOption(String(north.id))
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
   await page.getByLabel('Tipo de pedido', { exact: true }).selectOption('dine_in')
+  await page.getByRole('button', { name: 'Cerrar detalles', exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'Agregar Producto contexto', exact: true }),
   ).toBeEnabled()
   await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Ver menú POS', exact: true }).click()
   await page.getByRole('button', { name: 'Agregar Producto contexto', exact: true }).click()
   await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
+  await page.locator('.pos-line-actions').getByRole('button', { name: 'Nota', exact: true }).click()
   await page
     .getByLabel('Observación para Producto contexto', { exact: true })
     .fill('Nota que permanece')
@@ -97,17 +103,23 @@ test('POS: inicio operativo, paneles móviles, atajos y contexto conservado sin 
     .locator('.pos-terminal')
     .screenshot({ path: '../docs/screenshots/pos-context-mobile.png', animations: 'disabled' })
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
+  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
   await expect(page.getByText('Nota que permanece', { exact: true })).toBeVisible()
   await page.getByLabel('Efectivo recibido', { exact: true }).fill('20')
+  await page
+    .getByRole('dialog', { name: 'Cobro en terminal' })
+    .screenshot({ path: 'test-results/terminal-checkout-mobile.png' })
   await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
-  await page.waitForURL(/\/pos\/ventas\/\d+$/)
-  await page.getByRole('link', { name: 'Nueva operación POS', exact: true }).click()
-  await expect(page.getByLabel('Sucursal de operación', { exact: true })).toHaveValue(
-    String(north.id),
-  )
+  await expect(page.getByRole('article', { name: /^Recibo / })).toBeVisible()
+  await expect(page).toHaveURL(/\/pos$/)
+  await page.getByRole('button', { name: 'Nueva operación POS', exact: true }).click()
+  await expect(
+    page.getByRole('combobox', { name: 'Sucursal de operación', exact: true }),
+  ).toHaveValue(String(north.id))
   await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
   await expect(page.getByLabel('Tipo de pedido', { exact: true })).toHaveValue('dine_in')
+  await page.getByRole('button', { name: 'Cerrar detalles', exact: true }).click()
   await expect(page.locator('.cart-empty')).toBeVisible()
   // Preferencia manipulada o sucursal retirada: no iniciar consultas/venta con ese ID.
   const key = posContextKey(profile)
@@ -126,12 +138,17 @@ test('POS: inicio operativo, paneles móviles, atajos y contexto conservado sin 
       { exact: true },
     ),
   ).toBeVisible()
-  await expect(page.getByLabel('Sucursal de operación', { exact: true })).toHaveValue('')
+  await expect(
+    page.getByRole('combobox', { name: 'Sucursal de operación', exact: true }),
+  ).toHaveValue('')
   expect(forbiddenBranchRequests).toEqual([])
-  await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(north.id))
+  await page
+    .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
+    .selectOption(String(north.id))
   await expect(
     page.getByRole('button', { name: 'Agregar Producto contexto', exact: true }),
   ).toBeEnabled()
+  await page.getByRole('link', { name: 'Salir del terminal', exact: true }).click()
   await page.getByRole('button', { name: 'Abrir menú', exact: true }).click()
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await expect(page).toHaveURL(/\/ingresar$/)

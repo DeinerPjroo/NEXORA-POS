@@ -45,6 +45,7 @@ import { PosOrderLines } from '../pos/PosOrderLines'
 import '../pos/digital-order.css'
 import '../pos/digital-menu.css'
 import { PosTablesPanel } from '../dining/PosTablesPanel'
+import { TerminalCheckout } from '../pos/TerminalCheckout'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -102,6 +103,11 @@ export function OrderComposer({
   )
   const [cart, setCart] = useState<CartLine[]>([])
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null)
+  const [checkoutOrderId, setCheckoutOrderId] = useState<number | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutContext, setCheckoutContext] = useState('')
+  const currentCheckoutContext = `${branch}:${channel}:${dining?.id ?? ''}`
+  const resumableCheckoutId = checkoutContext === currentCheckoutContext ? checkoutOrderId : null
   useEffect(() => {
     if (!terminal) return
     document.body.classList.add('pos-active')
@@ -204,8 +210,14 @@ export function OrderComposer({
         ? 'Pedido registrado. Revisa y confirma el cobro.'
         : 'Pedido registrado. No se ha realizado ningún cobro.',
     )
-    if (terminal) navigate(`/pos/pedidos/${order.id}/cobrar`)
-    else if (can('orders.view')) navigate(`/pedidos/${order.id}`)
+    if (terminal) {
+      setCart([])
+      setActiveLine(null)
+      setConfirmedOrder(null)
+      setCheckoutOrderId(order.id)
+      setCheckoutContext(currentCheckoutContext)
+      setCheckoutOpen(true)
+    } else if (can('orders.view')) navigate(`/pedidos/${order.id}`)
     else {
       setCart([])
     }
@@ -378,7 +390,7 @@ export function OrderComposer({
           <button
             type="button"
             aria-label="Actualizar estado del terminal"
-            disabled={locked}
+            disabled={operation.isPending || pricing.locked}
             onClick={() => {
               void context.refetch()
               if (selected) void posCash.refetch()
@@ -1011,9 +1023,15 @@ export function OrderComposer({
                 aria-label={terminal ? 'Continuar al cobro' : undefined}
                 onClick={(event) => {
                   if (!operation.uncertain) orderIntent.current = 'checkout'
-                  if (!operation.uncertain && !cart.length && currentOrder) {
+                  if (
+                    !operation.uncertain &&
+                    !cart.length &&
+                    (currentOrder || resumableCheckoutId)
+                  ) {
                     event.preventDefault()
-                    navigate(`/pos/pedidos/${currentOrder.id}/cobrar`)
+                    setCheckoutOrderId(currentOrder?.id ?? resumableCheckoutId)
+                    setCheckoutContext(currentCheckoutContext)
+                    setCheckoutOpen(true)
                   }
                 }}
                 ref={submitButton}
@@ -1022,7 +1040,7 @@ export function OrderComposer({
                   operation.isPending ||
                   pricing.locked ||
                   (!operation.uncertain &&
-                    ((!cart.length && !currentOrder) ||
+                    ((!cart.length && !currentOrder && !resumableCheckoutId) ||
                       !selected ||
                       conflict ||
                       !posReady ||
@@ -1064,6 +1082,23 @@ export function OrderComposer({
           )}
         </div>
       </div>
+      {checkoutOpen && checkoutOrderId && (
+        <TerminalCheckout
+          key={checkoutOrderId}
+          orderId={checkoutOrderId}
+          onClose={(completed) => {
+            setCheckoutOpen(false)
+            if (completed) {
+              setCheckoutOrderId(null)
+              setPanel('menu')
+              setDining(null)
+              setConfirmedOrder(null)
+              orderForm.current?.reset()
+              operation.reset()
+            }
+          }}
+        />
+      )}
       {picking && selected && (
         <VariantOrderPicker
           product={picking}

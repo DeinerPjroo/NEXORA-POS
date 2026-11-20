@@ -6,6 +6,7 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 
 | ID | Estado | Capacidad y criterio de aceptación | Dependencias |
 | --- | --- | --- | --- |
+| DIGITAL-TERMINAL-CHECKOUT | COMPLETED | Cobro y recibo dentro de Terminal, tabla compacta/total visible/métodos reales táctiles/teclado/cambio; ajustes desplegables. Cierre protegido, reintento exacto sin duplicar pago y contexto actualizado. Build/TS/formato y cinco casos Chromium dirigidos cubiertos entre ejecuciones; claro/oscuro/móvil revisados. Sin backend ni suites generales | POS/mesas/cobros existentes |
 | CONT-01 | COMPLETED | Documentos de continuidad, protocolo permanente y pruebas SQL sin DROP DATABASE; 82/591 en SQLite y MariaDB, esquema aislado conservado | Ninguna |
 | 2.1-A | COMPLETED | Métodos configurables y cobro/devolución manual no efectivo. Backend 90/684 SQLite/MariaDB y 10 Playwright; migración aplicada, build/formato y capturas verificados | Ventas 0.5 |
 | 2.1-B | COMPLETED | Abonos/mixtos, saldo e historial, devolución de importes realmente cobrados. Migración 000007 aplicada; 100/808 SQLite/MariaDB, 11 Playwright, build/formato y capturas correctos | 2.1-A |

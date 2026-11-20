@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ModifierDetails } from '../orders/ModifierDetails'
 import { PriceDetails } from '../orders/PriceDetails'
 import { AvailabilityDetails } from '../orders/AvailabilityDetails'
@@ -6,7 +6,7 @@ import { SavedCombos } from '../orders/SavedCombos'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Banknote, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Banknote, RefreshCw, WalletCards, SlidersHorizontal } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
 import { formatMoney, moneyUnits, unitsToMoney } from '../../lib/money'
 import { ErrorNotice, Field, Loading, PageTitle, Submit } from '../../components/ui'
@@ -22,12 +22,27 @@ import { SaleAdjustments, useSaleAdjustments } from './SaleAdjustments'
 import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 import { useSalesCash } from './useSalesCash'
 import { TaxBreakdownDetails } from './TaxBreakdownDetails'
+import { CashTenderKeypad } from '../pos/CashTenderKeypad'
 
-export function CheckoutPage({ terminal = false }: { terminal?: boolean }) {
-  const { orderId = '' } = useParams()
+type EmbeddedCheckout = {
+  orderId?: number
+  onCollected?: (sale: Sale) => void
+  onLockChange?: (locked: boolean) => void
+}
+
+export function CheckoutPage({
+  terminal = false,
+  orderId: embeddedOrderId,
+  onCollected,
+  onLockChange,
+}: { terminal?: boolean } & EmbeddedCheckout) {
+  const { orderId: routeOrderId = '' } = useParams()
+  const orderId = embeddedOrderId ? String(embeddedOrderId) : routeOrderId
   const can = useCan()
   const query = useQuery({
     queryKey: ['order', Number(orderId)],
+    refetchOnWindowFocus: !embeddedOrderId,
+    refetchOnReconnect: !embeddedOrderId,
     queryFn: ({ signal }) =>
       api<{ data: Order }>(`orders/${encodeURIComponent(orderId)}`, { signal }),
   })
@@ -49,10 +64,12 @@ export function CheckoutPage({ terminal = false }: { terminal?: boolean }) {
   const order = query.data.data
   return (
     <>
-      <Link className="text-button product-back" to={`/pedidos/${order.id}`}>
-        <ArrowLeft size={16} />
-        Volver al pedido
-      </Link>
+      {!embeddedOrderId && (
+        <Link className="text-button product-back" to={`/pedidos/${order.id}`}>
+          <ArrowLeft size={16} />
+          Volver al pedido
+        </Link>
+      )}
       <PageTitle
         eyebrow="DEL PEDIDO A LA VENTA"
         title={`Cobrar pedido #${order.id}`}
@@ -85,7 +102,13 @@ export function CheckoutPage({ terminal = false }: { terminal?: boolean }) {
           )}
         </div>
       ) : (
-        <CheckoutForm order={order} settings={settings.data.data} terminal={terminal} />
+        <CheckoutForm
+          order={order}
+          settings={settings.data.data}
+          terminal={terminal}
+          onCollected={onCollected}
+          onLockChange={onLockChange}
+        />
       )}
     </>
   )
@@ -95,13 +118,17 @@ function CheckoutForm({
   order,
   settings,
   terminal,
+  onCollected,
+  onLockChange,
 }: {
   order: Order
   settings: SalesSettings
   terminal: boolean
-}) {
+} & EmbeddedCheckout) {
   const can = useCan()
   const client = useQueryClient()
+  const digital = !!onCollected
+  const OptionsPanel = digital ? 'details' : 'div'
   const navigate = useNavigate()
   const adjustments = useSaleAdjustments()
   const [cashId, setCashId] = useState('')
@@ -129,7 +156,8 @@ function CheckoutForm({
     cash.data?.data.find((item) => String(item.id) === cashId) ??
     (cashId === '' ? cash.data?.data[0] : undefined)
   const operation = useOperation<Sale>(`orders/${order.id}/collect`, async (sale) => {
-    if (!can('sales.view')) setResult(sale)
+    if (onCollected) onCollected(sale)
+    else if (!can('sales.view')) setResult(sale)
     await Promise.all(
       [
         'sales',
@@ -141,10 +169,18 @@ function CheckoutForm({
         'cash-movements',
         'payment-history',
         'checkout-cash',
+        'pos-cash',
+        'operation-context',
+        'table-active-order',
+        'table-orders',
+        'dining-occupancy',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     )
-    if (can('sales.view')) navigate(`${terminal ? '/pos' : ''}/ventas/${sale.id}`)
+    if (!onCollected && can('sales.view')) navigate(`${terminal ? '/pos' : ''}/ventas/${sale.id}`)
   })
+  useEffect(() => {
+    onLockChange?.(operation.locked)
+  }, [onLockChange, operation.locked])
   const normalizedReceived = received.replace(',', '.')
   const account = quote.data?.data.accounts_preview.find(
     (part) => String(part.number) === accountNumber,
@@ -201,7 +237,7 @@ function CheckoutForm({
       </>
     )
   return (
-    <div className="checkout-layout">
+    <div className={`checkout-layout${digital ? ' digital-checkout' : ''}`}>
       <form className="panel form-stack checkout-form" onSubmit={submit}>
         <div className="panel-heading">
           <h2>
@@ -211,64 +247,46 @@ function CheckoutForm({
         </div>
         <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
         <OperationNotice uncertain={operation.uncertain} />
-        <fieldset disabled={operation.locked} className="form-stack">
-          <PaymentMethodField method={method} onPick={setChosenMethod} />
-          {can('sales.view') && (
-            <>
-              <Field
-                label="Dividir cuenta"
-                hint="Elige las partes antes del primer pago. Se conserva una venta y un recibo."
-              >
-                <select
-                  value={splitCount}
-                  onChange={(event) => {
-                    setSplitCount(event.target.value)
-                    setAccountNumber('1')
-                    setPaymentAmount(null)
-                    setReceived('')
-                  }}
-                >
-                  <option value="">Sin división</option>
-                  {Array.from({ length: 19 }, (_, index) => index + 2).map((count) => (
-                    <option key={count} value={count}>
-                      {count} partes iguales
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {!!quote.data?.data.accounts_preview.length && (
-                <Field label="Cuenta del primer pago">
-                  <select
-                    value={accountNumber}
-                    onChange={(event) => {
-                      setAccountNumber(event.target.value)
-                      setPaymentAmount(null)
-                      setReceived('')
-                    }}
-                  >
-                    {quote.data.data.accounts_preview.map((part) => (
-                      <option key={part.number} value={part.number}>
-                        {part.label} · {formatMoney(part.amount, order.currency)}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+        {digital && (
+          <div className="digital-pay-total">
+            <span>TOTAL A COBRAR</span>
+            <strong>
+              {quote.data && !quote.error
+                ? formatMoney(quote.data.data.total, order.currency)
+                : '—'}
+            </strong>
+            <small>
+              {selected ? `${selected.name} · Caja abierta` : 'Selecciona una caja abierta'}
+            </small>
+            {quote.data &&
+              paymentValid &&
+              moneyUnits(normalizedPayment) < moneyUnits(quote.data.data.total) && (
+                <b>Este abono: {formatMoney(normalizedPayment, order.currency)}</b>
               )}
-            </>
-          )}
-          {can('sales.view') && (
-            <Field
-              label="Importe de este pago"
-              hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
-            >
-              <input
-                value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
-                onChange={(event) => setPaymentAmount(event.target.value)}
-                inputMode="decimal"
-                required
-                pattern="[0-9]+([.,][0-9]{1,2})?"
-              />
-            </Field>
+          </div>
+        )}
+        <fieldset disabled={operation.locked} className="form-stack">
+          {digital ? (
+            <div className="digital-payment-methods" role="group" aria-label="Métodos de pago">
+              {methods.data?.data.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Pagar con ${item.name}`}
+                  aria-pressed={item.id === method?.id}
+                  onClick={() => setChosenMethod(item)}
+                >
+                  {item.kind === 'cash' ? <Banknote size={22} /> : <WalletCards size={22} />}
+                  <span>{item.name}</span>
+                  <small>{item.kind === 'cash' ? 'Efectivo' : 'Registro manual'}</small>
+                </button>
+              ))}
+              {(methods.data?.meta.last_page ?? 1) > 1 && (
+                <PaymentMethodField method={method} onPick={setChosenMethod} />
+              )}
+            </div>
+          ) : (
+            <PaymentMethodField method={method} onPick={setChosenMethod} />
           )}
           {!isCash && method && (
             <>
@@ -281,28 +299,92 @@ function CheckoutForm({
               </Field>
             </>
           )}
-          <SaleAdjustments
-            state={adjustments}
-            canDiscount={can('sales.discount')}
-            canTip={settings.tip_enabled && can('sales.tips')}
-            fetching={quote.isFetching}
-          />
-          <Field label="Caja para recibir el cobro">
-            <select
-              value={selected?.id ?? ''}
-              onChange={(event) => setCashId(event.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Selecciona una caja abierta
-              </option>
-              {cash.data?.data.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} · Sesión #{item.id}
+          <OptionsPanel className={digital ? 'digital-payment-options' : 'form-stack'}>
+            {digital && (
+              <summary>
+                <SlidersHorizontal size={16} /> Ajustes · dividir · abono · caja
+              </summary>
+            )}
+            {can('sales.view') && (
+              <>
+                <Field
+                  label="Dividir cuenta"
+                  hint="Elige las partes antes del primer pago. Se conserva una venta y un recibo."
+                >
+                  <select
+                    value={splitCount}
+                    onChange={(event) => {
+                      setSplitCount(event.target.value)
+                      setAccountNumber('1')
+                      setPaymentAmount(null)
+                      setReceived('')
+                    }}
+                  >
+                    <option value="">Sin división</option>
+                    {Array.from({ length: 19 }, (_, index) => index + 2).map((count) => (
+                      <option key={count} value={count}>
+                        {count} partes iguales
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {!!quote.data?.data.accounts_preview.length && (
+                  <Field label="Cuenta del primer pago">
+                    <select
+                      value={accountNumber}
+                      onChange={(event) => {
+                        setAccountNumber(event.target.value)
+                        setPaymentAmount(null)
+                        setReceived('')
+                      }}
+                    >
+                      {quote.data.data.accounts_preview.map((part) => (
+                        <option key={part.number} value={part.number}>
+                          {part.label} · {formatMoney(part.amount, order.currency)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </>
+            )}
+            {can('sales.view') && (
+              <Field
+                label="Importe de este pago"
+                hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
+              >
+                <input
+                  value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
+                  onChange={(event) => setPaymentAmount(event.target.value)}
+                  inputMode="decimal"
+                  required
+                  pattern="[0-9]+([.,][0-9]{1,2})?"
+                />
+              </Field>
+            )}
+            <SaleAdjustments
+              state={adjustments}
+              canDiscount={can('sales.discount')}
+              canTip={settings.tip_enabled && can('sales.tips')}
+              fetching={quote.isFetching}
+            />
+            <Field label="Caja para recibir el cobro">
+              <select
+                value={selected?.id ?? ''}
+                onChange={(event) => setCashId(event.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  Selecciona una caja abierta
                 </option>
-              ))}
-            </select>
-          </Field>
+                {cash.data?.data.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} · Sesión #{item.id}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </OptionsPanel>
           {!cash.isPending && !cash.data?.data.length && (
             <p className="notice">
               No hay cajas abiertas en esta sucursal.
@@ -324,6 +406,30 @@ function CheckoutForm({
                   autoComplete="off"
                 />
               </Field>
+              {digital && (
+                <>
+                  <div
+                    className="digital-cash-shortcuts"
+                    role="group"
+                    aria-label="Importes rápidos"
+                  >
+                    <button
+                      type="button"
+                      disabled={!paymentValid}
+                      onClick={() => setReceived(normalizedPayment)}
+                    >
+                      Exacto
+                    </button>
+                    {order.currency === 'COP' &&
+                      ['20000', '50000', '100000'].map((amount) => (
+                        <button type="button" key={amount} onClick={() => setReceived(amount)}>
+                          {formatMoney(amount, order.currency)}
+                        </button>
+                      ))}
+                  </div>
+                  <CashTenderKeypad value={received} onChange={setReceived} />
+                </>
+              )}
               <div className="checkout-change">
                 <span>Cambio a entregar</span>
                 <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
@@ -350,7 +456,7 @@ function CheckoutForm({
             Revisar datos actuales
           </button>
         )}
-        <p className="muted small">
+        <p className="muted small checkout-confirmation-note">
           {isCash
             ? 'Al confirmar registras una venta y el ingreso neto de efectivo en caja.'
             : 'Al confirmar registras una venta con pago manual no efectivo, sin movimiento de efectivo.'}{' '}
@@ -380,7 +486,13 @@ function CheckoutForm({
       </form>
       <section className="panel checkout-summary">
         <div className="panel-heading">
-          <h2>Resumen del cobro</h2>
+          <h2>
+            {digital
+              ? order.dining_session_id
+                ? 'Cuenta de la mesa'
+                : 'Cuenta del pedido'
+              : 'Resumen del cobro'}
+          </h2>
           <span className="pill neutral">Pedido #{order.id}</span>
         </div>
         {!!quote.data?.data.accounts_preview.length && (
@@ -393,39 +505,78 @@ function CheckoutForm({
             </span>
           </div>
         )}
-        <SavedCombos combos={order.combos} items={order.items} currency={order.currency} />
-        {order.items
-          ?.filter((item) => !item.order_combo_id)
-          .map((item) => (
-            <div className="checkout-order-line" key={item.id}>
-              <div>
-                {item.quantity}× {item.product_name}
-                {item.variant_name && ` · ${item.variant_name}`}
-                {item.notes && <p className="muted small">{item.notes}</p>}
-                <PriceDetails context={item.price_snapshot} currency={order.currency} />
-                <AvailabilityDetails context={item.availability_snapshot} />
-                <ModifierDetails
-                  groups={item.modifiers_snapshot}
-                  basePrice={item.base_unit_price}
-                  currency={order.currency}
-                />
-              </div>
-              <strong>{formatMoney(item.line_subtotal, order.currency)}</strong>
-            </div>
-          ))}
-        {quote.isPending ? (
-          <Loading />
-        ) : quote.data && !quote.error ? (
-          <>
-            <SaleAmounts amounts={quote.data.data} />
-            <TaxBreakdownDetails
-              breakdown={quote.data.data.tax_breakdown}
-              currency={order.currency}
-            />
-          </>
+        {digital ? (
+          <div className="digital-checkout-lines">
+            <table aria-label="Detalle de la cuenta">
+              <thead>
+                <tr>
+                  <th>Cant.</th>
+                  <th>Producto</th>
+                  <th>Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items?.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <span className="digital-checkout-quantity">{item.quantity}</span>
+                    </td>
+                    <td>
+                      <strong>{item.product_name}</strong>
+                      {item.variant_name && <small>{item.variant_name}</small>}
+                      {item.notes && <small>{item.notes}</small>}
+                      <ModifierDetails
+                        groups={item.modifiers_snapshot}
+                        basePrice={item.base_unit_price}
+                        currency={order.currency}
+                      />
+                    </td>
+                    <td>{formatMoney(item.line_subtotal, order.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <p className="muted">Revisa los datos para calcular el total.</p>
+          <>
+            <SavedCombos combos={order.combos} items={order.items} currency={order.currency} />
+            {order.items
+              ?.filter((item) => !item.order_combo_id)
+              .map((item) => (
+                <div className="checkout-order-line" key={item.id}>
+                  <div>
+                    {item.quantity}× {item.product_name}
+                    {item.variant_name && ` · ${item.variant_name}`}
+                    {item.notes && <p className="muted small">{item.notes}</p>}
+                    <PriceDetails context={item.price_snapshot} currency={order.currency} />
+                    <AvailabilityDetails context={item.availability_snapshot} />
+                    <ModifierDetails
+                      groups={item.modifiers_snapshot}
+                      basePrice={item.base_unit_price}
+                      currency={order.currency}
+                    />
+                  </div>
+                  <strong>{formatMoney(item.line_subtotal, order.currency)}</strong>
+                </div>
+              ))}
+          </>
         )}
+        <OptionsPanel className={digital ? 'digital-account-breakdown' : undefined}>
+          {digital && <summary>Desglose de importes e impuestos</summary>}
+          {quote.isPending ? (
+            <Loading />
+          ) : quote.data && !quote.error ? (
+            <>
+              <SaleAmounts amounts={quote.data.data} />
+              <TaxBreakdownDetails
+                breakdown={quote.data.data.tax_breakdown}
+                currency={order.currency}
+              />
+            </>
+          ) : (
+            <p className="muted">Revisa los datos para calcular el total.</p>
+          )}
+        </OptionsPanel>
         <p className="muted small">
           Subtotal y cálculo confirmados por el servidor. Redondeo a dos decimales, mitades hacia
           arriba.

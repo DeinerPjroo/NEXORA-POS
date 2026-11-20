@@ -166,11 +166,15 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     .getByRole('navigation')
     .getByRole('link', { name: 'Terminal POS', exact: true })
     .click()
-  await expect(page.getByRole('heading', { name: 'Terminal POS', exact: true })).toBeVisible()
-  await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(branch))
+  await expect(page.locator('.pos-topbar')).toContainText('NEXORA')
+  await page
+    .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
+    .selectOption(String(branch))
+  await page.getByRole('button', { name: 'Caja', exact: true }).click()
   await expect(
     page.getByText('Abre una caja de esta sucursal para iniciar el cobro.', { exact: false }),
   ).toBeVisible()
+  await page.getByRole('button', { name: 'Caja', exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'Agregar Tostada POS', exact: true }),
   ).toBeDisabled()
@@ -208,12 +212,16 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
   await page.locator('.pos-line-actions').getByRole('button', { name: 'Nota', exact: true }).click()
   await page.getByLabel('Observación para Tostada POS', { exact: true }).fill('Conservar nota POS')
   await expect(page.locator('.order-subtotal')).toContainText(formatMoney('15.5052'))
-  await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(north.id))
+  await page
+    .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
+    .selectOption(String(north.id))
   await expect(page.getByRole('button', { name: 'Continuar al cobro', exact: true })).toBeDisabled()
   await expect(page.getByLabel('Observación para Tostada POS', { exact: true })).toHaveValue(
     'Conservar nota POS',
   )
-  await page.getByLabel('Sucursal de operación', { exact: true }).selectOption(String(branch))
+  await page
+    .getByRole('combobox', { name: 'Sucursal de operación', exact: true })
+    .selectOption(String(branch))
   await expect(page.getByRole('button', { name: 'Continuar al cobro', exact: true })).toBeEnabled()
   mkdirSync('../docs/screenshots', { recursive: true })
   await page
@@ -231,7 +239,9 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     else await route.fulfill({ response })
   })
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Reintentar envío', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continuar al cobro', exact: true })).toHaveText(
+    'Reintentar envío',
+  )
   const originalBranch = (
     await readApi<{ id: number; name: string; code: string }[]>(page, 'branches')
   ).find((item) => item.id === branch)!
@@ -241,15 +251,18 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     is_active: false,
   })
   await page.getByRole('button', { name: 'Actualizar estado del terminal', exact: true }).click()
-  await expect(page.getByLabel('Sucursal de operación', { exact: true })).toHaveValue('')
-  await expect(page.getByRole('button', { name: 'Reintentar envío', exact: true })).toBeEnabled()
+  await expect(
+    page.getByRole('combobox', { name: 'Sucursal de operación', exact: true }),
+  ).toHaveValue('')
+  await expect(page.getByRole('button', { name: 'Continuar al cobro', exact: true })).toBeEnabled()
   await writeApi(page, 'PUT', `branches/${branch}`, {
     name: originalBranch.name,
     code: originalBranch.code,
     is_active: true,
   })
-  await page.getByRole('button', { name: 'Reintentar envío', exact: true }).click()
-  await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
+  await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
+  await expect(page).toHaveURL(/\/pos$/)
   expect(orders).toHaveLength(2)
   expect(orders[0]).toBe(orders[1])
   expect(
@@ -265,11 +278,21 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
     if (collectBodies.length === 1) await route.abort('failed')
     else await route.fulfill({ response })
   })
-  await page.getByLabel('Efectivo recibido', { exact: true }).fill('20')
+  const cashKeys = page.getByRole('group', { name: 'Teclado de efectivo', exact: true })
+  await cashKeys.getByRole('button', { name: 'Efectivo 2', exact: true }).click()
+  await cashKeys.getByRole('button', { name: 'Efectivo 0', exact: true }).click()
+  await expect(page.getByLabel('Efectivo recibido', { exact: true })).toHaveValue('20')
+  await page
+    .getByRole('dialog', { name: 'Cobro en terminal' })
+    .screenshot({ path: 'test-results/terminal-checkout-desktop.png' })
   await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Reintentar cobro', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Volver al pedido', exact: true })).toBeDisabled()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
   await page.getByRole('button', { name: 'Reintentar cobro', exact: true }).click()
-  await page.waitForURL(/\/pos\/ventas\/\d+$/)
+  await expect(page.getByRole('article', { name: /^Recibo / })).toBeVisible()
+  await expect(page).toHaveURL(/\/pos$/)
   expect(collectBodies).toHaveLength(2)
   expect(collectBodies[0]).toBe(collectBodies[1])
   await expect(page.getByRole('heading', { name: 'Recibo V-000001', exact: true })).toBeVisible()
@@ -284,8 +307,8 @@ test('POS: caja y contexto, preparaciones, combo promocional, pedido y cobro inc
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     .toBe(true)
-  await page.getByRole('link', { name: 'Nueva operación POS', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Terminal POS', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Nueva operación POS', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Agregar Tostada POS', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
   await expect(page.locator('.cart-empty')).toBeVisible()
@@ -352,8 +375,34 @@ test('POS: cobrar sin sales.view muestra recibo local y permite nueva operación
   await page.goto('/pos')
   await page.getByRole('button', { name: 'Agregar Producto POS', exact: true }).click()
   await page.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
-  await page.waitForURL(/\/pos\/pedidos\/\d+\/cobrar$/)
+  await expect(page.getByRole('dialog', { name: 'Cobro en terminal' })).toBeVisible()
   await page.getByLabel('Efectivo recibido', { exact: true }).fill('20')
+  await expect(
+    page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }),
+  ).toBeEnabled()
+  const checkout = page.getByRole('dialog', { name: 'Cobro en terminal' })
+  await checkout.locator('.checkout-form').evaluate((form) => {
+    form.scrollTop = form.scrollHeight
+  })
+  await expect
+    .poll(async () =>
+      checkout.evaluate((dialog) => {
+        const total = dialog.querySelector('.digital-pay-total')!.getBoundingClientRect()
+        const header = dialog.querySelector('.terminal-checkout-header')!.getBoundingClientRect()
+        const confirm = dialog.querySelector('button[type="submit"]')!.getBoundingClientRect()
+        return total.top >= header.bottom && total.bottom <= confirm.top
+      }),
+    )
+    .toBe(true)
+  await checkout.screenshot({ path: 'test-results/checkout-digital-light.png' })
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = 'dark'
+  })
+  await checkout.screenshot({ path: 'test-results/checkout-digital-dark.png' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    .toBe(true)
   await page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }).click()
   await expect(page.getByRole('article')).toContainText('V-000001')
   await expect(page.getByRole('article')).toContainText(formatMoney('10'))
@@ -361,6 +410,7 @@ test('POS: cobrar sin sales.view muestra recibo local y permite nueva operación
     headers: { Origin: 'http://127.0.0.1:5199', Accept: 'application/json' },
   })
   expect(response.status()).toBe(403)
-  await page.getByRole('link', { name: 'Nueva operación POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Nueva operación POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
   await expect(page.locator('.cart-empty')).toBeVisible()
 })
