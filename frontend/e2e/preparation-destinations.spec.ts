@@ -1,11 +1,29 @@
 import { test, expect } from '@playwright/test'
 import { fixtureWorkspace, readApi, writeApi } from './helpers'
 
+test('Personal de mostrador sin acceso a mesas inicia en Para llevar', async ({ page }) => {
+  await fixtureWorkspace(page, 'Mostrador sin mesas', [
+    'catalog.view',
+    'orders.view',
+    'orders.manage',
+    'sales.collect',
+  ])
+  await expect(page).toHaveURL(/\/terminal\/recogidas$/)
+  await expect(page.getByRole('button', { name: 'Nueva recogida', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Mesas', exact: true })).toHaveCount(0)
+  const nav = page.getByRole('navigation', { name: 'Navegación operativa', exact: true })
+  await expect(nav.getByRole('link', { name: 'Terminal POS', exact: true })).toHaveCount(0)
+  await page.goto('/pos')
+  await expect(page).toHaveURL(/\/terminal\/recogidas$/)
+  await page.goto('/inicio')
+  await expect(page).toHaveURL(/\/terminal\/recogidas$/)
+})
+
 test('Mesero abre recogidas y domicilios en Terminal sin acceso al cobro', async ({ page }) => {
   await fixtureWorkspace(page, 'Mesero sin cobro', ['catalog.view', 'orders.view', 'orders.manage'])
   await page.goto('/terminal/domicilios')
   await page.getByRole('link', { name: 'Nuevo domicilio', exact: true }).click()
-  await expect(page).toHaveURL(/\/pedidos\/nuevo\?canal=delivery$/)
+  await expect(page).toHaveURL(/\/terminal\/domicilios\/nuevo$/)
   await expect(page.locator('.pos-terminal')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Continuar al cobro', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Cliente', exact: true }).click()

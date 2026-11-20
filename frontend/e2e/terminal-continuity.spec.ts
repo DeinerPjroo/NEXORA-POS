@@ -79,6 +79,11 @@ test('Cajero conserva Terminal entre POS, mesas, pedidos y caja; Admin es explí
   const posBox = await cashier.locator('.pos-terminal').boundingBox()
   expect(posBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height)
   await nav.getByRole('link', { name: 'Pedidos', exact: true }).click()
+  await expect(cashier.locator('.pos-pickup-card')).toHaveCount(0)
+  await cashier
+    .getByRole('group', { name: 'Filtrar tipo de pedido' })
+    .getByRole('button', { name: 'Todos', exact: true })
+    .click()
   await expect(cashier.locator('.pos-pickup-card')).toHaveCount(9)
   await expect(cashier).toHaveURL(/\/pos$/)
   await expect
@@ -101,6 +106,8 @@ test('Cajero conserva Terminal entre POS, mesas, pedidos y caja; Admin es explí
   await nav.getByRole('link', { name: 'Pedidos', exact: true }).click()
   await cashier.getByRole('link', { name: 'Nuevo pedido', exact: true }).click()
   await expect(cashier).toHaveURL(/\/pos$/)
+  await nav.getByRole('link', { name: 'Para llevar', exact: true }).click()
+  await expect(cashier).toHaveURL(/\/terminal\/recogidas$/)
   await cashier.getByRole('button', { name: 'Agregar Pizza operativa', exact: true }).click()
   await expect(nav.getByRole('link', { name: 'Pedidos', exact: true })).toHaveAttribute(
     'aria-disabled',
@@ -109,7 +116,7 @@ test('Cajero conserva Terminal entre POS, mesas, pedidos y caja; Admin es explí
   await nav
     .getByRole('link', { name: 'Pedidos', exact: true })
     .evaluate((el) => (el as HTMLAnchorElement).click())
-  await expect(cashier).toHaveURL(/\/pos$/)
+  await expect(cashier).toHaveURL(/\/terminal\/recogidas$/)
   await cashier.getByRole('button', { name: 'Continuar al cobro', exact: true }).click()
   await expect(
     cashier.getByRole('region', { name: 'Cobro en terminal', exact: true }),

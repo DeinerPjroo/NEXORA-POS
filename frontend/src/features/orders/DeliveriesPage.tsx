@@ -10,7 +10,6 @@ import { useOperation } from '../operations/useOperation'
 import { OperationNotice } from '../operations/OperationNotice'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
-import { posPermissions } from '../pos/pos-permissions'
 type Delivery = {
   id: number
   order_id: number
@@ -58,12 +57,7 @@ export function DeliveriesPage() {
         description="Preparación y reparto con estados independientes del cobro."
         action={
           can('orders.manage') && (
-            <Link
-              className="button primary"
-              to={
-                posPermissions.every(can) ? '/pos?canal=delivery' : '/pedidos/nuevo?canal=delivery'
-              }
-            >
+            <Link className="button primary" to="/terminal/domicilios/nuevo">
               Nuevo domicilio
             </Link>
           )

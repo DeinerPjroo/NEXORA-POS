@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, Clock3, Plus, ClipboardList, RefreshCw } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -12,14 +12,28 @@ import { OperationalBranchPicker, useOperationContext } from '../operations/Oper
 import { orderStates } from '../operations/types'
 import type { Order } from '../operations/types'
 import { posPermissions } from '../pos/pos-permissions'
-import { OrderIdentity } from './OrderIdentity'
+import { OrderIdentity, orderChannels } from './OrderIdentity'
 
 export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
   const context = useOperationContext()
   const { session } = useSession()
   const can = useCan()
+  const [searchParams] = useSearchParams()
+  const [activeChannel, setActiveChannel] = useState<Order['channel'] | ''>(
+    () =>
+      channel ??
+      (Object.hasOwn(orderChannels, searchParams.get('canal') ?? '')
+        ? (searchParams.get('canal') as Order['channel'])
+        : ''),
+  )
   const newOrderPath =
-    (posPermissions.every(can) ? '/pos' : '/pedidos/nuevo') + (channel ? '?canal=takeaway' : '')
+    activeChannel === 'takeaway'
+      ? '/terminal/recogidas'
+      : activeChannel === 'delivery'
+        ? '/terminal/domicilios/nuevo'
+        : posPermissions.every(can)
+          ? '/pos'
+          : '/pedidos/nuevo'
   const [branch, setBranch] = useState<number | null>(null)
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
@@ -34,7 +48,7 @@ export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
     per_page: '12',
   })
   if (status) params.set('status', status)
-  if (channel) params.set('channel', channel)
+  if (activeChannel) params.set('channel', activeChannel)
   const query = useQuery({
     queryKey: ['orders', params.toString()],
     queryFn: ({ signal }) => api<CatalogPage<Order>>(`orders?${params}`, { signal }),
@@ -58,6 +72,35 @@ export function OrdersPage({ channel }: { channel?: 'takeaway' }) {
         }
       />
       <div className="operation-toolbar">
+        {!channel && (
+          <div className="order-channel-filters" role="group" aria-label="Filtrar tipo de pedido">
+            <button
+              type="button"
+              aria-pressed={!activeChannel}
+              onClick={() => {
+                setActiveChannel('')
+                setPage(1)
+              }}
+            >
+              Todos
+            </button>
+            {Object.entries(orderChannels).map(([value, { label, icon: Icon }]) => (
+              <button
+                type="button"
+                key={value}
+                data-channel={value}
+                aria-pressed={activeChannel === value}
+                onClick={() => {
+                  setActiveChannel(value as Order['channel'])
+                  setPage(1)
+                }}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <OperationalBranchPicker
           branches={context.data?.branches ?? []}
           value={selected}

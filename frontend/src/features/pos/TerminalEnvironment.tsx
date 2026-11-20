@@ -52,6 +52,13 @@ export function TerminalEnvironment({
   const home = session ? terminalPath(session) : '/ingresar'
   const [guard, setGuard] = useState({ navigation: false, controls: false })
   const [openOrders, setOpenOrders] = useState<(() => void) | null>(null)
+  const ordersPath = pathname.startsWith('/terminal/domicilios')
+    ? '/pedidos?canal=delivery'
+    : pathname === '/terminal/recogidas'
+      ? '/pedidos?canal=takeaway'
+      : pathname === '/terminal/mesas' || pathname.startsWith('/pos')
+        ? '/pedidos?canal=dine_in'
+        : '/pedidos'
   useEffect(() => {
     document.body.classList.add('terminal-active')
     return () => document.body.classList.remove('terminal-active')
@@ -98,7 +105,8 @@ export function TerminalEnvironment({
                 .filter(
                   (link) =>
                     can(link.permission) &&
-                    (link.to !== '/pos' || posPermissions.every(can)) &&
+                    (link.to !== '/pos' ||
+                      (posPermissions.every(can) && can('dining.view') && can('dining.operate'))) &&
                     (link.to !== '/terminal/domicilios' ||
                       can('orders.manage') ||
                       can('deliveries.operate')),
@@ -106,7 +114,7 @@ export function TerminalEnvironment({
                 .map((link) => (
                   <Link
                     key={link.to}
-                    to={link.to}
+                    to={link.to === '/pedidos' ? ordersPath : link.to}
                     {...navigationProps}
                     onClick={(event) => {
                       navigationProps.onClick(event)
@@ -124,7 +132,9 @@ export function TerminalEnvironment({
                       pathname === link.to ||
                       (link.to === '/pedidos' && pathname.startsWith('/pedidos/')) ||
                       (link.to === '/caja' && pathname.startsWith('/caja/')) ||
-                      (link.to === '/pos' && pathname.startsWith('/pos/'))
+                      (link.to === '/pos' && pathname.startsWith('/pos/')) ||
+                      (link.to === '/terminal/domicilios' &&
+                        pathname.startsWith('/terminal/domicilios/'))
                         ? 'page'
                         : undefined
                     }

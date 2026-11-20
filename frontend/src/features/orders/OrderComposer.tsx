@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -81,7 +81,6 @@ export function OrderComposer({
 }) {
   const context = useOperationContext(terminal)
   const { session } = useSession()
-  const [searchParams] = useSearchParams()
   const [currency] = useState(session!.company.currency)
   const [remembered] = useState(() =>
     terminal ? loadPosContext(session!) : { branchId: null, channel: 'takeaway' as OrderChannel },
@@ -90,14 +89,7 @@ export function OrderComposer({
     initialDining?.branch_id ?? remembered.branchId,
   )
   const [channel, setChannel] = useState<OrderChannel>(
-    initialDining
-      ? 'dine_in'
-      : (initialChannel ??
-          (searchParams.get('canal') === 'delivery'
-            ? 'delivery'
-            : searchParams.get('canal') === 'takeaway'
-              ? 'takeaway'
-              : remembered.channel)),
+    initialDining ? 'dine_in' : (initialChannel ?? (terminal ? 'dine_in' : remembered.channel)),
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [details, setDetails] = useState<false | 'client' | 'notes'>(false)
@@ -384,7 +376,7 @@ export function OrderComposer({
     return () => window.removeEventListener('keydown', shortcut)
   }, [terminal, checkoutOpen, customerEditId, picking, bundling, customizing, pricing.review])
   function configure(product: Product, variant?: Variant) {
-    if (savedPickup) return
+    if (savedPickup || (terminal && channel === 'dine_in' && !dining)) return
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
     else add(product, variant)
@@ -395,7 +387,7 @@ export function OrderComposer({
     addLine(line)
   }
   function addLine(line: CartLine) {
-    if (locked || savedPickup) return
+    if (locked || savedPickup || (terminal && channel === 'dine_in' && !dining)) return
     line = withDestination(line, channel === 'dine_in' ? 'table' : 'takeaway')
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
@@ -598,9 +590,13 @@ export function OrderComposer({
           >
             Fotos
           </button>
-          {channel === 'takeaway' && (
-            <strong className="pos-channel-label">Para llevar · Mostrador</strong>
-          )}
+          <strong className="pos-channel-label">
+            {channel === 'dine_in'
+              ? dining?.label || 'Mesas · selecciona una mesa'
+              : channel === 'delivery'
+                ? 'Domicilios · entrega'
+                : 'Para llevar · Mostrador'}
+          </strong>
         </header>
       )}
       <Link className="text-button product-back" to="/pedidos">
@@ -731,31 +727,32 @@ export function OrderComposer({
                   </button>
                 </>
               )}
-              <button
-                type="button"
-                disabled={
-                  locked ||
-                  savedPickup ||
-                  !!initialChannel ||
-                  (tableOrderUnavailable && !!cart.length) ||
-                  !selected ||
-                  !can('dining.view') ||
-                  !can('dining.operate')
-                }
-                title={
-                  !can('dining.view') || !can('dining.operate')
-                    ? 'Necesitas permisos para consultar y operar mesas'
-                    : 'Seleccionar una mesa de esta sucursal'
-                }
-                onClick={() => {
-                  setTablesOpen((value) => !value)
-                  setOrdersOpen(false)
-                  setPickupsOpen(false)
-                  setPanel('cart')
-                }}
-              >
-                Mesas
-              </button>
+              {channel === 'dine_in' && (
+                <button
+                  type="button"
+                  disabled={
+                    locked ||
+                    savedPickup ||
+                    (tableOrderUnavailable && !!cart.length) ||
+                    !selected ||
+                    !can('dining.view') ||
+                    !can('dining.operate')
+                  }
+                  title={
+                    !can('dining.view') || !can('dining.operate')
+                      ? 'Necesitas permisos para consultar y operar mesas'
+                      : 'Seleccionar una mesa de esta sucursal'
+                  }
+                  onClick={() => {
+                    setTablesOpen((value) => !value)
+                    setOrdersOpen(false)
+                    setPickupsOpen(false)
+                    setPanel('cart')
+                  }}
+                >
+                  Mesas
+                </button>
+              )}
               <button
                 type="button"
                 disabled={locked || !customerAvailable}
@@ -918,6 +915,7 @@ export function OrderComposer({
                         ordersOpen ||
                         products.isFetching ||
                         !posReady ||
+                        (channel === 'dine_in' && !dining) ||
                         !!currentOrder?.sale_id
                       }
                       onClick={() =>
@@ -1053,6 +1051,11 @@ export function OrderComposer({
               <p className="notice">Consultando precios actuales sin registrar el pedido…</p>
             )}
             <OperationNotice uncertain={operation.uncertain} />
+            {terminal && channel === 'dine_in' && !dining && (
+              <p className="pos-dining-selection" role="status">
+                Selecciona una mesa para comenzar su pedido.
+              </p>
+            )}
             {dining && channel === 'dine_in' && (
               <p className="pos-dining-selection" role="status">
                 Mesa seleccionada: {dining.label}
@@ -1257,24 +1260,26 @@ export function OrderComposer({
                       autoComplete="off"
                     />
                   </Field>
-                  <Field label="Tipo de pedido">
-                    <select
-                      name="channel"
-                      disabled={!!initialChannel}
-                      value={channel}
-                      onChange={(event) =>
-                        selected &&
-                        pricing.request({
-                          branchId: selected,
-                          channel: event.target.value as OrderChannel,
-                        })
-                      }
-                    >
-                      <option value="takeaway">Para llevar</option>
-                      <option value="dine_in">Consumo en mesa</option>
-                      <option value="delivery">Domicilio</option>
-                    </select>
-                  </Field>
+                  {!terminal && (
+                    <Field label="Tipo de pedido">
+                      <select
+                        name="channel"
+                        disabled={!!initialChannel}
+                        value={channel}
+                        onChange={(event) =>
+                          selected &&
+                          pricing.request({
+                            branchId: selected,
+                            channel: event.target.value as OrderChannel,
+                          })
+                        }
+                      >
+                        <option value="takeaway">Para llevar</option>
+                        <option value="dine_in">Consumo en mesa</option>
+                        <option value="delivery">Domicilio</option>
+                      </select>
+                    </Field>
+                  )}
                   {channel === 'delivery' && (
                     <>
                       <Field label="Nombre de quien recibe">
@@ -1298,7 +1303,8 @@ export function OrderComposer({
                       placeholder="Ej. Mesa 4 o nombre de recogida"
                     />
                   </Field>
-                  {selected &&
+                  {!terminal &&
+                    selected &&
                     channel === 'dine_in' &&
                     can('dining.view') &&
                     can('dining.operate') && (
@@ -1524,8 +1530,9 @@ export function OrderComposer({
           )}
           {ordersOpen && selected && (
             <PosOrdersPanel
-              key={selected}
+              key={`${selected}:${channel}`}
               branchId={selected}
+              initialChannel={channel}
               onClose={() => setOrdersOpen(false)}
               onKitchen={setKitchenOrderId}
               onEditCustomer={setCustomerEditId}

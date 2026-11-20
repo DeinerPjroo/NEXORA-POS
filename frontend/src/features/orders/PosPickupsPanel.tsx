@@ -13,15 +13,19 @@ export function PosPickupsPanel({
   onSelect,
   onClose,
   allOrders = false,
+  initialChannel,
+  active = true,
 }: {
   branchId: number
   onSelect: (id: number) => void
   onClose: () => void
   allOrders?: boolean
+  initialChannel?: Order['channel']
+  active?: boolean
 }) {
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('')
-  const [channel, setChannel] = useState<Order['channel'] | ''>('')
+  const [channel, setChannel] = useState<Order['channel'] | ''>(initialChannel ?? '')
   const filterChannel = allOrders ? channel : 'takeaway'
   const query = useQuery({
     queryKey: ['orders', 'pos-pickups', branchId, status, page, allOrders, filterChannel],
@@ -30,7 +34,8 @@ export function PosPickupsPanel({
         `orders?${filterChannel ? `channel=${filterChannel}&` : ''}branch_id=${branchId}${status ? `&status=${status}` : ''}&page=${page}&per_page=12`,
         { signal },
       ),
-    refetchInterval: 15000,
+    enabled: active,
+    refetchInterval: active ? 15000 : false,
   })
   return (
     <section

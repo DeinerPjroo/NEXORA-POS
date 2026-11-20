@@ -2,6 +2,8 @@
 
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación
 
+El canal de toma se fija por ruta: POS de mesas, recogidas y domicilios separados. La preferencia histórica de canal no cambia el entorno ni Cliente ofrece cambiarlo; enlaces antiguos redirigen. Elegir mesa no cambia opciones de recogida dentro del POS, pues pertenecen a su propia sección. Pedidos se filtra por canal activo, conserva filtros/página al consultar detalles y permite Todos. El personal sin operación de mesas inicia en recogidas; empacar líneas de mesa conserva pedido y cuenta únicos.
+
 Modificar cliente es una operación separada de agregar productos: solo metadatos de Order y contactos de OrderDelivery, con motivo/revisiones/UUID y auditoría/eventos. No cambia snapshots, dinero ni notas; se impide tras venta/finalización y, para entrega, tras salida. Frontend mantiene snapshot y payload exactos ante incertidumbre y no vuelve a crear pedidos para corregir nombres.
 
 La identificación visual usa canal, no destino de una línea: mesa azul, recogida violeta y domicilio ámbar, siempre con texto/icono. Mesa histórica se identifica como ubicación al registrar; nombre de cliente tiene prioridad sobre referencia en pedidos sin mesa. Filtros reutilizan channel del API.

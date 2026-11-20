@@ -17,7 +17,7 @@ import { CashPage } from './features/cash/CashPage'
 import { CashSessionPage } from './features/cash/CashSessionPage'
 import { OrdersPage } from './features/orders/OrdersPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
-import { OrderComposer } from './features/orders/OrderComposer'
+import { TerminalOrderPage } from './features/orders/TerminalOrderPage'
 import { PickupTerminalPage } from './features/orders/PickupTerminalPage'
 import { SalesPage } from './features/sales/SalesPage'
 import { SalesSettingsPage } from './features/sales/SalesSettingsPage'
@@ -89,6 +89,14 @@ export default function App() {
             <PermissionBoundary permission="orders.view">
               <PickupTerminalPage />
             </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/terminal/domicilios/nuevo"
+          element={
+            <PosAccess takingOrder>
+              <TerminalOrderPage />
+            </PosAccess>
           }
         />
         <Route
@@ -219,7 +227,7 @@ export default function App() {
           path="/pos"
           element={
             <PosAccess>
-              <OrderComposer key="pos" terminal />
+              <TerminalOrderPage />
             </PosAccess>
           }
         />
@@ -329,7 +337,7 @@ export default function App() {
           path="/pedidos/nuevo"
           element={
             <PosAccess takingOrder>
-              <OrderComposer key="operational-new" terminal />
+              <TerminalOrderPage />
             </PosAccess>
           }
         />

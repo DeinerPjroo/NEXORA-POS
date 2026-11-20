@@ -85,12 +85,53 @@ test('Pedidos distingue canales por color y destaca mesa o cliente con filtros r
         : {}),
     })
   }
-  await page.goto('/pos?canal=dine_in')
+  await writeApi(page, 'PUT', 'sales/settings', {
+    revision: 1,
+    confirmed: true,
+    tax_mode: 'none',
+    tax_name: 'Sin impuesto',
+    tax_rate: '0',
+    tip_enabled: false,
+  })
+  const { data: registers } = await readApi<{ data: { id: number }[] }>(page, 'cash/registers')
+  await writeApi(page, 'POST', `cash/registers/${registers[0].id}/open`, {
+    idempotency_key: crypto.randomUUID(),
+    opening_amount: '0',
+    currency: 'COP',
+  })
+  await page.goto('/pos?canal=takeaway')
+  await expect(page).toHaveURL(/\/terminal\/recogidas$/)
+  await expect(page.getByRole('button', { name: 'Nueva recogida', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Mesas', exact: true })).toHaveCount(0)
+  const nav = page.getByRole('navigation', { name: 'Navegación operativa', exact: true })
+  await nav.getByRole('link', { name: 'Terminal POS', exact: true }).click()
+  await expect(page).toHaveURL(/\/pos$/)
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Cliente', exact: true })).toBeDisabled()
-  await page.goto(`/pos/atenciones/${session.id}`)
+  await expect(page.getByRole('button', { name: 'Nueva recogida', exact: true })).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Agregar Pizza canales', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Mesas', exact: true }).click()
+  await page.getByRole('button', { name: 'Seleccionar Mesa 12', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeEnabled()
   await expect(page.getByRole('button', { name: 'Cliente', exact: true })).toBeEnabled()
+  await expect(
+    page.getByRole('button', { name: 'Agregar Pizza canales', exact: true }),
+  ).toBeEnabled()
+  for (const name of [
+    'Mesas',
+    'Cliente',
+    'Pedidos',
+    'Nota',
+    'Descuento',
+    'Imprimir borrador',
+    'Cancelar',
+  ])
+    await expect(
+      page.locator('.pos-actions').getByRole('button', { name, exact: true }),
+    ).toBeVisible()
+  await page.screenshot({ path: 'test-results/terminal-tables-channel.png' })
   await page.getByRole('button', { name: 'Nota', exact: true }).click()
   const notes = page.getByRole('group', { name: 'Notas del pedido', exact: true })
   await expect(notes.getByLabel('Observación general', { exact: true })).toBeVisible()
@@ -99,13 +140,51 @@ test('Pedidos distingue canales por color y destaca mesa o cliente con filtros r
     '',
   )
   await expect(notes.getByLabel('Nombre del cliente', { exact: true })).toBeHidden()
+  await notes.getByRole('button', { name: 'Cerrar detalles', exact: true }).click()
+  await page.getByRole('button', { name: 'Cliente', exact: true }).click()
+  await expect(
+    page.getByRole('region', { name: 'Editar cliente del pedido', exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Cerrar edición de cliente', exact: true }).click()
+  await page.getByRole('button', { name: 'Agregar Pizza canales', exact: true }).click()
+  await page.getByRole('button', { name: 'Para llevar', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Para llevar', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(nav.getByRole('link', { name: 'Para llevar', exact: true })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  )
+  await nav
+    .getByRole('link', { name: 'Para llevar', exact: true })
+    .evaluate((node) => (node as HTMLAnchorElement).click())
+  await expect(page).toHaveURL(/\/pos$/)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
   await page.goto('/pos?canal=delivery')
+  await expect(page).toHaveURL(/\/terminal\/domicilios\/nuevo$/)
+  await expect(nav.getByRole('link', { name: 'Domicilios', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+  await expect(page.getByRole('button', { name: 'Mesas', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeDisabled()
+  await page.goto('/terminal/domicilios')
+  await nav.getByRole('link', { name: 'Pedidos', exact: true }).click()
+  await expect(page).toHaveURL(/\/pedidos\?canal=delivery$/)
+  await expect(page.locator('.terminal-order-row')).toHaveCount(1)
   await page.goto('/terminal/recogidas')
   await expect(page.getByRole('button', { name: 'Nota', exact: true })).toBeEnabled()
   await page.locator('.pos-actions').getByRole('button', { name: 'Pedidos', exact: true }).click()
   const panel = page.getByRole('region', { name: 'Pedidos del terminal', exact: true })
   const cards = panel.locator('.pos-pickup-card')
+  await expect(cards).toHaveCount(1)
+  await expect(cards.locator('.order-identity-title')).toHaveText('Laura Gómez')
+  await panel
+    .getByRole('group', { name: 'Filtrar tipo de pedido' })
+    .getByRole('button', { name: 'Todos', exact: true })
+    .click()
   await expect(cards).toHaveCount(3)
   const colors: string[] = []
   for (const [channel, title, label] of [
