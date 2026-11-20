@@ -227,12 +227,14 @@ class DiningOccupancyTest extends TestCase
         $sale = $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$collect, 'order_revision' => 2])->assertCreated()->assertJsonPath('data.total', '20.2500')->assertJsonPath('data.balance_due', '15.2500')->json('data');
         $b = $this->detail($b['id']);
         $this->postJson('/api/v1/dining-sessions/'.$b['id'].'/close', $this->close($b))->assertConflict();
+        $this->getJson('/api/v1/dining-rooms/'.$this->room['id'].'/occupancy')->assertOk()->assertJsonPath('data.1.session.can_release', false)->assertJsonPath('data.1.session.paid_occupied', false);
         $this->getJson('/api/v1/dining-sessions/'.$b['id'].'/orders?pending=1&per_page=1')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $order['id'])->assertJsonPath('data.0.sale_id', $sale['id'])->assertJsonPath('data.0.items.0.product_name', 'Menú');
         $c = $this->open([2]);
         $this->postJson('/api/v1/orders/'.$order['id'].'/dining-transfer', [...$this->key(), 'order_revision' => 3, 'source_revision' => $b['revision'], 'target_session_id' => $c['id'], 'target_revision' => $c['revision']])->assertConflict();
         $method = $this->getJson('/api/v1/payment-methods')->json('data.0');
         $this->postJson('/api/v1/sales/'.$sale['id'].'/payments', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 2, 'sale_revision' => $sale['revision'], 'expected_balance' => '15.25', 'payments' => [['payment_method_id' => $method['id'], 'method_revision' => $method['revision'], 'amount' => '15.25', 'received_amount' => '20']]])->assertOk()->assertJsonPath('data.balance_due', '0.0000');
         $this->getJson('/api/v1/dining-sessions/'.$b['id'].'/orders?pending=1')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/v1/dining-rooms/'.$this->room['id'].'/occupancy')->assertOk()->assertJsonPath('data.1.session.can_release', true)->assertJsonPath('data.1.session.paid_occupied', true);
         $b = $this->detail($b['id']);
         $this->postJson('/api/v1/dining-sessions/'.$b['id'].'/close', $this->close($b))->assertOk();
         $this->getJson('/api/v1/cash/sessions/'.$cash['id'])->assertJsonPath('data.expected_amount', '120.2500');

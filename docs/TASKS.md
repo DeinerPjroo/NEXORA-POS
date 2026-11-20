@@ -6,6 +6,7 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 
 | ID | Estado | Capacidad y criterio de aceptación | Dependencias |
 | --- | --- | --- | --- |
+| TERMINAL-RELEASE-TABLE | COMPLETED | Estado Pagada todavía ocupada y Liberar mesa con confirmación de salida; cierre existente con permisos/deuda/revisión/UUID, sin liberar por cobrar. Build/TS/formato/Pint, backend2/75 y Chromium pago/cierre incierto/mesa Libre aprobados | PENDING-CHECKOUT-DIGITAL |
 | PENDING-CHECKOUT-DIGITAL | COMPLETED | Saldos pendientes con cuentas/productos y pago en columnas, teclado/métodos táctiles, opciones compactas y acciones fijas; sin formulario administrativo extendido ni recibo anticipado. Build/TS/formato, Chromium de reapertura y pago completo y captura escritorio aprobados | PARTIAL-TABLE-CHECKOUT |
 | PARTIAL-TABLE-CHECKOUT | COMPLETED | Conservar pedido/mesa tras cobro parcial, reanudar venta y pagar cuentas restantes sin duplicar; solo saldo0 finaliza. Backend2/69, MariaDB2/69, Chromium mesa/recarga/reanudación/pago final y build/TS/formato/Pint aprobados | DIGITAL-SPLIT-ACCOUNTS |
 | DIGITAL-SPLIT-ACCOUNTS | COMPLETED | División inicial táctil2–20 y tarjetas seleccionables con importes del servidor; resets/permisos/UUID preservados. Build/TS/formato y Chromium dirigido1 aprobados: centavos, móvil, cuenta elegida y reintento sin duplicar dinero | INLINE-TERMINAL-CHECKOUT |

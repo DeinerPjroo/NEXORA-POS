@@ -4,10 +4,10 @@
   "reference_date": "2026-11-20",
   "version": "0.33.0",
   "phase": 3,
-  "module": "Terminal: vista digital de saldos pendientes",
+  "module": "Terminal: estado pagada ocupada y liberación de mesa",
   "status": "COMPLETED",
-  "active_task": "PENDING-CHECKOUT-DIGITAL",
-  "last_completed_task": "PENDING-CHECKOUT-DIGITAL",
+  "active_task": "TERMINAL-RELEASE-TABLE",
+  "last_completed_task": "TERMINAL-RELEASE-TABLE",
   "next_task": "Continuar KDS/comandas reales bajo estética Terminal; personalización Studio posterior. No reiniciar fases ni auditar módulos terminados.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
@@ -33,7 +33,7 @@
     "playwright": 10
   },
   "current_verification": "0.32 completa1-SEC-D y el núcleo1-SEC: auditoría de rechazos con actor/tenant autenticados, metadata permitida y muestreo acotado tras respuesta/rollback. SQLite seguridad64/511; preview e historial financiero aprobados y devolución ajena final1/15 (sin escrituras financieras; ahora exige evento de acceso). MariaDB auditoría/devolución9/88 en nexora_test_0837d82602af0c8e conservado. Chromium denegación real/historial propio1 aprobado25.1s; TypeScript/Prettier/Pint correctos. Sin migración, dependencias ni UI nueva; sin repetir compilación o suites generales por rutina. SMTP externo y operación1-OPS siguen pendientes.",
-  "working_verification": "Saldo pendiente usa dos columnas digitales: cuentas/productos/saldo a izquierda y pago a derecha. AddPayments embedded compacto con métodos táctiles, teclado/importes rápidos, opciones de caja/abono desplegables y acciones Preparar/Confirmar fijas. Sin recibo completo mientras existe deuda; conserva recibo final y comandos/snapshots/UUID originales. Build/TypeScript/formato aprobados. Chromium pos-split-accounts final1.6min aprobado: centavos, respuesta perdida, recarga/reselección de mesa, restantes sobre misma venta, tres pagos, saldo0/caja1100.0100; nueva vista sin dialog y móvil sin overflow. Captura escritorio con caja/método cargados revisada. Ajustados test que esperaba recibo anticipado y acceso opcional a items. Sin backend/migraciones/suites generales; no repetir SQL del cambio anterior sin impacto.",
+  "working_verification": "Ocupación añade can_release/paid_occupied usando pedidos activos y SaleBalance/BCMath sin importes adicionales. Mesas digitales muestran Pagada todavía ocupada y Liberar mesa con dining.operate. Confirmación compacta exige salida física y conserva revisión/UUID ante respuesta perdida; cierre de atención existente valida deuda y libera también mesas unidas. Build/TS/Prettier/Pint aprobados; backend dirigido2/75 verifica deuda bloqueada, estado pagado y permisos propios. Chromium pos-split-accounts final1.6min aprobado: pago total sigue ocupado, confirmar salida, cierre con respuesta perdida/Escape bloqueado/reintento exacto, atención closed y mesa Libre; captura móvil final revisada. Sin migraciones ni suites generales; motor de cierre sin cambios.",
   "development_protocol": "Modo rápido: código funcional, contexto mínimo, solo pruebas indispensables por impacto; sin suites generales/Playwright/capturas rutinarias; continuidad resumida y commits por módulo. AGENTS.md prevalece.",
   "retained_test_schemas": [
     "nexora_test_7560b20e6e7961ea",

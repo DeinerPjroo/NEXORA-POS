@@ -288,3 +288,59 @@
     animation: none;
   }
 }
+.digital-floor .digital-table[data-state='paid'] {
+  --table-color: #d49620;
+}
+.digital-table[data-releasable='true'] .digital-table-hit {
+  height: calc(100% - 30px);
+  padding-top: 6px;
+  padding-bottom: 5px;
+  gap: 2px;
+}
+.digital-table[data-releasable='true'] .digital-table-symbol {
+  max-height: 42px;
+}
+.digital-table .digital-table-release {
+  width: 100%;
+  height: 30px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--table-color) 18%, var(--surface));
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.digital-table .digital-table-release:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: -3px;
+}
+.digital-table[data-state='paid'] .digital-table-state {
+  font-size: 10px;
+}
+.release-table-panel {
+  width: min(440px, calc(100vw - 24px));
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--secondary);
+  border-radius: 12px;
+  padding: 20px;
+  color: var(--text);
+  background: var(--surface);
+}
+.release-table-panel::backdrop {
+  background: #080d1dbb;
+}
+.release-table-panel h3 {
+  margin: 0 0 12px;
+}
+.release-table-panel p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.release-table-panel .form-actions {
+  position: static;
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 0;
+}

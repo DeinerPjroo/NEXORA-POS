@@ -80,12 +80,18 @@ final class DiningSessionController extends Controller
     {
         Gate::authorize('dining.view');
         $tables = $diningRoom->diningTables()->where('is_active', true)->orderBy('id')->get();
-        $members = DiningSessionTable::whereIn('dining_table_id', $tables->pluck('id'))->whereNull('released_at')->with('session.waiter')->get()->keyBy('dining_table_id');
+        $members = DiningSessionTable::whereIn('dining_table_id', $tables->pluck('id'))->whereNull('released_at')->with('session.waiter', 'session.orders.sale.payments', 'session.orders.sale.refunds')->get()->keyBy('dining_table_id');
+        $states = $members->pluck('session')->filter()->unique('id')->mapWithKeys(function ($session) {
+            $active = $session->orders->where('status', '!=', 'cancelled');
+            $clear = $active->every(fn ($order) => $order->sale && bccomp(app(SaleBalance::class)->amounts($order->sale)['balance_due'], '0', 4) === 0);
 
-        return ['data' => $tables->map(function ($table) use ($members) {
+            return [$session->id => ['can_release' => $clear, 'paid_occupied' => $clear && $active->isNotEmpty()]];
+        });
+
+        return ['data' => $tables->map(function ($table) use ($members, $states) {
             $session = $members->get($table->id)?->session;
 
-            return ['table' => $table->only(['id', 'name', 'shape', 'color', 'capacity', 'revision']), 'session' => $session ? ['id' => $session->id, 'revision' => $session->revision, 'guest_count' => $session->guest_count, 'waiter_name' => $session->waiter?->name, 'opened_at' => $session->opened_at] : null];
+            return ['table' => $table->only(['id', 'name', 'shape', 'color', 'capacity', 'revision']), 'session' => $session ? ['id' => $session->id, 'revision' => $session->revision, 'guest_count' => $session->guest_count, 'waiter_name' => $session->waiter?->name, 'opened_at' => $session->opened_at, ...$states[$session->id]] : null];
         })];
     }
 

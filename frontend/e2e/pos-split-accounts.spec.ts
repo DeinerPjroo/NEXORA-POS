@@ -193,4 +193,40 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
     `cash/sessions/${cash.id}`,
   )
   expect(updatedCash.expected_amount).toBe('1100.0100')
+  await page.getByRole('button', { name: 'Nueva operación POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Ver pedido POS', exact: true }).click()
+  await page.getByRole('button', { name: 'Mesas', exact: true }).click()
+  const tile = page
+    .locator('.digital-table')
+    .filter({ has: page.getByRole('button', { name: 'Seleccionar Mesa división', exact: true }) })
+  await expect(tile).toContainText('Pagada · todavía ocupada')
+  await tile.getByRole('button', { name: 'Liberar Mesa división', exact: true }).click()
+  const release = page.getByRole('dialog', { name: 'Liberar mesa', exact: true })
+  await expect(
+    release.getByRole('button', { name: 'Confirmar liberación', exact: true }),
+  ).toBeDisabled()
+  await release.getByRole('checkbox').check()
+  const releases: string[] = []
+  await page.route(`**/api/v1/dining-sessions/${dining.id}/close`, async (route) => {
+    releases.push(route.request().postData()!)
+    const response = await route.fetch()
+    if (releases.length === 1) await route.abort('failed')
+    else await route.fulfill({ response })
+  })
+  await release.getByRole('button', { name: 'Confirmar liberación', exact: true }).click()
+  await expect(
+    release.getByRole('button', { name: 'Reintentar liberación', exact: true }),
+  ).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(release).toBeVisible()
+  await release.getByRole('button', { name: 'Reintentar liberación', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Ocupar Mesa división', exact: true }),
+  ).toBeVisible()
+  expect(releases).toHaveLength(2)
+  expect(releases[0]).toBe(releases[1])
+  expect(
+    (await readApi<{ data: { status: string } }>(page, `dining-sessions/${dining.id}`)).data.status,
+  ).toBe('closed')
+  await page.locator('.pos-terminal').screenshot({ path: 'test-results/released-table.png' })
 })

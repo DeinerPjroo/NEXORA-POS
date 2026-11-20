@@ -8,6 +8,7 @@ import { useCan } from '../auth/SessionProvider'
 import type { DiningRoom } from './types'
 import type { DiningSelection, TableChoice } from './session-types'
 import { SessionEditor } from './SessionEditor'
+import { ReleaseTable } from './ReleaseTable'
 import './digital-tables.css'
 
 type Occupancy = {
@@ -18,6 +19,8 @@ type Occupancy = {
     guest_count: number
     waiter_name: string | null
     opened_at: string
+    can_release: boolean
+    paid_occupied: boolean
   } | null
 }
 export function OccupancyPanel({
@@ -34,6 +37,10 @@ export function OccupancyPanel({
   const [filter, setFilter] = useState<'all' | 'available' | 'occupied'>('all')
   const [search, setSearch] = useState('')
   const [opening, setOpening] = useState<TableChoice | null>(null)
+  const [releasing, setReleasing] = useState<{
+    session: NonNullable<Occupancy['session']>
+    label: string
+  } | null>(null)
   const query = useQuery({
     queryKey: ['dining-occupancy', room.id],
     queryFn: ({ signal }) =>
@@ -114,6 +121,11 @@ export function OccupancyPanel({
                 key={table.id}
                 entry={{ table, session }}
                 selectable={Boolean(onSelect)}
+                onRelease={
+                  session?.can_release && can('dining.operate')
+                    ? () => setReleasing({ session, label: table.name })
+                    : undefined
+                }
                 disabled={
                   !session && (!can('dining.operate') || !room.is_active || !room.branch.is_active)
                 }
@@ -200,6 +212,14 @@ export function OccupancyPanel({
       <Link className="text-button" to="/salones/atenciones">
         Historial de atenciones
       </Link>
+      {releasing && (
+        <ReleaseTable
+          key={releasing.session.id}
+          session={releasing.session}
+          label={releasing.label}
+          onClose={() => setReleasing(null)}
+        />
+      )}
       {opening && (
         <SessionEditor
           branchId={room.branch_id}
@@ -231,11 +251,13 @@ export function OccupancyPanel({
 function DigitalTable({
   entry: { table, session },
   selectable,
+  onRelease,
   disabled,
   onClick,
 }: {
   entry: Occupancy
   selectable: boolean
+  onRelease?: () => void
   disabled: boolean
   onClick: () => void
 }) {
@@ -243,7 +265,8 @@ function DigitalTable({
   return (
     <article
       className="dining-occupancy-card digital-table"
-      data-state={session ? 'occupied' : 'available'}
+      data-state={session?.paid_occupied ? 'paid' : session ? 'occupied' : 'available'}
+      data-releasable={!!onRelease}
     >
       <button
         type="button"
@@ -267,7 +290,9 @@ function DigitalTable({
           <b>{number ?? <LayoutGrid size={22} />}</b>
           <i />
         </span>
-        <span className="digital-table-state">{session ? 'Ocupada' : 'Libre'}</span>
+        <span className="digital-table-state">
+          {session?.paid_occupied ? 'Pagada · todavía ocupada' : session ? 'Ocupada' : 'Libre'}
+        </span>
         <span className="digital-table-bottom">
           <span>
             <UsersRound size={12} />
@@ -276,6 +301,16 @@ function DigitalTable({
           <span>{session ? '#' + session.id : 'Abrir →'}</span>
         </span>
       </button>
+      {onRelease && (
+        <button
+          type="button"
+          className="digital-table-release"
+          aria-label={`Liberar ${table.name}`}
+          onClick={onRelease}
+        >
+          Liberar mesa
+        </button>
+      )}
     </article>
   )
 }
