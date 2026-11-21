@@ -7,7 +7,7 @@
   "module": "Nexora Domicilios: clientes, direcciones y tarifas",
   "status": "IN_PROGRESS",
   "active_task": "3.DEL-1",
-  "last_completed_task": "3.1-CHANGE-DUE",
+  "last_completed_task": "3.1-TENDER-SHORTCUTS",
   "next_task": "Completar Nexora Domicilios por cinco etapas del pedido del usuario: núcleo/clientes/direcciones/tarifas, cocina incremental, repartidores/incidencias, cobros/custodia/rendiciones y central/indicadores. Reutilizar dominios existentes; Kitchen3.1-C sigue pendiente sin reiniciar fases.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",

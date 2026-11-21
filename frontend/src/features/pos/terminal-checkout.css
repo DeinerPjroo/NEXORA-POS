@@ -761,6 +761,7 @@
 .payment-tender-dock .cash-tender-keypad button {
   min-height: 0;
   padding: 0;
+  line-height: 1;
   font-size: 23px;
 }
 .payment-tender-dock .cash-tender-keypad button:last-child {
@@ -843,6 +844,9 @@
   overflow: auto;
 }
 @media (max-height: 700px) {
+  .terminal-checkout .payment-tender-dock .cash-tender-keypad button {
+    font-size: 17px;
+  }
   .terminal-checkout .checkout-confirmation-note {
     display: none;
   }
@@ -911,7 +915,15 @@
     display: none;
   }
   .payment-tender-dock .cash-tender-keypad button {
-    font-size: 20px;
+    font-size: 18px;
+  }
+  .payment-tender-dock .digital-cash-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .payment-tender-dock .digital-cash-shortcuts button {
+    min-height: 22px;
+    font-size: 9px;
   }
   .payment-secondary-scroll .digital-payment-methods {
     grid-template-columns: minmax(0, 1fr);

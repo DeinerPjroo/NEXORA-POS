@@ -431,23 +431,6 @@ function CheckoutForm({
                 {can('cash.view') && <Link to="/caja"> Ir a caja</Link>}
               </p>
             )}
-            {digital && isCash && (
-              <div className="digital-cash-shortcuts" role="group" aria-label="Importes rápidos">
-                <button
-                  type="button"
-                  disabled={!paymentValid}
-                  onClick={() => setReceived(normalizedPayment)}
-                >
-                  Exacto
-                </button>
-                {order.currency === 'COP' &&
-                  ['20000', '50000', '100000'].map((amount) => (
-                    <button type="button" key={amount} onClick={() => setReceived(amount)}>
-                      {formatMoney(amount, order.currency)}
-                    </button>
-                  ))}
-              </div>
-            )}
           </div>
           <div className={digital ? 'payment-tender-dock' : 'form-stack'}>
             {isCash && (
@@ -467,6 +450,25 @@ function CheckoutForm({
                 </Field>
                 {digital && (
                   <>
+                    <div
+                      className="digital-cash-shortcuts"
+                      role="group"
+                      aria-label="Importes rápidos"
+                    >
+                      <button
+                        type="button"
+                        disabled={!paymentValid}
+                        onClick={() => setReceived(normalizedPayment)}
+                      >
+                        Exacto
+                      </button>
+                      {order.currency === 'COP' &&
+                        ['20000', '50000', '100000'].map((amount) => (
+                          <button type="button" key={amount} onClick={() => setReceived(amount)}>
+                            {formatMoney(amount, order.currency)}
+                          </button>
+                        ))}
+                    </div>
                     <CashTenderKeypad value={received} onChange={setReceived} />
                   </>
                 )}

@@ -2,6 +2,8 @@
 
 ## DEC-024 · COMPLETED · Cobro en el espacio de Terminal
 
+Exacto e importes sugeridos se ubican encima del teclado fijo, tanto en el primer cobro como en saldos pendientes; no dentro de los métodos desplazables. Adaptar tipografía/filas en pantallas compactas manteniendo teclas completas y accesibles.
+
 Cambio a devolver se destaca en tarjeta propia grande/verde, sin duplicarlo en el encabezado. Preparar no borra el cambio visible: sumar solo diferencias de efectivo de líneas preparadas y entrada actual válida con BigInt, sin modificar importes ni comandos. Entradas inválidas muestran—. Pagos no efectivos sin efectivo preparado conservan su resumen de pagos.
 
 Conservar CheckoutPage/AddPaymentsModal y sus comandos; cambiar distribución, sin otro motor financiero. Cuenta/productos a izquierda; total/recibido/cambio arriba a derecha, teclado fijo en su propia columna, métodos/ajustes con scroll interno y confirmación fuera del desplazamiento. Se aplica también a abonos/división y al ingreso de importe no efectivo. Mantener formularios/UUID exactos e impedir navegación durante cobro incierto. Verificar recorte y accesibilidad real de teclas en pantallas compactas, no solo sus coordenadas en viewport.

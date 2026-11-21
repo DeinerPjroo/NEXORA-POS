@@ -6,6 +6,16 @@ import type { Sale } from '../src/features/sales/types'
 async function expectFixedPaymentDock(page: import('@playwright/test').Page) {
   const keypad = page.getByRole('group', { name: 'Teclado de efectivo', exact: true })
   await expect(keypad).toBeVisible()
+  const suggestions = page.getByRole('group', { name: 'Importes rápidos', exact: true })
+  await expect(suggestions).toBeVisible()
+  const suggestionBounds = await suggestions.boundingBox()
+  const keyBounds = await keypad.boundingBox()
+  expect(suggestionBounds!.y + suggestionBounds!.height).toBeLessThanOrEqual(keyBounds!.y)
+  expect(
+    await suggestions.evaluate((node) =>
+      node.parentElement?.classList.contains('payment-tender-dock'),
+    ),
+  ).toBe(true)
   const positions = await keypad.getByRole('button').evaluateAll((buttons) =>
     buttons.map((button) => {
       const rect = button.getBoundingClientRect()

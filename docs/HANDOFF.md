@@ -1,5 +1,7 @@
 # Continuidad de Nexora POS
 
+3.1-TENDER-SHORTCUTS COMPLETED: Exacto/20k/50k/100k movidos del área de métodos a encima del teclado en cobro inicial y saldos; acciones/DTO intactos. Ajuste de tipografía compacta mantiene las13 teclas sin recorte. Chromium dirigido final~1.4min verifica ubicación, geometría en3 tamaños, división/reintento/3 pagos; vista y TS/Prettier correctos. Caso ok; runner interrumpido esperando cierre como antes. Domicilios sigue pendiente.
+
 ## Cambio destacado · 2026-11-21
 
 3.1-CHANGE-DUE COMPLETED: tarjeta compartida ChangeDueDisplay grande/verde en cobro inicial y saldos; quita Cambio del encabezado y reemplaza Pagos preparados en efectivo. Conserva cambio de líneas cash al preparar, suma con BigInt el efectivo actual válido y muestra— si es inválido; no cambia comandos/importes del backend. Chromium división dirigido~1.3min confirma6.66 antes y6.67 después de preparar,3 pagos/replay exacto y teclas accesibles en los tres tamaños; vista revisada/build/TS/Prettier correctos. Caso ok; runner interrumpido esperando cierre como antes. Domicilios sigue pendiente desde3.DEL-1.

@@ -361,23 +361,6 @@ export function AddPaymentsModal({
               Saldo después del envío: {formatMoney(unitsToMoney(remaining), snapshot.currency)}.
               Solo los importes de efectivo cambian el saldo de caja.
             </p>
-            {embedded && isCash && remaining > 0n && (
-              <div className="digital-cash-shortcuts">
-                <button
-                  type="button"
-                  disabled={!amountValid}
-                  onClick={() => setReceived(normalized)}
-                >
-                  Exacto
-                </button>
-                {snapshot.currency === 'COP' &&
-                  ['20000', '50000', '100000'].map((value) => (
-                    <button type="button" key={value} onClick={() => setReceived(value)}>
-                      {formatMoney(value, snapshot.currency)}
-                    </button>
-                  ))}
-              </div>
-            )}
           </div>
           {embedded && (
             <fieldset
@@ -395,6 +378,25 @@ export function AddPaymentsModal({
               )}
               {isCash && (
                 <>
+                  <div
+                    className="digital-cash-shortcuts"
+                    role="group"
+                    aria-label="Importes rápidos"
+                  >
+                    <button
+                      type="button"
+                      disabled={!amountValid}
+                      onClick={() => setReceived(normalized)}
+                    >
+                      Exacto
+                    </button>
+                    {snapshot.currency === 'COP' &&
+                      ['20000', '50000', '100000'].map((value) => (
+                        <button type="button" key={value} onClick={() => setReceived(value)}>
+                          {formatMoney(value, snapshot.currency)}
+                        </button>
+                      ))}
+                  </div>
                   <CashTenderKeypad value={received} onChange={setReceived} />
                   <div className="checkout-change">
                     <span>Cambio a entregar</span>
