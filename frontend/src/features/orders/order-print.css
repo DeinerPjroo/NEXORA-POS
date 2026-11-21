@@ -65,6 +65,40 @@
   padding-top: 8px;
   font-size: 10px;
 }
+.thermal-sale-receipt .sale-amounts {
+  margin: 8px 0;
+  gap: 4px;
+  font-size: inherit;
+}
+.thermal-sale-receipt .sale-amounts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+  margin: 3px 0;
+  font-size: inherit;
+}
+.thermal-sale-receipt .sale-amounts dt {
+  color: inherit;
+}
+.thermal-sale-receipt .sale-amounts dd {
+  margin: 0;
+  white-space: normal;
+  text-align: right;
+}
+.thermal-sale-receipt .sale-amounts .sale-grand-total {
+  border-top: 1px dashed #555;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 6px 0;
+  padding-top: 6px;
+}
+.thermal-payment {
+  margin: 8px 0;
+}
+.thermal-sale-receipt .ticket-line > .thermal-payment {
+  display: block;
+}
 .print-ticket-list {
   max-height: 50dvh;
   overflow: auto;
@@ -79,6 +113,12 @@
   border-radius: 8px;
 }
 @media print {
+  [data-screen-blocked='true'],
+  [data-screen-blocked='true'] * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  body:has(> .operational-print-root) > #root,
   body:has(> .operational-print-root) > *:not(.operational-print-root) {
     display: none !important;
   }

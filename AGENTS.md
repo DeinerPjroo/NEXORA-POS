@@ -4,6 +4,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Recibo térmico de venta: reutilizar SaleAmounts y datos persistidos de venta/pagos/devoluciones, sin recalcular dinero ni crear ventas/pagos al imprimir. Accesible en cobro Terminal e historial; distinguir abonos/saldo y devoluciones. Preview compartido58/80mm, aislado del recibo administrativo y oculto al bloquear sesión. Es recibo interno, nunca afirmar factura electrónica DIAN o impresión física verificada sin integración/prueba real.
+
 - Impresión operativa compartida: borradores de mesa/recogida/domicilio identifican líneas sin guardar y subtotal informativo; comandas imprimen copias de tickets existentes con estación/destino/notas, sin reenviar productos. Consulta exige permisos/scopes vigentes y el portal imprimible desaparece al bloquear sesión. Formatos58/80mm usan impresión del navegador; no afirmar impresión física, factura o pago por abrir el diálogo. No reescribir snapshots anteriores.
 
 - Tarifas de domicilio: política/zona por sucursal, perfil tributario explícito y revisiones/total esperado validados en servidor. Congelar snapshot en OrderDelivery y venta; SaleTotals versión4 agrega envío una sola vez, separado de descuentos/propina de productos. Cobro/devolución/división reutilizan el total de la única venta. No inventar tasas ni tratar tarifa como producto ficticio; custodia de repartidores sigue siendo dominio distinto de caja física.

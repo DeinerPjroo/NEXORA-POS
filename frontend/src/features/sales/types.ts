@@ -70,6 +70,9 @@ export type SaleAccount = AccountPart & {
   effective_total: string
 }
 export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
+  customer_name?: string | null
+  channel?: 'dine_in' | 'takeaway' | 'delivery'
+  dining_snapshot?: import('../operations/types').Order['dining_snapshot']
   accounts: SaleAccount[]
   id: number
   order_id: number

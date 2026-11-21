@@ -17,6 +17,7 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { useOperation } from '../operations/useOperation'
 import { SaleAmounts } from './SaleAmounts'
 import { SaleReceipt } from './SaleReceipt'
+import { SalePrintButton } from './SalePrintButton'
 import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPicker'
 import { SaleAdjustments, useSaleAdjustments } from './SaleAdjustments'
 import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
@@ -247,6 +248,7 @@ function CheckoutForm({
   if (result)
     return (
       <>
+        <SalePrintButton sale={result} />
         <SaleReceipt sale={result} />
         {terminal && (
           <Link className="button primary" to="/pos">

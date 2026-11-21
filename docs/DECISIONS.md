@@ -2,6 +2,8 @@
 
 ## DEC-023 · COMPLETED · Impresión operativa compartida
 
+Recibo de venta térmico comparte PrintDocumentPreview con borrador/comanda. Renderiza importes persistidos y SaleAmounts, incluidos saldo pendiente/devoluciones; no crea pagos ni modifica caja. Disponible al cobrar y reimprimir desde historial, con58/80mm y aislamiento CSS del recibo administrativo anterior. Nombre/canal/mesas proceden del pedido relacionado, protegido tras venta. Etiqueta de documento interno sin factura electrónica; hardware/DIAN siguen pendientes.
+
 Borradores y comandas usan una única vista previa/documento58/80mm con texto escapado. Comanda es copia de KitchenTicket real, nunca otro despacho; borrador identifica pendientes y subtotal informativo, sin representar pago. Consulta por pedido respeta orders.view y scopes tenant/sucursal; KDS usa sus tickets autorizados. Portal imprimible se retira al bloquear sesión. Browser print no acredita éxito físico ni sustituye integración de hardware. Preferencias de página solo se aplican mientras exista la vista previa; no alterar el recibo financiero.
 
 ## DEC-022 · IN_PROGRESS · Nexora Domicilios propio

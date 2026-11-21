@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { formatMoney } from '../../lib/money'
@@ -9,7 +8,7 @@ import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { Order } from '../operations/types'
 import type { KitchenTicket } from '../kitchen/types'
-import './order-print.css'
+import { PrintDocumentPreview } from '../../components/PrintDocumentPreview'
 
 export type PrintDraft = {
   orderId?: number
@@ -168,9 +167,7 @@ function PrintPreview({
   onClose: () => void
 }) {
   const { session, screenBlocked } = useSession()
-  const [width, setWidth] = useState('80')
   const [printedAt] = useState(() => new Date())
-  const [error, setError] = useState('')
   const time = (value: Date) =>
     new Intl.DateTimeFormat('es-CO', {
       dateStyle: 'short',
@@ -178,7 +175,7 @@ function PrintPreview({
       timeZone: session!.company.timezone,
     }).format(value)
   if (!session || screenBlocked) return null
-  const content = (
+  const content = (width: string) => (
     <article className="operational-ticket" data-width={width}>
       <h2>{session!.company.name}</h2>
       <h1>{ticket ? 'COMANDA · COPIA' : 'BORRADOR DEL PEDIDO'}</h1>
@@ -276,48 +273,11 @@ function PrintPreview({
     </article>
   )
   return (
-    <>
-      <Modal title={ticket ? 'Imprimir comanda' : 'Imprimir borrador'} onClose={onClose}>
-        <div className="print-controls">
-          <label>
-            Papel
-            <select
-              aria-label="Ancho de papel"
-              value={width}
-              onChange={(e) => setWidth(e.target.value)}
-            >
-              <option value="80">80 mm</option>
-              <option value="58">58 mm</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            className="button primary"
-            onClick={() => {
-              try {
-                window.print()
-              } catch {
-                setError('No se pudo abrir la impresión del navegador. Inténtalo de nuevo.')
-              }
-            }}
-          >
-            Abrir impresión
-          </button>
-        </div>
-        <p className="muted">
-          Selecciona tu impresora en el navegador. Abrir este diálogo no confirma una impresión
-          física.
-        </p>
-        {error && <p role="alert">{error}</p>}
-        <div className="ticket-preview">{content}</div>
-      </Modal>
-      {createPortal(
-        <div className="operational-print-root">
-          <style media="print">{'@page { size: auto; margin: 4mm; }'}</style>
-          {content}
-        </div>,
-        document.body,
-      )}
-    </>
+    <PrintDocumentPreview
+      title={ticket ? 'Imprimir comanda' : 'Imprimir borrador'}
+      onClose={onClose}
+    >
+      {content}
+    </PrintDocumentPreview>
   )
 }

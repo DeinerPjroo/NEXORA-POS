@@ -90,6 +90,9 @@ class SalesTest extends TestCase
         $this->assertSame('-0.0001', $sale['rounding_adjustment']);
         $this->assertSame('10.4800', $sale['payment']['change_amount']);
         $this->assertSame('V-000001', $sale['receipt_code']);
+        $this->assertSame('takeaway', $sale['channel']);
+        $this->assertNull($sale['customer_name']);
+        $this->assertNull($sale['dining_snapshot']);
         $this->assertSame('123.4567', $sale['items'][0]['unit_price']);
         $this->getJson('/api/v1/cash/sessions/'.$work['session']['id'])->assertJsonPath('data.expected_amount', '1389.5200')->assertJsonPath('data.revision', 2);
         $this->assertDatabaseCount('sales', 1);

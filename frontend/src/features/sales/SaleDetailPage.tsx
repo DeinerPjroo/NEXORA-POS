@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Printer, Undo2 } from 'lucide-react'
+import { ArrowLeft, Undo2 } from 'lucide-react'
 import { api } from '../../lib/api'
 import { Loading, PageTitle } from '../../components/ui'
 import { useCan } from '../auth/SessionProvider'
 import { CatalogError } from '../catalog/catalog-ui'
 import { RefundModal } from './RefundModal'
 import { SaleReceipt } from './SaleReceipt'
+import { SalePrintButton } from './SalePrintButton'
 import { AddPaymentsModal } from './AddPaymentsModal'
 import { PartialRefundModal } from './PartialRefundModal'
 import { saleStates } from './types'
@@ -38,10 +39,7 @@ export function SaleDetailPage({ terminal = false }: { terminal?: boolean }) {
         description={`${sale.branch_name} · ${saleStates[sale.status]}`}
         action={
           <div className="operation-actions">
-            <button className="button secondary" onClick={() => window.print()}>
-              <Printer size={16} />
-              Imprimir recibo
-            </button>
+            <SalePrintButton sale={sale} />
             {sale.balance_due !== '0.0000' &&
               sale.status !== 'refunded' &&
               can('sales.collect') && (

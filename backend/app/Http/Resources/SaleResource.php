@@ -33,6 +33,9 @@ final class SaleResource extends JsonResource
             'items' => $this->whenLoaded('order', fn () => $this->order->items->map(fn ($item) => $item->only('id', 'product_name', 'variant_name', 'sku', 'quantity', 'unit_price', 'line_subtotal', 'notes', 'base_unit_price', 'modifiers_snapshot', 'price_snapshot', 'availability_snapshot', 'order_combo_id', 'combo_position'))),
             'combos' => $this->whenLoaded('order', fn () => OrderComboResource::collection($this->order->combos)),
             'reference' => $this->whenLoaded('order', fn () => $this->order->reference),
+            'customer_name' => $this->whenLoaded('order', fn () => $this->order->customer_name),
+            'channel' => $this->whenLoaded('order', fn () => $this->order->channel),
+            'dining_snapshot' => $this->whenLoaded('order', fn () => $this->order->dining_snapshot),
         ];
     }
 }

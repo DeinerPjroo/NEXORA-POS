@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
 import { CheckoutPage } from '../sales/CheckoutPage'
 import { SaleReceipt } from '../sales/SaleReceipt'
+import { SalePrintButton } from '../sales/SalePrintButton'
 import { AddPaymentsModal } from '../sales/AddPaymentsModal'
 import { moneyUnits, formatMoney } from '../../lib/money'
 import type { Sale } from '../sales/types'
@@ -131,6 +132,7 @@ export function TerminalCheckout({
                 />
               </div>
             )}
+            <SalePrintButton sale={sale} disabled={locked} />
             {!pending && <SaleReceipt sale={sale} />}
             {!pending && (
               <button type="button" className="button primary" onClick={close}>
