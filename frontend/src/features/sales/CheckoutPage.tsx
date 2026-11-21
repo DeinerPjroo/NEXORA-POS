@@ -301,179 +301,202 @@ function CheckoutForm({
               )}
           </div>
         )}
-        <fieldset disabled={operation.locked} className="form-stack">
-          <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
-          <OperationNotice uncertain={operation.uncertain} />
-          {digital ? (
-            <div className="digital-payment-methods" role="group" aria-label="Métodos de pago">
-              {methods.data?.data.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-label={`Pagar con ${item.name}`}
-                  aria-pressed={item.id === method?.id}
-                  onClick={() => setChosenMethod(item)}
-                >
-                  {item.kind === 'cash' ? <Banknote size={22} /> : <WalletCards size={22} />}
-                  <span>{item.name}</span>
-                  <small>{item.kind === 'cash' ? 'Efectivo' : 'Registro manual'}</small>
-                </button>
-              ))}
-              {(methods.data?.meta.last_page ?? 1) > 1 && (
-                <PaymentMethodField method={method} onPick={setChosenMethod} />
-              )}
-            </div>
-          ) : (
-            <PaymentMethodField method={method} onPick={setChosenMethod} />
-          )}
-          {!isCash && method && (
-            <>
-              <p className="notice">
-                Registro manual no efectivo. No se verifica con una pasarela ni modifica el efectivo
-                de caja.
-              </p>
-              <Field label="Referencia del pago">
-                <input name="payment_reference" required maxLength={120} />
-              </Field>
-            </>
-          )}
-          <OptionsPanel className={digital ? 'digital-payment-options' : 'form-stack'}>
-            {digital && (
-              <summary>
-                <SlidersHorizontal size={16} /> Ajustes · abono · caja
-              </summary>
-            )}
-            {!digital && can('sales.view') && (
-              <>
-                <Field
-                  label="Dividir cuenta"
-                  hint="Elige las partes antes del primer pago. Se conserva una venta y un recibo."
-                >
-                  <select
-                    value={splitCount}
-                    onChange={(event) => {
-                      setSplitCount(event.target.value)
-                      setAccountNumber('1')
-                      setPaymentAmount(null)
-                      setReceived('')
-                    }}
+        <fieldset
+          disabled={operation.locked}
+          className={`form-stack${digital ? ' payment-controls-grid' : ''}`}
+        >
+          <div className={digital ? 'payment-secondary-scroll' : 'form-stack'}>
+            <ErrorNotice error={operation.error || cash.error || quote.error || methods.error} />
+            <OperationNotice uncertain={operation.uncertain} />
+            {digital ? (
+              <div className="digital-payment-methods" role="group" aria-label="Métodos de pago">
+                {methods.data?.data.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-label={`Pagar con ${item.name}`}
+                    aria-pressed={item.id === method?.id}
+                    onClick={() => setChosenMethod(item)}
                   >
-                    <option value="">Sin división</option>
-                    {Array.from({ length: 19 }, (_, index) => index + 2).map((count) => (
-                      <option key={count} value={count}>
-                        {count} partes iguales
-                      </option>
-                    ))}
-                  </select>
+                    {item.kind === 'cash' ? <Banknote size={22} /> : <WalletCards size={22} />}
+                    <span>{item.name}</span>
+                    <small>{item.kind === 'cash' ? 'Efectivo' : 'Registro manual'}</small>
+                  </button>
+                ))}
+                {(methods.data?.meta.last_page ?? 1) > 1 && (
+                  <PaymentMethodField method={method} onPick={setChosenMethod} />
+                )}
+              </div>
+            ) : (
+              <PaymentMethodField method={method} onPick={setChosenMethod} />
+            )}
+            {!isCash && method && (
+              <>
+                <p className="notice">
+                  Registro manual no efectivo. No se verifica con una pasarela ni modifica el
+                  efectivo de caja.
+                </p>
+                <Field label="Referencia del pago">
+                  <input name="payment_reference" required maxLength={120} />
                 </Field>
-                {!!quote.data?.data.accounts_preview.length && (
-                  <Field label="Cuenta del primer pago">
+              </>
+            )}
+            <OptionsPanel className={digital ? 'digital-payment-options' : 'form-stack'}>
+              {digital && (
+                <summary>
+                  <SlidersHorizontal size={16} /> Ajustes · abono · caja
+                </summary>
+              )}
+              {!digital && can('sales.view') && (
+                <>
+                  <Field
+                    label="Dividir cuenta"
+                    hint="Elige las partes antes del primer pago. Se conserva una venta y un recibo."
+                  >
                     <select
-                      value={accountNumber}
+                      value={splitCount}
                       onChange={(event) => {
-                        setAccountNumber(event.target.value)
+                        setSplitCount(event.target.value)
+                        setAccountNumber('1')
                         setPaymentAmount(null)
                         setReceived('')
                       }}
                     >
-                      {quote.data.data.accounts_preview.map((part) => (
-                        <option key={part.number} value={part.number}>
-                          {part.label} · {formatMoney(part.amount, order.currency)}
+                      <option value="">Sin división</option>
+                      {Array.from({ length: 19 }, (_, index) => index + 2).map((count) => (
+                        <option key={count} value={count}>
+                          {count} partes iguales
                         </option>
                       ))}
                     </select>
                   </Field>
-                )}
-              </>
-            )}
-            {can('sales.view') && (
-              <Field
-                label="Importe de este pago"
-                hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
-              >
-                <input
-                  value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
-                  onChange={(event) => setPaymentAmount(event.target.value)}
-                  inputMode="decimal"
-                  required
-                  pattern="[0-9]+([.,][0-9]{1,2})?"
-                />
-              </Field>
-            )}
-            <SaleAdjustments
-              state={adjustments}
-              canDiscount={can('sales.discount')}
-              canTip={settings.tip_enabled && can('sales.tips')}
-              fetching={quote.isFetching}
-            />
-            <Field label="Caja para recibir el cobro">
-              <select
-                value={selected?.id ?? ''}
-                onChange={(event) => setCashId(event.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Selecciona una caja abierta
-                </option>
-                {cash.data?.data.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} · Sesión #{item.id}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </OptionsPanel>
-          {!cash.isPending && !cash.data?.data.length && (
-            <p className="notice">
-              No hay cajas abiertas en esta sucursal.
-              {can('cash.view') && <Link to="/caja"> Ir a caja</Link>}
-            </p>
-          )}
-          {isCash && (
-            <>
-              <Field
-                label="Efectivo recibido"
-                hint="Registra el dinero entregado por el cliente. El servidor confirma el cambio."
-              >
-                <input
-                  value={received}
-                  onChange={(event) => setReceived(event.target.value)}
-                  inputMode="decimal"
-                  required
-                  pattern="[0-9]+([.,][0-9]{1,2})?"
-                  autoComplete="off"
-                />
-              </Field>
-              {digital && (
-                <>
-                  <div
-                    className="digital-cash-shortcuts"
-                    role="group"
-                    aria-label="Importes rápidos"
-                  >
-                    <button
-                      type="button"
-                      disabled={!paymentValid}
-                      onClick={() => setReceived(normalizedPayment)}
-                    >
-                      Exacto
-                    </button>
-                    {order.currency === 'COP' &&
-                      ['20000', '50000', '100000'].map((amount) => (
-                        <button type="button" key={amount} onClick={() => setReceived(amount)}>
-                          {formatMoney(amount, order.currency)}
-                        </button>
-                      ))}
-                  </div>
-                  <CashTenderKeypad value={received} onChange={setReceived} />
+                  {!!quote.data?.data.accounts_preview.length && (
+                    <Field label="Cuenta del primer pago">
+                      <select
+                        value={accountNumber}
+                        onChange={(event) => {
+                          setAccountNumber(event.target.value)
+                          setPaymentAmount(null)
+                          setReceived('')
+                        }}
+                      >
+                        {quote.data.data.accounts_preview.map((part) => (
+                          <option key={part.number} value={part.number}>
+                            {part.label} · {formatMoney(part.amount, order.currency)}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  )}
                 </>
               )}
-              <div className="checkout-change">
-                <span>Cambio a entregar</span>
-                <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
+              {can('sales.view') && (!digital || isCash) && (
+                <Field
+                  label="Importe de este pago"
+                  hint="Puedes registrar el total o un abono. El resto quedará como saldo pendiente."
+                >
+                  <input
+                    value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
+                    onChange={(event) => setPaymentAmount(event.target.value)}
+                    inputMode="decimal"
+                    required
+                    pattern="[0-9]+([.,][0-9]{1,2})?"
+                  />
+                </Field>
+              )}
+              <SaleAdjustments
+                state={adjustments}
+                canDiscount={can('sales.discount')}
+                canTip={settings.tip_enabled && can('sales.tips')}
+                fetching={quote.isFetching}
+              />
+              <Field label="Caja para recibir el cobro">
+                <select
+                  value={selected?.id ?? ''}
+                  onChange={(event) => setCashId(event.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Selecciona una caja abierta
+                  </option>
+                  {cash.data?.data.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} · Sesión #{item.id}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </OptionsPanel>
+            {!cash.isPending && !cash.data?.data.length && (
+              <p className="notice">
+                No hay cajas abiertas en esta sucursal.
+                {can('cash.view') && <Link to="/caja"> Ir a caja</Link>}
+              </p>
+            )}
+            {digital && isCash && (
+              <div className="digital-cash-shortcuts" role="group" aria-label="Importes rápidos">
+                <button
+                  type="button"
+                  disabled={!paymentValid}
+                  onClick={() => setReceived(normalizedPayment)}
+                >
+                  Exacto
+                </button>
+                {order.currency === 'COP' &&
+                  ['20000', '50000', '100000'].map((amount) => (
+                    <button type="button" key={amount} onClick={() => setReceived(amount)}>
+                      {formatMoney(amount, order.currency)}
+                    </button>
+                  ))}
               </div>
-            </>
-          )}
+            )}
+          </div>
+          <div className={digital ? 'payment-tender-dock' : 'form-stack'}>
+            {isCash && (
+              <>
+                <Field
+                  label="Efectivo recibido"
+                  hint="Registra el dinero entregado por el cliente. El servidor confirma el cambio."
+                >
+                  <input
+                    value={received}
+                    onChange={(event) => setReceived(event.target.value)}
+                    inputMode="decimal"
+                    required
+                    pattern="[0-9]+([.,][0-9]{1,2})?"
+                    autoComplete="off"
+                  />
+                </Field>
+                {digital && (
+                  <>
+                    <CashTenderKeypad value={received} onChange={setReceived} />
+                  </>
+                )}
+                <div className="checkout-change">
+                  <span>Cambio a entregar</span>
+                  <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
+                </div>
+              </>
+            )}
+            {digital && !isCash && (
+              <>
+                <Field label="Importe de este pago">
+                  <input
+                    value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
+                    onChange={(event) => setPaymentAmount(event.target.value)}
+                    inputMode="decimal"
+                    required
+                    pattern="[0-9]+([.,][0-9]{1,2})?"
+                  />
+                </Field>
+                <CashTenderKeypad
+                  label="Importe"
+                  value={paymentAmount ?? paymentLimit?.replace(/00$/, '') ?? ''}
+                  onChange={setPaymentAmount}
+                />
+              </>
+            )}
+          </div>
         </fieldset>
         {operation.error instanceof ApiError && operation.error.status === 409 && (
           <button
@@ -522,7 +545,7 @@ function CheckoutForm({
               : 'Confirmar pago manual'}
         </Submit>
       </form>
-      <section className="panel checkout-summary">
+      <section className="panel checkout-summary pos-payment-account">
         <div className="panel-heading">
           <h2>
             {digital
@@ -532,6 +555,9 @@ function CheckoutForm({
               : 'Resumen del cobro'}
           </h2>
           <span className="pill neutral">Pedido #{order.id}</span>
+          {digital && order.customer_name && (
+            <strong className="payment-customer-name">{order.customer_name}</strong>
+          )}
         </div>
         {digital && can('sales.view') && (
           <fieldset disabled={operation.locked} className="pos-split-fieldset">

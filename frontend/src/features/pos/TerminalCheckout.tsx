@@ -66,11 +66,12 @@ export function TerminalCheckout({
           <>
             {pending && (
               <div className="pending-checkout-grid">
-                <aside className="panel pending-account-summary">
-                  <div className="digital-pay-total">
-                    <span>SALDO PENDIENTE</span>
-                    <strong>{formatMoney(sale.balance_due, sale.currency)}</strong>
-                    <small>{sale.receipt_code} · Los pagos anteriores se conservan</small>
+                <aside className="panel pending-account-summary pos-payment-account">
+                  <div className="pending-account-heading">
+                    <strong>
+                      {sale.channel === 'dine_in' ? 'Cuenta de la mesa' : 'Cuenta del pedido'}
+                    </strong>
+                    <small>{sale.customer_name || sale.reference || sale.receipt_code}</small>
                   </div>
                   <fieldset
                     disabled={locked}
@@ -116,6 +117,7 @@ export function TerminalCheckout({
                       </tbody>
                     </table>
                   </div>
+                  <SalePrintButton sale={sale} disabled={locked} />
                 </aside>
                 <AddPaymentsModal
                   key={`${sale.revision}:${accountId ?? ''}`}
@@ -132,7 +134,7 @@ export function TerminalCheckout({
                 />
               </div>
             )}
-            <SalePrintButton sale={sale} disabled={locked} />
+            {!pending && <SalePrintButton sale={sale} disabled={locked} />}
             {!pending && <SaleReceipt sale={sale} />}
             {!pending && (
               <button type="button" className="button primary" onClick={close}>

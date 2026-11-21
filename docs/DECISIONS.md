@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-024 · COMPLETED · Cobro en el espacio de Terminal
+
+Conservar CheckoutPage/AddPaymentsModal y sus comandos; cambiar distribución, sin otro motor financiero. Cuenta/productos a izquierda; total/recibido/cambio arriba a derecha, teclado fijo en su propia columna, métodos/ajustes con scroll interno y confirmación fuera del desplazamiento. Se aplica también a abonos/división y al ingreso de importe no efectivo. Mantener formularios/UUID exactos e impedir navegación durante cobro incierto. Verificar recorte y accesibilidad real de teclas en pantallas compactas, no solo sus coordenadas en viewport.
+
 ## DEC-023 · COMPLETED · Impresión operativa compartida
 
 Recibo de venta térmico comparte PrintDocumentPreview con borrador/comanda. Renderiza importes persistidos y SaleAmounts, incluidos saldo pendiente/devoluciones; no crea pagos ni modifica caja. Disponible al cobrar y reimprimir desde historial, con58/80mm y aislamiento CSS del recibo administrativo anterior. Nombre/canal/mesas proceden del pedido relacionado, protegido tras venta. Etiqueta de documento interno sin factura electrónica; hardware/DIAN siguen pendientes.

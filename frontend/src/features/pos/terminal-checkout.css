@@ -8,10 +8,9 @@
   flex-direction: column;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--pos-primary, #7258df);
-  border-radius: 8px;
-  background: var(--canvas);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--text);
   overflow: hidden;
 }
@@ -30,9 +29,10 @@
 }
 .terminal-checkout-header h2 {
   margin: 4px 0 0;
-  font-size: 18px;
+  font-size: 14px;
 }
 .terminal-checkout-body {
+  flex: 1;
   min-height: 0;
   overflow: auto;
   padding: 8px;
@@ -559,5 +559,329 @@
   .pending-payment-panel .form-actions {
     position: sticky;
     bottom: 0;
+  }
+}
+
+/* Cobro en el mismo espacio de operación: cuenta y controles fijos. */
+.terminal-checkout-header {
+  padding: 0 0 6px;
+  background: transparent;
+  border: 0;
+  min-height: 32px;
+  flex-shrink: 0;
+}
+.terminal-checkout-header .eyebrow {
+  display: none;
+}
+.terminal-checkout-header h2 {
+  margin: 0;
+}
+.terminal-checkout-header > button {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.terminal-checkout-body {
+  padding: 0;
+}
+.terminal-checkout .digital-checkout,
+.pending-checkout-grid {
+  grid-template-columns: minmax(280px, min(var(--pos-order-width, 350px), 43%)) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+}
+.terminal-checkout .digital-checkout > .panel,
+.pending-checkout-grid > .panel {
+  padding: 10px;
+  border-radius: 8px;
+}
+.terminal-checkout .digital-checkout .checkout-summary {
+  overflow: hidden;
+  gap: 8px;
+}
+.terminal-checkout .digital-checkout .checkout-form {
+  display: flex;
+  flex-direction: column;
+}
+.terminal-checkout .digital-checkout .checkout-form > .digital-pay-total,
+.terminal-checkout .digital-checkout .checkout-form > .checkout-review-data,
+.terminal-checkout .digital-checkout .checkout-form > .checkout-confirmation-note,
+.terminal-checkout .digital-checkout .checkout-form > button[type='submit'] {
+  flex-shrink: 0;
+}
+.terminal-checkout .digital-checkout .checkout-form > fieldset.payment-controls-grid {
+  flex: 1;
+}
+.pos-payment-account {
+  border-top: 3px solid var(--pos-primary);
+}
+.pos-payment-account .panel-heading {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.pos-payment-account .panel-heading h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.payment-customer-name {
+  flex-basis: 100%;
+  font-size: 13px;
+}
+.digital-checkout .checkout-summary > .pos-split-fieldset {
+  flex-shrink: 0;
+  min-height: 0;
+  max-height: 35%;
+  overflow: auto;
+}
+.digital-checkout .checkout-summary > .digital-checkout-lines {
+  min-height: 0;
+}
+.digital-checkout .checkout-summary > .digital-account-breakdown {
+  flex-shrink: 0;
+  max-height: 35%;
+  overflow: auto;
+}
+.digital-checkout .checkout-summary > p:last-child {
+  display: none;
+}
+.terminal-checkout .checkout-form > fieldset.payment-controls-grid,
+.terminal-checkout .pending-payment-panel > form > fieldset.payment-controls-grid {
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) minmax(185px, 1.1fr);
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.payment-secondary-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  padding-right: 3px;
+}
+.payment-secondary-scroll > * {
+  flex-shrink: 0;
+}
+.payment-secondary-scroll .digital-payment-methods {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+.payment-secondary-scroll .digital-cash-shortcuts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.payment-secondary-scroll .digital-payment-methods > button {
+  min-height: 48px;
+  padding: 7px;
+}
+.payment-tender-dock {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  gap: 6px;
+}
+.payment-tender-dock > .field,
+.payment-tender-dock > .digital-cash-shortcuts,
+.payment-tender-dock > .checkout-change {
+  flex-shrink: 0;
+  margin: 0;
+}
+.payment-tender-dock > .field {
+  gap: 3px;
+}
+.payment-tender-dock > .field > small {
+  display: none;
+}
+.payment-tender-dock input {
+  min-height: 36px;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: right;
+}
+.payment-tender-dock .digital-cash-shortcuts button {
+  min-height: 27px;
+  padding: 2px;
+  font-size: 10px;
+}
+.payment-tender-dock .cash-tender-keypad {
+  flex: 1;
+  min-height: 0;
+  max-height: 360px;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+.payment-tender-dock .cash-tender-keypad button {
+  min-height: 0;
+  padding: 0;
+  font-size: 23px;
+}
+.payment-tender-dock .cash-tender-keypad button:last-child {
+  min-height: 0;
+}
+.terminal-checkout .payment-tender-dock > .checkout-change {
+  display: none;
+}
+.pending-payment-panel .payment-tender-dock > .checkout-change {
+  padding: 4px 8px;
+}
+.pending-payment-panel .payment-tender-dock > .checkout-change strong {
+  font-size: 18px;
+}
+.terminal-checkout .digital-pay-total {
+  padding: 8px 10px;
+  gap: 2px;
+}
+.terminal-checkout .digital-pay-total > strong {
+  font-size: clamp(24px, 2.5vw, 34px);
+}
+.terminal-checkout .digital-tender-status {
+  gap: 6px;
+}
+.terminal-checkout .digital-tender-status strong {
+  font-size: clamp(15px, 1.8vw, 23px);
+}
+.terminal-checkout .checkout-form > button[type='submit'] {
+  position: static;
+  min-height: 44px;
+}
+.pending-account-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pending-account-heading > strong {
+  font-size: 16px;
+}
+.pending-account-heading > small {
+  color: var(--muted);
+}
+.pending-account-summary > .digital-checkout-lines {
+  min-height: 0;
+}
+.pending-account-summary > button {
+  flex-shrink: 0;
+}
+.pending-payment-panel .form-actions {
+  padding-top: 0;
+}
+.pending-payment-panel .form-actions > button {
+  min-height: 42px;
+  padding: 6px;
+  font-size: 12px;
+}
+.terminal-checkout .payment-tender-dock .field input {
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 4px 8px;
+}
+.terminal-checkout .payment-tender-dock .field > span {
+  font-size: 11px;
+  line-height: 14px;
+}
+.pending-payment-panel .form-actions > button:not(.prepare-account-payment):not([type='submit']) {
+  display: none;
+}
+.pending-payment-panel .form-actions > .prepare-account-payment {
+  flex: 0 1 42%;
+  min-width: 0;
+}
+.pending-payment-panel .form-actions > button[type='submit'] {
+  min-width: 0;
+}
+.pending-payment-panel > form > .notice {
+  flex-shrink: 0;
+  max-height: 80px;
+  overflow: auto;
+}
+@media (max-height: 700px) {
+  .terminal-checkout .checkout-confirmation-note {
+    display: none;
+  }
+  .terminal-checkout .digital-pay-total > strong {
+    font-size: 25px;
+  }
+  .terminal-checkout .digital-pay-total small {
+    font-size: 10px;
+  }
+  .terminal-checkout .digital-pay-total {
+    padding: 6px 8px;
+  }
+}
+@media (max-width: 720px) {
+  .terminal-checkout-header {
+    flex-wrap: nowrap;
+  }
+  .terminal-checkout-body:has(.digital-checkout),
+  .terminal-checkout-body:has(.pending-checkout-grid) {
+    overflow: hidden;
+  }
+  .terminal-checkout .digital-checkout,
+  .pending-checkout-grid {
+    height: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(90px, 0.7fr) minmax(0, 1.5fr);
+  }
+  .terminal-checkout .digital-checkout .checkout-summary {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .terminal-checkout .digital-checkout .checkout-form {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    overflow: hidden;
+  }
+  .terminal-checkout .digital-checkout > .panel,
+  .pending-checkout-grid > .panel {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: 7px;
+  }
+  .terminal-checkout .checkout-form > fieldset.payment-controls-grid,
+  .terminal-checkout .pending-payment-panel > form > fieldset.payment-controls-grid {
+    grid-template-columns: minmax(105px, 1fr) minmax(150px, 1.2fr);
+    gap: 7px;
+    overflow: hidden;
+  }
+  .terminal-checkout .digital-pay-total:has(.digital-tender-status) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+  .terminal-checkout .digital-tender-status {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    padding: 0;
+  }
+  .terminal-checkout .digital-pay-total > strong {
+    font-size: 23px;
+  }
+  .terminal-checkout .digital-tender-status strong {
+    font-size: 14px;
+  }
+  .terminal-checkout .checkout-confirmation-note {
+    display: none;
+  }
+  .payment-tender-dock .cash-tender-keypad button {
+    font-size: 20px;
+  }
+  .payment-secondary-scroll .digital-payment-methods {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pending-payment-panel .form-actions {
+    position: static;
   }
 }

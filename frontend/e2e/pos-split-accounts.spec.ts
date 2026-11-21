@@ -3,6 +3,45 @@ import { fixtureWorkspace, readApi, writeApi } from './helpers'
 import { formatMoney } from '../src/lib/money'
 import type { Sale } from '../src/features/sales/types'
 
+async function expectFixedPaymentDock(page: import('@playwright/test').Page) {
+  const keypad = page.getByRole('group', { name: 'Teclado de efectivo', exact: true })
+  await expect(keypad).toBeVisible()
+  const positions = await keypad.getByRole('button').evaluateAll((buttons) =>
+    buttons.map((button) => {
+      const rect = button.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+      let clipped = false
+      for (let ancestor = button.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        const style = getComputedStyle(ancestor)
+        if (!['hidden', 'auto', 'scroll', 'clip'].includes(style.overflowY)) continue
+        const bounds = ancestor.getBoundingClientRect()
+        if (rect.top < bounds.top - 1 || rect.bottom > bounds.bottom + 1) clipped = true
+      }
+      return (
+        rect.width > 0 &&
+        rect.height >= 20 &&
+        !clipped &&
+        rect.top >= 0 &&
+        rect.bottom <= innerHeight &&
+        rect.left >= 0 &&
+        rect.right <= innerWidth &&
+        !!hit &&
+        (hit === button || button.contains(hit))
+      )
+    }),
+  )
+  expect(positions).toHaveLength(13)
+  expect(positions.every(Boolean)).toBe(true)
+  const top = await keypad.evaluate((node) => node.getBoundingClientRect().top)
+  await page.locator('.terminal-checkout .payment-secondary-scroll').evaluate((node) => {
+    node.scrollTop = node.scrollHeight
+  })
+  expect(await keypad.evaluate((node) => node.getBoundingClientRect().top)).toBe(top)
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(
+    true,
+  )
+}
+
 test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin duplicados', async ({
   page,
 }) => {
@@ -109,7 +148,12 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
     page.getByRole('button', { name: 'Confirmar cobro en efectivo', exact: true }),
   ).toBeEnabled()
   await page.locator('.pos-terminal').screenshot({ path: 'test-results/pos-split-accounts.png' })
+  await expectFixedPaymentDock(page)
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await expectFixedPaymentDock(page)
+  await page.screenshot({ path: 'test-results/checkout-integrated-compact.png' })
   await page.setViewportSize({ width: 390, height: 844 })
+  await expectFixedPaymentDock(page)
   await split.scrollIntoViewIfNeeded()
   await expect(part(2)).toBeVisible()
   await expect
@@ -164,6 +208,9 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByLabel('Caja de la operación', { exact: true })).not.toHaveValue('')
   await page.getByLabel('Efectivo recibido para este pago', { exact: true }).fill('40')
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await expectFixedPaymentDock(page)
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page
     .locator('.pos-terminal')
     .screenshot({ path: 'test-results/pending-checkout-desktop.png' })
