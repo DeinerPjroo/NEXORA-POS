@@ -769,3 +769,31 @@ alter table `delivery_events` add constraint `delivery_events_tenant_id_actor_id
 
 alter table `delivery_events` add constraint `delivery_events_tenant_id_courier_id_foreign` foreign key (`tenant_id`, `courier_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+create table `customers` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `name` varchar(100) not null, `phone` varchar(30) not null, `phone_digits` varchar(30) not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `customers` add unique `customer_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `customers` add index `customers_tenant_id_branch_id_phone_digits_index`(`tenant_id`, `branch_id`, `phone_digits`);
+
+alter table `customers` add constraint `customers_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+create table `customer_addresses` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `customer_id` bigint unsigned not null, `label` varchar(60) not null, `recipient_name` varchar(100) not null, `phone` varchar(30) not null, `address` varchar(300) not null, `neighborhood` varchar(100) null, `location_reference` varchar(300) null, `instructions` varchar(300) null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `customer_addresses` add unique `address_customer_identity`(`tenant_id`, `branch_id`, `customer_id`, `id`);
+
+alter table `customer_addresses` add constraint `address_customer_fk` foreign key (`tenant_id`, `branch_id`, `customer_id`) references `customers` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `order_deliveries` add `customer_id` bigint unsigned null;
+
+alter table `order_deliveries` add `customer_address_id` bigint unsigned null;
+
+alter table `order_deliveries` add `neighborhood` varchar(100) null;
+
+alter table `order_deliveries` add `location_reference` varchar(300) null;
+
+alter table `order_deliveries` add `customer_snapshot` json null;
+
+alter table `order_deliveries` add constraint `delivery_customer_fk` foreign key (`tenant_id`, `branch_id`, `customer_id`) references `customers` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `order_deliveries` add constraint `delivery_address_fk` foreign key (`tenant_id`, `branch_id`, `customer_id`, `customer_address_id`) references `customer_addresses` (`tenant_id`, `branch_id`, `customer_id`, `id`) on delete restrict;
+

@@ -15,7 +15,7 @@ final class OrderDelivery extends Model
 
     protected function casts(): array
     {
-        return ['revision' => 'integer', 'out_at' => 'datetime', 'delivered_at' => 'datetime'];
+        return ['revision' => 'integer', 'out_at' => 'datetime', 'delivered_at' => 'datetime', 'customer_snapshot' => 'array'];
     }
 
     public function events(): HasMany

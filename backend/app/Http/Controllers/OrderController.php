@@ -26,7 +26,7 @@ final class OrderController extends Controller
         Gate::authorize('orders.manage');
         $delivery = $order->channel === 'delivery' ? OrderDelivery::where('order_id', $order->id)->firstOrFail() : null;
 
-        return response()->json(['data' => ['revision' => $order->revision, 'customer_name' => $order->customer_name, 'reference' => $order->reference, 'delivery' => $delivery?->only('revision', 'recipient_name', 'phone', 'address', 'instructions')]]);
+        return response()->json(['data' => ['revision' => $order->revision, 'customer_name' => $order->customer_name, 'reference' => $order->reference, 'delivery' => $delivery?->only('revision', 'recipient_name', 'phone', 'address', 'instructions', 'neighborhood', 'location_reference')]]);
     }
 
     public function updateCustomer(OrderCustomerRequest $request, Order $order, UpdateOrderCustomer $service)

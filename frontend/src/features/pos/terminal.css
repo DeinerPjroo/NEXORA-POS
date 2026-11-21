@@ -340,6 +340,29 @@ body.pos-active {
   flex-direction: column;
   gap: 12px;
 }
+.delivery-customer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.delivery-address-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.delivery-address-options > button {
+  padding: 10px;
+  min-height: 42px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--canvas);
+  color: var(--text);
+}
+.delivery-address-options > button[aria-pressed='true'] {
+  border-color: var(--pos-primary);
+  background: color-mix(in srgb, var(--pos-primary) 14%, var(--surface));
+}
 .pos-customer-edit {
   padding: 0;
   gap: 0;

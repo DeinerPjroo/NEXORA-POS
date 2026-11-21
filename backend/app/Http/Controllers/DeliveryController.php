@@ -37,6 +37,6 @@ final class DeliveryController extends Controller
 
     public function present(OrderDelivery $d): array
     {
-        return [...$d->only('id', 'order_id', 'branch_id', 'recipient_name', 'phone', 'address', 'instructions', 'courier_id', 'status', 'revision', 'out_at', 'delivered_at', 'created_at'), 'courier_name' => $d->courier?->name, 'preparation_status' => $d->order->status, 'events' => $d->events->map(fn ($e) => $e->only('id','status','reason','created_at'))];
+        return [...$d->only('id', 'order_id', 'branch_id', 'recipient_name', 'phone', 'address', 'instructions', 'neighborhood', 'location_reference', 'customer_id', 'customer_address_id', 'courier_id', 'status', 'revision', 'out_at', 'delivered_at', 'created_at'), 'courier_name' => $d->courier?->name, 'preparation_status' => $d->order->status, 'events' => $d->events->map(fn ($e) => $e->only('id', 'status', 'reason', 'created_at'))];
     }
 }

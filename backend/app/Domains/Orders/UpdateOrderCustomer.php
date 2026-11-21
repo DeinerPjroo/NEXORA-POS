@@ -26,7 +26,7 @@ final class UpdateOrderCustomer
                 $delivery = OrderDelivery::where('order_id', $order->id)->lockForUpdate()->firstOrFail();
                 abort_unless(isset($data['delivery']) && $delivery->revision === (int) $data['delivery']['revision'], 409, 'Los datos de entrega cambiaron. Cierra y vuelve a abrir sus datos.');
                 abort_unless(in_array($delivery->status, ['pending', 'assigned'], true), 409, 'No se cambian destinatarios ni dirección cuando el domicilio ya salió.');
-                $delivery->fill(collect($data['delivery'])->only('recipient_name', 'phone', 'address', 'instructions')->all());
+                $delivery->fill(collect($data['delivery'])->only('recipient_name', 'phone', 'address', 'instructions', 'neighborhood', 'location_reference')->all());
                 $delivery->revision++;
                 $delivery->save();
                 DeliveryEvent::create(['order_id' => $order->id, 'order_delivery_id' => $delivery->id, 'actor_id' => $actor->id, 'courier_id' => $delivery->courier_id, 'status' => $delivery->status, 'reason' => 'Datos de destinatario actualizados: '.$data['reason'], 'created_at' => now()]);

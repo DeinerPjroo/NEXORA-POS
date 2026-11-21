@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-022 · IN_PROGRESS · Nexora Domicilios propio
+
+Extender Order/OrderDelivery, usuarios y motor financiero actuales en cinco etapas solicitadas. Libreta de clientes/direcciones por sucursal con FK tenant/branch/customer, revisiones y auditoría; el domicilio copia un snapshot autoritativo que no sigue ediciones de libreta. Operación de dirección identifica CustomerAddress para reintentos y devuelve saved_address_id, conservando la dirección exacta si se agregan otras después. Guardar un domicilio no requiere caja abierta y no confirma pago. Tarifas y custodia/rendiciones siguen pendientes: no representar efectivo del repartidor como entrada física a caja ni crear otra venta al rendir. Sin plataformas externas, GPS o app independiente.
+
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación
 
 El canal de toma se fija por ruta: POS de mesas, recogidas y domicilios separados. La preferencia histórica de canal no cambia el entorno ni Cliente ofrece cambiarlo; enlaces antiguos redirigen. Elegir mesa no cambia opciones de recogida dentro del POS, pues pertenecen a su propia sección. Pedidos se filtra por canal activo, conserva filtros/página al consultar detalles y permite Todos. El personal sin operación de mesas inicia en recogidas; empacar líneas de mesa conserva pedido y cuenta únicos.

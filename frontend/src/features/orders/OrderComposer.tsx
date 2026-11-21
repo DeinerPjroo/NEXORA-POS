@@ -56,6 +56,7 @@ import { useTerminalGuard, useTerminalOrders } from '../pos/TerminalEnvironment'
 import { PosPickupsPanel } from './PosPickupsPanel'
 import { PosOrdersPanel } from './PosOrdersPanel'
 import { OrderCustomerEditor } from './OrderCustomerEditor'
+import { DeliveryCustomerFields } from './DeliveryCustomerFields'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -99,6 +100,9 @@ export function OrderComposer({
   const [ordersCheckoutId, setOrdersCheckoutId] = useState<number | null>(null)
   const [customerEditId, setCustomerEditId] = useState<number | null>(null)
   const [customerEditBusy, setCustomerEditBusy] = useState(false)
+  const [deliveryBookBusy, setDeliveryBookBusy] = useState(false)
+  const [deliveryDirty, setDeliveryDirty] = useState(false)
+  const [deliveryFormEpoch, setDeliveryFormEpoch] = useState(0)
   const [pickupId, setPickupId] = useState<number | null>(null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
@@ -211,22 +215,27 @@ export function OrderComposer({
   const pickupOrder = useQuery({
     queryKey: ['orders', 'pos-pickup', pickupId],
     queryFn: ({ signal }) => api<{ data: Order }>(`orders/${pickupId}`, { signal }),
-    enabled: !!pickupId && channel === 'takeaway',
+    enabled: !!pickupId && channel !== 'dine_in',
     refetchInterval: 15000,
   })
-  const savedPickup = channel === 'takeaway' && !!pickupId
+  const savedPickup = channel !== 'dine_in' && !!pickupId
   const acknowledged =
     terminal && dining && confirmedOrder?.dining_session_id === dining.id ? confirmedOrder : null
   const currentOrder =
     terminal && dining && channel === 'dine_in'
       ? (acknowledged ?? activeTableOrder.data?.data[0])
       : savedPickup &&
-          pickupOrder.data?.data.channel === 'takeaway' &&
+          pickupOrder.data?.data.channel === channel &&
           pickupOrder.data.data.branch_id === selected
         ? pickupOrder.data.data
         : undefined
   const displayCart = acknowledged ? [] : cart
   const operation = useOperation<Order>('orders', async (order) => {
+    if (order.channel === 'delivery') {
+      setDeliveryDirty(false)
+      setDeliveryFormEpoch((value) => value + 1)
+      orderForm.current?.reset()
+    }
     if (terminal && order.dining_session_id) setConfirmedOrder(order)
     await client.invalidateQueries({ queryKey: ['orders'] })
     if (order.dining_session_id) await client.invalidateQueries({ queryKey: ['dining-occupancy'] })
@@ -255,7 +264,7 @@ export function OrderComposer({
     }
     if (terminal && (orderIntent.current !== 'checkout' || !can('sales.collect'))) {
       setCart([])
-      if (order.channel === 'takeaway') {
+      if (order.channel !== 'dine_in') {
         client.setQueryData(['orders', 'pos-pickup', order.id], { data: order })
         setPickupId(order.id)
       }
@@ -274,7 +283,7 @@ export function OrderComposer({
     )
     if (terminal) {
       setCart([])
-      if (order.channel === 'takeaway') {
+      if (order.channel !== 'dine_in') {
         client.setQueryData(['orders', 'pos-pickup', order.id], { data: order })
         setPickupId(order.id)
       }
@@ -309,7 +318,7 @@ export function OrderComposer({
       void client.invalidateQueries({ queryKey: ['products', 'order-menu'] })
     },
   })
-  const locked = operation.locked || pricing.locked || !!customerEditId
+  const locked = operation.locked || pricing.locked || !!customerEditId || deliveryBookBusy
   const customerAvailable =
     !!selected &&
     !tableOrderUnavailable &&
@@ -337,8 +346,10 @@ export function OrderComposer({
   }, [locked, cart.length])
   useTerminalOrders(terminal ? openOrdersPanel : null)
   useTerminalGuard(
-    terminal && (cart.length > 0 || locked || checkoutOpen),
-    terminal && (operation.locked || pricing.locked || checkoutOpen || customerEditBusy),
+    terminal &&
+      (cart.length > 0 || locked || checkoutOpen || (channel === 'delivery' && deliveryDirty)),
+    terminal &&
+      (operation.locked || pricing.locked || checkoutOpen || customerEditBusy || deliveryBookBusy),
   )
   useEffect(() => {
     if (pricing.error) pendingDining.current = null
@@ -347,7 +358,7 @@ export function OrderComposer({
     if (terminal && selected && !locked) savePosContext(session!, selected, channel)
   }, [terminal, selected, channel, locked, session])
   useEffect(() => {
-    if (!terminal || checkoutOpen || customerEditId) return
+    if (!terminal || checkoutOpen || customerEditId || deliveryBookBusy) return
     const shortcut = (event: KeyboardEvent) => {
       if (
         event.repeat ||
@@ -374,7 +385,16 @@ export function OrderComposer({
     }
     window.addEventListener('keydown', shortcut)
     return () => window.removeEventListener('keydown', shortcut)
-  }, [terminal, checkoutOpen, customerEditId, picking, bundling, customizing, pricing.review])
+  }, [
+    terminal,
+    checkoutOpen,
+    customerEditId,
+    deliveryBookBusy,
+    picking,
+    bundling,
+    customizing,
+    pricing.review,
+  ])
   function configure(product: Product, variant?: Variant) {
     if (savedPickup || (terminal && channel === 'dine_in' && !dining)) return
     setPicking(null)
@@ -482,8 +502,19 @@ export function OrderComposer({
       toast('Selecciona la mesa para este pedido.')
       return
     }
-    const { delivery_name, delivery_phone, delivery_address, delivery_instructions, ...data } =
-      Object.fromEntries(new FormData(event.currentTarget))
+    const {
+      delivery_name,
+      delivery_phone,
+      delivery_address,
+      delivery_instructions,
+      delivery_neighborhood,
+      delivery_location_reference,
+      delivery_customer_id,
+      delivery_customer_revision,
+      delivery_customer_address_id,
+      delivery_address_revision,
+      ...data
+    } = Object.fromEntries(new FormData(event.currentTarget))
     if (
       channel === 'delivery' &&
       (!String(delivery_name ?? '').trim() ||
@@ -507,6 +538,20 @@ export function OrderComposer({
               phone: delivery_phone,
               address: delivery_address,
               instructions: delivery_instructions || null,
+              neighborhood: delivery_neighborhood || null,
+              location_reference: delivery_location_reference || null,
+              ...(delivery_customer_id
+                ? {
+                    customer_id: Number(delivery_customer_id),
+                    customer_revision: Number(delivery_customer_revision),
+                  }
+                : {}),
+              ...(delivery_customer_address_id
+                ? {
+                    customer_address_id: Number(delivery_customer_address_id),
+                    address_revision: Number(delivery_address_revision),
+                  }
+                : {}),
             },
           }
         : {}),
@@ -727,6 +772,25 @@ export function OrderComposer({
                   </button>
                 </>
               )}
+              {channel === 'delivery' && (
+                <button
+                  type="button"
+                  disabled={locked || !!cart.length || deliveryDirty}
+                  onClick={() => {
+                    setPickupId(null)
+                    setCheckoutOrderId(null)
+                    setCheckoutContext('')
+                    setOrdersOpen(false)
+                    setDetails(false)
+                    setDeliveryFormEpoch((value) => value + 1)
+                    setDeliveryDirty(false)
+                    orderForm.current?.reset()
+                    operation.reset()
+                  }}
+                >
+                  Nuevo domicilio
+                </button>
+              )}
               {channel === 'dine_in' && (
                 <button
                   type="button"
@@ -812,11 +876,16 @@ export function OrderComposer({
               <button
                 type="button"
                 className="pos-cancel"
-                disabled={locked || !cart.length}
+                disabled={locked || (!cart.length && !(channel === 'delivery' && deliveryDirty))}
                 onClick={() => {
                   if (window.confirm('¿Descartar este pedido sin registrar?')) {
                     setCart([])
                     setActiveLine(null)
+                    if (channel === 'delivery') {
+                      setDeliveryFormEpoch((value) => value + 1)
+                      setDeliveryDirty(false)
+                      orderForm.current?.reset()
+                    }
                   }
                 }}
               >
@@ -914,7 +983,7 @@ export function OrderComposer({
                         pickupsOpen ||
                         ordersOpen ||
                         products.isFetching ||
-                        !posReady ||
+                        (!posReady && channel !== 'delivery') ||
                         (channel === 'dine_in' && !dining) ||
                         !!currentOrder?.sale_id
                       }
@@ -1024,7 +1093,7 @@ export function OrderComposer({
             {savedPickup && (
               <>
                 <ErrorNotice error={pickupOrder.error} />
-                {pickupOrder.isPending && <p role="status">Cargando recogida…</p>}
+                {pickupOrder.isPending && <p role="status">Cargando pedido…</p>}
                 {pickupOrder.error && (
                   <button type="button" onClick={() => void pickupOrder.refetch()}>
                     Reintentar consulta
@@ -1032,7 +1101,10 @@ export function OrderComposer({
                 )}
                 {currentOrder && (
                   <div className="pos-dining-selection">
-                    <strong>{currentOrder.customer_name || 'Recogida en mostrador'}</strong>
+                    <strong>
+                      {currentOrder.customer_name ||
+                        (channel === 'delivery' ? 'Domicilio' : 'Recogida en mostrador')}
+                    </strong>
                     {' · '}
                     {currentOrder.sale_status === 'paid' ? 'Pagada' : 'Pedido registrado'}
                     {currentOrder.reference && (
@@ -1041,8 +1113,9 @@ export function OrderComposer({
                   </div>
                 )}
                 <p className="muted small">
-                  Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva
-                  recogida.
+                  {channel === 'delivery'
+                    ? 'Pedido de domicilio guardado. Puedes consultar sus productos, enviarlo a cocina o cobrarlo cuando corresponda.'
+                    : 'Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva recogida.'}
                 </p>
               </>
             )}
@@ -1281,20 +1354,12 @@ export function OrderComposer({
                     </Field>
                   )}
                   {channel === 'delivery' && (
-                    <>
-                      <Field label="Nombre de quien recibe">
-                        <input name="delivery_name" maxLength={100} />
-                      </Field>
-                      <Field label="Teléfono del domicilio">
-                        <input name="delivery_phone" type="tel" maxLength={30} />
-                      </Field>
-                      <Field label="Dirección de entrega">
-                        <textarea name="delivery_address" maxLength={300} rows={2} />
-                      </Field>
-                      <Field label="Indicaciones de entrega">
-                        <textarea name="delivery_instructions" maxLength={300} rows={2} />
-                      </Field>
-                    </>
+                    <DeliveryCustomerFields
+                      key={`${selected}:${deliveryFormEpoch}`}
+                      branchId={selected}
+                      onBusy={setDeliveryBookBusy}
+                      onDirty={setDeliveryDirty}
+                    />
                   )}
                   <Field label="Referencia del pedido">
                     <input
@@ -1384,7 +1449,7 @@ export function OrderComposer({
               </button>
             )}
             <div className={terminal ? 'pos-order-actions' : undefined}>
-              {terminal && channel === 'takeaway' && !savedPickup && (
+              {terminal && channel !== 'dine_in' && !savedPickup && (
                 <button
                   type="button"
                   className="pos-save-order"
@@ -1399,7 +1464,11 @@ export function OrderComposer({
                     orderForm.current?.requestSubmit()
                   }}
                 >
-                  {operation.uncertain ? 'Reintentar guardado' : 'GUARDAR RECOGIDA'}
+                  {operation.uncertain
+                    ? 'Reintentar guardado'
+                    : channel === 'delivery'
+                      ? 'GUARDAR DOMICILIO'
+                      : 'GUARDAR RECOGIDA'}
                 </button>
               )}
               {terminal && dining && (

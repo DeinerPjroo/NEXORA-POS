@@ -16,6 +16,8 @@ type Customer = {
     phone: string
     address: string
     instructions: string | null
+    neighborhood: string | null
+    location_reference: string | null
   }
 }
 
@@ -110,6 +112,8 @@ export function OrderCustomerEditor({
                         phone: form.get('phone'),
                         address: form.get('address'),
                         instructions: form.get('instructions') || null,
+                        neighborhood: form.get('neighborhood') || null,
+                        location_reference: form.get('location_reference') || null,
                       },
                     }
                   : {}),
@@ -163,6 +167,21 @@ export function OrderCustomerEditor({
                       name="instructions"
                       maxLength={300}
                       defaultValue={data.delivery.instructions ?? ''}
+                      rows={2}
+                    />
+                  </Field>
+                  <Field label="Barrio o zona">
+                    <input
+                      name="neighborhood"
+                      maxLength={100}
+                      defaultValue={data.delivery.neighborhood ?? ''}
+                    />
+                  </Field>
+                  <Field label="Referencias de ubicación">
+                    <textarea
+                      name="location_reference"
+                      maxLength={300}
+                      defaultValue={data.delivery.location_reference ?? ''}
                       rows={2}
                     />
                   </Field>

@@ -15,6 +15,11 @@ final class DeliveryWorkflow
 {
     public function create(User $actor, Order $order, array $data): void
     {
+        $data = app(DeliveryCustomerSnapshot::class)->resolve($actor, $order->branch_id, $data);
+        if (! filled($order->customer_name)) {
+            $order->customer_name = $data['customer_snapshot']['customer']['name'] ?? $data['recipient_name'];
+            $order->save();
+        }
         $delivery = OrderDelivery::create([...$data, 'order_id' => $order->id, 'branch_id' => $order->branch_id, 'status' => 'pending', 'revision' => 1]);
         $this->event($actor, $delivery, 'Domicilio registrado.');
     }
