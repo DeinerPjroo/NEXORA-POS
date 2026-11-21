@@ -11,6 +11,7 @@ import { PaymentMethodField, useDefaultPaymentMethod } from './PaymentMethodPick
 import type { PaymentMethod, Sale } from './types'
 import { useSalesCash } from './useSalesCash'
 import { CashTenderKeypad } from '../pos/CashTenderKeypad'
+import { ChangeDueDisplay } from '../pos/ChangeDueDisplay'
 
 type DraftPayment = {
   account_id?: number
@@ -77,6 +78,21 @@ export function AddPaymentsModal({
     (isCash
       ? validMoney(tendered) && moneyUnits(tendered) >= moneyUnits(normalized)
       : !!reference.trim() && reference.length <= 120)
+  const cashLines = lines.filter((line) => line.method.kind === 'cash')
+  const preparedChange = cashLines.reduce(
+    (sum, line) => sum + moneyUnits(line.received_amount) - moneyUnits(line.amount),
+    0n,
+  )
+  const currentChange =
+    isCash && received.trim()
+      ? amountValid && validMoney(tendered) && moneyUnits(tendered) >= moneyUnits(normalized)
+        ? moneyUnits(tendered) - moneyUnits(normalized)
+        : null
+      : 0n
+  const changeDue =
+    currentChange === null || (!received.trim() && !cashLines.length)
+      ? null
+      : unitsToMoney(preparedChange + currentChange)
   const client = useQueryClient()
   const toast = useToast()
   const operation = useOperation<Sale>(`sales/${snapshot.id}/payments`, async (updated) => {
@@ -172,19 +188,6 @@ export function AddPaymentsModal({
                     <span>Recibido</span>
                     <strong>
                       {formatMoney(validMoney(tendered) ? tendered : '0', snapshot.currency)}
-                    </strong>
-                  </div>
-                  <div>
-                    <span>Cambio</span>
-                    <strong>
-                      {validMoney(tendered) &&
-                      amountValid &&
-                      moneyUnits(tendered) >= moneyUnits(normalized)
-                        ? formatMoney(
-                            unitsToMoney(moneyUnits(tendered) - moneyUnits(normalized)),
-                            snapshot.currency,
-                          )
-                        : '—'}
                     </strong>
                   </div>
                 </div>
@@ -342,10 +345,18 @@ export function AddPaymentsModal({
                 )}
               </>
             )}
-            <div className="checkout-change">
-              <span>Pagos preparados</span>
-              <strong>{formatMoney(unitsToMoney(total), snapshot.currency)}</strong>
-            </div>
+            {embedded && (isCash || cashLines.length > 0) ? (
+              <ChangeDueDisplay
+                amount={changeDue}
+                currency={snapshot.currency}
+                prepared={cashLines.length > 0}
+              />
+            ) : (
+              <div className="checkout-change">
+                <span>Pagos preparados</span>
+                <strong>{formatMoney(unitsToMoney(total), snapshot.currency)}</strong>
+              </div>
+            )}
             <p className="muted small">
               Saldo después del envío: {formatMoney(unitsToMoney(remaining), snapshot.currency)}.
               Solo los importes de efectivo cambian el saldo de caja.

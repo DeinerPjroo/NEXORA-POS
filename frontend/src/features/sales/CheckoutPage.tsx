@@ -24,6 +24,7 @@ import type { PaymentMethod, Sale, SaleQuote, SalesSettings } from './types'
 import { useSalesCash } from './useSalesCash'
 import { TaxBreakdownDetails } from './TaxBreakdownDetails'
 import { CashTenderKeypad } from '../pos/CashTenderKeypad'
+import { ChangeDueDisplay } from '../pos/ChangeDueDisplay'
 import { PosSplitAccounts } from '../pos/PosSplitAccounts'
 
 type EmbeddedCheckout = {
@@ -285,10 +286,6 @@ function CheckoutForm({
                     {formatMoney(normalizedReceived.replace(/\.$/, '.0') || '0', order.currency)}
                   </strong>
                 </div>
-                <div>
-                  <span>Cambio</span>
-                  <strong>{change === null ? '—' : formatMoney(change, order.currency)}</strong>
-                </div>
               </div>
             )}
             {quote.data &&
@@ -341,6 +338,7 @@ function CheckoutForm({
                 </Field>
               </>
             )}
+            {digital && isCash && <ChangeDueDisplay amount={change} currency={order.currency} />}
             <OptionsPanel className={digital ? 'digital-payment-options' : 'form-stack'}>
               {digital && (
                 <summary>

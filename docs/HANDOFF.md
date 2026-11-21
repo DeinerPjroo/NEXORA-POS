@@ -1,5 +1,9 @@
 # Continuidad de Nexora POS
 
+## Cambio destacado · 2026-11-21
+
+3.1-CHANGE-DUE COMPLETED: tarjeta compartida ChangeDueDisplay grande/verde en cobro inicial y saldos; quita Cambio del encabezado y reemplaza Pagos preparados en efectivo. Conserva cambio de líneas cash al preparar, suma con BigInt el efectivo actual válido y muestra— si es inválido; no cambia comandos/importes del backend. Chromium división dirigido~1.3min confirma6.66 antes y6.67 después de preparar,3 pagos/replay exacto y teclas accesibles en los tres tamaños; vista revisada/build/TS/Prettier correctos. Caso ok; runner interrumpido esperando cierre como antes. Domicilios sigue pendiente desde3.DEL-1.
+
 ## Cobro integrado y teclado fijo · 2026-11-21
 
 3.1-CHECKOUT-DOCK COMPLETED: TerminalCheckout pierde marco/encabezado de página separado; cuenta a izquierda y métodos/ajustes desplazables junto a teclado fijo, total y confirmación a derecha. CheckoutPage/AddPaymentsModal conservan servicios/estado/DTO/UUID; incluye cuentas divididas/abonos e ingreso numérico no efectivo. Recibido/cambio se muestran arriba, sin duplicar controles ni scroll global; móvil usa paneles con desplazamiento interno. Chromium2 dirigidos finales: no efectivo31.8s (una venta/pago y caja0), división~1.3min (3 partes, respuesta perdida/replay idéntico, reapertura y3 pagos sin duplicar). Geometría comprueba13 teclas completas/pulsables y sin recorte por ancestros a1440×900/1024×600/390×844; vistas revisadas y build/TS/Prettier aprobados. Casos imprimieron ok; se interrumpió runner esperando cierre de servicios. Sin backend, migraciones ni datos reales. Domicilios continúa pendiente desde3.DEL-1, sin reiniciar.

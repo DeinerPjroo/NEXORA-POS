@@ -672,6 +672,41 @@
 .payment-secondary-scroll > * {
   flex-shrink: 0;
 }
+.digital-change-due {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--pos-pay, #11976f) 48%, var(--line));
+  background: color-mix(in srgb, var(--pos-pay, #11976f) 15%, var(--surface));
+}
+.payment-secondary-scroll > .digital-change-due {
+  order: -1;
+}
+.digital-change-due > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.digital-change-due > strong {
+  font-size: clamp(30px, 3.1vw, 48px);
+  line-height: 1.1;
+  font-weight: 900;
+  color: var(--pos-pay, #11976f);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.digital-change-due > small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.terminal-checkout .digital-tender-status {
+  grid-template-columns: minmax(0, 1fr);
+}
+.terminal-checkout .digital-tender-status > div:only-child strong {
+  color: var(--text);
+}
 .payment-secondary-scroll .digital-payment-methods {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;

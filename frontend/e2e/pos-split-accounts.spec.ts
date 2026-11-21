@@ -208,6 +208,11 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByLabel('Caja de la operación', { exact: true })).not.toHaveValue('')
   await page.getByLabel('Efectivo recibido para este pago', { exact: true }).fill('40')
+  const changeDue = page.getByRole('region', { name: 'Cambio a devolver', exact: true })
+  await expect(changeDue).toContainText(formatMoney('6.66'))
+  await expect(
+    page.locator('.digital-tender-status').getByText('Cambio', { exact: true }),
+  ).toHaveCount(0)
   await page.setViewportSize({ width: 1024, height: 600 })
   await expectFixedPaymentDock(page)
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -221,6 +226,7 @@ test('POS: división táctil, centavos exactos y pago de la cuenta elegida sin d
   await page.getByRole('button', { name: /Cuenta 3 ·/ }).click()
   await page.getByLabel('Efectivo recibido para este pago', { exact: true }).fill('40')
   await page.getByRole('button', { name: 'Preparar pago de esta cuenta', exact: true }).click()
+  await expect(changeDue).toContainText(formatMoney('6.67'))
   await page.getByRole('button', { name: 'Confirmar pagos preparados', exact: true }).click()
   await expect(page.getByRole('button', { name: /Cuenta 3 · Pagada/ })).toBeDisabled()
   await page.getByRole('button', { name: /Cuenta 1 ·/ }).click()
