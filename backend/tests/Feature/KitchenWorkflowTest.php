@@ -112,6 +112,33 @@ class KitchenWorkflowTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'kitchen.dispatched']);
     }
 
+    public function test_order_print_history_is_read_only_scoped_and_requires_order_permission(): void
+    {
+        $item = $this->route($this->product(), $this->station());
+        $order = $this->order([$item], ['customer_name' => 'Ana recogida']);
+        $other = $this->order([$item]);
+        $this->send($other);
+        $url = '/api/v1/orders/'.$order['id'].'/kitchen-tickets';
+        $this->getJson($url)->assertOk()->assertJsonCount(0, 'data');
+        $ticket = $this->send($order)['tickets'][0];
+        foreach ([1, 2] as $read) {
+            $this->getJson($url)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $ticket['id'])->assertJsonPath('data.0.lines.0.notes', 'Sin cebolla')->assertJsonPath('data.0.order_snapshot.customer_name', 'Ana recogida');
+        }
+        $this->assertDatabaseCount('kitchen_tickets', 2);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+        $foreign = $this->company('print-other@example.test');
+        $this->actingAs($foreign)->getJson($url)->assertNotFound();
+        $this->actingAs($this->owner);
+        $this->owner->forceFill(['all_branches' => false])->save();
+        $this->getJson($url)->assertNotFound();
+        $this->owner->forceFill(['all_branches' => true])->save();
+        DB::table('role_permission')->where('role_id', $this->owner->role_id)->delete();
+        $this->owner->unsetRelation('role');
+        $this->getJson($url)->assertForbidden();
+    }
+
     public function test_all_stations_must_finish_before_order_ready_and_delivered(): void
     {
         $p = $this->route($this->product(), $this->station());

@@ -1,0 +1,106 @@
+.operational-print-root {
+  display: none;
+}
+.print-controls {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+.print-controls label {
+  display: grid;
+  gap: 4px;
+}
+.ticket-preview {
+  max-height: 55dvh;
+  overflow: auto;
+  padding: 14px;
+  background: #e9edf2;
+  margin-top: 12px;
+}
+.operational-ticket {
+  box-sizing: border-box;
+  width: 72mm;
+  max-width: 100%;
+  margin: auto;
+  padding: 8px;
+  color: #000;
+  background: #fff;
+  font:
+    12px/1.4 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.operational-ticket[data-width='58'] {
+  width: 50mm;
+  font-size: 11px;
+}
+.operational-ticket h1 {
+  font-size: 16px;
+  text-align: center;
+  margin: 8px 0;
+}
+.operational-ticket h2 {
+  font-size: 14px;
+  margin: 6px 0;
+}
+.operational-ticket p {
+  margin: 4px 0;
+}
+.ticket-line {
+  border-top: 1px dashed #555;
+  padding: 7px 0;
+  break-inside: avoid;
+}
+.ticket-line > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ticket-line > b {
+  display: block;
+}
+.operational-ticket footer {
+  border-top: 1px dashed #555;
+  margin-top: 10px;
+  padding-top: 8px;
+  font-size: 10px;
+}
+.print-ticket-list {
+  max-height: 50dvh;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+.print-ticket-list > div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 8px;
+}
+@media print {
+  body:has(> .operational-print-root) > *:not(.operational-print-root) {
+    display: none !important;
+  }
+  body:has(> .operational-print-root) {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+  .operational-print-root {
+    display: block !important;
+  }
+  .operational-print-root,
+  .operational-print-root * {
+    visibility: visible !important;
+    color: black !important;
+  }
+  body:has(> .operational-print-root) dialog::backdrop {
+    display: none !important;
+  }
+  .operational-print-root .operational-ticket {
+    margin: 0;
+    padding: 0;
+  }
+}

@@ -1,5 +1,9 @@
 # Decisiones técnicas y operativas
 
+## DEC-023 · COMPLETED · Impresión operativa compartida
+
+Borradores y comandas usan una única vista previa/documento58/80mm con texto escapado. Comanda es copia de KitchenTicket real, nunca otro despacho; borrador identifica pendientes y subtotal informativo, sin representar pago. Consulta por pedido respeta orders.view y scopes tenant/sucursal; KDS usa sus tickets autorizados. Portal imprimible se retira al bloquear sesión. Browser print no acredita éxito físico ni sustituye integración de hardware. Preferencias de página solo se aplican mientras exista la vista previa; no alterar el recibo financiero.
+
 ## DEC-022 · IN_PROGRESS · Nexora Domicilios propio
 
 Tarifas implementadas con DeliveryPolicy/DeliveryZone por sucursal y perfil tributario explícito. Cotización usa OrderPlan/SaleTotals; guardar valida revisiones y cargo esperado. Snapshot congelado en OrderDelivery, copiado a venta con calculation_version4: envío fuera del descuento/propina de productos, impuestos desglosados y una sola suma al total. Pagos/devoluciones/división siguen el motor existente. Custodia/rendiciones permanecen pendientes.

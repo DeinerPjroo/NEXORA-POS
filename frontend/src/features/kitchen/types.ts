@@ -13,6 +13,7 @@ export type KitchenTicket = {
   ready_at: string | null
   delivered_at: string | null
   order_snapshot: {
+    customer_name?: string | null
     channel: string
     reference: string | null
     notes: string | null

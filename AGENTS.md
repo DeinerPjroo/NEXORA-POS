@@ -4,6 +4,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Impresión operativa compartida: borradores de mesa/recogida/domicilio identifican líneas sin guardar y subtotal informativo; comandas imprimen copias de tickets existentes con estación/destino/notas, sin reenviar productos. Consulta exige permisos/scopes vigentes y el portal imprimible desaparece al bloquear sesión. Formatos58/80mm usan impresión del navegador; no afirmar impresión física, factura o pago por abrir el diálogo. No reescribir snapshots anteriores.
+
 - Tarifas de domicilio: política/zona por sucursal, perfil tributario explícito y revisiones/total esperado validados en servidor. Congelar snapshot en OrderDelivery y venta; SaleTotals versión4 agrega envío una sola vez, separado de descuentos/propina de productos. Cobro/devolución/división reutilizan el total de la única venta. No inventar tasas ni tratar tarifa como producto ficticio; custodia de repartidores sigue siendo dominio distinto de caja física.
 
 - Nexora Domicilios es reparto propio y reutiliza pedidos/cocina/empleados/pagos; sin plataformas externas, GPS ni app separada. Libreta Customer/CustomerAddress por sucursal con customers.view/manage y FK compuestas. Al registrar un domicilio, validar revisiones y copiar contacto/dirección desde servidor; cambios posteriores de libreta no alteran el snapshot. Registro de dirección usa identidad de CustomerAddress y saved_address_id en reintentos, nunca elegir la última dirección por posición. Guardar un domicilio no exige caja abierta ni equivale a venta; cobrar y rendir son operaciones separadas. No declarar custodia/rendiciones disponibles hasta implementar y verificar su extensión financiera.

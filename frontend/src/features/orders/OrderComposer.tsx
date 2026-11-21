@@ -58,6 +58,7 @@ import { PosOrdersPanel } from './PosOrdersPanel'
 import { OrderCustomerEditor } from './OrderCustomerEditor'
 import { DeliveryCustomerFields } from './DeliveryCustomerFields'
 import { DeliveryFeeFields } from './DeliveryFeeFields'
+import { OrderPrintActions, orderDraft } from './OrderPrintActions'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -907,9 +908,61 @@ export function OrderComposer({
               >
                 Descuento
               </button>
-              <button type="button" onClick={() => window.print()}>
-                Imprimir borrador
-              </button>
+              <OrderPrintActions
+                order={currentOrder}
+                disabled={
+                  locked || tableOrderUnavailable || ordersOpen || pickupsOpen || tablesOpen
+                }
+                getDraft={
+                  currentOrder?.items?.length || displayCart.length
+                    ? () => {
+                        const fields = orderForm.current ? new FormData(orderForm.current) : null
+                        const saved = currentOrder ? orderDraft(currentOrder) : null
+                        return {
+                          ...saved,
+                          channel,
+                          currency,
+                          orderId: currentOrder?.id,
+                          branch: context.data?.branches.find((b) => b.id === selected)?.name,
+                          table: dining?.label ?? saved?.table,
+                          customer:
+                            saved?.customer ??
+                            String(
+                              fields?.get('customer_name') || fields?.get('delivery_name') || '',
+                            ),
+                          reference: saved?.reference ?? String(fields?.get('reference') || ''),
+                          notes: saved?.notes ?? String(fields?.get('notes') || ''),
+                          subtotal: unifiedOrderSubtotal(currentOrder?.subtotal, displayCart),
+                          pending: !!displayCart.length,
+                          lines: [
+                            ...(saved?.lines ?? []),
+                            ...displayCart.map((line) => ({
+                              name: [line.product_name, line.variant_name]
+                                .filter(Boolean)
+                                .join(' · '),
+                              quantity: line.quantity,
+                              amount: cartSubtotal([line]),
+                              notes: line.notes,
+                              destination:
+                                line.preparation_destination ??
+                                (channel === 'dine_in' ? 'table' : 'takeaway'),
+                              preparations: [
+                                ...(line.modifier_labels?.flatMap((g) =>
+                                  g.options.map((o) => o.name),
+                                ) ?? []),
+                                ...(line.components?.map((part) =>
+                                  [part.product_name, part.variant_name, part.notes]
+                                    .filter(Boolean)
+                                    .join(' · '),
+                                ) ?? []),
+                              ],
+                            })),
+                          ],
+                        }
+                      }
+                    : undefined
+                }
+              />
               <button
                 type="button"
                 className="pos-cancel"

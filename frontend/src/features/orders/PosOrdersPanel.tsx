@@ -7,6 +7,7 @@ import { useCan } from '../auth/SessionProvider'
 import { orderStates, type Order } from '../operations/types'
 import { PosPickupsPanel } from './PosPickupsPanel'
 import { OrderIdentity } from './OrderIdentity'
+import { OrderPrintActions } from './OrderPrintActions'
 
 export function PosOrdersPanel({
   branchId,
@@ -82,6 +83,7 @@ export function PosOrdersPanel({
                   {order.reference && <div>Referencia: {order.reference}</div>}
                 </div>
                 <div className="pos-order-preview-lines">
+                  <OrderPrintActions order={order} disabled={inactive} />
                   <table>
                     <thead>
                       <tr>

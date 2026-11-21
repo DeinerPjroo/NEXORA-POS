@@ -15,6 +15,14 @@ use Illuminate\Validation\Rule;
 
 final class KitchenController extends Controller
 {
+    public function orderTickets(Request $request, Order $order)
+    {
+        Gate::authorize('orders.view');
+        $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
+
+        return KitchenTicketResource::collection(KitchenTicket::where('order_id', $order->id)->with('lines', 'events')->latest('id')->paginate(30));
+    }
+
     public function sessionTickets(Request $request, DiningSession $diningSession)
     {
         Gate::authorize('dining.view');

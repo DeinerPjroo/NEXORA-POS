@@ -20,6 +20,7 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { KitchenTicket } from './types'
+import { TicketPrintButton } from '../orders/OrderPrintActions'
 import './kitchen.css'
 import { preparationLabels } from './TableKitchen'
 const labels = {
@@ -282,6 +283,7 @@ export function KitchenBoardPage() {
                                 : 'ENTREGAR'}
                           </button>
                         )}
+                      <TicketPrintButton ticket={ticket} />
                       <details>
                         <summary>Historial de la comanda</summary>
                         {ticket.events?.map((event) => (

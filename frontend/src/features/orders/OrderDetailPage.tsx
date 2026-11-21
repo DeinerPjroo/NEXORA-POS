@@ -13,6 +13,7 @@ import { CatalogError } from '../catalog/catalog-ui'
 import { orderStates } from '../operations/types'
 import type { Order } from '../operations/types'
 import { OrderActions } from './OrderActions'
+import { OrderPrintActions } from './OrderPrintActions'
 import { posPermissions } from '../pos/pos-permissions'
 
 export function OrderDetailPage() {
@@ -145,6 +146,9 @@ export function OrderDetailPage() {
                 </Link>
               )}
           <OrderActions key={`${order.id}:${order.revision}`} order={order} />
+          <div className="operation-toolbar">
+            <OrderPrintActions order={order} />
+          </div>
         </section>
         <section className="panel order-timeline">
           <div className="panel-heading">

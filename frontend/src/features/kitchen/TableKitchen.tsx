@@ -6,6 +6,7 @@ import { Modal, Field, ErrorNotice, Loading, Submit } from '../../components/ui'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { KitchenTicket } from './types'
+import { TicketPrintButton } from '../orders/OrderPrintActions'
 import { useOperation } from '../operations/useOperation'
 import { OperationNotice } from '../operations/OperationNotice'
 
@@ -51,6 +52,7 @@ export function TableKitchen({ sessionId, onClose }: { sessionId: number; onClos
                   </li>
                 ))}
               </ul>
+              <TicketPrintButton ticket={t} />
               <details>
                 <summary>Historial de la comanda</summary>
                 {t.events?.map((e) => (
