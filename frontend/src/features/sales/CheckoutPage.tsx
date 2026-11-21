@@ -440,6 +440,7 @@ function CheckoutForm({
                   hint="Registra el dinero entregado por el cliente. El servidor confirma el cambio."
                 >
                   <input
+                    data-cash-received="true"
                     value={received}
                     onChange={(event) => setReceived(event.target.value)}
                     inputMode="decimal"

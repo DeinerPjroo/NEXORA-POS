@@ -2,6 +2,8 @@
 
 ## DEC-024 · COMPLETED · Cobro en el espacio de Terminal
 
+Efectivo recibido se identifica con fondo/borde/etiqueta en el acento del tema, separado visualmente del cambio verde. Mantener dimensiones para no desplazar ni recortar el teclado.
+
 Exacto e importes sugeridos se ubican encima del teclado fijo, tanto en el primer cobro como en saldos pendientes; no dentro de los métodos desplazables. Adaptar tipografía/filas en pantallas compactas manteniendo teclas completas y accesibles.
 
 Cambio a devolver se destaca en tarjeta propia grande/verde, sin duplicarlo en el encabezado. Preparar no borra el cambio visible: sumar solo diferencias de efectivo de líneas preparadas y entrada actual válida con BigInt, sin modificar importes ni comandos. Entradas inválidas muestran—. Pagos no efectivos sin efectivo preparado conservan su resumen de pagos.

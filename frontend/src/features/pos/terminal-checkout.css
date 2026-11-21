@@ -824,6 +824,26 @@
   max-height: 36px;
   padding: 4px 8px;
 }
+.payment-tender-dock .field:has(input[data-cash-received]) > label {
+  color: var(--text);
+  background: color-mix(in srgb, var(--pos-primary, #7258df) 22%, var(--surface));
+  border-left: 4px solid var(--pos-primary, #7258df);
+  border-radius: 4px;
+  padding-left: 6px;
+  font-weight: 850;
+}
+.terminal-checkout .payment-tender-dock .field input[data-cash-received] {
+  background: color-mix(in srgb, var(--pos-primary, #7258df) 16%, var(--surface));
+  border: 2px solid var(--pos-primary, #7258df);
+  color: var(--text);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pos-primary, #7258df) 18%, transparent);
+}
+.terminal-checkout .payment-tender-dock .field input[data-cash-received]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--pos-primary, #7258df) 36%, transparent);
+  outline-offset: 1px;
+}
 .terminal-checkout .payment-tender-dock .field > span {
   font-size: 11px;
   line-height: 14px;

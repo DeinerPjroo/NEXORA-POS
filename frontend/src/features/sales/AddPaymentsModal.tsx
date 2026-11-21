@@ -370,6 +370,7 @@ export function AddPaymentsModal({
               {isCash && (
                 <Field label="Efectivo recibido para este pago">
                   <input
+                    data-cash-received="true"
                     value={received}
                     onChange={(event) => setReceived(event.target.value)}
                     inputMode="decimal"

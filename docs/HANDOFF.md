@@ -1,5 +1,7 @@
 # Continuidad de Nexora POS
 
+3.1-CASH-FIELD-STYLE COMPLETED: Efectivo recibido usa etiqueta en negrita, fondo de acento suave, borde2px y foco visible en cobro/saldos. Mantiene dimensiones y utiliza variables de tema; no cambia lógica/importes. Chromium dirigido~1.5min y vista1024×600 aprobados, con teclado completo y flujo de división/reintento/pagos previo. Caso ok; runner interrumpido esperando cierre de servicios. No repetir suites financieras por este estilo; Domicilios sigue pendiente.
+
 3.1-TENDER-SHORTCUTS COMPLETED: Exacto/20k/50k/100k movidos del área de métodos a encima del teclado en cobro inicial y saldos; acciones/DTO intactos. Ajuste de tipografía compacta mantiene las13 teclas sin recorte. Chromium dirigido final~1.4min verifica ubicación, geometría en3 tamaños, división/reintento/3 pagos; vista y TS/Prettier correctos. Caso ok; runner interrumpido esperando cierre como antes. Domicilios sigue pendiente.
 
 ## Cambio destacado · 2026-11-21
