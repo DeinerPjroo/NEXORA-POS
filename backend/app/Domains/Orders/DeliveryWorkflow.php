@@ -15,12 +15,16 @@ final class DeliveryWorkflow
 {
     public function create(User $actor, Order $order, array $data): void
     {
+        $fee = app(DeliveryFeePlan::class)->resolve($actor, $order->branch_id, $order->currency, $order->subtotal, $data);
         $data = app(DeliveryCustomerSnapshot::class)->resolve($actor, $order->branch_id, $data);
         if (! filled($order->customer_name)) {
             $order->customer_name = $data['customer_snapshot']['customer']['name'] ?? $data['recipient_name'];
             $order->save();
         }
-        $delivery = OrderDelivery::create([...$data, 'order_id' => $order->id, 'branch_id' => $order->branch_id, 'status' => 'pending', 'revision' => 1]);
+        $delivery = OrderDelivery::create([...$data, ...$fee, 'order_id' => $order->id, 'branch_id' => $order->branch_id, 'status' => 'pending', 'revision' => 1]);
+        if ($fee['fee_snapshot']) {
+            Audit::record('delivery.fee.confirmed', 'Se confirmó la tarifa de domicilio.', $actor, ['order_id' => $order->id, 'fee_total' => $fee['fee_total'], 'source' => $fee['fee_snapshot']['source'], 'reason' => $fee['fee_snapshot']['reason']]);
+        }
         $this->event($actor, $delivery, 'Domicilio registrado.');
     }
 

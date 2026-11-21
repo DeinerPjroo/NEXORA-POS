@@ -6,6 +6,7 @@ import { OverviewPage } from './features/workspace/OverviewPage'
 import { BranchesPage } from './features/workspace/BranchesPage'
 import { TeamPage } from './features/workspace/TeamPage'
 import { DeliveriesPage } from './features/orders/DeliveriesPage'
+import { DeliveryTariffsPage } from './features/orders/DeliveryTariffsPage'
 import { RolesPage } from './features/workspace/RolesPage'
 import { SettingsPage } from './features/workspace/SettingsPage'
 import { StudioPage } from './features/studio/StudioPage'
@@ -83,6 +84,14 @@ export default function App() {
       <Route path="/recuperar" element={<AuthPage key="forgot" mode="forgot" />} />
       <Route path="/restablecer" element={<AuthPage key="reset" mode="reset" />} />
       <Route element={<AppShell />}>
+        <Route
+          path="/terminal/domicilios/tarifas"
+          element={
+            <PermissionBoundary permission="deliveries.configure">
+              <DeliveryTariffsPage />
+            </PermissionBoundary>
+          }
+        />
         <Route
           path="/terminal/recogidas"
           element={

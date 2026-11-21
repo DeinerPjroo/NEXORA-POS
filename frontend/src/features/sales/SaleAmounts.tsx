@@ -7,6 +7,8 @@ export function SaleAmounts({
   amounts: Omit<SaleQuote, 'order_revision' | 'accounts_preview'>
 }) {
   const money = (value: string) => formatMoney(value, amounts.currency)
+  const goodsBase = amounts.delivery_charge?.goods_taxable_base ?? amounts.taxable_base
+  const goodsTax = amounts.delivery_charge?.goods_tax_amount ?? amounts.tax_amount
   return (
     <dl className="sale-amounts">
       <div>
@@ -36,7 +38,7 @@ export function SaleAmounts({
         <>
           <div>
             <dt>Base de productos y propina participante</dt>
-            <dd>{money(amounts.taxable_base)}</dd>
+            <dd>{money(goodsBase)}</dd>
           </div>
           <div>
             <dt>Impuestos incluidos en precios</dt>
@@ -55,14 +57,14 @@ export function SaleAmounts({
                 ? 'Base extraída del precio'
                 : 'Base del impuesto adicional'}
             </dt>
-            <dd>{money(amounts.taxable_base)}</dd>
+            <dd>{money(goodsBase)}</dd>
           </div>
           <div>
             <dt>
               {amounts.tax_name} ({amounts.tax_rate.replace(/\.?0+$/, '') || '0'} %
               {amounts.tax_mode === 'inclusive' ? ' incluido' : ''})
             </dt>
-            <dd>{money(amounts.tax_amount)}</dd>
+            <dd>{money(goodsTax)}</dd>
           </div>
         </>
       ) : (
@@ -70,6 +72,29 @@ export function SaleAmounts({
           <dt>Impuesto adicional calculado</dt>
           <dd>{money('0')}</dd>
         </div>
+      )}
+      {amounts.delivery_charge && (
+        <>
+          <div>
+            <dt>
+              Domicilio
+              {amounts.delivery_charge.zone_name ? ` · ${amounts.delivery_charge.zone_name}` : ''}
+            </dt>
+            <dd>{money(amounts.delivery_charge.amount)}</dd>
+          </div>
+          {amounts.delivery_charge.additional_tax_amount !== '0.0000' && (
+            <div>
+              <dt>Impuestos adicionales del domicilio</dt>
+              <dd>{money(amounts.delivery_charge.additional_tax_amount)}</dd>
+            </div>
+          )}
+          {amounts.delivery_charge.included_tax_amount !== '0.0000' && (
+            <div>
+              <dt>Impuestos ya incluidos en domicilio</dt>
+              <dd>{money(amounts.delivery_charge.included_tax_amount)}</dd>
+            </div>
+          )}
+        </>
       )}
       {amounts.tip_amount !== '0.0000' && (
         <div>

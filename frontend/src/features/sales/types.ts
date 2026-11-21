@@ -1,5 +1,16 @@
 import type { OrderItem } from '../operations/types'
-import type { TaxBreakdown, TaxSnapshot } from './tax-types'
+import type { TaxBreakdown, TaxSnapshot, TaxLine } from './tax-types'
+export type DeliveryCharge = TaxLine & {
+  currency: string
+  version: number
+  tax_amount: string
+  policy_revision: number
+  zone_revision: number | null
+  zone_name: string | null
+  source: string
+  goods_tax_amount?: string
+  goods_taxable_base?: string
+}
 
 export type PaymentMethod = {
   id: number
@@ -25,6 +36,8 @@ export type SalesSettings = {
   tip_tax_snapshot: TaxSnapshot | null
 }
 export type SaleQuote = {
+  delivery_charge?: DeliveryCharge | null
+  delivery_fee_total?: string
   tax_breakdown: TaxBreakdown | null
   calculation_version: number
   accounts_preview: AccountPart[]

@@ -68,7 +68,11 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
           ))}
       </div>
       <SaleAmounts amounts={sale} />
-      <TaxBreakdownDetails breakdown={sale.tax_breakdown} currency={sale.currency} />
+      <TaxBreakdownDetails
+        breakdown={sale.tax_breakdown}
+        currency={sale.currency}
+        delivery={sale.delivery_charge}
+      />
       {sale.discount_reason && (
         <p className="receipt-discount-note">Motivo del descuento: {sale.discount_reason}</p>
       )}

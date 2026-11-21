@@ -64,6 +64,11 @@ export function DeliveriesPage() {
         }
       />
       <div className="operation-toolbar">
+        {can('deliveries.configure') && (
+          <Link className="button" to="/terminal/domicilios/tarifas">
+            Tarifas de entrega
+          </Link>
+        )}
         <OperationalBranchPicker
           branches={context.data?.branches ?? []}
           value={selected}

@@ -4,15 +4,17 @@ import type { TaxBreakdown, TaxLine } from './tax-types'
 export function TaxBreakdownDetails({
   breakdown,
   currency,
+  delivery,
 }: {
   breakdown: TaxBreakdown | null
   currency: string
+  delivery?: TaxLine | null
 }) {
-  if (!breakdown) return null
+  if (!breakdown && !delivery) return null
   return (
     <section className="receipt-refund" aria-label="Desglose de impuestos">
-      <h3>Impuestos por producto</h3>
-      {breakdown.items.map((line) => (
+      <h3>{delivery ? 'Desglose de impuestos y domicilio' : 'Impuestos por producto'}</h3>
+      {breakdown?.items.map((line) => (
         <section className="sale-account-card" key={line.order_item_id}>
           <h4>
             {line.product_name}
@@ -25,10 +27,16 @@ export function TaxBreakdownDetails({
           <TaxLineDetails line={line} currency={currency} />
         </section>
       ))}
-      {breakdown.tip && (
+      {breakdown?.tip && (
         <section className="sale-account-card">
           <h4>Propina voluntaria</h4>
           <TaxLineDetails line={breakdown.tip} currency={currency} />
+        </section>
+      )}
+      {delivery && (
+        <section className="sale-account-card">
+          <h4>Domicilio</h4>
+          <TaxLineDetails line={delivery} currency={currency} />
         </section>
       )}
       <p className="small muted">

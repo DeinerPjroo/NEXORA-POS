@@ -797,3 +797,37 @@ alter table `order_deliveries` add constraint `delivery_customer_fk` foreign key
 
 alter table `order_deliveries` add constraint `delivery_address_fk` foreign key (`tenant_id`, `branch_id`, `customer_id`, `customer_address_id`) references `customer_addresses` (`tenant_id`, `branch_id`, `customer_id`, `id`) on delete restrict;
 
+create table `delivery_policies` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `currency` varchar(3) not null, `is_enabled` tinyint(1) not null default '0', `default_fee` decimal(19, 4) not null default '0', `free_from` decimal(19, 4) null, `tax_profile_id` bigint unsigned null, `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `delivery_policies` add unique `delivery_policies_tenant_id_branch_id_unique`(`tenant_id`, `branch_id`);
+
+alter table `delivery_policies` add unique `delivery_policy_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `delivery_policies` add constraint `delivery_policies_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `delivery_policies` add constraint `delivery_policies_tenant_id_tax_profile_id_foreign` foreign key (`tenant_id`, `tax_profile_id`) references `tax_profiles` (`tenant_id`, `id`) on delete restrict;
+
+create table `delivery_zones` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `delivery_policy_id` bigint unsigned not null, `name` varchar(100) not null, `fee` decimal(19, 4) not null, `is_active` tinyint(1) not null default '1', `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `delivery_zones` add unique `delivery_zone_name`(`tenant_id`, `delivery_policy_id`, `name`);
+
+alter table `delivery_zones` add unique `delivery_zone_identity`(`tenant_id`, `branch_id`, `delivery_policy_id`, `id`);
+
+alter table `delivery_zones` add constraint `delivery_zone_policy_fk` foreign key (`tenant_id`, `branch_id`, `delivery_policy_id`) references `delivery_policies` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `order_deliveries` add `delivery_policy_id` bigint unsigned null;
+
+alter table `order_deliveries` add `delivery_zone_id` bigint unsigned null;
+
+alter table `order_deliveries` add `fee_snapshot` json null;
+
+alter table `order_deliveries` add `fee_total` decimal(19, 4) not null default '0';
+
+alter table `order_deliveries` add constraint `delivery_policy_order_fk` foreign key (`tenant_id`, `branch_id`, `delivery_policy_id`) references `delivery_policies` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `order_deliveries` add constraint `delivery_zone_order_fk` foreign key (`tenant_id`, `branch_id`, `delivery_policy_id`, `delivery_zone_id`) references `delivery_zones` (`tenant_id`, `branch_id`, `delivery_policy_id`, `id`) on delete restrict;
+
+alter table `sales` add `delivery_charge` json null;
+
+alter table `sales` add `delivery_fee_total` decimal(19, 4) not null default '0';
+

@@ -39,7 +39,7 @@ final class ProductTaxTotals
             'breakdown' => ['items' => $rows, 'tip' => $tipLine, 'included_tax_amount' => $included, 'additional_tax_amount' => $additional]];
     }
 
-    private function line(string $amount, array $profile): array
+    public function line(string $amount, array $profile): array
     {
         $rates = $profile['rates'];
         $base = $amount;

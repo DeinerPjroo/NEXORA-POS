@@ -57,6 +57,7 @@ import { PosPickupsPanel } from './PosPickupsPanel'
 import { PosOrdersPanel } from './PosOrdersPanel'
 import { OrderCustomerEditor } from './OrderCustomerEditor'
 import { DeliveryCustomerFields } from './DeliveryCustomerFields'
+import { DeliveryFeeFields } from './DeliveryFeeFields'
 
 const DiningSessionPicker = lazy(() =>
   import('../dining/DiningSessionPicker').then((module) => ({
@@ -103,6 +104,8 @@ export function OrderComposer({
   const [deliveryBookBusy, setDeliveryBookBusy] = useState(false)
   const [deliveryDirty, setDeliveryDirty] = useState(false)
   const [deliveryFormEpoch, setDeliveryFormEpoch] = useState(0)
+  const [deliveryFeeReady, setDeliveryFeeReady] = useState(false)
+  const [deliveryFeeDirty, setDeliveryFeeDirty] = useState(false)
   const [pickupId, setPickupId] = useState<number | null>(null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
@@ -233,6 +236,7 @@ export function OrderComposer({
   const operation = useOperation<Order>('orders', async (order) => {
     if (order.channel === 'delivery') {
       setDeliveryDirty(false)
+      setDeliveryFeeDirty(false)
       setDeliveryFormEpoch((value) => value + 1)
       orderForm.current?.reset()
     }
@@ -347,7 +351,10 @@ export function OrderComposer({
   useTerminalOrders(terminal ? openOrdersPanel : null)
   useTerminalGuard(
     terminal &&
-      (cart.length > 0 || locked || checkoutOpen || (channel === 'delivery' && deliveryDirty)),
+      (cart.length > 0 ||
+        locked ||
+        checkoutOpen ||
+        (channel === 'delivery' && (deliveryDirty || deliveryFeeDirty))),
     terminal &&
       (operation.locked || pricing.locked || checkoutOpen || customerEditBusy || deliveryBookBusy),
   )
@@ -494,6 +501,7 @@ export function OrderComposer({
       !cart.length ||
       pricing.locked ||
       tableOrderUnavailable ||
+      (channel === 'delivery' && !deliveryFeeReady) ||
       (orderIntent.current === 'checkout' && terminal && (!posReady || !can('sales.collect')))
     )
       return
@@ -513,6 +521,13 @@ export function OrderComposer({
       delivery_customer_revision,
       delivery_customer_address_id,
       delivery_address_revision,
+      delivery_zone_id,
+      delivery_fee_policy_revision,
+      delivery_fee_profile_revision,
+      delivery_fee_zone_revision,
+      delivery_expected_fee_total,
+      delivery_fee_override,
+      delivery_fee_override_reason,
       ...data
     } = Object.fromEntries(new FormData(event.currentTarget))
     if (
@@ -540,6 +555,27 @@ export function OrderComposer({
               instructions: delivery_instructions || null,
               neighborhood: delivery_neighborhood || null,
               location_reference: delivery_location_reference || null,
+              ...(delivery_fee_policy_revision !== undefined && delivery_fee_policy_revision !== ''
+                ? { fee_policy_revision: Number(delivery_fee_policy_revision) }
+                : {}),
+              ...(delivery_fee_profile_revision
+                ? { fee_profile_revision: Number(delivery_fee_profile_revision) }
+                : {}),
+              ...(delivery_zone_id
+                ? {
+                    delivery_zone_id: Number(delivery_zone_id),
+                    fee_zone_revision: Number(delivery_fee_zone_revision),
+                  }
+                : {}),
+              ...(delivery_expected_fee_total
+                ? { expected_fee_total: delivery_expected_fee_total }
+                : {}),
+              ...(delivery_fee_override !== undefined
+                ? {
+                    fee_override: delivery_fee_override,
+                    fee_override_reason: delivery_fee_override_reason,
+                  }
+                : {}),
               ...(delivery_customer_id
                 ? {
                     customer_id: Number(delivery_customer_id),
@@ -775,7 +811,7 @@ export function OrderComposer({
               {channel === 'delivery' && (
                 <button
                   type="button"
-                  disabled={locked || !!cart.length || deliveryDirty}
+                  disabled={locked || !!cart.length || deliveryDirty || deliveryFeeDirty}
                   onClick={() => {
                     setPickupId(null)
                     setCheckoutOrderId(null)
@@ -784,6 +820,7 @@ export function OrderComposer({
                     setDetails(false)
                     setDeliveryFormEpoch((value) => value + 1)
                     setDeliveryDirty(false)
+                    setDeliveryFeeDirty(false)
                     orderForm.current?.reset()
                     operation.reset()
                   }}
@@ -876,7 +913,10 @@ export function OrderComposer({
               <button
                 type="button"
                 className="pos-cancel"
-                disabled={locked || (!cart.length && !(channel === 'delivery' && deliveryDirty))}
+                disabled={
+                  locked ||
+                  (!cart.length && !(channel === 'delivery' && (deliveryDirty || deliveryFeeDirty)))
+                }
                 onClick={() => {
                   if (window.confirm('¿Descartar este pedido sin registrar?')) {
                     setCart([])
@@ -884,6 +924,7 @@ export function OrderComposer({
                     if (channel === 'delivery') {
                       setDeliveryFormEpoch((value) => value + 1)
                       setDeliveryDirty(false)
+                      setDeliveryFeeDirty(false)
                       orderForm.current?.reset()
                     }
                   }
@@ -1420,6 +1461,25 @@ export function OrderComposer({
                 </footer>
               )}
             </fieldset>
+            {terminal && channel === 'delivery' && !savedPickup && (
+              <DeliveryFeeFields
+                key={`fee-${selected}:${deliveryFormEpoch}`}
+                branchId={selected}
+                currency={currency}
+                lines={cart}
+                onReady={setDeliveryFeeReady}
+                onDirty={setDeliveryFeeDirty}
+                onReviewPrices={() => {
+                  if (selected && !locked) pricing.request({ branchId: selected, channel })
+                }}
+              />
+            )}
+            {channel === 'delivery' && savedPickup && currentOrder?.delivery_charge && (
+              <div className="pos-fee-totals">
+                <span>Domicilio con sus impuestos</span>
+                <strong>{formatMoney(currentOrder.delivery_fee_total ?? '0', currency)}</strong>
+              </div>
+            )}
             <div className="order-subtotal">
               <span>{terminal ? 'SUBTOTAL' : 'Subtotal del pedido'}</span>
               <strong>
@@ -1457,7 +1517,8 @@ export function OrderComposer({
                     operation.isPending ||
                     pricing.locked ||
                     (!operation.uncertain && !cart.length) ||
-                    (operation.uncertain && orderIntent.current !== 'save')
+                    (operation.uncertain && orderIntent.current !== 'save') ||
+                    (!operation.uncertain && channel === 'delivery' && !deliveryFeeReady)
                   }
                   onClick={() => {
                     if (!operation.uncertain) orderIntent.current = 'save'
@@ -1500,6 +1561,10 @@ export function OrderComposer({
                   disabled={
                     locked ||
                     tableOrderUnavailable ||
+                    (!operation.uncertain &&
+                      channel === 'delivery' &&
+                      !savedPickup &&
+                      !deliveryFeeReady) ||
                     (savedPickup && (!currentOrder || currentOrder.status === 'cancelled')) ||
                     (!cart.length && !currentOrder && !resumableCheckoutId)
                   }
@@ -1540,6 +1605,7 @@ export function OrderComposer({
                         !selected ||
                         conflict ||
                         !posReady ||
+                        (channel === 'delivery' && !savedPickup && !deliveryFeeReady) ||
                         tableOrderUnavailable)) ||
                     (savedPickup &&
                       (!currentOrder ||

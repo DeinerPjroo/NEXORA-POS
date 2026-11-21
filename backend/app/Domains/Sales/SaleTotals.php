@@ -4,6 +4,7 @@ namespace App\Domains\Sales;
 
 use App\Domains\Operations\Money;
 use App\Models\Order;
+use App\Models\OrderDelivery;
 use App\Models\SalesSetting;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -62,12 +63,27 @@ final class SaleTotals
             $tax = $settings->tax_mode === 'exclusive' ? self::round(bcdiv(bcmul($base, $settings->tax_rate, 8), '100', 8)) : '0.0000';
         }
         $total = $productTaxes ? $productTaxes['total'] : Money::bounded(bcadd(bcadd($goodsAmount, $tip, 4), $settings->tax_mode === 'exclusive' ? $tax : '0', 4));
+        $deliveryCharge = null;
+        $deliveryTotal = '0.0000';
+        if ($order->channel === 'delivery') {
+            $delivery = $order->relationLoaded('delivery') ? $order->getRelation('delivery') : OrderDelivery::where('order_id', $order->id)->firstOrFail();
+            $deliveryTotal = $delivery->fee_total;
+            abort_unless(bccomp($deliveryTotal, $delivery->fee_snapshot['total'] ?? '0', 4) === 0, 409, 'El snapshot de la tarifa no coincide. Revisa el domicilio.');
+            if ($delivery->fee_snapshot) {
+                abort_unless($delivery->fee_snapshot['currency'] === $order->currency, 409, 'La moneda del domicilio no coincide.');
+                $deliveryCharge = [...$delivery->fee_snapshot, 'goods_tax_amount' => $tax, 'goods_taxable_base' => $base];
+                $total = Money::bounded(bcadd($total, $deliveryTotal, 4));
+                $base = Money::bounded(bcadd($base, $deliveryCharge['base'], 4));
+                $tax = Money::bounded(bcadd($tax, $deliveryCharge['tax_amount'], 4));
+            }
+        }
         if (bccomp($total, '0', 4) <= 0) {
             throw ValidationException::withMessages(['discount_amount' => 'El total debe ser mayor que cero para registrar un cobro.']);
         }
 
         return [
-            'calculation_version' => $productTaxes ? 3 : ($settings->tax_mode === 'inclusive' ? 2 : 1), 'tax_breakdown' => $productTaxes['breakdown'] ?? null,
+            'calculation_version' => $deliveryCharge ? 4 : ($productTaxes ? 3 : ($settings->tax_mode === 'inclusive' ? 2 : 1)), 'tax_breakdown' => $productTaxes['breakdown'] ?? null,
+            'delivery_charge' => $deliveryCharge, 'delivery_fee_total' => $deliveryTotal,
             'currency' => $order->currency, 'catalog_subtotal' => $order->subtotal, 'subtotal' => $subtotal,
             'rounding_adjustment' => bcsub($subtotal, $order->subtotal, 4),
             'discount_amount' => Money::normalize($discount), 'taxable_base' => $base,

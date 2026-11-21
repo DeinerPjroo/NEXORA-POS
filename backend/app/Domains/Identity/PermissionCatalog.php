@@ -7,6 +7,8 @@ use App\Models\Permission;
 final class PermissionCatalog
 {
     public const ALL = [
+        'deliveries.configure' => ['Configurar tarifas y zonas de domicilio', 'Domicilios'],
+        'deliveries.override_fee' => ['Ajustar tarifa de domicilio con motivo', 'Domicilios'],
         'customers.view' => ['Consultar clientes y direcciones', 'Clientes'],
         'customers.manage' => ['Gestionar clientes y direcciones', 'Clientes'],
         'deliveries.operate' => ['Operar entregas a domicilio', 'Domicilios'],

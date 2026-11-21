@@ -629,6 +629,7 @@ function CheckoutForm({
               <SaleAmounts amounts={quote.data.data} />
               <TaxBreakdownDetails
                 breakdown={quote.data.data.tax_breakdown}
+                delivery={quote.data.data.delivery_charge}
                 currency={order.currency}
               />
             </>

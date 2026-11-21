@@ -31,17 +31,17 @@ final class OrderController extends Controller
 
     public function updateCustomer(OrderCustomerRequest $request, Order $order, UpdateOrderCustomer $service)
     {
-        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale'));
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale', 'delivery'));
     }
 
     public function correctPreparation(PreparationCorrectionRequest $request, Order $order, CorrectPreparation $service)
     {
-        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items.preparationCorrections', 'events', 'sale'));
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items.preparationCorrections', 'events', 'sale', 'delivery'));
     }
 
     public function index(OperationFiltersRequest $request)
     {
-        $query = Order::with('branch', 'sale')->withCount('items')
+        $query = Order::with('branch', 'sale', 'delivery')->withCount('items')
             ->when($request->validated('channel'), fn ($q, $channel) => $q->where('channel', $channel))
             ->when($request->validated('branch_id'), fn ($q, $id) => $q->where('branch_id', $id))
             ->when($request->validated('status'), fn ($q, $state) => $q->where('status', $state));
@@ -53,12 +53,12 @@ final class OrderController extends Controller
     {
         Gate::authorize('orders.view');
 
-        return new OrderResource($order->load('branch', 'items', 'events', 'sale'));
+        return new OrderResource($order->load('branch', 'items', 'events', 'sale', 'delivery'));
     }
 
     public function store(OrderRequest $request, CreateOrder $service)
     {
-        return (new OrderResource($service->execute($request->user(), $request->validated())->load('branch', 'items', 'events', 'sale')))->response()->setStatusCode(201);
+        return (new OrderResource($service->execute($request->user(), $request->validated())->load('branch', 'items', 'events', 'sale', 'delivery')))->response()->setStatusCode(201);
     }
 
     public function preview(OrderPreviewRequest $request, PreviewOrder $service)
@@ -68,6 +68,6 @@ final class OrderController extends Controller
 
     public function changeState(OrderStateRequest $request, Order $order, ChangeOrderState $service)
     {
-        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale'));
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale', 'delivery'));
     }
 }

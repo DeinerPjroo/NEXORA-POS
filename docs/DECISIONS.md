@@ -2,6 +2,8 @@
 
 ## DEC-022 · IN_PROGRESS · Nexora Domicilios propio
 
+Tarifas implementadas con DeliveryPolicy/DeliveryZone por sucursal y perfil tributario explícito. Cotización usa OrderPlan/SaleTotals; guardar valida revisiones y cargo esperado. Snapshot congelado en OrderDelivery, copiado a venta con calculation_version4: envío fuera del descuento/propina de productos, impuestos desglosados y una sola suma al total. Pagos/devoluciones/división siguen el motor existente. Custodia/rendiciones permanecen pendientes.
+
 Extender Order/OrderDelivery, usuarios y motor financiero actuales en cinco etapas solicitadas. Libreta de clientes/direcciones por sucursal con FK tenant/branch/customer, revisiones y auditoría; el domicilio copia un snapshot autoritativo que no sigue ediciones de libreta. Operación de dirección identifica CustomerAddress para reintentos y devuelve saved_address_id, conservando la dirección exacta si se agregan otras después. Guardar un domicilio no requiere caja abierta y no confirma pago. Tarifas y custodia/rendiciones siguen pendientes: no representar efectivo del repartidor como entrada física a caja ni crear otra venta al rendir. Sin plataformas externas, GPS o app independiente.
 
 ## DEC-021 · COMPLETED · Canal de atención y destino de preparación

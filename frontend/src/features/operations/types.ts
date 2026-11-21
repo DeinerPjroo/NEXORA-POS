@@ -86,6 +86,8 @@ export type OrderEvent = {
   created_at: string
 }
 export type Order = {
+  delivery_fee_total?: string
+  delivery_charge?: import('../sales/types').DeliveryCharge | null
   dining_session_id?: number | null
   dining_snapshot?: {
     version: number
