@@ -416,3 +416,22 @@
     font-size: 20px;
   }
 }
+.kitchen-changes {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid #d95b69;
+  border-radius: 10px;
+  background: #d95b6912;
+  font-size: 12px;
+}
+.kitchen-changes > div {
+  max-height: 70px;
+  overflow: auto;
+}
+.kitchen-changes p {
+  margin: 5px 0;
+}
+.kitchen-ticket-list li[data-annulled='true'] .kitchen-food {
+  text-decoration: line-through;
+  opacity: 0.65;
+}

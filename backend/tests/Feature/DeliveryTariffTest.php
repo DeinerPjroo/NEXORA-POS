@@ -80,6 +80,26 @@ class DeliveryTariffTest extends TestCase
         return $this->postJson('/api/v1/cash/registers/'.$id.'/open', [...$this->key(), 'opening_amount' => '0', 'currency' => 'COP'])->assertCreated()->json('data');
     }
 
+    public function test_delivery_item_correction_preserves_shipping_and_product_tax_snapshots_in_collection(): void
+    {
+        $this->policy(['free_from' => '36000']);
+        $this->scope(fn () => Product::whereKey($this->item['product_id'])->update(['tax_profile_id' => $this->profile['id'], 'revision' => 2]));
+        $this->item = [...$this->item, 'product_revision' => 2, 'expected_tax_revision' => 1, 'quantity' => 2];
+        $body = $this->orderBody($this->preview([], '36000'));
+        $order = $this->postJson('/api/v1/orders', $body)->assertCreated()->json('data');
+        $next = $this->postJson('/api/v1/orders/'.$order['id'].'/item-changes', [...$this->key(), 'order_revision' => 1, 'delivery_revision' => 1, 'item_id' => $order['items'][0]['id'], 'action' => 'correct', 'quantity' => 1, 'notes' => null, 'reason' => 'Cliente reduce cantidad'])->assertOk()->assertJsonPath('data.subtotal', '18000.0000')->assertJsonPath('data.delivery_fee_total', '0.0000')->json('data');
+        $this->assertSame($order['delivery_charge'], $next['delivery_charge']);
+        $this->assertSame($order['items'][0]['tax_snapshot'], $next['items'][0]['tax_snapshot']);
+        $cash = $this->configureSales();
+        $this->putJson('/api/v1/sales/settings', ['revision' => 2, 'confirmed' => true, 'tax_mode' => 'product', 'tax_name' => 'Prueba', 'tax_rate' => '0'])->assertOk();
+        $quote = $this->getJson('/api/v1/orders/'.$order['id'].'/quote?discount_amount=0')->assertOk()->assertJsonPath('data.total', '19440.0000')->assertJsonPath('data.tax_amount', '1440.0000')->json('data');
+        $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'order_revision' => $next['revision'], 'settings_revision' => 3, 'discount_amount' => '0', 'expected_total' => '19440.00', 'received_amount' => '20000'])->assertCreated()->assertJsonPath('data.total', $quote['total']);
+        $this->postJson('/api/v1/orders/'.$order['id'].'/item-changes', [...$this->key(), 'order_revision' => $next['revision'], 'delivery_revision' => $next['delivery_revision'], 'item_id' => $next['items'][0]['id'], 'action' => 'cancel', 'reason' => 'Intento posterior a venta'])->assertConflict();
+        $this->assertDatabaseCount('order_item_changes', 1);
+        $this->assertDatabaseCount('sales', 1);
+        $this->assertDatabaseCount('payments', 1);
+    }
+
     public function test_delivery_additions_keep_fee_snapshot_even_when_free_threshold_is_crossed_and_sale_blocks_more(): void
     {
         $this->policy(['free_from' => '36000']);

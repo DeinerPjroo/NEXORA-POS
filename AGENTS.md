@@ -4,6 +4,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Correcciones de domicilio: OrderItemChange conserva originales append-only; Order.items devuelve solo líneas vigentes para dinero/impuestos/impresión. Corregir reduce cantidad o cambia notas con reemplazo al precio/snapshot original; aumentar usa adiciones y retirar combos anula todos sus componentes. Exigir orders.view/manage/cancel, revisiones de pedido/entrega, UUID y motivo, antes de venta/salida. Cocina conserva snapshots, añade reemplazo solo en la comanda afectada y marca originales NO PREPARAR; anulaciones recientes visibles30min y permanentes en historial. Última retirada cancela pedido/entrega; nunca modifica venta/pago ni tarifa congelada.
+
 - Domicilios conserva estética de Terminal: tarjetas compactas por estado y detalle de cliente/productos/reparto a la izquierda; en móvil, lista y detalle alternan sin perder filtros. Consultar, imprimir, cocina y cobrar se integran en la misma pantalla con servicios actuales. Cocina, entrega y cobro tienen estados independientes; no inventar disponibilidad de repartidores, métricas globales ni conexión en tiempo real. La búsqueda local debe identificarse como limitada a la página cargada.
 
 - Cobro dentro de Terminal mantiene cuenta/productos a la izquierda y total/recibido/cambio/confirmación a la derecha. Teclado numérico fijo fuera del desplazamiento de métodos/ajustes, también en abonos/cuentas divididas y pantallas compactas. Productos y opciones desplazan internamente; verificar teclas completas y pulsables, no solo dentro del viewport. Reutilizar CheckoutPage/AddPaymentsModal y preservar DTO/UUID, revisiones y guardas durante incertidumbre; no duplicar cálculos ni pagos.

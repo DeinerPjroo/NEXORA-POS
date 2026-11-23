@@ -56,7 +56,19 @@ export function KitchenBoardPage() {
     queryKey: ['kitchen-tickets', branchId, station, history, page],
     enabled: !!branchId,
     queryFn: () =>
-      api<CatalogPage<KitchenTicket> & { server_now: string }>(
+      api<
+        CatalogPage<KitchenTicket> & {
+          server_now: string
+          recent_changes?: {
+            id: number
+            order_id: number
+            product_name: string
+            quantity: number
+            reason: string
+            corrected: boolean
+          }[]
+        }
+      >(
         `kitchen-tickets?branch_id=${branchId}&page=${page}&history=${history ? 1 : 0}${station ? '&station_id=' + station : ''}`,
       ),
     refetchInterval: 5000,
@@ -151,6 +163,19 @@ export function KitchenBoardPage() {
         </button>
       </div>
       <ErrorNotice error={context.error || stations.error || query.error} />
+      {!!query.data?.recent_changes?.length && (
+        <section className="kitchen-changes" aria-label="Cambios recientes de productos">
+          <strong>Correcciones y anulaciones · últimos 30 min</strong>
+          <div>
+            {query.data.recent_changes.map((change) => (
+              <p key={change.id}>
+                Pedido #{change.order_id} · {change.quantity} × {change.product_name} ·{' '}
+                <b>{change.corrected ? 'CORREGIDO' : 'ANULADO'}</b> · {change.reason}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
       {query.isPending ? (
         <Loading />
       ) : (
@@ -230,12 +255,22 @@ export function KitchenBoardPage() {
                       </p>
                       <ul>
                         {ticket.lines.map((line) => (
-                          <li key={line.id}>
+                          <li key={line.id} data-annulled={!!line.item_change}>
                             <strong className="kitchen-food">
                               <span className="kitchen-quantity">{line.quantity} ×</span>{' '}
                               <span>{line.product_name}</span>
                             </strong>
                             {line.variant_name && <small>{line.variant_name}</small>}
+                            {line.item_change && (
+                              <p className="kitchen-note">
+                                <b>
+                                  {line.item_change.replacement_item_id
+                                    ? 'REEMPLAZADO · NO PREPARAR ESTA LÍNEA'
+                                    : 'ANULADO · NO PREPARAR'}
+                                </b>{' '}
+                                · {line.item_change.reason}
+                              </p>
+                            )}
                             <span
                               className="preparation-badge"
                               data-destination={line.preparation_destination}

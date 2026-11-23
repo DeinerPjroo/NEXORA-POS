@@ -4,7 +4,7 @@ import { api } from '../../lib/api'
 import { formatMoney, moneyUnits } from '../../lib/money'
 import { ErrorNotice, Loading } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
-import type { Order } from '../operations/types'
+import type { Order, OrderItem } from '../operations/types'
 import { OrderPrintActions } from './OrderPrintActions'
 import { deliveryLabels, deliveryKitchenLabels, type Delivery } from './delivery-types'
 
@@ -16,6 +16,7 @@ export function DeliveryDetail({
   onKitchen,
   onEdit,
   onAdd,
+  onChangeItem,
 }: {
   delivery: Delivery | null
   onBack: () => void
@@ -24,6 +25,7 @@ export function DeliveryDetail({
   onKitchen: () => void
   onEdit: () => void
   onAdd: (order: Order) => void
+  onChangeItem: (order: Order, item: OrderItem) => void
 }) {
   const can = useCan()
   const { session } = useSession()
@@ -141,12 +143,45 @@ export function DeliveryDetail({
                       <strong>{item.product_name}</strong>
                       {item.variant_name && <small>{item.variant_name}</small>}
                       {item.notes && <small>{item.notes}</small>}
+                      {can('orders.manage') &&
+                        can('orders.cancel') &&
+                        !order.sale_id &&
+                        order.status !== 'cancelled' &&
+                        ['pending', 'assigned'].includes(order.delivery_status ?? '') && (
+                          <button
+                            type="button"
+                            className="delivery-line-edit"
+                            aria-label={`Corregir ${item.product_name}`}
+                            onClick={() => onChangeItem(order, item)}
+                          >
+                            {item.order_combo_id ? 'Retirar combo' : 'Corregir / retirar'}
+                          </button>
+                        )}
                     </td>
                     <td>{formatMoney(item.line_subtotal, order.currency)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {!!order.item_changes?.length && (
+              <details className="delivery-history">
+                <summary>Cambios de productos · {order.item_changes.length}</summary>
+                <ol>
+                  {order.item_changes.map((change) => (
+                    <li key={change.id}>
+                      <strong>
+                        {change.product_name} ·{' '}
+                        {change.replacement_item_id
+                          ? `Corregido a ${change.replacement_quantity}`
+                          : 'Anulado'}
+                      </strong>
+                      <p>{change.reason}</p>
+                      <time dateTime={change.created_at}>{time(change.created_at)}</time>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
             <div className="delivery-order-amounts">
               <span>Subtotal de productos</span>
               <strong>{formatMoney(order.subtotal, order.currency)}</strong>

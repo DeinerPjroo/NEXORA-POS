@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Domains\Kitchen\CorrectPreparation;
+use App\Domains\Orders\ChangeDeliveryItem;
 use App\Domains\Orders\ChangeOrderState;
 use App\Domains\Orders\CreateOrder;
 use App\Domains\Orders\PreviewOrder;
 use App\Domains\Orders\UpdateOrderCustomer;
 use App\Http\Requests\OperationFiltersRequest;
 use App\Http\Requests\OrderCustomerRequest;
+use App\Http\Requests\OrderItemChangeRequest;
 use App\Http\Requests\OrderPreviewRequest;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderStateRequest;
@@ -20,6 +22,11 @@ use Illuminate\Support\Facades\Gate;
 
 final class OrderController extends Controller
 {
+    public function changeItem(OrderItemChangeRequest $request, Order $order, ChangeDeliveryItem $service)
+    {
+        return new OrderResource($service->execute($request->user(), $order, $request->validated())->load('branch', 'items', 'events', 'sale', 'delivery'));
+    }
+
     public function customer(Order $order)
     {
         Gate::authorize('orders.view');

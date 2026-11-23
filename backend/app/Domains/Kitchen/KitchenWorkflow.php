@@ -13,6 +13,7 @@ use App\Models\KitchenTicketEvent;
 use App\Models\KitchenTicketLine;
 use App\Models\Order;
 use App\Models\OrderEvent;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -111,7 +112,7 @@ final class KitchenWorkflow
         });
     }
 
-    private function synchronize(User $actor, Order $order): void
+    public function synchronize(User $actor, Order $order): void
     {
         $tickets = KitchenTicket::where('order_id', $order->id)->where('status', '!=', 'cancelled')->get();
         if ($tickets->isEmpty() || $order->status === 'cancelled') {
@@ -141,6 +142,29 @@ final class KitchenWorkflow
             $this->event($actor, $ticket, 'ready', 'delivered', 'Entregada al repartidor del domicilio.');
         }
         $this->synchronize($actor, $order);
+    }
+
+    public function changeItem(User $actor, Order $order, OrderItem $original, ?OrderItem $replacement, string $reason): void
+    {
+        $line = KitchenTicketLine::where('order_id', $order->id)->where('order_item_id', $original->id)->first();
+        if (! $line) {
+            return;
+        }
+        $ticket = KitchenTicket::whereKey($line->kitchen_ticket_id)->lockForUpdate()->firstOrFail();
+        abort_if(in_array($ticket->status, ['delivered', 'cancelled'], true), 409, 'La comanda ya se entregó o canceló.');
+        $from = $ticket->status;
+        if ($replacement) {
+            KitchenTicketLine::create(['order_id' => $order->id, 'kitchen_ticket_id' => $ticket->id, 'order_item_id' => $replacement->id, 'snapshot' => [...$line->snapshot, 'quantity' => $replacement->quantity, 'notes' => $replacement->notes, 'preparation_destination' => $replacement->destination($order->channel)]]);
+            if ($ticket->status === 'ready') {
+                $ticket->status = 'preparing';
+                $ticket->ready_at = null;
+            }
+        } elseif (! $ticket->lines()->whereDoesntHave('itemChange')->exists()) {
+            $ticket->status = 'cancelled';
+        }
+        $ticket->revision++;
+        $ticket->save();
+        $this->event($actor, $ticket, $from, $ticket->status, mb_substr(($replacement ? 'Corrección' : 'Anulación').' de '.$original->quantity.' × '.$original->product_name.': '.$reason, 0, 300));
     }
 
     public function cancel(User $actor, Order $order, ?string $reason): void

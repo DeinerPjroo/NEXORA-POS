@@ -6,12 +6,18 @@ use App\Domains\Operations\AppendOnly;
 use App\Domains\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class KitchenTicketLine extends Model
 {
     use AppendOnly, BelongsToTenant;
 
     protected $guarded = ['id', 'tenant_id'];
+
+    public function itemChange(): HasOne
+    {
+        return $this->hasOne(OrderItemChange::class, 'order_item_id', 'order_item_id');
+    }
 
     public function preparationCorrections(): HasMany
     {

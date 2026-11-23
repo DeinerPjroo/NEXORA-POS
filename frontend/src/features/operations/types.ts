@@ -86,6 +86,17 @@ export type OrderEvent = {
   created_at: string
 }
 export type Order = {
+  item_changes?: {
+    id: number
+    order_item_id: number
+    replacement_item_id: number | null
+    reason: string
+    product_name: string
+    quantity: number
+    replacement_quantity: number | null
+    replacement_notes: string | null
+    created_at: string
+  }[]
   delivery_fee_total?: string
   delivery_revision?: number | null
   delivery_status?: string | null

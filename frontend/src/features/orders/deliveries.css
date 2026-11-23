@@ -731,3 +731,44 @@
 .delivery-terminal[data-mode='edit'] {
   gap: 0;
 }
+.delivery-line-edit {
+  margin-top: 5px;
+  font-size: 11px;
+  min-height: 32px;
+  padding: 4px 8px;
+}
+.modal.delivery-item-modal {
+  width: min(680px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+}
+.delivery-item-modal > form {
+  max-height: calc(100dvh - 150px);
+  min-height: 0;
+}
+.delivery-item-modal > form > fieldset {
+  overflow: auto;
+  min-height: 0;
+}
+.delivery-item-modal > form > header,
+.delivery-item-modal > form > footer {
+  flex-shrink: 0;
+}
+.delivery-item-modes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.delivery-item-modes > button {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+  font-weight: 700;
+}
+.delivery-item-modes [aria-pressed='true'] {
+  background: var(--terminal-purple, #7255db);
+  color: white;
+}

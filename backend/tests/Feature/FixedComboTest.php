@@ -64,6 +64,23 @@ class FixedComboTest extends TestCase
         return [...$input, 'idempotency_key' => (string) Str::uuid(), 'items' => [[...$input['items'][0], 'product_revision' => $line['product_revision'], 'expected_unit_price' => $line['expected_unit_price'], 'components' => $components]]];
     }
 
+    public function test_delivery_combo_removal_keeps_original_components_and_cancels_the_entire_header(): void
+    {
+        $work = $this->work();
+        $input = [...$this->setupCombo($work), 'channel' => 'delivery'];
+        $preview = $this->postJson('/api/v1/orders/preview', $input)->assertOk()->json('data');
+        $body = [...$this->confirm($input, $preview), 'delivery' => ['recipient_name' => 'Cliente', 'phone' => '3001234567', 'address' => 'Calle principal 123']];
+        $order = $this->postJson('/api/v1/orders', $body)->assertCreated()->json('data');
+        $change = ['idempotency_key' => (string) Str::uuid(), 'order_revision' => 1, 'delivery_revision' => 1, 'item_id' => $order['items'][0]['id'], 'action' => 'correct', 'quantity' => 1, 'notes' => null, 'reason' => 'Cambio de combo'];
+        $this->postJson('/api/v1/orders/'.$order['id'].'/item-changes', $change)->assertUnprocessable();
+        unset($change['quantity'], $change['notes']);
+        $change['action'] = 'cancel';
+        $this->postJson('/api/v1/orders/'.$order['id'].'/item-changes', $change)->assertOk()->assertJsonCount(0, 'data.items')->assertJsonCount(0, 'data.combos')->assertJsonCount(count($order['items']), 'data.item_changes')->assertJsonPath('data.status', 'cancelled');
+        $this->assertDatabaseCount('order_items', count($order['items']));
+        $this->assertDatabaseCount('order_combos', 1);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
     public function test_identity_configuration_nested_guard_and_menu_eligibility(): void
     {
         $work = $this->work();

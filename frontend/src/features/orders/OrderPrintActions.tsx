@@ -130,7 +130,10 @@ function TicketPicker({ orderId, onClose }: { orderId: number; onClose: () => vo
                     #{ticket.id} · {ticket.station_name}
                   </strong>
                   <span>
-                    {states[ticket.status]} · {ticket.lines.reduce((sum, l) => sum + l.quantity, 0)}{' '}
+                    {states[ticket.status]} ·{' '}
+                    {ticket.lines
+                      .filter((line) => !line.item_change)
+                      .reduce((sum, l) => sum + l.quantity, 0)}{' '}
                     unidades
                   </span>
                   <TicketPrintButton ticket={ticket} />
@@ -204,6 +207,16 @@ function PrintPreview({
           <p>Enviada: {time(new Date(ticket.created_at))}</p>
           {ticket.lines.map((line) => (
             <section className="ticket-line" key={line.id}>
+              {line.item_change && (
+                <p>
+                  <b>
+                    {line.item_change.replacement_item_id
+                      ? 'REEMPLAZADO · NO PREPARAR'
+                      : 'ANULADO · NO PREPARAR'}
+                  </b>{' '}
+                  · {line.item_change.reason}
+                </p>
+              )}
               <strong>
                 {line.quantity} × {line.product_name}
                 {line.variant_name ? ` · ${line.variant_name}` : ''}

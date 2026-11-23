@@ -831,3 +831,17 @@ alter table `sales` add `delivery_charge` json null;
 
 alter table `sales` add `delivery_fee_total` decimal(19, 4) not null default '0';
 
+create table `order_item_changes` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `order_id` bigint unsigned not null, `order_item_id` bigint unsigned not null, `replacement_item_id` bigint unsigned null, `actor_id` bigint unsigned not null, `reason` varchar(300) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `order_item_changes` add constraint `order_item_changes_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `order_item_changes` add unique `ochange_original_once`(`tenant_id`, `order_item_id`);
+
+alter table `order_item_changes` add index `ochange_recent`(`tenant_id`, `created_at`);
+
+alter table `order_item_changes` add constraint `ochange_original_fk` foreign key (`tenant_id`, `order_id`, `order_item_id`) references `order_items` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `order_item_changes` add constraint `ochange_replacement_fk` foreign key (`tenant_id`, `order_id`, `replacement_item_id`) references `order_items` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `order_item_changes` add constraint `ochange_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

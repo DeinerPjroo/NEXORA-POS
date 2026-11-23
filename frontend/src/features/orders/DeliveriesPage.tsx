@@ -29,7 +29,8 @@ import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
 import { OrderCustomerEditor } from './OrderCustomerEditor'
 import { OrderComposer } from './OrderComposer'
-import type { Order } from '../operations/types'
+import { DeliveryItemEditor } from './DeliveryItemEditor'
+import type { Order, OrderItem } from '../operations/types'
 import './deliveries.css'
 
 const filters = [
@@ -54,9 +55,10 @@ export function DeliveriesPage() {
   const [kitchen, setKitchen] = useState<number | null>(null)
   const [editing, setEditing] = useState<number | null>(null)
   const [adding, setAdding] = useState<Order | null>(null)
+  const [changingItem, setChangingItem] = useState<{ order: Order; item: OrderItem } | null>(null)
   const [editorBusy, setEditorBusy] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
-  const busy = !!checkout || !!action || !!kitchen || !!editing
+  const busy = !!checkout || !!action || !!kitchen || !!editing || !!changingItem
   useTerminalGuard(busy, busy)
   useEffect(() => {
     if (!busy) return
@@ -278,6 +280,7 @@ export function DeliveriesPage() {
               )}
             </section>
             <DeliveryDetail
+              onChangeItem={(order, item) => setChangingItem(structuredClone({ order, item }))}
               onAdd={(order) => setAdding(structuredClone(order))}
               delivery={delivery}
               onBack={() => setSelectedId(null)}
@@ -303,6 +306,9 @@ export function DeliveriesPage() {
             </span>
           </footer>
         </>
+      )}
+      {changingItem && (
+        <DeliveryItemEditor {...changingItem} onClose={() => setChangingItem(null)} />
       )}
       {action && <DeliveryAction value={action} onClose={() => setAction(null)} />}
       {kitchen && (

@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function () {
         Route::put('kitchen-stations/{kitchenStation}', [KitchenStationController::class, 'update']);
         Route::get('kitchen-routes', [KitchenController::class, 'routes']);
         Route::post('kitchen-routes', [KitchenController::class, 'saveRoute']);
+        Route::post('orders/{order}/item-changes', [OrderController::class, 'changeItem']);
         Route::get('orders/{order}/kitchen-tickets', [KitchenController::class, 'orderTickets']);
         Route::get('kitchen-tickets', [KitchenController::class, 'index']);
         Route::post('kitchen-tickets/{kitchenTicket}/status', [KitchenController::class, 'transition']);

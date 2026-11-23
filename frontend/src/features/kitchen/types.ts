@@ -22,6 +22,12 @@ export type KitchenTicket = {
   lines: {
     id: number
     order_item_id: number
+    item_change?: {
+      id: number
+      reason: string
+      replacement_item_id: number | null
+      created_at: string
+    } | null
     product_name: string
     variant_name: string | null
     quantity: number

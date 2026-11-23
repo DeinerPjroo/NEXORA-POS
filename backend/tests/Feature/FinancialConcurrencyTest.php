@@ -93,6 +93,38 @@ class FinancialConcurrencyTest extends SqlConcurrencyTestCase
         return [$work, $order, $append];
     }
 
+    public function test_delivery_item_corrections_replay_once_and_competing_keys_reject_stale_revisions(): void
+    {
+        [$work, $order] = $this->deliveryAppendWork();
+        $data = [...$this->key(), 'order_revision' => 1, 'delivery_revision' => 1, 'item_id' => $order['items'][0]['id'], 'action' => 'correct', 'quantity' => 1, 'notes' => 'Sin cebolla', 'reason' => 'Cliente corrige preparación'];
+        $job = $this->job($work, 'order.item.change', $order['id'], $data);
+        $this->assertSame([true, true], array_column($this->race([$job, $job]), 'accepted'));
+        $this->assertSame(1, DB::table('order_item_changes')->where('order_id', $order['id'])->count());
+        $current = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        $data = [...$data, ...$this->key(), 'order_revision' => $current['revision'], 'delivery_revision' => $current['delivery_revision'], 'item_id' => $current['items'][0]['id'], 'notes' => 'Sin salsas'];
+        $this->oneAccepted($this->race([$this->job($work, 'order.item.change', $order['id'], $data), $this->job($work, 'order.item.change', $order['id'], [...$data, ...$this->key()])]));
+        $this->assertSame(2, DB::table('order_item_changes')->where('order_id', $order['id'])->count());
+        $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '100.0100', 'revision' => 3]);
+    }
+
+    public function test_delivery_item_correction_racing_collection_preserves_sale_and_original_items(): void
+    {
+        [$work, $order] = $this->deliveryAppendWork();
+        $data = [...$this->key(), 'order_revision' => 1, 'delivery_revision' => 1, 'item_id' => $order['items'][0]['id'], 'action' => 'cancel', 'reason' => 'Cliente retira producto'];
+        $results = $this->race([$this->job($work, 'order.item.change', $order['id'], $data), $this->job($work, 'sale.collect', $order['id'], $this->collect($work))]);
+        $this->oneAccepted($results);
+        if ($results[0]['accepted']) {
+            $this->assertDatabaseCount('sales', 0);
+            $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '0.0000', 'status' => 'cancelled']);
+            $this->assertDatabaseHas('cash_sessions', ['id' => $work['session']['id'], 'expected_amount' => '100.0000']);
+        } else {
+            $this->assertDatabaseHas('sales', ['order_id' => $order['id'], 'total' => '100.0100']);
+            $this->assertDatabaseCount('order_item_changes', 0);
+            $this->assertDatabaseHas('cash_sessions', ['id' => $work['session']['id'], 'expected_amount' => '200.0100']);
+        }
+        $this->assertSame(1, DB::table('order_items')->where('order_id', $order['id'])->count());
+    }
+
     public function test_delivery_append_same_uuid_replays_once_and_competing_keys_use_revisions(): void
     {
         [$work, $order, $append] = $this->deliveryAppendWork();

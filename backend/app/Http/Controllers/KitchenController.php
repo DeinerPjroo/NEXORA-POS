@@ -7,7 +7,9 @@ use App\Http\Resources\KitchenTicketResource;
 use App\Models\DiningSession;
 use App\Models\KitchenRoute;
 use App\Models\KitchenTicket;
+use App\Models\KitchenTicketLine;
 use App\Models\Order;
+use App\Models\OrderItemChange;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
@@ -78,7 +80,10 @@ final class KitchenController extends Controller
         Gate::authorize('kitchen.view');
         $data = $request->validate(['branch_id' => ['required', 'integer', $this->own($request, 'branches')], 'station_id' => ['nullable', 'integer', $this->own($request, 'kitchen_stations')], 'history' => ['sometimes', 'boolean'], 'page' => ['sometimes', 'integer', 'min:1']]);
 
-        return KitchenTicketResource::collection(KitchenTicket::where('branch_id', $data['branch_id'])->when($data['station_id'] ?? null, fn ($q, $id) => $q->where('kitchen_station_id', $id))->whereIn('status', ($data['history'] ?? false) ? ['delivered', 'cancelled'] : ['new', 'preparing', 'ready'])->with('lines', 'events')->orderByDesc('id')->paginate(60))->additional(['server_now' => now()->toISOString()]);
+        $tickets = KitchenTicket::where('branch_id', $data['branch_id'])->when($data['station_id'] ?? null, fn ($q, $id) => $q->where('kitchen_station_id', $id));
+        $changes = OrderItemChange::where('created_at', '>=', now()->subMinutes(30))->whereIn('order_item_id', KitchenTicketLine::whereIn('kitchen_ticket_id', (clone $tickets)->select('id'))->select('order_item_id'))->with('item')->latest('id')->limit(20)->get()->map(fn ($c) => [...$c->only('id', 'order_id', 'reason', 'created_at'), 'product_name' => $c->item->product_name, 'quantity' => $c->item->quantity, 'corrected' => $c->replacement_item_id !== null]);
+
+        return KitchenTicketResource::collection($tickets->whereIn('status', ($data['history'] ?? false) ? ['delivered', 'cancelled'] : ['new', 'preparing', 'ready'])->with('lines', 'events')->orderByDesc('id')->paginate(60))->additional(['server_now' => now()->toISOString(), 'recent_changes' => $changes]);
     }
 
     public function transition(Request $request, KitchenTicket $kitchenTicket, KitchenWorkflow $service)

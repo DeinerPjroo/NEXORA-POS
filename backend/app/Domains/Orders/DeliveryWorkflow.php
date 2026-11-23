@@ -68,6 +68,13 @@ final class DeliveryWorkflow
         });
     }
 
+    public function recordItemChange(User $actor, OrderDelivery $delivery, string $reason): void
+    {
+        $delivery->revision++;
+        $delivery->save();
+        $this->event($actor, $delivery, mb_substr('Corrección de productos: '.$reason, 0, 300));
+    }
+
     public function recordAddition(User $actor, Order $order, int $revision): void
     {
         $delivery = OrderDelivery::where('order_id', $order->id)->lockForUpdate()->firstOrFail();

@@ -6,6 +6,7 @@ use App\Domains\Operations\AppendOnly;
 use App\Domains\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class OrderItem extends Model
 {
@@ -13,6 +14,11 @@ final class OrderItem extends Model
     use BelongsToTenant;
 
     protected $guarded = ['id', 'tenant_id'];
+
+    public function change(): HasOne
+    {
+        return $this->hasOne(OrderItemChange::class);
+    }
 
     public function preparationCorrections(): HasMany
     {
