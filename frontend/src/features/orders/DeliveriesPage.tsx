@@ -299,7 +299,12 @@ export function DeliveriesPage() {
         />
       )}
       {editing && (
-        <Modal title="Cliente del domicilio" onClose={() => setEditing(null)} locked={editorBusy}>
+        <Modal
+          title="Cliente del domicilio"
+          className="modal delivery-customer-modal"
+          onClose={() => setEditing(null)}
+          locked={editorBusy}
+        >
           <OrderCustomerEditor
             orderId={editing}
             onClose={() => setEditing(null)}

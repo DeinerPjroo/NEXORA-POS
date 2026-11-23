@@ -1,7 +1,7 @@
 .delivery-terminal {
   --pos-primary: var(--terminal-purple, #7255db);
   --pos-pay: var(--terminal-green, #209b79);
-  --pos-order-width: clamp(300px, 32vw, 400px);
+  --pos-order-width: clamp(420px, 43vw, 640px);
   height: 100%;
   min-height: 0;
   display: flex;
@@ -116,7 +116,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: clamp(300px, 32vw, 400px) minmax(0, 1fr);
+  grid-template-columns: var(--pos-order-width) minmax(0, 1fr);
   gap: 10px;
 }
 .delivery-board {
@@ -548,6 +548,108 @@
 .delivery-terminal button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.modal.delivery-customer-modal {
+  width: min(960px, calc(100vw - 32px));
+  max-width: 960px;
+  height: min(780px, calc(100dvh - 40px));
+  max-height: calc(100dvh - 40px);
+  padding: 16px;
+  overflow: hidden;
+}
+.delivery-customer-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+.delivery-customer-modal > .modal-header {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+.delivery-customer-modal > .pos-customer-edit {
+  position: static;
+  inset: auto;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+.delivery-customer-modal .pos-client-heading {
+  flex-shrink: 0;
+  padding: 10px;
+}
+.delivery-customer-modal .pos-client-heading h3 {
+  font-size: 16px;
+}
+.delivery-customer-modal .pos-client-heading > .pos-detail-close {
+  display: none;
+}
+.delivery-customer-modal .pos-client-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 14px 18px;
+  min-height: 0;
+  padding: 12px 4px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.delivery-customer-modal .pos-client-fields > .field {
+  min-width: 0;
+  margin: 0;
+  gap: 5px;
+}
+.delivery-customer-modal .pos-client-fields > .field:last-child {
+  grid-column: 1/-1;
+}
+.delivery-customer-modal .pos-client-fields label {
+  font-size: 12px;
+  font-weight: 750;
+}
+.delivery-customer-modal .pos-client-fields input {
+  min-height: 42px;
+}
+.delivery-customer-modal .pos-client-fields textarea {
+  min-height: 68px;
+  resize: vertical;
+}
+.delivery-customer-modal .pos-client-footer {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 12px 2px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.delivery-customer-modal .pos-client-footer > :not(small):not(button) {
+  grid-column: 1/-1;
+  max-height: 100px;
+  overflow: auto;
+}
+.delivery-customer-modal .pos-client-footer > button {
+  min-height: 42px;
+}
+@media (max-width: 600px) {
+  .modal.delivery-customer-modal {
+    padding: 12px;
+    width: calc(100vw - 20px);
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+  .delivery-customer-modal .pos-client-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .delivery-customer-modal .pos-client-footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .delivery-customer-modal .pos-client-footer > small {
+    display: none;
+  }
 }
 .delivery-terminal[data-mode='checkout'] {
   gap: 0;

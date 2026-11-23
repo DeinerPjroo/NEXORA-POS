@@ -2,6 +2,8 @@
 
 ## DEC-025 · COMPLETED · Interfaz operativa de Domicilios
 
+Detalle ampliado420–640px; el modal de cliente tiene distribución propia, hasta960px y altura de viewport. Anular posición absoluta del editor embebido al usarlo dentro de dialog; campos2 columnas/1 móvil y scroll de fieldset con guardado fijo, conservando revisiones/UUID existentes.
+
 Tarjetas compactas por estado con detalle lateral, sin tienda/carrito ni formularios permanentes. Acciones integradas reutilizan servicios/componentes de pedido/cocina/impresión/cliente/cobro; selección y filtros se conservan al volver. Consultas siguen API autorizada y sucursales vigentes; courier sólo ve lo que servidor devuelve. Búsqueda local identificada como página cargada, sin métricas globales ficticias. Preparación/entrega/cobro se presentan independientes. El rediseño no declara terminados disponibilidad, incidencias, custodia ni rendición pendientes.
 
 ## DEC-024 · COMPLETED · Cobro en el espacio de Terminal
