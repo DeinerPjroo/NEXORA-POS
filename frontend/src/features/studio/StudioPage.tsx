@@ -19,6 +19,8 @@ import { foreground } from '../../lib/theme'
 import type { Settings, Theme } from '../../lib/types'
 import { ErrorNotice, Field, Loading, PageTitle, Submit, useToast } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
+import { Link } from 'react-router-dom'
+import './studio-layout.css'
 
 type ThemeVersion = { id: number; version: number; theme: Theme; created_at: string }
 type StudioData = { settings: Settings; versions: ThemeVersion[]; defaults: Theme }
@@ -31,7 +33,7 @@ export function StudioPage() {
     <>
       <PageTitle
         eyebrow="NEXORA STUDIO / IDENTIDAD"
-        title="Se siente como tú."
+        title="Nexora Studio"
         description="Tu restaurante tiene personalidad. Tu espacio de trabajo también."
         action={
           <span className="pill violet">
@@ -40,6 +42,25 @@ export function StudioPage() {
           </span>
         }
       />
+      <section className="studio-surfaces" aria-label="Áreas personalizables">
+        <Link to="/admin/studio/pos">
+          <strong>Terminal POS</strong>
+          <small>Diseño guardado y publicación</small>
+        </Link>
+        {[
+          'Mesas y salones',
+          'Pedidos para llevar',
+          'Domicilios',
+          'Nexora Kitchen',
+          'Dashboard administrativo',
+          'Recibos y comandas',
+        ].map((name) => (
+          <div key={name}>
+            <strong>{name}</strong>
+            <small>Próxima superficie · aún no editable</small>
+          </div>
+        ))}
+      </section>
       <ErrorNotice error={query.error} />
       {query.isPending ? (
         <Loading />

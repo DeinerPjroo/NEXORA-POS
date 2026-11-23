@@ -10,6 +10,7 @@ import { DeliveryTariffsPage } from './features/orders/DeliveryTariffsPage'
 import { RolesPage } from './features/workspace/RolesPage'
 import { SettingsPage } from './features/workspace/SettingsPage'
 import { StudioPage } from './features/studio/StudioPage'
+import { PosStudioPage } from './features/studio/PosStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -419,6 +420,22 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <StudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <StudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/pos"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <PosStudioPage />
             </PermissionBoundary>
           }
         />

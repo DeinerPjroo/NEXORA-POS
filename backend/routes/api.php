@@ -33,6 +33,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
 use App\Http\Controllers\ScreenSecurityController;
+use App\Http\Controllers\StudioLayoutController;
 use App\Http\Controllers\TaxProfileController;
 use App\Http\Controllers\VariantController;
 use App\Http\Controllers\WorkspaceController;
@@ -161,6 +162,10 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/company', [WorkspaceController::class, 'settings']);
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
+        Route::get('studio/pos', [StudioLayoutController::class, 'show']);
+        Route::get('studio/pos/active', [StudioLayoutController::class, 'active']);
+        Route::post('studio/pos/draft', [StudioLayoutController::class, 'save']);
+        Route::post('studio/pos/publish', [StudioLayoutController::class, 'publish']);
         Route::put('workspace/theme', [WorkspaceController::class, 'publishTheme']);
         Route::get('branches', [BranchController::class, 'index']);
         Route::post('branches', [BranchController::class, 'store']);

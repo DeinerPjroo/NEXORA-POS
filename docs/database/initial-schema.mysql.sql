@@ -845,3 +845,17 @@ alter table `order_item_changes` add constraint `ochange_replacement_fk` foreign
 
 alter table `order_item_changes` add constraint `ochange_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+create table `studio_layouts` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `surface` varchar(30) not null, `device` varchar(20) not null default 'adaptive', `branch_id` bigint unsigned null, `role_id` bigint unsigned null, `revision` int unsigned not null default '1', `draft` json not null, `published` json null, `published_revision` int unsigned null, `updated_by` bigint unsigned not null, `published_by` bigint unsigned null, `published_at` timestamp null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `studio_layouts` add constraint `studio_layouts_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `studio_layouts` add unique `studio_surface_identity`(`tenant_id`, `surface`);
+
+alter table `studio_layouts` add constraint `studio_branch_fk` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `studio_layouts` add constraint `studio_role_fk` foreign key (`tenant_id`, `role_id`) references `roles` (`tenant_id`, `id`) on delete restrict;
+
+alter table `studio_layouts` add constraint `studio_editor_fk` foreign key (`tenant_id`, `updated_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `studio_layouts` add constraint `studio_publisher_fk` foreign key (`tenant_id`, `published_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+

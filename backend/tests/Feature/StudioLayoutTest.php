@@ -1,0 +1,147 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Domains\Identity\PermissionCatalog;
+use App\Domains\Identity\RegisterCompany;
+use App\Domains\Studio\PosLayoutSchema;
+use App\Domains\Tenancy\TenantContext;
+use App\Models\AuditLog;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\StudioLayout;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+class StudioLayoutTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $owner;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        PermissionCatalog::seed();
+        $this->owner = $this->company('studio@example.test');
+        $this->actingAs($this->owner)->withHeader('Origin', 'http://127.0.0.1:5173');
+    }
+
+    private function company(string $email): User
+    {
+        return app(RegisterCompany::class)->execute(['company_name' => 'Studio', 'business_type' => 'restaurant', 'branch_name' => 'Principal', 'name' => 'Ana', 'email' => $email, 'password' => 'SeguraNexora123']);
+    }
+
+    private function key(): array
+    {
+        return ['idempotency_key' => (string) Str::uuid()];
+    }
+
+    private function body(int $revision = 0): array
+    {
+        return [...$this->key(), 'revision' => $revision, 'configuration' => PosLayoutSchema::defaults()];
+    }
+
+    private function scope(callable $callback): mixed
+    {
+        return app(TenantContext::class)->run($this->owner->tenant_id, $callback);
+    }
+
+    private function employee(array $keys): User
+    {
+        return $this->scope(function () use ($keys) {
+            $role = Role::create(['name' => Str::random(12), 'is_owner' => false]);
+            $role->permissions()->attach(Permission::whereIn('key', $keys)->pluck('id'), ['tenant_id' => $this->owner->tenant_id]);
+
+            return User::factory()->create(['role_id' => $role->id]);
+        });
+    }
+
+    public function test_studio_layout_draft_is_isolated_from_runtime_and_publication_preserves_business_data(): void
+    {
+        $defaults = PosLayoutSchema::defaults();
+        $this->getJson('/api/v1/studio/pos')->assertOk()->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/pos/active')->assertOk()->assertJsonPath('data.revision', 0);
+        $body = $this->body();
+        $body['configuration']['tokens']['order_width'] = 400;
+        $this->postJson('/api/v1/studio/pos/draft', $body)->assertOk()->assertJsonPath('data.revision', 1)->assertJsonPath('data.published', null);
+        $this->postJson('/api/v1/studio/pos/draft', $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $this->getJson('/api/v1/studio/pos/active')->assertJsonPath('data.configuration', $defaults);
+        $publish = [...$this->key(), 'revision' => 1];
+        $this->postJson('/api/v1/studio/pos/publish', $publish)->assertOk()->assertJsonPath('data.published_revision', 2);
+        $this->postJson('/api/v1/studio/pos/publish', $publish)->assertOk()->assertJsonPath('data.revision', 2);
+        $this->getJson('/api/v1/studio/pos/active')->assertJsonPath('data.configuration.tokens.order_width', 400)->assertJsonPath('data.revision', 2);
+        $this->postJson('/api/v1/studio/pos/draft', $this->body(2))->assertOk()->assertJsonPath('data.revision', 3);
+        $this->getJson('/api/v1/studio/pos/active')->assertJsonPath('data.configuration.tokens.order_width', 400)->assertJsonPath('data.revision', 2);
+        $this->postJson('/api/v1/studio/pos/draft', [...$body, ...$this->key()])->assertConflict();
+        $this->postJson('/api/v1/studio/pos/publish', [...$this->key(), 'revision' => 2])->assertConflict();
+        $this->assertDatabaseCount('studio_layouts', 1);
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'studio.layout.published']);
+    }
+
+    public function test_studio_rejects_executable_content_unknown_properties_components_and_unsafe_dimensions(): void
+    {
+        $configs = [];
+        foreach ([['tokens', 'accent', 'url(javascript:alert(1))'], ['tokens', 'order_width', 99999], ['tokens', 'font_size', 1], ['tokens', 'css', 'body{}'], ['options', 'payments', false]] as [$section, $key, $value]) {
+            $c = PosLayoutSchema::defaults();
+            $c[$section][$key] = $value;
+            $configs[] = $c;
+        }
+        $c = PosLayoutSchema::defaults();
+        $c['panels'] = ['actions', 'order', 'categories', '<script>'];
+        $configs[] = $c;
+        $c = PosLayoutSchema::defaults();
+        $c['panels'] = ['order', 'order', 'products', 'actions'];
+        $configs[] = $c;
+        $c = PosLayoutSchema::defaults();
+        $c['schema_version'] = 999;
+        $configs[] = $c;
+        foreach ($configs as $config) {
+            $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'configuration' => $config])->assertUnprocessable();
+        }
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'tenant_id' => $this->owner->tenant_id])->assertUnprocessable();
+        $this->assertDatabaseCount('studio_layouts', 0);
+    }
+
+    public function test_studio_permissions_and_tenants_are_enforced_before_replay(): void
+    {
+        $editor = $this->employee(['studio.view', 'studio.edit']);
+        $this->actingAs($editor);
+        $body = $this->body();
+        $this->postJson('/api/v1/studio/pos/draft', $body)->assertOk();
+        $this->postJson('/api/v1/studio/pos/publish', [...$this->key(), 'revision' => 1])->assertForbidden();
+        $this->getJson('/api/v1/studio/pos/active')->assertForbidden();
+        $reader = $this->employee(['studio.view']);
+        $this->actingAs($reader);
+        $this->getJson('/api/v1/studio/pos')->assertOk();
+        $this->postJson('/api/v1/studio/pos/draft', $body)->assertForbidden();
+        $other = $this->company('other-studio@example.test');
+        $this->actingAs($other);
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data', null);
+        $this->postJson('/api/v1/studio/pos/draft', $body)->assertOk()->assertJsonPath('data.tenant_id', $other->tenant_id);
+        $this->assertDatabaseCount('studio_layouts', 2);
+    }
+
+    public function test_studio_audit_failure_rolls_back_publication_and_invalid_published_schema_falls_back(): void
+    {
+        $this->postJson('/api/v1/studio/pos/draft', $this->body())->assertOk();
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'studio.layout.published') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $body = [...$this->key(), 'revision' => 1];
+        $this->postJson('/api/v1/studio/pos/publish', $body)->assertServerError();
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data.revision', 1)->assertJsonPath('data.published', null);
+        $fail = false;
+        $this->postJson('/api/v1/studio/pos/publish', $body)->assertOk();
+        $this->scope(fn () => StudioLayout::firstOrFail()->update(['published' => ['schema_version' => 999]]));
+        $this->getJson('/api/v1/studio/pos/active')->assertOk()->assertJsonPath('data.configuration', PosLayoutSchema::defaults());
+    }
+}

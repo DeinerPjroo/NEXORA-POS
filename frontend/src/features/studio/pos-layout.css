@@ -1,0 +1,53 @@
+.pos-terminal[data-studio='true'][data-studio-hints='false'] .pos-shortcuts {
+  display: none;
+}
+.pos-terminal[data-studio='true'][data-studio-hints='true'] .pos-shortcuts {
+  display: block;
+}
+.pos-terminal[data-studio='true'] .pos-actions > button,
+.pos-terminal[data-studio='true'] .pos-categories > button,
+.pos-terminal[data-studio='true'][data-photos] .order-menu .order-product,
+.pos-terminal[data-studio='true'] .order-cart {
+  border-radius: var(--studio-radius);
+}
+.pos-terminal[data-studio='true'][data-photos] .order-menu .order-product strong {
+  font-size: var(--studio-font);
+}
+.pos-terminal[data-studio='true'] .pos-categories > button[aria-pressed='true'],
+.pos-terminal[data-studio='true'] .pos-kitchen {
+  color: var(--studio-accent-ink);
+}
+@media (min-width: 1200px) {
+  .pos-terminal[data-studio='true'][data-mode='order'] .order-composer {
+    grid-template-columns: var(--studio-tracks);
+    gap: var(--studio-gap);
+  }
+  .pos-terminal[data-studio='true'][data-mode='order'] .order-composer > .pos-actions {
+    grid-column: var(--studio-actions-column);
+  }
+  .pos-terminal[data-studio='true'][data-mode='order'] .order-composer > .pos-order-workspace {
+    grid-column: var(--studio-order-column);
+  }
+  .pos-terminal[data-studio='true'][data-mode='order'] .order-composer > .pos-categories {
+    grid-column: var(--studio-categories-column);
+  }
+  .pos-terminal[data-studio='true'][data-mode='order'] .order-composer > .order-menu {
+    grid-column: var(--studio-products-column);
+  }
+  .pos-terminal[data-studio='true'][data-photos] .order-menu-grid {
+    grid-template-columns: repeat(var(--studio-columns), minmax(0, 1fr));
+  }
+  .pos-terminal[data-studio='true'][data-photos] .order-menu .order-product {
+    height: var(--studio-card-height);
+    min-height: var(--studio-card-height);
+  }
+  .pos-terminal[data-studio='true'][data-photos='true'] .order-menu .order-product {
+    height: calc(var(--studio-card-height) + 65px);
+    min-height: calc(var(--studio-card-height) + 65px);
+  }
+}
+
+.pos-terminal[data-studio='true'][data-photos] .pos-actions > button,
+.pos-terminal[data-studio='true'][data-photos] .pos-category-name {
+  font-size: var(--studio-font);
+}

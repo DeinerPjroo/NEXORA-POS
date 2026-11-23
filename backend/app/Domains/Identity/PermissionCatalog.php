@@ -30,6 +30,8 @@ final class PermissionCatalog
         'settings.view' => ['Consultar configuración', 'Configuración'],
         'settings.manage' => ['Editar empresa', 'Configuración'],
         'studio.view' => ['Ver identidad visual', 'Nexora Studio'],
+        'studio.edit' => ['Editar diseños de Terminal', 'Nexora Studio'],
+        'studio.publish' => ['Publicar diseños de Terminal', 'Nexora Studio'],
         'studio.manage' => ['Publicar identidad visual', 'Nexora Studio'],
         'audit.view' => ['Consultar actividad', 'Seguridad'],
         'catalog.view' => ['Consultar catálogo', 'Catálogo'],

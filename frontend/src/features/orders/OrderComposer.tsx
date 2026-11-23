@@ -21,6 +21,9 @@ import { api, ApiError } from '../../lib/api'
 import { formatMoney } from '../../lib/money'
 import { ErrorNotice, Field, Loading, PageTitle, useToast } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
+import { usePosLayout } from '../studio/usePosLayout'
+import { posLayoutStyle, type PosLayout } from '../studio/pos-layout'
+import '../studio/pos-layout.css'
 import { CategoryPicker } from '../catalog/CategoryPicker'
 import { CatalogEmpty, CatalogError, Pagination, useDebounce } from '../catalog/catalog-ui'
 import type { CatalogPage, CategorySummary, Product, Variant } from '../catalog/types'
@@ -79,12 +82,14 @@ export function OrderComposer({
   initialChannel,
   initialOrder,
   onReturn,
+  studioPreview,
 }: {
   terminal?: boolean
   initialDining?: DiningSelection
   initialChannel?: OrderChannel
   initialOrder?: Order
   onReturn?: () => void
+  studioPreview?: PosLayout
 }) {
   const appendDelivery = initialOrder?.channel === 'delivery'
   const [appendSnapshot, setAppendSnapshot] = useState(initialOrder)
@@ -137,7 +142,7 @@ export function OrderComposer({
         ?.focus()
   }, [terminal, details])
   const [statusOpen, setStatusOpen] = useState(false)
-  const [photos, setPhotos] = useState(false)
+  const [photos, setPhotos] = useState<boolean | null>(null)
   const [activeLine, setActiveLine] = useState<string | null>(null)
   const terminalRoot = useRef<HTMLDivElement>(null)
   const [panel, setPanel] = useState<'menu' | 'cart'>('menu')
@@ -159,10 +164,10 @@ export function OrderComposer({
   const currentCheckoutContext = `${branch}:${channel}:${dining?.id ?? ''}`
   const resumableCheckoutId = checkoutContext === currentCheckoutContext ? checkoutOrderId : null
   useEffect(() => {
-    if (!terminal) return
+    if (!terminal || studioPreview) return
     document.body.classList.add('pos-active')
     return () => document.body.classList.remove('pos-active')
-  }, [terminal])
+  }, [terminal, studioPreview])
   const can = useCan()
   const navigate = useNavigate()
   const client = useQueryClient()
@@ -361,6 +366,16 @@ export function OrderComposer({
     },
   })
   const locked = operation.locked || pricing.locked || !!customerEditId || deliveryBookBusy
+  const studio = usePosLayout(
+    terminal && channel === 'dine_in',
+    locked ||
+      checkoutOpen ||
+      cart.length > 0 ||
+      deliveryDirty ||
+      deliveryFeeDirty ||
+      !!kitchenOrderId,
+    studioPreview,
+  )
   const customerAvailable =
     !appendDelivery &&
     !!selected &&
@@ -387,7 +402,7 @@ export function OrderComposer({
     setDetails(false)
     setPanel('cart')
   }, [locked, cart.length, appendDelivery])
-  useTerminalOrders(terminal ? openOrdersPanel : null)
+  useTerminalOrders(terminal && !studioPreview ? openOrdersPanel : null)
   useTerminalGuard(
     terminal &&
       (cart.length > 0 ||
@@ -401,10 +416,11 @@ export function OrderComposer({
     if (pricing.error) pendingDining.current = null
   }, [pricing.error])
   useEffect(() => {
-    if (terminal && selected && !locked) savePosContext(session!, selected, channel)
-  }, [terminal, selected, channel, locked, session])
+    if (terminal && !studioPreview && selected && !locked)
+      savePosContext(session!, selected, channel)
+  }, [terminal, studioPreview, selected, channel, locked, session])
   useEffect(() => {
-    if (!terminal || checkoutOpen || customerEditId || deliveryBookBusy) return
+    if (!terminal || studioPreview || checkoutOpen || customerEditId || deliveryBookBusy) return
     const shortcut = (event: KeyboardEvent) => {
       if (
         event.repeat ||
@@ -433,6 +449,7 @@ export function OrderComposer({
     return () => window.removeEventListener('keydown', shortcut)
   }, [
     terminal,
+    studioPreview,
     checkoutOpen,
     customerEditId,
     deliveryBookBusy,
@@ -667,7 +684,11 @@ export function OrderComposer({
       className={terminal ? 'pos-terminal' : undefined}
       data-pos-panel={panel}
       data-mode={checkoutOpen ? 'checkout' : 'order'}
-      data-photos={photos}
+      data-photos={photos ?? (studio.revision !== 0 && studio.configuration.options.photos)}
+      data-studio={studio.revision !== 0}
+      data-studio-hints={studio.configuration.options.hints}
+      data-studio-revision={studio.revision}
+      style={studio.revision !== 0 ? posLayoutStyle(studio.configuration) : undefined}
       data-layout-version={defaultPosLayout.schemaVersion}
       ref={terminalRoot}
     >
@@ -712,8 +733,10 @@ export function OrderComposer({
           <button
             type="button"
             aria-label="Mostrar fotografías"
-            aria-pressed={photos}
-            onClick={() => setPhotos(!photos)}
+            aria-pressed={photos ?? (studio.revision !== 0 && studio.configuration.options.photos)}
+            onClick={() =>
+              setPhotos(!(photos ?? (studio.revision !== 0 && studio.configuration.options.photos)))
+            }
           >
             Fotos
           </button>
