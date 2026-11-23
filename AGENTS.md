@@ -4,6 +4,8 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Requisito permanente de interfaces
 
+- Domicilios conserva estética de Terminal: tarjetas compactas por estado y detalle de cliente/productos/reparto a la izquierda; en móvil, lista y detalle alternan sin perder filtros. Consultar, imprimir, cocina y cobrar se integran en la misma pantalla con servicios actuales. Cocina, entrega y cobro tienen estados independientes; no inventar disponibilidad de repartidores, métricas globales ni conexión en tiempo real. La búsqueda local debe identificarse como limitada a la página cargada.
+
 - Cobro dentro de Terminal mantiene cuenta/productos a la izquierda y total/recibido/cambio/confirmación a la derecha. Teclado numérico fijo fuera del desplazamiento de métodos/ajustes, también en abonos/cuentas divididas y pantallas compactas. Productos y opciones desplazan internamente; verificar teclas completas y pulsables, no solo dentro del viewport. Reutilizar CheckoutPage/AddPaymentsModal y preservar DTO/UUID, revisiones y guardas durante incertidumbre; no duplicar cálculos ni pagos.
 
 - Recibo térmico de venta: reutilizar SaleAmounts y datos persistidos de venta/pagos/devoluciones, sin recalcular dinero ni crear ventas/pagos al imprimir. Accesible en cobro Terminal e historial; distinguir abonos/saldo y devoluciones. Preview compartido58/80mm, aislado del recibo administrativo y oculto al bloquear sesión. Es recibo interno, nunca afirmar factura electrónica DIAN o impresión física verificada sin integración/prueba real.

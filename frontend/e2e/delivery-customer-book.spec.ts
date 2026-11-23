@@ -137,9 +137,9 @@ test('Domicilio guarda cliente y varias direcciones, conserva snapshot y se recu
     customer_id: customers[0].id,
   })
   await page.goto('/terminal/domicilios')
-  await expect(page.locator('.delivery-card')).toContainText('Calle 10 número 20')
+  await expect(page.locator('.delivery-tile')).toContainText('Calle 10 número 20')
   await page.reload()
-  await expect(page.locator('.delivery-card')).toHaveCount(1)
+  await expect(page.locator('.delivery-tile')).toHaveCount(1)
   await page.goto('/terminal/domicilios/nuevo')
   await page.getByRole('button', { name: 'Cliente', exact: true }).click()
   await details.getByLabel('Buscar cliente guardado', { exact: true }).fill('300123')

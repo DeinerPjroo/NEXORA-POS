@@ -204,8 +204,9 @@ test('Mesa mixta, recogida y domicilio conservan canales, historial y envíos in
   await page.getByRole('button', { name: 'Agregar Pizza mixta', exact: true }).click()
   await send()
   await page.goto('/terminal/domicilios')
-  await expect(page.locator('.delivery-card')).toHaveCount(1)
-  await expect(page.locator('.delivery-card')).toContainText('Calle de prueba 123')
+  await expect(page.locator('.delivery-tile')).toHaveCount(1)
+  await expect(page.locator('.delivery-tile')).toContainText('Calle de prueba 123')
+  await page.locator('.delivery-tile').click()
   const { roles } = await readApi<{ roles: { id: number; name: string }[] }>(page, 'roles')
   const { data: courier } = await writeApi<{ data: { id: number } }>(page, 'POST', 'employees', {
     idempotency_key: crypto.randomUUID(),
@@ -250,7 +251,7 @@ test('Mesa mixta, recogida y domicilio conservan canales, historial y envíos in
     .getByRole('dialog', { name: 'Confirmar entrega al cliente', exact: true })
     .getByRole('button', { name: 'Confirmar estado de entrega', exact: true })
     .click()
-  await expect(page.locator('.delivery-card')).toContainText('Entregado al cliente')
+  await expect(page.locator('.delivery-tile')).toContainText('Entregado al cliente')
   await page.screenshot({ path: 'test-results/terminal-delivery.png' })
   expect((await readApi<{ data: unknown[] }>(page, 'orders')).data).toHaveLength(3)
   expect((await readApi<{ data: unknown[] }>(page, 'sales')).data).toHaveLength(0)
