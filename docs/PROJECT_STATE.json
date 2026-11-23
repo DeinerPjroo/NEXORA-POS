@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "project": "Nexora POS",
-  "reference_date": "2026-11-21",
+  "reference_date": "2026-11-23",
   "version": "0.33.0",
   "phase": 3,
   "module": "Nexora Domicilios: clientes, direcciones y tarifas",
   "status": "IN_PROGRESS",
   "active_task": "3.DEL-1",
-  "last_completed_task": "3.DEL-UI-EDITOR",
+  "last_completed_task": "3.DEL-2A",
+  "delivery_additions_verification": "3.DEL-2A COMPLETED: Añadir productos desde detalle reutiliza OrderComposer/CreateOrder sobre el mismo domicilio, solo pending/assigned y sin venta. Revisiones de pedido/entrega, UUID exacto, auditoría/eventos atómicos y tarifa congelada; cocina solo despacha adiciones. Conflicto requiere actualización explícita conservando borrador. Pruebas nativas dirigidas; SQL14/215 incluidas carreras de UUID/revisión/cobro y regresión de mesa; Chromium1/52.8s con respuesta perdida, conflicto y cocina incremental. Build/TS/Pint/Prettier aprobados. Caso Chromium ok; runner interrumpido esperando cierre de servicios. Sin migración ni datos reales. Correcciones/cancelaciones de líneas registradas siguen pendientes en3.DEL-2.",
   "next_task": "Completar Nexora Domicilios por cinco etapas del pedido del usuario: núcleo/clientes/direcciones/tarifas, cocina incremental, repartidores/incidencias, cobros/custodia/rendiciones y central/indicadores. Reutilizar dominios existentes; Kitchen3.1-C sigue pendiente sin reiniciar fases.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
@@ -86,7 +87,8 @@
     "nexora_test_da2ea354dfa25a83",
     "nexora_test_34e4b943644faf6c",
     "nexora_test_8d08d59bfd2a6f2e",
-    "nexora_test_b0127201de5d5b75"
+    "nexora_test_b0127201de5d5b75",
+    "nexora_test_127a213572e98b16"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",

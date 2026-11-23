@@ -68,6 +68,16 @@ final class DeliveryWorkflow
         });
     }
 
+    public function recordAddition(User $actor, Order $order, int $revision): void
+    {
+        $delivery = OrderDelivery::where('order_id', $order->id)->lockForUpdate()->firstOrFail();
+        abort_unless($delivery->revision === $revision, 409, 'El domicilio cambió. Actualízalo antes de agregar productos.');
+        abort_unless(in_array($delivery->status, ['pending', 'assigned'], true), 409, 'Solo puedes agregar productos antes de salir a reparto.');
+        $delivery->revision++;
+        $delivery->save();
+        $this->event($actor, $delivery, 'Se agregaron productos al pedido. Se conserva la tarifa de envío registrada.');
+    }
+
     public function cancel(User $actor, Order $order, ?string $reason): void
     {
         $delivery = OrderDelivery::where('order_id', $order->id)->lockForUpdate()->first();

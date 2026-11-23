@@ -87,6 +87,8 @@ export type OrderEvent = {
 }
 export type Order = {
   delivery_fee_total?: string
+  delivery_revision?: number | null
+  delivery_status?: string | null
   delivery_charge?: import('../sales/types').DeliveryCharge | null
   dining_session_id?: number | null
   dining_snapshot?: {

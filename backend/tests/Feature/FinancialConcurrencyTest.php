@@ -82,6 +82,48 @@ class FinancialConcurrencyTest extends SqlConcurrencyTestCase
         return [$work, $order, $append];
     }
 
+    private function deliveryAppendWork(): array
+    {
+        $work = $this->work();
+        $input = [...$this->key(), 'branch_id' => $work['branch'], 'channel' => 'delivery', 'currency' => 'COP', 'delivery' => ['recipient_name' => 'Cliente', 'phone' => '3001234567', 'address' => 'Calle de prueba 123'], 'items' => [['product_id' => $work['product'], 'quantity' => 1, 'product_revision' => 1, 'expected_unit_price' => '100.01']]];
+        $order = $this->postJson('/api/v1/orders', $input)->assertCreated()->json('data');
+        unset($input['delivery']);
+        $append = [...$input, ...$this->key(), 'append_order_id' => $order['id'], 'order_revision' => 1, 'delivery_revision' => 1];
+
+        return [$work, $order, $append];
+    }
+
+    public function test_delivery_append_same_uuid_replays_once_and_competing_keys_use_revisions(): void
+    {
+        [$work, $order, $append] = $this->deliveryAppendWork();
+        $job = $this->job($work, 'order.append', $order['id'], $append);
+        $results = $this->race([$job, $job]);
+        $this->assertSame([true, true], array_column($results, 'accepted'));
+        $this->assertDatabaseHas('orders', ['id' => $order['id'], 'revision' => 2, 'subtotal' => '200.0200']);
+        $this->assertDatabaseHas('order_deliveries', ['order_id' => $order['id'], 'revision' => 2]);
+        $append = [...$append, ...$this->key(), 'order_revision' => 2, 'delivery_revision' => 2];
+        $this->oneAccepted($this->race([$this->job($work, 'order.append', $order['id'], $append), $this->job($work, 'order.append', $order['id'], [...$append, ...$this->key()])]));
+        $this->assertSame(3, DB::table('order_items')->where('order_id', $order['id'])->count());
+        $this->assertDatabaseHas('order_deliveries', ['order_id' => $order['id'], 'revision' => 3]);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
+    public function test_delivery_append_racing_collection_preserves_the_collected_total(): void
+    {
+        [$work, $order, $append] = $this->deliveryAppendWork();
+        $results = $this->race([$this->job($work, 'order.append', $order['id'], $append), $this->job($work, 'sale.collect', $order['id'], $this->collect($work))]);
+        $this->oneAccepted($results);
+        if ($results[0]['accepted']) {
+            $this->assertDatabaseCount('sales', 0);
+            $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '200.0200']);
+            $this->assertDatabaseHas('order_deliveries', ['order_id' => $order['id'], 'revision' => 2]);
+        } else {
+            $this->assertDatabaseHas('orders', ['id' => $order['id'], 'subtotal' => '100.0100']);
+            $this->assertDatabaseHas('sales', ['order_id' => $order['id'], 'total' => '100.0100']);
+            $this->assertDatabaseHas('order_deliveries', ['order_id' => $order['id'], 'revision' => 1]);
+        }
+    }
+
     public function test_table_append_same_uuid_only_adds_products_once(): void
     {
         [$work, $order, $append] = $this->appendWork();

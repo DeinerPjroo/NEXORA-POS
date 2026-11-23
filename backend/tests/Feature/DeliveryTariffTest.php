@@ -80,6 +80,22 @@ class DeliveryTariffTest extends TestCase
         return $this->postJson('/api/v1/cash/registers/'.$id.'/open', [...$this->key(), 'opening_amount' => '0', 'currency' => 'COP'])->assertCreated()->json('data');
     }
 
+    public function test_delivery_additions_keep_fee_snapshot_even_when_free_threshold_is_crossed_and_sale_blocks_more(): void
+    {
+        $this->policy(['free_from' => '36000']);
+        $order = $this->postJson('/api/v1/orders', $this->orderBody($this->preview()))->assertCreated()->json('data');
+        $body = [...$this->key(), 'branch_id' => $this->branch, 'channel' => 'delivery', 'currency' => 'COP', 'append_order_id' => $order['id'], 'order_revision' => $order['revision'], 'delivery_revision' => $order['delivery_revision'], 'items' => [$this->item]];
+        $next = $this->postJson('/api/v1/orders', $body)->assertCreated()->assertJsonPath('data.subtotal', '36000.0000')->assertJsonPath('data.delivery_fee_total', '3240.0000')->json('data');
+        $this->assertSame($order['delivery_charge'], $next['delivery_charge']);
+        $cash = $this->configureSales();
+        $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'order_revision' => $next['revision'], 'settings_revision' => 2, 'discount_amount' => '0', 'expected_total' => '39240.00', 'received_amount' => '40000'])->assertCreated()->assertJsonPath('data.total', '39240.0000');
+        $this->postJson('/api/v1/orders', [...$body, ...$this->key(), 'order_revision' => $next['revision'], 'delivery_revision' => $next['delivery_revision']])->assertConflict();
+        $this->assertDatabaseCount('sales', 1);
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseCount('order_items', 2);
+        $this->getJson('/api/v1/orders/'.$order['id'])->assertJsonPath('data.delivery_revision', $next['delivery_revision']);
+    }
+
     public function test_fixed_zone_free_and_manual_tariffs_are_authoritative_and_revisioned(): void
     {
         $p = $this->policy(['free_from' => '36000']);

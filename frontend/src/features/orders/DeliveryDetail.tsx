@@ -15,6 +15,7 @@ export function DeliveryDetail({
   onCollect,
   onKitchen,
   onEdit,
+  onAdd,
 }: {
   delivery: Delivery | null
   onBack: () => void
@@ -22,6 +23,7 @@ export function DeliveryDetail({
   onCollect: () => void
   onKitchen: () => void
   onEdit: () => void
+  onAdd: (order: Order) => void
 }) {
   const can = useCan()
   const { session } = useSession()
@@ -198,6 +200,16 @@ export function DeliveryDetail({
         </details>
       </div>
       <footer className="delivery-detail-actions">
+        {can('orders.manage') &&
+          can('catalog.view') &&
+          order &&
+          !order.sale_id &&
+          order.status !== 'cancelled' &&
+          ['pending', 'assigned'].includes(order.delivery_status ?? '') && (
+            <button type="button" className="delivery-main-action" onClick={() => onAdd(order)}>
+              Añadir productos
+            </button>
+          )}
         {can('orders.manage') && ['pending', 'assigned'].includes(delivery.status) && (
           <button type="button" onClick={() => onAction('assigned')}>
             <UserRound size={16} />

@@ -77,11 +77,17 @@ export function OrderComposer({
   terminal = false,
   initialDining,
   initialChannel,
+  initialOrder,
+  onReturn,
 }: {
   terminal?: boolean
   initialDining?: DiningSelection
   initialChannel?: OrderChannel
+  initialOrder?: Order
+  onReturn?: () => void
 }) {
+  const appendDelivery = initialOrder?.channel === 'delivery'
+  const [appendSnapshot, setAppendSnapshot] = useState(initialOrder)
   const context = useOperationContext(terminal)
   const { session } = useSession()
   const [currency] = useState(session!.company.currency)
@@ -89,10 +95,11 @@ export function OrderComposer({
     terminal ? loadPosContext(session!) : { branchId: null, channel: 'takeaway' as OrderChannel },
   )
   const [branch, setBranch] = useState<number | null>(
-    initialDining?.branch_id ?? remembered.branchId,
+    initialOrder?.branch_id ?? initialDining?.branch_id ?? remembered.branchId,
   )
   const [channel, setChannel] = useState<OrderChannel>(
-    initialDining ? 'dine_in' : (initialChannel ?? (terminal ? 'dine_in' : remembered.channel)),
+    initialOrder?.channel ??
+      (initialDining ? 'dine_in' : (initialChannel ?? (terminal ? 'dine_in' : remembered.channel))),
   )
   const [dining, setDining] = useState<DiningSelection | null>(initialDining ?? null)
   const [details, setDetails] = useState<false | 'client' | 'notes'>(false)
@@ -107,7 +114,7 @@ export function OrderComposer({
   const [deliveryFormEpoch, setDeliveryFormEpoch] = useState(0)
   const [deliveryFeeReady, setDeliveryFeeReady] = useState(false)
   const [deliveryFeeDirty, setDeliveryFeeDirty] = useState(false)
-  const [pickupId, setPickupId] = useState<number | null>(null)
+  const [pickupId, setPickupId] = useState<number | null>(initialOrder?.id ?? null)
   const pendingDining = useRef<DiningSelection | null>(null)
   const pendingTableSwitch = useRef<DiningSelection | null>(null)
   const orderIntent = useRef<'save' | 'checkout' | 'kitchen'>(
@@ -219,22 +226,52 @@ export function OrderComposer({
   const pickupOrder = useQuery({
     queryKey: ['orders', 'pos-pickup', pickupId],
     queryFn: ({ signal }) => api<{ data: Order }>(`orders/${pickupId}`, { signal }),
-    enabled: !!pickupId && channel !== 'dine_in',
-    refetchInterval: 15000,
+    enabled: !!pickupId && channel !== 'dine_in' && !appendDelivery,
+    refetchInterval: appendDelivery ? false : 15000,
   })
   const savedPickup = channel !== 'dine_in' && !!pickupId
   const acknowledged =
     terminal && dining && confirmedOrder?.dining_session_id === dining.id ? confirmedOrder : null
-  const currentOrder =
-    terminal && dining && channel === 'dine_in'
+  const currentOrder = appendDelivery
+    ? appendSnapshot
+    : terminal && dining && channel === 'dine_in'
       ? (acknowledged ?? activeTableOrder.data?.data[0])
       : savedPickup &&
           pickupOrder.data?.data.channel === channel &&
           pickupOrder.data.data.branch_id === selected
         ? pickupOrder.data.data
         : undefined
+  const appendUnavailable =
+    !!appendDelivery &&
+    (!currentOrder ||
+      !!currentOrder.sale_id ||
+      currentOrder.status === 'cancelled' ||
+      !currentOrder.delivery_revision ||
+      !['pending', 'assigned'].includes(currentOrder.delivery_status ?? ''))
+  const savedReadOnly = (savedPickup && !appendDelivery) || appendUnavailable
+  async function refreshAppend() {
+    const fresh = await pickupOrder.refetch()
+    if (!fresh.isError && fresh.data) {
+      setAppendSnapshot(fresh.data.data)
+      operation.reset()
+    }
+  }
   const displayCart = acknowledged ? [] : cart
   const operation = useOperation<Order>('orders', async (order) => {
+    if (appendDelivery) {
+      setAppendSnapshot(order)
+      setCart([])
+      setActiveLine(null)
+      client.setQueryData(['orders', 'pos-pickup', order.id], { data: order })
+      client.setQueryData(['order', order.id], { data: order })
+      void client.invalidateQueries({ queryKey: ['deliveries'] })
+      setCheckoutOrderId(order.id)
+      setCheckoutContext(currentCheckoutContext)
+      if (orderIntent.current === 'kitchen') setKitchenOrderId(order.id)
+      else if (orderIntent.current === 'checkout') setCheckoutOpen(true)
+      else toast('Domicilio actualizado. Solo se agregaron los nuevos productos.')
+      return
+    }
     if (order.channel === 'delivery') {
       setDeliveryDirty(false)
       setDeliveryFeeDirty(false)
@@ -325,6 +362,7 @@ export function OrderComposer({
   })
   const locked = operation.locked || pricing.locked || !!customerEditId || deliveryBookBusy
   const customerAvailable =
+    !appendDelivery &&
     !!selected &&
     !tableOrderUnavailable &&
     !ordersOpen &&
@@ -342,13 +380,13 @@ export function OrderComposer({
     !pickupsOpen &&
     (channel === 'takeaway' || (channel === 'dine_in' && !!dining))
   const openOrdersPanel = useCallback(() => {
-    if (locked || cart.length) return
+    if (locked || cart.length || appendDelivery) return
     setOrdersOpen(true)
     setPickupsOpen(false)
     setTablesOpen(false)
     setDetails(false)
     setPanel('cart')
-  }, [locked, cart.length])
+  }, [locked, cart.length, appendDelivery])
   useTerminalOrders(terminal ? openOrdersPanel : null)
   useTerminalGuard(
     terminal &&
@@ -404,7 +442,7 @@ export function OrderComposer({
     pricing.review,
   ])
   function configure(product: Product, variant?: Variant) {
-    if (savedPickup || (terminal && channel === 'dine_in' && !dining)) return
+    if (savedReadOnly || (terminal && channel === 'dine_in' && !dining)) return
     setPicking(null)
     if (product.modifier_groups_count) setCustomizing({ product, variant })
     else add(product, variant)
@@ -415,7 +453,7 @@ export function OrderComposer({
     addLine(line)
   }
   function addLine(line: CartLine) {
-    if (locked || savedPickup || (terminal && channel === 'dine_in' && !dining)) return
+    if (locked || savedReadOnly || (terminal && channel === 'dine_in' && !dining)) return
     line = withDestination(line, channel === 'dine_in' ? 'table' : 'takeaway')
     setCart((previous) => {
       const existing = previous.find((item) => item.key === line.key)
@@ -498,11 +536,11 @@ export function OrderComposer({
     }
     if (
       !selected ||
-      savedPickup ||
+      savedReadOnly ||
       !cart.length ||
       pricing.locked ||
       tableOrderUnavailable ||
-      (channel === 'delivery' && !deliveryFeeReady) ||
+      (channel === 'delivery' && !appendDelivery && !deliveryFeeReady) ||
       (orderIntent.current === 'checkout' && terminal && (!posReady || !can('sales.collect')))
     )
       return
@@ -533,6 +571,7 @@ export function OrderComposer({
     } = Object.fromEntries(new FormData(event.currentTarget))
     if (
       channel === 'delivery' &&
+      !appendDelivery &&
       (!String(delivery_name ?? '').trim() ||
         String(delivery_phone ?? '').trim().length < 3 ||
         String(delivery_address ?? '').trim().length < 5)
@@ -542,12 +581,18 @@ export function OrderComposer({
       return
     }
     operation.send({
-      ...data,
+      ...(appendDelivery
+        ? {
+            append_order_id: currentOrder!.id,
+            order_revision: currentOrder!.revision,
+            delivery_revision: currentOrder!.delivery_revision,
+          }
+        : data),
       branch_id: selected,
       channel,
       currency,
       items: serializeCart(cart, true),
-      ...(channel === 'delivery'
+      ...(channel === 'delivery' && !appendDelivery
         ? {
             delivery: {
               recipient_name: delivery_name,
@@ -812,8 +857,19 @@ export function OrderComposer({
               {channel === 'delivery' && (
                 <button
                   type="button"
-                  disabled={locked || !!cart.length || deliveryDirty || deliveryFeeDirty}
+                  disabled={
+                    locked ||
+                    (!appendDelivery && (!!cart.length || deliveryDirty || deliveryFeeDirty))
+                  }
                   onClick={() => {
+                    if (appendDelivery) {
+                      if (
+                        !cart.length ||
+                        window.confirm('¿Volver sin guardar los productos agregados?')
+                      )
+                        onReturn?.()
+                      return
+                    }
                     setPickupId(null)
                     setCheckoutOrderId(null)
                     setCheckoutContext('')
@@ -826,7 +882,7 @@ export function OrderComposer({
                     operation.reset()
                   }}
                 >
-                  Nuevo domicilio
+                  {appendDelivery ? 'Volver a domicilios' : 'Nuevo domicilio'}
                 </button>
               )}
               {channel === 'dine_in' && (
@@ -874,7 +930,7 @@ export function OrderComposer({
               </button>
               <button
                 type="button"
-                disabled={locked || !!cart.length || !selected}
+                disabled={locked || !!cart.length || !selected || appendDelivery}
                 aria-expanded={ordersOpen}
                 onClick={() => {
                   setOrdersOpen(!ordersOpen)
@@ -1073,7 +1129,7 @@ export function OrderComposer({
                       disabled={
                         !product.sellable ||
                         locked ||
-                        savedPickup ||
+                        savedReadOnly ||
                         pickupsOpen ||
                         ordersOpen ||
                         products.isFetching ||
@@ -1187,7 +1243,7 @@ export function OrderComposer({
             {savedPickup && (
               <>
                 <ErrorNotice error={pickupOrder.error} />
-                {pickupOrder.isPending && <p role="status">Cargando pedido…</p>}
+                {!appendDelivery && pickupOrder.isPending && <p role="status">Cargando pedido…</p>}
                 {pickupOrder.error && (
                   <button type="button" onClick={() => void pickupOrder.refetch()}>
                     Reintentar consulta
@@ -1207,11 +1263,27 @@ export function OrderComposer({
                   </div>
                 )}
                 <p className="muted small">
-                  {channel === 'delivery'
-                    ? 'Pedido de domicilio guardado. Puedes consultar sus productos, enviarlo a cocina o cobrarlo cuando corresponda.'
-                    : 'Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva recogida.'}
+                  {appendDelivery
+                    ? 'Añade productos al mismo pedido. La tarifa de envío registrada se conserva.'
+                    : channel === 'delivery'
+                      ? 'Pedido de domicilio guardado. Puedes consultar sus productos, enviarlo a cocina o cobrarlo cuando corresponda.'
+                      : 'Consulta, envía a cocina o cobra esta recogida. Para otro cliente, pulsa Nueva recogida.'}
                 </p>
               </>
+            )}
+            {appendDelivery && conflict && !locked && (
+              <button
+                type="button"
+                disabled={pickupOrder.isFetching}
+                onClick={() => void refreshAppend()}
+              >
+                Actualizar pedido conservando adiciones
+              </button>
+            )}
+            {appendUnavailable && (
+              <p className="notice">
+                Este domicilio ya tiene venta registrada o salió a reparto. No admite adiciones.
+              </p>
             )}
             <ErrorNotice error={pricing.error} />
             {pricing.pending && (
@@ -1562,7 +1634,7 @@ export function OrderComposer({
               </button>
             )}
             <div className={terminal ? 'pos-order-actions' : undefined}>
-              {terminal && channel !== 'dine_in' && !savedPickup && (
+              {terminal && channel !== 'dine_in' && (!savedPickup || appendDelivery) && (
                 <button
                   type="button"
                   className="pos-save-order"
@@ -1571,7 +1643,10 @@ export function OrderComposer({
                     pricing.locked ||
                     (!operation.uncertain && !cart.length) ||
                     (operation.uncertain && orderIntent.current !== 'save') ||
-                    (!operation.uncertain && channel === 'delivery' && !deliveryFeeReady)
+                    (!operation.uncertain &&
+                      (appendUnavailable ||
+                        conflict ||
+                        (channel === 'delivery' && !appendDelivery && !deliveryFeeReady)))
                   }
                   onClick={() => {
                     if (!operation.uncertain) orderIntent.current = 'save'
@@ -1580,9 +1655,11 @@ export function OrderComposer({
                 >
                   {operation.uncertain
                     ? 'Reintentar guardado'
-                    : channel === 'delivery'
-                      ? 'GUARDAR DOMICILIO'
-                      : 'GUARDAR RECOGIDA'}
+                    : appendDelivery
+                      ? 'ACTUALIZAR DOMICILIO'
+                      : channel === 'delivery'
+                        ? 'GUARDAR DOMICILIO'
+                        : 'GUARDAR RECOGIDA'}
                 </button>
               )}
               {terminal && dining && (
@@ -1614,6 +1691,7 @@ export function OrderComposer({
                   disabled={
                     locked ||
                     tableOrderUnavailable ||
+                    (appendDelivery && !!cart.length && (appendUnavailable || conflict)) ||
                     (!operation.uncertain &&
                       channel === 'delivery' &&
                       !savedPickup &&
@@ -1657,6 +1735,7 @@ export function OrderComposer({
                       ((!cart.length && !currentOrder && !resumableCheckoutId) ||
                         !selected ||
                         conflict ||
+                        (appendUnavailable && !!cart.length) ||
                         !posReady ||
                         (channel === 'delivery' && !savedPickup && !deliveryFeeReady) ||
                         tableOrderUnavailable)) ||
@@ -1742,7 +1821,13 @@ export function OrderComposer({
         </div>
       </div>
       {kitchenOrderId && (
-        <KitchenSend orderId={kitchenOrderId} onClose={() => setKitchenOrderId(null)} />
+        <KitchenSend
+          orderId={kitchenOrderId}
+          onClose={() => {
+            setKitchenOrderId(null)
+            if (appendDelivery) void refreshAppend()
+          }}
+        />
       )}
       {tableKitchen && dining && (
         <TableKitchen sessionId={dining.id} onClose={() => setTableKitchen(false)} />
@@ -1761,6 +1846,10 @@ export function OrderComposer({
             }
             requestAnimationFrame(() => submitButton.current?.focus())
             if (completed) {
+              if (appendDelivery) {
+                onReturn?.()
+                return
+              }
               if (savedPickup) void pickupOrder.refetch()
               setCheckoutOrderId(null)
               setPanel('menu')
@@ -1768,7 +1857,7 @@ export function OrderComposer({
               setConfirmedOrder(null)
               orderForm.current?.reset()
               operation.reset()
-            }
+            } else if (appendDelivery) void refreshAppend()
           }}
         />
       )}

@@ -728,3 +728,6 @@
     font-size: 9px;
   }
 }
+.delivery-terminal[data-mode='edit'] {
+  gap: 0;
+}

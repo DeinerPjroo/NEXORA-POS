@@ -71,6 +71,71 @@ class DeliveryWorkflowTest extends TestCase
         });
     }
 
+    private function additions(array $order): array
+    {
+        return [...$this->key(), 'branch_id' => $this->branch, 'channel' => 'delivery', 'currency' => 'COP', 'append_order_id' => $order['id'], 'order_revision' => $order['revision'], 'delivery_revision' => $order['delivery_revision'], 'items' => [$this->product]];
+    }
+
+    public function test_delivery_additions_preserve_history_replay_exactly_and_reject_stale_revisions(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $body = $this->additions($order);
+        $next = $this->postJson('/api/v1/orders', $body)->assertCreated()->assertJsonPath('data.id', $order['id'])->assertJsonPath('data.subtotal', '40000.0000')->assertJsonPath('data.delivery_revision', 2)->assertJsonCount(2, 'data.items')->json('data');
+        $this->assertSame($order['items'][0], $next['items'][0]);
+        $this->postJson('/api/v1/orders', $body)->assertCreated()->assertJsonCount(2, 'data.items');
+        $this->postJson('/api/v1/orders', [...$body, 'items' => [[...$this->product, 'quantity' => 3]]])->assertConflict();
+        $this->postJson('/api/v1/orders', [...$this->additions($next), 'order_revision' => 1])->assertConflict();
+        $this->postJson('/api/v1/orders', [...$this->additions($next), 'delivery_revision' => 1])->assertConflict();
+        $this->postJson('/api/v1/orders', [...$this->additions($next), 'delivery' => $this->payload()['delivery']])->assertUnprocessable();
+        $this->getJson('/api/v1/orders/'.$order['id'])->assertJsonPath('data.delivery_revision', 2)->assertJsonPath('data.revision', 2);
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseCount('order_items', 2);
+        $this->assertDatabaseCount('order_deliveries', 1);
+        $this->assertDatabaseCount('delivery_events', 2);
+        $this->assertDatabaseHas('order_deliveries', ['order_id' => $order['id'], 'recipient_name' => 'Cliente', 'address' => 'Calle de prueba 123']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'order.items_added']);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+    }
+
+    public function test_delivery_additions_reject_logistics_changes_foreign_context_and_unauthorized_replays(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $body = $this->additions($order);
+        $otherBranch = $this->scope(fn () => Branch::create(['name' => 'Otra sede', 'code' => 'OTHER', 'is_active' => true])->id);
+        $this->postJson('/api/v1/orders', [...$body, 'branch_id' => $otherBranch])->assertConflict();
+        $this->postJson('/api/v1/orders', [...$body, 'channel' => 'takeaway'])->assertConflict();
+        $this->scope(fn () => OrderDelivery::where('order_id', $order['id'])->update(['status' => 'out_for_delivery', 'revision' => 2]));
+        $this->postJson('/api/v1/orders', [...$body, 'delivery_revision' => 2])->assertConflict();
+        $this->scope(fn () => OrderDelivery::where('order_id', $order['id'])->update(['status' => 'pending', 'revision' => 3]));
+        $this->postJson('/api/v1/orders', [...$body, 'delivery_revision' => 2])->assertConflict();
+        $body['delivery_revision'] = 3;
+        $this->postJson('/api/v1/orders', $body)->assertCreated();
+        $this->actingAs($this->courier())->postJson('/api/v1/orders', $body)->assertForbidden();
+        $other = $this->company('another-delivery@example.test');
+        $this->actingAs($other)->postJson('/api/v1/orders', $body)->assertUnprocessable();
+        $this->assertDatabaseCount('order_items', 2);
+    }
+
+    public function test_failed_addition_audit_rolls_back_order_delivery_lines_and_idempotency(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $body = $this->additions($order);
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'order.items_added') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $this->postJson('/api/v1/orders', $body)->assertServerError();
+        $fail = false;
+        $this->assertDatabaseCount('order_items', 1);
+        $this->assertDatabaseCount('delivery_events', 1);
+        $this->getJson('/api/v1/orders/'.$order['id'])->assertJsonPath('data.revision', 1)->assertJsonPath('data.delivery_revision', 1)->assertJsonPath('data.subtotal', '20000.0000');
+        $this->postJson('/api/v1/orders', $body)->assertCreated()->assertJsonCount(2, 'data.items');
+    }
+
     public function test_delivery_is_distinct_from_pickup_has_authorized_courier_and_never_collects_money(): void
     {
         $body = $this->payload();
@@ -141,6 +206,7 @@ class DeliveryWorkflowTest extends TestCase
             return $u->refresh();
         });
         $this->actingAs($staff)->getJson('/api/v1/deliveries?branch_id='.$branch)->assertNotFound();
+        $this->postJson('/api/v1/orders', [...$this->additions($order), 'branch_id' => $this->branch])->assertNotFound();
         $this->postJson('/api/v1/deliveries/'.$delivery->id.'/status', [...$this->key(), 'revision' => 1, 'status' => 'assigned', 'courier_id' => $courier->id])->assertNotFound();
         $this->getJson('/api/v1/deliveries?branch_id='.$this->branch)->assertOk()->assertJsonCount(0, 'data');
         $this->postJson('/api/v1/orders', $this->payload())->assertCreated();

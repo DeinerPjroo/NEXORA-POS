@@ -32,8 +32,14 @@ final class CreateOrder
             $appending = ! empty($data['append_order_id']);
             if ($appending) {
                 $order = Order::whereKey($data['append_order_id'])->lockForUpdate()->firstOrFail();
-                abort_unless($dining && $order->dining_session_id === $dining->id && $order->branch_id === $dining->branch_id && $order->currency === $data['currency'] && $order->channel === 'dine_in', 409, 'El pedido no corresponde a esta atención.');
-                abort_unless($order->revision === (int) $data['order_revision'], 409, 'El pedido cambió. Actualiza la mesa antes de agregar productos.');
+                abort_unless($order->branch_id === $plan['branch']->id && $order->currency === $data['currency'] && $order->channel === $data['channel'], 409, 'El pedido no corresponde a este contexto.');
+                if ($order->channel === 'delivery') {
+                    abort_if($dining, 409, 'Un domicilio no puede asociarse a una mesa.');
+                    app(DeliveryWorkflow::class)->recordAddition($actor, $order, (int) $data['delivery_revision']);
+                } else {
+                    abort_unless($order->channel === 'dine_in' && $dining && $order->dining_session_id === $dining->id && $order->branch_id === $dining->branch_id, 409, 'El pedido no corresponde a esta atención.');
+                }
+                abort_unless($order->revision === (int) $data['order_revision'], 409, 'El pedido cambió. Actualízalo antes de agregar productos.');
                 abort_if($order->status === 'cancelled' || $order->sale()->exists(), 409, 'Un pedido cancelado o con cobros no admite nuevos productos.');
                 abort_if($order->items()->count() + count($plan['items']) > 100, 422, 'El pedido no admite más de 100 posiciones facturables.');
                 $previousStatus = $order->status;

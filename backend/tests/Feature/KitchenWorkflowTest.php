@@ -84,6 +84,25 @@ class KitchenWorkflowTest extends TestCase
         return $this->postJson('/api/v1/kitchen-tickets/'.$ticket['id'].'/status', [...$this->key(), 'revision' => $ticket['revision'], 'status' => $status])->assertOk()->json('data');
     }
 
+    public function test_delivery_additions_dispatch_only_new_lines_to_the_existing_order(): void
+    {
+        $item = $this->route($this->product(), $this->station());
+        $order = $this->order([$item], ['channel' => 'delivery', 'delivery' => ['recipient_name' => 'Cliente', 'phone' => '3001234567', 'address' => 'Calle de prueba 123']]);
+        $first = $this->send($order);
+        $fresh = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        $next = $this->order([$item], ['channel' => 'delivery', 'append_order_id' => $order['id'], 'order_revision' => $fresh['revision'], 'delivery_revision' => $fresh['delivery_revision']]);
+        $second = $this->send($next);
+        $this->assertSame($order['id'], $next['id']);
+        $this->assertCount(1, $second['tickets']);
+        $this->assertCount(1, $second['tickets'][0]['lines']);
+        $this->assertNotSame($first['tickets'][0]['lines'][0]['order_item_id'], $second['tickets'][0]['lines'][0]['order_item_id']);
+        $this->assertSame('takeaway', $second['tickets'][0]['lines'][0]['preparation_destination']);
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseCount('order_deliveries', 1);
+        $this->assertDatabaseCount('kitchen_ticket_lines', 2);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
     public function test_dispatch_groups_stations_snapshots_once_and_never_moves_money(): void
     {
         $a = $this->station();

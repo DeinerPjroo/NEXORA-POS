@@ -28,6 +28,8 @@ import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
 import { OrderCustomerEditor } from './OrderCustomerEditor'
+import { OrderComposer } from './OrderComposer'
+import type { Order } from '../operations/types'
 import './deliveries.css'
 
 const filters = [
@@ -51,6 +53,7 @@ export function DeliveriesPage() {
   const [checkout, setCheckout] = useState<number | null>(null)
   const [kitchen, setKitchen] = useState<number | null>(null)
   const [editing, setEditing] = useState<number | null>(null)
+  const [adding, setAdding] = useState<Order | null>(null)
   const [editorBusy, setEditorBusy] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
   const busy = !!checkout || !!action || !!kitchen || !!editing
@@ -67,13 +70,13 @@ export function DeliveriesPage() {
   const selected = branch ?? context.data?.branches.find((b) => b.is_active)?.id ?? null
   const query = useQuery({
     queryKey: ['deliveries', selected, status, page],
-    enabled: !!selected && !busy,
+    enabled: !!selected && !busy && !adding,
     queryFn: ({ signal }) =>
       api<CatalogPage<Delivery>>(
         `deliveries?branch_id=${selected}&page=${page}${status ? '&status=' + status : ''}`,
         { signal },
       ),
-    refetchInterval: busy ? false : 10000,
+    refetchInterval: busy || adding ? false : 10000,
   })
   const delivery = query.data?.data.find((row) => row.id === selectedId) ?? null
   const term = search.trim().toLocaleLowerCase()
@@ -99,10 +102,22 @@ export function DeliveriesPage() {
   return (
     <section
       className="delivery-terminal"
-      data-mode={checkout ? 'checkout' : 'board'}
+      data-mode={adding ? 'edit' : checkout ? 'checkout' : 'board'}
       aria-label="Terminal de domicilios"
     >
-      {checkout ? (
+      {adding ? (
+        <OrderComposer
+          key={adding.id}
+          terminal
+          initialOrder={adding}
+          initialChannel="delivery"
+          onReturn={() => {
+            setAdding(null)
+            void client.invalidateQueries({ queryKey: ['deliveries'] })
+            void client.invalidateQueries({ queryKey: ['order', adding.id] })
+          }}
+        />
+      ) : checkout ? (
         <TerminalCheckout
           orderId={checkout}
           onClose={() => {
@@ -263,6 +278,7 @@ export function DeliveriesPage() {
               )}
             </section>
             <DeliveryDetail
+              onAdd={(order) => setAdding(structuredClone(order))}
               delivery={delivery}
               onBack={() => setSelectedId(null)}
               onAction={(status) => {
