@@ -42,6 +42,29 @@ class StudioConcurrencyTest extends SqlConcurrencyTestCase
         $this->assertDatabaseHas('studio_layouts', ['revision' => 2, 'published' => null]);
     }
 
+    public function test_studio_restore_same_uuid_is_once_and_restore_racing_publish_rejects_stale_revision(): void
+    {
+        $actor = $this->actor();
+        $config = PosLayoutSchema::defaults();
+        $this->postJson('/api/v1/studio/pos/draft', ['idempotency_key' => (string) Str::uuid(), 'revision' => 0, 'configuration' => $config])->assertOk();
+        $version = $this->getJson('/api/v1/studio/pos/versions')->json('data.0.id');
+        $this->postJson('/api/v1/studio/pos/publish', ['idempotency_key' => (string) Str::uuid(), 'revision' => 1])->assertOk();
+        $config['tokens']['order_width'] = 420;
+        $this->postJson('/api/v1/studio/pos/draft', ['idempotency_key' => (string) Str::uuid(), 'revision' => 2, 'configuration' => $config])->assertOk();
+        $data = ['idempotency_key' => (string) Str::uuid(), 'revision' => 3, 'version_id' => $version, 'reason' => 'Restaurar distribución anterior'];
+        $job = ['operation' => 'studio.restore', 'actor_id' => $actor->id, 'resource_id' => 0, 'data' => $data];
+        $results = $this->race([$job, $job]);
+        $this->assertSame([true, true], array_column($results, 'accepted'));
+        $this->assertDatabaseCount('studio_layout_versions', 4);
+        $job['data'] = [...$data, 'idempotency_key' => (string) Str::uuid(), 'revision' => 4];
+        $publish = ['operation' => 'studio.publish', 'actor_id' => $actor->id, 'resource_id' => 0, 'data' => ['idempotency_key' => (string) Str::uuid(), 'revision' => 4]];
+        $accepted = array_column($this->race([$job, $publish]), 'accepted');
+        sort($accepted);
+        $this->assertSame([false, true], $accepted);
+        $this->assertDatabaseCount('studio_layout_versions', 5);
+        $this->assertDatabaseHas('studio_layouts', ['revision' => 5]);
+    }
+
     public function test_studio_publish_racing_draft_cannot_publish_unreviewed_configuration(): void
     {
         $actor = $this->actor();

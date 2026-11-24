@@ -15,6 +15,13 @@ import {
   type PosLayout,
 } from './pos-layout'
 import { PosLayoutCanvas } from './PosLayoutCanvas'
+import { useLayoutHistory } from './useLayoutHistory'
+import {
+  StudioVersions,
+  StudioVersionAction,
+  type VersionAction,
+  type LayoutVersion,
+} from './StudioVersions'
 import './studio-layout.css'
 
 export type SavedPosLayout = {
@@ -23,6 +30,7 @@ export type SavedPosLayout = {
   draft: unknown
   published: unknown
   published_revision: number | null
+  draft_revision: number | null
 }
 type StudioPosData = { data: SavedPosLayout | null; defaults: unknown; components: string[] }
 export function PosStudioPage() {
@@ -54,16 +62,26 @@ const labels = {
   font_size: 'Tamaño de texto',
 }
 function PosLayoutEditor({ data }: { data: StudioPosData }) {
-  const [config, setConfig] = useState<PosLayout>(
-    () =>
-      parsePosLayout(data.data?.draft) ?? parsePosLayout(data.defaults) ?? defaultPosConfiguration,
+  const history = useLayoutHistory(
+    parsePosLayout(data.data?.draft) ?? parsePosLayout(data.defaults) ?? defaultPosConfiguration,
   )
+  const { config, set: setConfig } = history
+  const [publishedConfig, setPublishedConfig] = useState(
+    parsePosLayout(data.data?.published) ?? defaultPosConfiguration,
+  )
+  const [previewVersion, setPreviewVersion] = useState<{
+    revision: number
+    config: PosLayout
+  } | null>(null)
+  const [viewPublished, setViewPublished] = useState(false)
+  const [versionAction, setVersionAction] = useState<VersionAction | null>(null)
   const [baseline, setBaseline] = useState(JSON.stringify(config))
   const [revision, setRevision] = useState(data.data?.revision ?? 0)
   const [published, setPublished] = useState(data.data?.published_revision ?? 0)
   const [selected, setSelected] = useState<PosPanel>('order')
   const [dragging, setDragging] = useState<PosPanel | null>(null)
   const [reloadError, setReloadError] = useState<unknown>(null)
+  const [reloading, setReloading] = useState(false)
   const client = useQueryClient()
   const can = useCan()
   const toast = useToast()
@@ -74,18 +92,49 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
     setBaseline(JSON.stringify(saved))
     setRevision(result.revision)
     setPublished(result.published_revision ?? 0)
+    setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
     toast('Borrador guardado. La terminal todavía no cambia.')
   })
   const publish = useOperation<SavedPosLayout>('studio/pos/publish', (result) => {
     const saved = parsePosLayout(result.draft) ?? defaultPosConfiguration
-    setConfig(saved)
+    history.reset(saved)
     setBaseline(JSON.stringify(saved))
     setRevision(result.revision)
     setPublished(result.published_revision ?? 0)
+    setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
     void client.invalidateQueries({ queryKey: ['studio-pos-active'] })
     toast('Diseño publicado para Terminal POS.')
   })
-  const locked = save.locked || publish.locked
+  const locked = save.locked || publish.locked || !!versionAction || reloading
+  const inspecting = viewPublished || !!previewVersion
+  const editLocked = locked || inspecting
+  const previewConfig = previewVersion?.config ?? (viewPublished ? publishedConfig : config)
+  const changes = [
+    {
+      label: 'Orden de paneles',
+      draft: config.panels.map((id) => posComponents[id].name).join(' → '),
+      active: publishedConfig.panels.map((id) => posComponents[id].name).join(' → '),
+    },
+    ...Object.keys(config.tokens).map((key) => ({
+      label: key === 'accent' ? 'Color de acento' : labels[key as keyof typeof labels],
+      draft: String(config.tokens[key as keyof PosLayout['tokens']]),
+      active: String(publishedConfig.tokens[key as keyof PosLayout['tokens']]),
+    })),
+    ...(['photos', 'hints'] as const).map((key) => ({
+      label: key === 'photos' ? 'Fotografías' : 'Ayudas de teclado',
+      draft: config.options[key] ? 'Sí' : 'No',
+      active: publishedConfig.options[key] ? 'Sí' : 'No',
+    })),
+  ].filter((row) => row.draft !== row.active)
+  function preview(version: LayoutVersion) {
+    const parsed = parsePosLayout(version.configuration)
+    if (!parsed) {
+      toast('Esta versión requiere un esquema compatible para previsualizarse.')
+      return
+    }
+    setPreviewVersion({ revision: version.revision, config: parsed })
+    setViewPublished(false)
+  }
   useEffect(() => {
     if (!dirty && !locked) return
     const prevent = (event: BeforeUnloadEvent) => {
@@ -107,36 +156,101 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
       document.removeEventListener('click', link, true)
     }
   }, [dirty, locked])
-  async function reload() {
+  async function reload(force = false) {
     if (
-      locked ||
-      (dirty && !window.confirm('¿Descartar tus cambios locales y cargar el borrador guardado?'))
+      !force &&
+      (locked ||
+        (dirty && !window.confirm('¿Descartar tus cambios locales y cargar el borrador guardado?')))
     )
       return
     setReloadError(null)
+    setReloading(true)
     try {
       const fresh = await api<StudioPosData>('studio/pos')
       const next = parsePosLayout(fresh.data?.draft) ?? defaultPosConfiguration
-      setConfig(next)
+      history.reset(next)
       setBaseline(JSON.stringify(next))
       setRevision(fresh.data?.revision ?? 0)
       setPublished(fresh.data?.published_revision ?? 0)
+      setPublishedConfig(parsePosLayout(fresh.data?.published) ?? defaultPosConfiguration)
+      setPreviewVersion(null)
+      setViewPublished(false)
       save.reset()
       publish.reset()
     } catch (error) {
       setReloadError(error)
+    } finally {
+      setReloading(false)
     }
   }
   return (
-    <section className="studio-pos-editor" aria-label="Editor de Terminal POS">
+    <section
+      className="studio-pos-editor"
+      aria-label="Editor de Terminal POS"
+      onPointerDownCapture={(event) => {
+        if (
+          !editLocked &&
+          event.target instanceof Element &&
+          event.target.closest('input[type="range"], .studio-resize')
+        )
+          history.begin()
+      }}
+      onPointerUpCapture={() => history.end()}
+      onPointerCancelCapture={() => history.end()}
+      onKeyDown={(event) => {
+        if (
+          editLocked ||
+          !can('studio.edit') ||
+          !(event.ctrlKey || event.metaKey) ||
+          (event.target instanceof Element &&
+            event.target.closest('input,textarea,[contenteditable="true"]'))
+        )
+          return
+        if (event.key.toLowerCase() === 'z') {
+          event.preventDefault()
+          if (event.shiftKey) history.redo()
+          else history.undo()
+        } else if (event.key.toLowerCase() === 'y') {
+          event.preventDefault()
+          history.redo()
+        }
+      }}
+    >
       <header className="studio-editor-toolbar">
         <strong>
           {dirty ? 'Cambios locales' : revision ? `Borrador · revisión ${revision}` : 'Diseño base'}{' '}
           · Publicado {published || 'Original'}
         </strong>
         <button
+          type="button"
           className="button secondary"
-          disabled={locked || !can('studio.edit')}
+          disabled={editLocked || !can('studio.edit') || !history.canUndo}
+          onClick={history.undo}
+        >
+          Deshacer
+        </button>
+        <button
+          type="button"
+          className="button secondary"
+          disabled={editLocked || !can('studio.edit') || !history.canRedo}
+          onClick={history.redo}
+        >
+          Rehacer
+        </button>
+        <button
+          type="button"
+          className="button secondary"
+          disabled={locked}
+          onClick={() => {
+            setViewPublished(!viewPublished)
+            setPreviewVersion(null)
+          }}
+        >
+          {viewPublished ? 'Volver al borrador' : 'Ver diseño publicado'}
+        </button>
+        <button
+          className="button secondary"
+          disabled={editLocked || !can('studio.edit')}
           onClick={() => setConfig(structuredClone(defaultPosConfiguration))}
         >
           Restaurar diseño base
@@ -145,6 +259,8 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           className="button secondary"
           disabled={
             save.isPending ||
+            inspecting ||
+            !!versionAction ||
             publish.locked ||
             !can('studio.edit') ||
             (!save.uncertain && !dirty && revision > 0)
@@ -157,6 +273,8 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           className="button primary"
           disabled={
             publish.isPending ||
+            inspecting ||
+            !!versionAction ||
             save.locked ||
             !can('studio.publish') ||
             (!publish.uncertain && (dirty || !revision))
@@ -168,6 +286,52 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
       </header>
       <ErrorNotice error={save.error || publish.error || reloadError} />
       <OperationNotice uncertain={save.uncertain || publish.uncertain} />
+      {inspecting && (
+        <p className="notice">
+          Vista previa de{' '}
+          {previewVersion
+            ? `versión ${previewVersion.revision}`
+            : published
+              ? `publicación ${published}`
+              : 'diseño base sin publicación'}
+          . Tu borrador se conserva.{' '}
+          <button
+            type="button"
+            disabled={locked}
+            onClick={() => {
+              setPreviewVersion(null)
+              setViewPublished(false)
+            }}
+          >
+            Editar borrador
+          </button>
+        </p>
+      )}
+      <details className="panel studio-comparison">
+        <summary>Comparar borrador con publicado · {changes.length} diferencias</summary>
+        {changes.length ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Propiedad</th>
+                <th>Borrador local</th>
+                <th>{published ? `Publicado ${published}` : 'Base original'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {changes.map((row) => (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td>{row.draft}</td>
+                  <td>{row.active}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>El borrador coincide con el diseño publicado o base.</p>
+        )}
+      </details>
       {((save.error instanceof ApiError && save.error.status === 409) ||
         (publish.error instanceof ApiError && publish.error.status === 409)) && (
         <button disabled={locked} onClick={() => void reload()}>
@@ -178,16 +342,16 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
         <aside className="studio-component-tree panel" aria-label="Estructura de Terminal">
           <h2>Componentes</h2>
           <p>Arrastra para reordenar o usa las flechas.</p>
-          {config.panels.map((id, index) => (
+          {previewConfig.panels.map((id, index) => (
             <div
               key={id}
-              draggable={!locked && can('studio.edit')}
+              draggable={!editLocked && can('studio.edit')}
               onDragStart={() => setDragging(id)}
               onDragEnd={() => setDragging(null)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault()
-                if (!dragging || locked || !can('studio.edit')) return
+                if (!dragging || editLocked || !can('studio.edit')) return
                 const panels = config.panels.filter((item) => item !== dragging)
                 panels.splice(index, 0, dragging)
                 setConfig({ ...config, panels })
@@ -204,7 +368,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
                     type="button"
                     aria-label={`${step === -1 ? 'Mover antes' : 'Mover después'} ${posComponents[id].name}`}
                     disabled={
-                      locked ||
+                      editLocked ||
                       !can('studio.edit') ||
                       index + step < 0 ||
                       index + step >= config.panels.length
@@ -226,11 +390,11 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
         </aside>
         {can('catalog.view') && can('orders.manage') ? (
           <PosLayoutCanvas
-            config={config}
+            config={previewConfig}
             selected={selected}
             onSelect={setSelected}
             onChange={setConfig}
-            editable={!locked && can('studio.edit')}
+            editable={!editLocked && can('studio.edit')}
           />
         ) : (
           <p className="notice">
@@ -238,7 +402,10 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             con tus permisos de Studio.
           </p>
         )}
-        <fieldset disabled={locked || !can('studio.edit')} className="studio-pos-properties panel">
+        <fieldset
+          disabled={editLocked || !can('studio.edit')}
+          className="studio-pos-properties panel"
+        >
           <legend>{posComponents[selected].name}</legend>
           <p>
             {posComponents[selected].description} Colores, texto, esquinas y espacios son estilos
@@ -254,7 +421,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
                   aria-label={labels[key as keyof typeof labels]}
                   min={min}
                   max={max}
-                  value={config.tokens[key as keyof typeof tokenBounds]}
+                  value={previewConfig.tokens[key as keyof typeof tokenBounds]}
                   onChange={(event) =>
                     setConfig({
                       ...config,
@@ -262,7 +429,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
                     })
                   }
                 />
-                <output>{config.tokens[key as keyof typeof tokenBounds]}</output>
+                <output>{previewConfig.tokens[key as keyof typeof tokenBounds]}</output>
               </Field>
             ),
           )}
@@ -270,7 +437,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             <input
               type="color"
               aria-label="Color de acento"
-              value={config.tokens.accent}
+              value={previewConfig.tokens.accent}
               onChange={(event) =>
                 setConfig({ ...config, tokens: { ...config.tokens, accent: event.target.value } })
               }
@@ -279,7 +446,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           <label>
             <input
               type="checkbox"
-              checked={config.options.photos}
+              checked={previewConfig.options.photos}
               onChange={(event) =>
                 setConfig({
                   ...config,
@@ -292,7 +459,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           <label>
             <input
               type="checkbox"
-              checked={config.options.hints}
+              checked={previewConfig.options.hints}
               onChange={(event) =>
                 setConfig({
                   ...config,
@@ -304,6 +471,44 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           </label>
         </fieldset>
       </div>
+      <StudioVersions
+        revision={revision}
+        locked={locked}
+        editable={!dirty && can('studio.edit')}
+        onPreview={preview}
+        onAction={setVersionAction}
+      />
+      {dirty && (
+        <p className="muted small">
+          Guarda tus cambios locales antes de restaurar o archivar versiones.
+        </p>
+      )}
+      {versionAction && (
+        <StudioVersionAction
+          value={versionAction}
+          onClose={() => setVersionAction(null)}
+          onStale={() => {
+            setVersionAction(null)
+            void reload(true)
+          }}
+          onSaved={(result) => {
+            setReloadError(null)
+            const next = parsePosLayout(result.draft) ?? defaultPosConfiguration
+            history.reset(next)
+            setBaseline(JSON.stringify(next))
+            setRevision(result.revision)
+            setPublished(result.published_revision ?? 0)
+            setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
+            setPreviewVersion(null)
+            setViewPublished(false)
+            toast(
+              versionAction.action === 'restore'
+                ? 'Versión restaurada como borrador. Publica para aplicarla.'
+                : 'Versión archivada conservando su historial.',
+            )
+          }}
+        />
+      )}
       <p className="notice">
         Distribución adaptable: en tablet y móvil se conserva la estructura operativa segura.
         Pedidos, cobros y permisos mantienen sus servicios actuales.

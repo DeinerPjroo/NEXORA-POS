@@ -180,3 +180,56 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.studio-version-history {
+  padding: 16px;
+}
+.studio-version-history header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.studio-version-history h2 {
+  font-size: 18px;
+}
+.studio-history-scroll {
+  max-height: 480px;
+  overflow: auto;
+}
+.studio-history-scroll table,
+.studio-comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.studio-history-scroll th,
+.studio-history-scroll td,
+.studio-comparison th,
+.studio-comparison td {
+  padding: 9px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.studio-history-scroll small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+.studio-history-scroll td:last-child button {
+  margin: 3px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11px;
+}
+.studio-comparison {
+  padding: 12px;
+  overflow: auto;
+}
+.studio-comparison summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+}

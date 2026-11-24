@@ -55,6 +55,7 @@ try {
                 'order.item.change' => app(App\Domains\Orders\ChangeDeliveryItem::class)->execute($actor, App\Models\Order::findOrFail($resource), $data),
                 'studio.save' => app(App\Domains\Studio\SavePosLayout::class)->execute($actor, $data),
                 'studio.publish' => app(App\Domains\Studio\SavePosLayout::class)->execute($actor, $data, true),
+                'studio.restore' => app(App\Domains\Studio\ChangeStudioVersion::class)->execute($actor, $data),
                 default => throw new LogicException('Operación de prueba no permitida.'),
             };
 

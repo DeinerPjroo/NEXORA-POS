@@ -164,6 +164,9 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
         Route::get('studio/pos', [StudioLayoutController::class, 'show']);
         Route::get('studio/pos/active', [StudioLayoutController::class, 'active']);
+        Route::get('studio/pos/versions', [StudioLayoutController::class, 'versions']);
+        Route::post('studio/pos/restore', [StudioLayoutController::class, 'restore']);
+        Route::post('studio/pos/archive', [StudioLayoutController::class, 'archive']);
         Route::post('studio/pos/draft', [StudioLayoutController::class, 'save']);
         Route::post('studio/pos/publish', [StudioLayoutController::class, 'publish']);
         Route::put('workspace/theme', [WorkspaceController::class, 'publishTheme']);

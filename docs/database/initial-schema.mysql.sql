@@ -859,3 +859,31 @@ alter table `studio_layouts` add constraint `studio_editor_fk` foreign key (`ten
 
 alter table `studio_layouts` add constraint `studio_publisher_fk` foreign key (`tenant_id`, `published_by`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `studio_layouts` add unique `studio_layout_tenant_identity`(`tenant_id`, `id`);
+
+alter table `studio_layouts` add `draft_revision` int unsigned null;
+
+create table `studio_layout_versions` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `studio_layout_id` bigint unsigned not null, `revision` int unsigned not null, `kind` varchar(20) not null, `configuration` json not null, `actor_id` bigint unsigned null, `source_version_id` bigint unsigned null, `reason` varchar(300) null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `studio_layout_versions` add constraint `studio_layout_versions_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `studio_layout_versions` add unique `studio_version_revision`(`tenant_id`, `studio_layout_id`, `revision`);
+
+alter table `studio_layout_versions` add unique `studio_version_identity`(`tenant_id`, `studio_layout_id`, `id`);
+
+alter table `studio_layout_versions` add constraint `studio_version_layout_fk` foreign key (`tenant_id`, `studio_layout_id`) references `studio_layouts` (`tenant_id`, `id`) on delete restrict;
+
+alter table `studio_layout_versions` add constraint `studio_version_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+alter table `studio_layout_versions` add constraint `studio_version_source_fk` foreign key (`tenant_id`, `studio_layout_id`, `source_version_id`) references `studio_layout_versions` (`tenant_id`, `studio_layout_id`, `id`) on delete restrict;
+
+create table `studio_version_archives` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `studio_layout_id` bigint unsigned not null, `studio_layout_version_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `reason` varchar(300) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `studio_version_archives` add constraint `studio_version_archives_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `studio_version_archives` add unique `studio_archive_once`(`tenant_id`, `studio_layout_version_id`);
+
+alter table `studio_version_archives` add constraint `studio_archive_version_fk` foreign key (`tenant_id`, `studio_layout_id`, `studio_layout_version_id`) references `studio_layout_versions` (`tenant_id`, `studio_layout_id`, `id`) on delete restrict;
+
+alter table `studio_version_archives` add constraint `studio_archive_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

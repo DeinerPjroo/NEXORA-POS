@@ -91,10 +91,10 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 3.5 | PENDING | Empleados/usuarios/sucursales/turnos/asistencia/comisiones | Equipo/permisos |
 | 3.6 | PENDING | Clientes/direcciones/historial/puntos/membresías/cupones | Ventas |
 | 3.7 | PENDING | Reportes reales y exportaciones Excel/PDF | Dominios anteriores |
-| 4 | IN_PROGRESS | Nexora Studio priorizado por usuario; A/B completos, C–F pendientes. No cerrar pendientes de otras fases | POS/dashboard y tema actual |
+| 4 | IN_PROGRESS | Nexora Studio priorizado por usuario; A/B/C completos, D–F pendientes. No cerrar pendientes de otras fases | POS/dashboard y tema actual |
 | STUDIO-A | COMPLETED | PosLayoutSchema1/registro de cuatro paneles, JSON permitido, persistencia tenant/borrador/publicado y runtime POS seguro. Permisos edit/publish separados, revisión/UUID/auditoría y fallback. Nativas4/53 y SQL6/67; migración36 aplicada/DDL | Tema/POS/seguridad existentes |
 | STUDIO-B | COMPLETED | Editor con componentes reales inert, selección, arrastre/flechas, resize de pedido, propiedades acotadas y guías por columnas. Chromium final~1.2min verifica edición, reintento exacto, publicación y cobro18k/teclas1024×600; build/TS/Pint/vista aprobados | STUDIO-A |
-| STUDIO-C | PENDING | Extender borrador/publicación básicos existentes: versiones históricas, archivo/restauración, vista previa avanzada y deshacer/rehacer | STUDIO-A/B |
+| STUDIO-C | COMPLETED | Historial append-only con autor/fecha/fuente, archivo protegido y restauración como borrador sin publicar. Undo/redo100 pasos agrupados, preview read-only y comparación. Nativas9/121, SQL12/147 y Chromium final57.7s con reintento/conflicto; build/TS/vista aprobados. Migración37 aplicada | STUDIO-A/B |
 | STUDIO-D | PENDING | Plantillas Original/Compacta/Táctil/Mesas, duplicación/renombrado, scopes por rol/dispositivo y temas | STUDIO-C |
 | STUDIO-E | PENDING | Extender primero Mesas; luego Kitchen, Domicilios y Dashboard sin duplicar dominios | STUDIO-D |
 | STUDIO-F | PENDING | Editor de recibos/comandas, importación/exportación segura y estabilización | STUDIO-E |

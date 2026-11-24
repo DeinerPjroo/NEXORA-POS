@@ -27,10 +27,12 @@ final class SavePosLayout
             } else {
                 $layout ??= new StudioLayout(['surface' => 'pos', 'revision' => 0]);
                 $layout->draft = PosLayoutSchema::validate($data['configuration']);
+                $layout->draft_revision = $layout->revision + 1;
             }
             $layout->revision++;
             $layout->updated_by = $actor->id;
             $layout->save();
+            $layout->versions()->create(['revision' => $layout->revision, 'kind' => $publish ? 'published' : 'draft', 'configuration' => $publish ? $layout->published : $layout->draft, 'actor_id' => $actor->id, 'created_at' => now()]);
             Audit::record($publish ? 'studio.layout.published' : 'studio.layout.saved', $publish ? 'Se publicó la distribución de Terminal POS.' : 'Se guardó un borrador de Terminal POS.', $actor, ['layout_id' => $layout->id, 'revision' => $layout->revision, 'schema_version' => 1]);
 
             return $layout;
