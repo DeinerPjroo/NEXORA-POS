@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Domains\Studio\LayoutScope;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StudioLayoutRequest extends FormRequest
 {
@@ -15,6 +17,6 @@ final class StudioLayoutRequest extends FormRequest
     {
         $publishing = $this->is('api/v1/studio/pos/publish');
 
-        return ['tenant_id' => ['prohibited'], 'idempotency_key' => ['required', 'uuid'], 'revision' => ['required', 'integer', $publishing ? 'min:1' : 'min:0'], 'configuration' => [$publishing ? 'prohibited' : 'required', 'array']];
+        return ['tenant_id' => ['prohibited'], 'role_id' => ['nullable', 'integer', 'min:1'], 'device' => ['sometimes', Rule::in(LayoutScope::DEVICES)], 'branch_id' => ['prohibited'], 'idempotency_key' => ['required', 'uuid'], 'revision' => ['required', 'integer', $publishing ? 'min:1' : 'min:0'], 'configuration' => [$publishing ? 'prohibited' : 'required', 'array']];
     }
 }

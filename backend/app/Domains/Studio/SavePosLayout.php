@@ -14,19 +14,20 @@ final class SavePosLayout
     {
         Gate::authorize('studio.view');
         Gate::authorize($publish ? 'studio.publish' : 'studio.edit');
+        LayoutScope::query($data);
 
         return app(IdempotentOperation::class)->run($actor, $publish ? 'studio.pos.publish' : 'studio.pos.save', $data, StudioLayout::class, function ($data) use ($actor, $publish) {
-            $layout = StudioLayout::where('surface', 'pos')->lockForUpdate()->first();
+            $layout = LayoutScope::query($data)->lockForUpdate()->first();
             abort_unless(($layout?->revision ?? 0) === (int) $data['revision'], 409, 'Otro administrador cambió el diseño. Conserva tus cambios y carga la revisión actual.');
             if ($publish) {
                 abort_unless($layout, 409, 'Guarda primero un borrador.');
-                $layout->published = PosLayoutSchema::validate($layout->draft);
+                $layout->published = LayoutScope::validateConfiguration($layout->draft, $layout->device);
                 $layout->published_revision = $layout->revision + 1;
                 $layout->published_by = $actor->id;
                 $layout->published_at = now();
             } else {
-                $layout ??= new StudioLayout(['surface' => 'pos', 'revision' => 0]);
-                $layout->draft = PosLayoutSchema::validate($data['configuration']);
+                $layout ??= new StudioLayout([...LayoutScope::identity($data), 'revision' => 0]);
+                $layout->draft = LayoutScope::validateConfiguration($data['configuration'], $layout->device);
                 $layout->draft_revision = $layout->revision + 1;
             }
             $layout->revision++;
