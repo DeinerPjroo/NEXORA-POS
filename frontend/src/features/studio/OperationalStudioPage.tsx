@@ -20,7 +20,7 @@ export type OperationalConfig = {
   options?: Record<string, boolean>
 }
 export type SurfaceDefinition<T extends OperationalConfig> = {
-  surface: 'tables' | 'kitchen' | 'deliveries'
+  surface: 'tables' | 'kitchen' | 'deliveries' | 'dashboard'
   title: string
   eyebrow: string
   description: string
@@ -36,6 +36,7 @@ export type SurfaceDefinition<T extends OperationalConfig> = {
   flags?: Record<string, string>
   presets: { name: string; configuration: T }[]
   render: (config: T, mode?: 'main' | 'detail') => ReactNode
+  extra?: (config: T, onChange: (config: T) => void) => ReactNode
 }
 
 type StudioData = { data: SavedPosLayout | null; defaults: unknown }
@@ -282,6 +283,7 @@ function OperationalEditor<T extends OperationalConfig>({
               {label}
             </label>
           ))}
+          {definition.extra?.(displayed, setConfig)}
           <p>{definition.help}</p>
         </fieldset>
         {can(definition.permission) ? (

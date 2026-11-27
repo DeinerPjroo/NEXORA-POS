@@ -164,6 +164,13 @@ Route::prefix('v1')->group(function () {
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
         Route::get('studio/pos', [StudioLayoutController::class, 'show']);
+        Route::get('studio/dashboard', [StudioLayoutController::class, 'show'])->defaults('studio_surface', 'dashboard');
+        Route::get('studio/dashboard/active', [StudioLayoutController::class, 'active'])->defaults('studio_surface', 'dashboard');
+        Route::get('studio/dashboard/versions', [StudioLayoutController::class, 'versions'])->defaults('studio_surface', 'dashboard');
+        Route::post('studio/dashboard/draft', [StudioLayoutController::class, 'save'])->defaults('studio_surface', 'dashboard');
+        Route::post('studio/dashboard/publish', [StudioLayoutController::class, 'publish'])->defaults('studio_surface', 'dashboard');
+        Route::post('studio/dashboard/restore', [StudioLayoutController::class, 'restore'])->defaults('studio_surface', 'dashboard');
+        Route::post('studio/dashboard/archive', [StudioLayoutController::class, 'archive'])->defaults('studio_surface', 'dashboard');
         Route::get('studio/pickup', [StudioLayoutController::class, 'show'])->defaults('studio_surface', 'pickup');
         Route::get('studio/pickup/active', [StudioLayoutController::class, 'active'])->defaults('studio_surface', 'pickup');
         Route::get('studio/pickup/versions', [StudioLayoutController::class, 'versions'])->defaults('studio_surface', 'pickup');

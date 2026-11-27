@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Studio\DashboardLayoutSchema;
 use App\Domains\Studio\DeliveriesLayoutSchema;
 use App\Domains\Studio\KitchenLayoutSchema;
 use App\Domains\Studio\PosLayoutSchema;
@@ -145,6 +146,50 @@ class StudioLayoutTest extends TestCase
             $this->getJson('/api/v1/studio/'.$surface)->assertJsonPath('data', null);
             $this->getJson('/api/v1/studio/'.$surface.'/active')->assertJsonPath('data.revision', 0);
         }
+    }
+
+    public function test_dashboard_studio_versions_are_separate_and_schema_is_closed(): void
+    {
+        $config = DashboardLayoutSchema::defaults();
+        $config['widgets'] = ['live', 'totals', 'chart', 'methods', 'products'];
+        $config['options']['methods'] = false;
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => $config];
+        $bad = $body;
+        $bad['configuration']['widgets'][0] = 'javascript:alert(1)';
+        $this->postJson('/api/v1/studio/dashboard/draft', $bad)->assertUnprocessable();
+        $bad = $body;
+        $bad['configuration']['sales_total'] = '99999';
+        $this->postJson('/api/v1/studio/dashboard/draft', $bad)->assertUnprocessable();
+        $this->postJson('/api/v1/studio/dashboard/draft', $body)->assertOk();
+        $this->postJson('/api/v1/studio/dashboard/draft', $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $this->getJson('/api/v1/studio/dashboard/active')->assertJsonPath('data.revision', 0);
+        $this->postJson('/api/v1/studio/dashboard/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $this->getJson('/api/v1/studio/dashboard/active')->assertJsonPath('data.configuration', $config);
+        $versions = $this->getJson('/api/v1/studio/dashboard/versions')->assertJsonCount(2, 'data')->json('data');
+        $this->postJson('/api/v1/studio/dashboard/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[1]['id'], 'reason' => 'Restore dashboard'])->assertOk()->assertJsonPath('data.published_revision', 2);
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data', null);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+    }
+
+    public function test_dashboard_layout_never_grants_reporting_permissions_or_cross_tenant_access(): void
+    {
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => DashboardLayoutSchema::defaults()];
+        $this->postJson('/api/v1/studio/dashboard/draft', $body)->assertOk();
+        $this->postJson('/api/v1/studio/dashboard/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $reader = $this->employee(['dashboard.view']);
+        $this->actingAs($reader);
+        $this->getJson('/api/v1/studio/dashboard/active')->assertOk();
+        $this->getJson('/api/v1/workspace/commercial-dashboard')->assertOk()->assertJsonPath('data.sales', null)->assertJsonPath('data.cash_expenses', null)->assertJsonPath('data.live.orders_active', null);
+        $this->postJson('/api/v1/studio/dashboard/draft', $body)->assertForbidden();
+        $designer = $this->employee(['studio.view', 'studio.edit']);
+        $this->actingAs($designer);
+        $this->getJson('/api/v1/studio/dashboard/active')->assertForbidden();
+        $other = $this->company('dashboard-studio-other@example.test');
+        $this->actingAs($other);
+        $this->getJson('/api/v1/studio/dashboard')->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/dashboard/versions')->assertJsonCount(0, 'data');
+        $this->getJson('/api/v1/studio/dashboard/active')->assertJsonPath('data.revision', 0);
     }
 
     public function test_kitchen_schema_permissions_and_tenant_enforcement(): void

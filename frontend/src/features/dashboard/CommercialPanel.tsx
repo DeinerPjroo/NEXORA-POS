@@ -13,8 +13,16 @@ import { widgetNames, loadWidgets, saveWidgets } from './widgets'
 import type { Widget } from './widgets'
 import { DailyChart } from './DailyChart'
 import './dashboard.css'
+import { usePublishedOperationalLayout } from '../studio/usePublishedOperationalLayout'
+import {
+  defaultDashboardLayout,
+  parseDashboardLayout,
+  dashboardStyle,
+  type DashboardLayout,
+} from '../studio/dashboard-layout'
+import '../studio/dashboard-layout.css'
 
-export function CommercialPanel() {
+export function CommercialPanel({ studioPreview }: { studioPreview?: DashboardLayout }) {
   const { session } = useSession()
   const can = useCan()
   const today = localMinute(Date.now(), session!.company.timezone).slice(0, 10)
@@ -24,14 +32,27 @@ export function CommercialPanel() {
   const [range, setRange] = useState({ from: draftFrom, to: draftTo, branch: '' })
   const [currency, setCurrency] = useState(session!.company.currency)
   const preferenceKey = 'nexora:dashboard:' + session!.company.id + ':' + session!.user.id
-  const [widgets, setWidgets] = useState(() => loadWidgets(preferenceKey))
+  const [localWidgets, setWidgets] = useState(() =>
+    studioPreview ? (Object.keys(widgetNames) as Widget[]) : loadWidgets(preferenceKey),
+  )
+  const layout = usePublishedOperationalLayout(
+    'dashboard',
+    'dashboard.view',
+    parseDashboardLayout,
+    defaultDashboardLayout,
+    true,
+    false,
+    studioPreview,
+  )
+  const widgets = layout ? localWidgets.filter((key) => layout.options[key]) : localWidgets
+  const widgetOrder = (key: Widget) => (layout ? { order: layout.widgets.indexOf(key) } : undefined)
   const params = new URLSearchParams({ from: range.from, to: range.to })
   if (range.branch) params.set('branch_id', range.branch)
   const query = useQuery({
     queryKey: ['commercial-dashboard', params.toString()],
     queryFn: ({ signal }) =>
       api<{ data: CommercialReport }>('workspace/commercial-dashboard?' + params, { signal }),
-    refetchInterval: 30000,
+    refetchInterval: studioPreview ? false : 30000,
   })
   const data = query.data?.data
   function apply(e: FormEvent) {
@@ -50,6 +71,7 @@ export function CommercialPanel() {
     setRange((current) => ({ ...current, from, to: today }))
   }
   function toggle(key: Widget, enabled: boolean) {
+    if (studioPreview) return
     setWidgets((previous) => {
       const next = enabled ? [...previous, key] : previous.filter((v) => v !== key)
       saveWidgets(preferenceKey, next)
@@ -69,7 +91,11 @@ export function CommercialPanel() {
   ]
   const current = summary?.current
   return (
-    <section className="commercial-dashboard">
+    <section
+      className="commercial-dashboard"
+      data-studio-dashboard={!!layout}
+      style={layout ? dashboardStyle(layout) : undefined}
+    >
       <div className="commercial-heading">
         <div>
           <p className="eyebrow">TU OPERACIÓN, EN CIFRAS REALES</p>
@@ -155,6 +181,7 @@ export function CommercialPanel() {
                       <input
                         type="checkbox"
                         checked={widgets.includes(key as Widget)}
+                        disabled={!!layout && !layout.options[key as Widget]}
                         onChange={(e) => toggle(key as Widget, e.target.checked)}
                       />
                       {label}
@@ -166,222 +193,244 @@ export function CommercialPanel() {
                 </div>
               </details>
             </div>
-            {widgets.includes('totals') && (
-              <>
-                <div className="commercial-metrics">
-                  {current &&
-                    [
-                      {
-                        label: 'Ventas registradas',
-                        value: current.sales_total,
-                        detail:
-                          current.sales_count +
-                          ' ventas · Ticket medio ' +
-                          money(current.average_ticket),
-                        change: summary?.sales_change,
-                      },
-                      {
-                        label: 'Cobros aplicados',
-                        value: current.applied_amount,
-                        detail: current.payment_count + ' pagos, sin sumar recibido ni cambio',
-                      },
-                      {
-                        label: 'Devoluciones registradas',
-                        value: current.refunded_amount,
-                        detail: current.refund_count + ' compensaciones del periodo',
-                      },
-                      {
-                        label: 'Neto de cobros',
-                        value: current.net_paid_amount,
-                        detail: 'Cobros menos devoluciones del periodo',
-                        change: summary?.net_change,
-                      },
-                      {
-                        label: 'Saldo actual de esas ventas',
-                        value: current.balance_due,
-                        detail: 'Pendiente actual de ventas creadas en el periodo',
-                      },
-                    ].map((card) => (
-                      <article className="metric-card commercial-metric" key={card.label}>
+            <div className="commercial-widget-stack">
+              {widgets.includes('totals') && (
+                <div data-studio-widget="totals" style={widgetOrder('totals')}>
+                  <div className="commercial-metrics">
+                    {current &&
+                      [
+                        {
+                          label: 'Ventas registradas',
+                          value: current.sales_total,
+                          detail:
+                            current.sales_count +
+                            ' ventas · Ticket medio ' +
+                            money(current.average_ticket),
+                          change: summary?.sales_change,
+                        },
+                        {
+                          label: 'Cobros aplicados',
+                          value: current.applied_amount,
+                          detail: current.payment_count + ' pagos, sin sumar recibido ni cambio',
+                        },
+                        {
+                          label: 'Devoluciones registradas',
+                          value: current.refunded_amount,
+                          detail: current.refund_count + ' compensaciones del periodo',
+                        },
+                        {
+                          label: 'Neto de cobros',
+                          value: current.net_paid_amount,
+                          detail: 'Cobros menos devoluciones del periodo',
+                          change: summary?.net_change,
+                        },
+                        {
+                          label: 'Saldo actual de esas ventas',
+                          value: current.balance_due,
+                          detail: 'Pendiente actual de ventas creadas en el periodo',
+                        },
+                      ].map((card) => (
+                        <article className="metric-card commercial-metric" key={card.label}>
+                          <div>
+                            <span>{card.label}</span>
+                            <BarChart3 size={17} />
+                          </div>
+                          <strong>{money(card.value)}</strong>
+                          <p>{card.detail}</p>
+                          {card.change && (
+                            <small className="muted">
+                              Variación: {money(card.change.amount)}
+                              {card.change.percent === null
+                                ? ' · Sin base positiva anterior'
+                                : ' · ' + card.change.percent + '%'}
+                            </small>
+                          )}
+                        </article>
+                      ))}
+                    {data.cash_expenses !== null && (
+                      <article className="metric-card commercial-metric">
                         <div>
-                          <span>{card.label}</span>
+                          <span>Egresos manuales de caja</span>
                           <BarChart3 size={17} />
                         </div>
-                        <strong>{money(card.value)}</strong>
-                        <p>{card.detail}</p>
-                        {card.change && (
-                          <small className="muted">
-                            Variación: {money(card.change.amount)}
-                            {card.change.percent === null
-                              ? ' · Sin base positiva anterior'
-                              : ' · ' + card.change.percent + '%'}
-                          </small>
-                        )}
+                        <strong>{money(expense?.amount ?? '0')}</strong>
+                        <p>{expense?.count ?? 0} movimientos · Devoluciones excluidas</p>
                       </article>
-                    ))}
-                  {data.cash_expenses !== null && (
-                    <article className="metric-card commercial-metric">
-                      <div>
-                        <span>Egresos manuales de caja</span>
-                        <BarChart3 size={17} />
-                      </div>
-                      <strong>{money(expense?.amount ?? '0')}</strong>
-                      <p>{expense?.count ?? 0} movimientos · Devoluciones excluidas</p>
-                    </article>
+                    )}
+                  </div>
+                  {current && (
+                    <p className="commercial-definition muted">
+                      Ventas del periodo: impuestos registrados {money(current.tax_amount)} ·
+                      Propinas {money(current.tip_amount)}. Los cobros netos son flujo registrado,
+                      no ganancia; los egresos de caja no representan todos los gastos del negocio.
+                    </p>
+                  )}
+                  {!current && data.cash_expenses === null && (
+                    <p className="notice">
+                      Tu acceso al resumen no incluye indicadores de ventas ni caja. Solicita los
+                      permisos de consulta correspondientes a tu administrador.
+                    </p>
                   )}
                 </div>
-                {current && (
-                  <p className="commercial-definition muted">
-                    Ventas del periodo: impuestos registrados {money(current.tax_amount)} · Propinas{' '}
-                    {money(current.tip_amount)}. Los cobros netos son flujo registrado, no ganancia;
-                    los egresos de caja no representan todos los gastos del negocio.
-                  </p>
-                )}
-                {!current && data.cash_expenses === null && (
-                  <p className="notice">
-                    Tu acceso al resumen no incluye indicadores de ventas ni caja. Solicita los
-                    permisos de consulta correspondientes a tu administrador.
-                  </p>
-                )}
-              </>
-            )}
-            {widgets.includes('live') && (
-              <section className="panel commercial-section">
-                <div className="commercial-heading">
-                  <h2>Operación actual</h2>
-                  <small className="muted">Al consultar · Sucursal seleccionada</small>
-                </div>
-                <div className="commercial-live">
-                  {[
-                    { label: 'Pedidos activos', value: data.live.orders_active, to: '/pedidos' },
-                    { label: 'Mesas ocupadas', value: data.live.tables_occupied, to: '/salones' },
-                    { label: 'Cajas abiertas', value: data.live.cash_sessions_open, to: '/caja' },
-                  ]
-                    .filter((item) => item.value !== null)
-                    .map((item) => (
-                      <Link key={item.label} to={item.to}>
-                        <strong>{item.value}</strong>
-                        <span>{item.label}</span>
-                      </Link>
-                    ))}
-                </div>
-                {Object.values(data.live).every((v) => v === null) && (
-                  <p className="muted">
-                    Los indicadores de operación requieren permiso de consulta de su módulo.
-                  </p>
-                )}
-              </section>
-            )}
-            {data.sales && widgets.includes('chart') && (
-              <DailyChart points={points} currency={currency} onDay={day} />
-            )}
-            {data.sales && widgets.includes('methods') && (
-              <section className="panel commercial-section">
-                <h2>Métodos registrados</h2>
-                <p className="muted">
-                  Nombre y tipo conservados al aplicar el pago. Los medios no efectivos son
-                  registros declarados por el operador.
-                </p>
-                <div className="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Método</th>
-                        <th>Cobros</th>
-                        <th>Devoluciones</th>
-                        <th>Neto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.sales.methods
-                        .filter((m) => m.currency === currency)
-                        .map((m, i) => (
-                          <tr key={i}>
-                            <td>
-                              {m.name}
-                              <small className="muted">
-                                {' '}
-                                ·{' '}
-                                {m.kind === 'non_cash'
-                                  ? 'Manual no efectivo'
-                                  : m.kind === 'cash'
-                                    ? 'Efectivo'
-                                    : 'Histórico'}
-                              </small>
-                            </td>
-                            <td>{money(m.applied_amount)}</td>
-                            <td>{money(m.refunded_amount)}</td>
-                            <td>{money(m.net_paid_amount)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-                {!data.sales.methods.some((m) => m.currency === currency) && (
-                  <p className="muted">Sin movimientos de esta moneda en el periodo.</p>
-                )}
-              </section>
-            )}
-            {data.sales && widgets.includes('products') && (
-              <div className="commercial-rankings">
-                <section className="panel commercial-section">
-                  <h2>Productos registrados en ventas</h2>
-                  <p className="muted">
-                    Hasta 10 por moneda · Unidades brutas; un combo cuenta como producto, sin
-                    duplicar sus componentes. Las devoluciones monetarias no asignan unidades
-                    devueltas.
-                  </p>
-                  {data.sales.products
-                    .filter((p) => p.currency === currency)
-                    .map((p, index) => (
-                      <div className="commercial-rank" key={p.product_id}>
-                        <span>{index + 1}</span>
-                        {can('catalog.view') ? (
-                          <Link to={'/productos/' + p.product_id}>{p.name}</Link>
-                        ) : (
-                          <span>{p.name}</span>
-                        )}
-                        <strong>{p.quantity} unidades</strong>
-                      </div>
-                    ))}
-                  {!data.sales.products.some((p) => p.currency === currency) && (
-                    <p className="muted">Sin productos vendidos en este periodo.</p>
+              )}
+              {widgets.includes('live') && (
+                <section
+                  className="panel commercial-section"
+                  data-studio-widget="live"
+                  style={widgetOrder('live')}
+                >
+                  <div className="commercial-heading">
+                    <h2>Operación actual</h2>
+                    <small className="muted">Al consultar · Sucursal seleccionada</small>
+                  </div>
+                  <div className="commercial-live">
+                    {[
+                      { label: 'Pedidos activos', value: data.live.orders_active, to: '/pedidos' },
+                      { label: 'Mesas ocupadas', value: data.live.tables_occupied, to: '/salones' },
+                      { label: 'Cajas abiertas', value: data.live.cash_sessions_open, to: '/caja' },
+                    ]
+                      .filter((item) => item.value !== null)
+                      .map((item) => (
+                        <Link key={item.label} to={item.to}>
+                          <strong>{item.value}</strong>
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
+                  </div>
+                  {Object.values(data.live).every((v) => v === null) && (
+                    <p className="muted">
+                      Los indicadores de operación requieren permiso de consulta de su módulo.
+                    </p>
                   )}
                 </section>
-                <section className="panel commercial-section">
-                  <h2>Ventas por hora de registro</h2>
+              )}
+              {data.sales && widgets.includes('chart') && (
+                <div data-studio-widget="chart" style={widgetOrder('chart')}>
+                  <DailyChart points={points} currency={currency} onDay={day} />
+                </div>
+              )}
+              {data.sales && widgets.includes('methods') && (
+                <section
+                  className="panel commercial-section"
+                  data-studio-widget="methods"
+                  style={widgetOrder('methods')}
+                >
+                  <h2>Métodos registrados</h2>
                   <p className="muted">
-                    Horario de {data.timezone} · No representa la hora de cada abono.
+                    Nombre y tipo conservados al aplicar el pago. Los medios no efectivos son
+                    registros declarados por el operador.
                   </p>
-                  {data.sales.hours
-                    .filter((h) => h.currency === currency)
-                    .map((h) => (
-                      <div className="commercial-rank" key={h.hour}>
-                        <span>{h.hour}:00</span>
-                        <span>{h.count} ventas</span>
-                        <strong>{money(h.amount)}</strong>
-                      </div>
-                    ))}
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Método</th>
+                          <th>Cobros</th>
+                          <th>Devoluciones</th>
+                          <th>Neto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.sales.methods
+                          .filter((m) => m.currency === currency)
+                          .map((m, i) => (
+                            <tr key={i}>
+                              <td>
+                                {m.name}
+                                <small className="muted">
+                                  {' '}
+                                  ·{' '}
+                                  {m.kind === 'non_cash'
+                                    ? 'Manual no efectivo'
+                                    : m.kind === 'cash'
+                                      ? 'Efectivo'
+                                      : 'Histórico'}
+                                </small>
+                              </td>
+                              <td>{money(m.applied_amount)}</td>
+                              <td>{money(m.refunded_amount)}</td>
+                              <td>{money(m.net_paid_amount)}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {!data.sales.methods.some((m) => m.currency === currency) && (
+                    <p className="muted">Sin movimientos de esta moneda en el periodo.</p>
+                  )}
                 </section>
-                <section className="panel commercial-section">
-                  <h2>Operadores que registraron ventas</h2>
-                  <p className="muted">Conteo y total registrado · Hasta 10 por moneda.</p>
-                  {data.sales.operators
-                    .filter((o) => o.currency === currency)
-                    .map((o) => (
-                      <div className="commercial-rank" key={o.user_id}>
-                        <span>{o.name}</span>
-                        <span>{o.count} ventas</span>
-                        <strong>{money(o.amount)}</strong>
-                      </div>
-                    ))}
-                </section>
-              </div>
-            )}
+              )}
+              {data.sales && widgets.includes('products') && (
+                <div
+                  className="commercial-rankings"
+                  data-studio-widget="products"
+                  style={widgetOrder('products')}
+                >
+                  <section className="panel commercial-section">
+                    <h2>Productos registrados en ventas</h2>
+                    <p className="muted">
+                      Hasta 10 por moneda · Unidades brutas; un combo cuenta como producto, sin
+                      duplicar sus componentes. Las devoluciones monetarias no asignan unidades
+                      devueltas.
+                    </p>
+                    {data.sales.products
+                      .filter((p) => p.currency === currency)
+                      .map((p, index) => (
+                        <div className="commercial-rank" key={p.product_id}>
+                          <span>{index + 1}</span>
+                          {can('catalog.view') ? (
+                            <Link to={'/productos/' + p.product_id}>{p.name}</Link>
+                          ) : (
+                            <span>{p.name}</span>
+                          )}
+                          <strong>{p.quantity} unidades</strong>
+                        </div>
+                      ))}
+                    {!data.sales.products.some((p) => p.currency === currency) && (
+                      <p className="muted">Sin productos vendidos en este periodo.</p>
+                    )}
+                  </section>
+                  <section className="panel commercial-section">
+                    <h2>Ventas por hora de registro</h2>
+                    <p className="muted">
+                      Horario de {data.timezone} · No representa la hora de cada abono.
+                    </p>
+                    {data.sales.hours
+                      .filter((h) => h.currency === currency)
+                      .map((h) => (
+                        <div className="commercial-rank" key={h.hour}>
+                          <span>{h.hour}:00</span>
+                          <span>{h.count} ventas</span>
+                          <strong>{money(h.amount)}</strong>
+                        </div>
+                      ))}
+                  </section>
+                  <section className="panel commercial-section">
+                    <h2>Operadores que registraron ventas</h2>
+                    <p className="muted">Conteo y total registrado · Hasta 10 por moneda.</p>
+                    {data.sales.operators
+                      .filter((o) => o.currency === currency)
+                      .map((o) => (
+                        <div className="commercial-rank" key={o.user_id}>
+                          <span>{o.name}</span>
+                          <span>{o.count} ventas</span>
+                          <strong>{money(o.amount)}</strong>
+                        </div>
+                      ))}
+                  </section>
+                </div>
+              )}
+              {widgets.length === 0 && (
+                <p className="notice">No hay widgets habilitados en esta vista.</p>
+              )}
+            </div>
             <p className="muted commercial-as-of">
               Consultado:{' '}
               {new Date(data.generated_at).toLocaleString('es-CO', { timeZone: data.timezone })} ·
-              Actualización cada 30 segundos. Los saldos se consultan al momento del reporte.
+              {studioPreview
+                ? 'Vista previa sin actualización automática.'
+                : 'Actualización cada 30 segundos.'}{' '}
+              Los saldos se consultan al momento del reporte.
             </p>
           </>
         )

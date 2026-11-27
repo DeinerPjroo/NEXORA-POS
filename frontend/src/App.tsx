@@ -14,6 +14,7 @@ import { PosStudioPage } from './features/studio/PosStudioPage'
 import { TablesStudioPage } from './features/studio/TablesStudioPage'
 import { KitchenStudioPage } from './features/studio/KitchenStudioPage'
 import { DeliveriesStudioPage } from './features/studio/DeliveriesStudioPage'
+import { DashboardStudioPage } from './features/studio/DashboardStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -463,6 +464,14 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <PosStudioPage surface="pickup" />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/dashboard"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <DashboardStudioPage />
             </PermissionBoundary>
           }
         />

@@ -47,14 +47,16 @@ final class StudioLayoutController extends Controller
         Gate::authorize('studio.view');
 
         return ['data' => LayoutScope::query($request->scopeData())->first(), 'defaults' => StudioSurface::defaults($request->route('studio_surface', 'pos'), $request->validated('device', 'adaptive')), 'components' => match ($request->route('studio_surface', 'pos')) {
-            'deliveries' => ['detail', 'board', 'actions'], 'tables' => ['rooms', 'tables', 'actions'], 'kitchen' => ['new', 'preparing', 'ready'], default => PosLayoutSchema::PANELS
+            'dashboard' => ['totals', 'live', 'chart', 'methods', 'products'], 'deliveries' => ['detail', 'board', 'actions'], 'tables' => ['rooms', 'tables', 'actions'], 'kitchen' => ['new', 'preparing', 'ready'], default => PosLayoutSchema::PANELS
         }, 'roles' => $request->user()->hasPermission('roles.view') ? Role::orderBy('name')->get(['id', 'name']) : []];
     }
 
     public function active(Request $request)
     {
         $surface = $request->route('studio_surface', 'pos');
-        if ($surface === 'deliveries') {
+        if ($surface === 'dashboard') {
+            Gate::authorize('dashboard.view');
+        } elseif ($surface === 'deliveries') {
             Gate::authorize('orders.view');
             abort_unless($request->user()->can('orders.manage') || $request->user()->can('deliveries.operate'), 403);
         } elseif ($surface === 'kitchen') {

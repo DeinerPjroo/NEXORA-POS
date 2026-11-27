@@ -63,7 +63,11 @@ export function StudioPage() {
           <strong>Domicilios</strong>
           <small>Tablero de reparto y toma de pedidos</small>
         </Link>
-        {['Dashboard administrativo', 'Recibos y comandas'].map((name) => (
+        <Link to="/admin/studio/dashboard">
+          <strong>Dashboard administrativo</strong>
+          <small>Widgets reales, orden y visibilidad</small>
+        </Link>
+        {['Recibos y comandas'].map((name) => (
           <div key={name}>
             <strong>{name}</strong>
             <small>Próxima superficie · aún no editable</small>
