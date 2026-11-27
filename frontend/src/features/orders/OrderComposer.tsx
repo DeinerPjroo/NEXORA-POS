@@ -83,6 +83,7 @@ export function OrderComposer({
   initialOrder,
   onReturn,
   studioPreview,
+  studioPreviewPanel = 'menu',
 }: {
   terminal?: boolean
   initialDining?: DiningSelection
@@ -90,6 +91,7 @@ export function OrderComposer({
   initialOrder?: Order
   onReturn?: () => void
   studioPreview?: PosLayout
+  studioPreviewPanel?: 'menu' | 'cart'
 }) {
   const appendDelivery = initialOrder?.channel === 'delivery'
   const [appendSnapshot, setAppendSnapshot] = useState(initialOrder)
@@ -682,7 +684,7 @@ export function OrderComposer({
   return (
     <div
       className={terminal ? 'pos-terminal' : undefined}
-      data-pos-panel={panel}
+      data-pos-panel={studioPreview ? studioPreviewPanel : panel}
       data-mode={checkoutOpen ? 'checkout' : 'order'}
       data-photos={photos ?? (studio.revision !== 0 && studio.configuration.options.photos)}
       data-studio={studio.revision !== 0}

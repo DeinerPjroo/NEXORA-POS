@@ -5,7 +5,9 @@ test('Studio: tema local claro y oscuro, herencia y publicación explícita', as
   await fixtureWorkspace(page, 'Temas Studio')
   await page.goto('/admin/studio/pos')
   const editor = page.getByRole('region', { name: 'Editor de Terminal POS' })
-  const preview = page.locator('.studio-pos-render .pos-terminal')
+  const preview = page
+    .frameLocator('iframe[title="Vista previa de Terminal por dispositivo"]')
+    .locator('.studio-pos-render .pos-terminal')
   const surface = () =>
     preview.evaluate((node) => getComputedStyle(node).getPropertyValue('--surface').trim())
   const theme = editor.getByLabel('Tema de la terminal', { exact: true })

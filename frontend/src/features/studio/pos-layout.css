@@ -1,6 +1,11 @@
 .pos-terminal[data-studio='true'][data-studio-hints='false'] .pos-shortcuts {
   display: none;
 }
+@media (max-width: 1199px) {
+  .pos-terminal[data-studio='true'] {
+    --pos-product-columns: 2;
+  }
+}
 .pos-terminal[data-studio='true'][data-studio-hints='true'] .pos-shortcuts {
   display: block;
 }

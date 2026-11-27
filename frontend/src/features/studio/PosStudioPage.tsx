@@ -517,6 +517,7 @@ function PosLayoutEditor({
         </aside>
         {can('catalog.view') && can('orders.manage') ? (
           <PosLayoutCanvas
+            device={scope.device}
             config={previewConfig}
             selected={selected}
             onSelect={setSelected}

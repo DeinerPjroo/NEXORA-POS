@@ -86,8 +86,13 @@ test('Studio A/B: edición visual real, borrador aislado, reintento exacto, publ
   await page.goto('/admin/studio/pos')
   const editor = page.getByRole('region', { name: 'Editor de Terminal POS' })
   const canvas = page.getByRole('region', { name: 'Vista previa real de Terminal' })
-  await expect(canvas.locator('.order-product')).toContainText('Pizza Studio')
-  await expect(canvas.locator('.studio-pos-render')).toHaveAttribute('inert', '')
+  await expect(canvas.frameLocator('iframe').locator('.order-product')).toContainText(
+    'Pizza Studio',
+  )
+  await expect(canvas.frameLocator('iframe').locator('.studio-pos-render')).toHaveAttribute(
+    'inert',
+    '',
+  )
   await range(editor.getByLabel('Ancho del pedido', { exact: true }), 420)
   await expect(editor.getByLabel('Ancho del pedido', { exact: true })).toHaveValue('420')
   await canvas
