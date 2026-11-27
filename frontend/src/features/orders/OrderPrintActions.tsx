@@ -160,14 +160,14 @@ export function TicketPrintButton({ ticket }: { ticket: KitchenTicket }) {
   )
 }
 
-function PrintPreview({
+export function OperationalTicketDocument({
   draft,
   ticket,
-  onClose,
+  width,
 }: {
   draft?: PrintDraft
   ticket?: KitchenTicket
-  onClose: () => void
+  width: string
 }) {
   const { session, screenBlocked } = useSession()
   const [printedAt] = useState(() => new Date())
@@ -178,7 +178,7 @@ function PrintPreview({
       timeZone: session!.company.timezone,
     }).format(value)
   if (!session || screenBlocked) return null
-  const content = (width: string) => (
+  return (
     <article className="operational-ticket" data-width={width}>
       <h2>{session!.company.name}</h2>
       <h1>{ticket ? 'COMANDA · COPIA' : 'BORRADOR DEL PEDIDO'}</h1>
@@ -285,12 +285,23 @@ function PrintPreview({
       </footer>
     </article>
   )
+}
+
+function PrintPreview({
+  draft,
+  ticket,
+  onClose,
+}: {
+  draft?: PrintDraft
+  ticket?: KitchenTicket
+  onClose: () => void
+}) {
   return (
     <PrintDocumentPreview
       title={ticket ? 'Imprimir comanda' : 'Imprimir borrador'}
       onClose={onClose}
     >
-      {content}
+      {(width) => <OperationalTicketDocument draft={draft} ticket={ticket} width={width} />}
     </PrintDocumentPreview>
   )
 }

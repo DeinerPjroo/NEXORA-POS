@@ -97,7 +97,7 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | STUDIO-C | COMPLETED | Historial append-only con autor/fecha/fuente, archivo protegido y restauración como borrador sin publicar. Undo/redo100 pasos agrupados, preview read-only y comparación. Nativas9/121, SQL12/147 y Chromium final57.7s con reintento/conflicto; build/TS/vista aprobados. Migración37 aplicada | STUDIO-A/B |
 | STUDIO-D | COMPLETED | Original/Compacta/Táctil, plantillas personales y temas, scopes rol/dispositivo y preview real verificados; Mesas Compactas integrada con E-Mesas1 | STUDIO-C |
 | STUDIO-E | COMPLETED | Superficies Mesas/Kitchen/Domicilios/recogidas y Dashboard1 integradas con componentes reales, editor/runtime/publicación/historial compartidos. Dashboard backend3/47 y Chromium2/1.2min verifica permisos y venta/caja sin cambios; build aprobado | STUDIO-D |
-| STUDIO-F | IN_PROGRESS | Siguiente incremento: editor seguro de recibos/comandas, importación/exportación y estabilización dirigida. Reutilizar impresión/DTO/versiones existentes | STUDIO-E |
+| STUDIO-F | IN_PROGRESS | Documentos y transferencias implementados: editor58/80mm, fuentes/pie, JSON cerrado como borrador, runtime congelado por copia. Backend17/224 y Chromium1 aprobados. Pendiente estabilizacion dirigida/cierre de alcance | STUDIO-E |
 | 5 | PENDING | SaaS: superadmin, empresas/planes/límites/suscripciones/soporte/landing, restricciones backend | Dominios estables; cobros comerciales requieren autorización |
 | 6 | PENDING | Móvil/escritorio/offline/QR/delivery/hardware/pasarelas/DIAN; subdividir y comprobar cada integración | Web estable y dependencias externas |
 

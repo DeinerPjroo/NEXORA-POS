@@ -9,6 +9,7 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { defaultLayoutScope } from './layout-scope'
 import { useLayoutHistory } from './useLayoutHistory'
 import { StudioPreviewFrame } from './StudioPreviewFrame'
+import { StudioTransfer } from './StudioTransfer'
 import { StudioVersions, StudioVersionAction, type VersionAction } from './StudioVersions'
 import type { SavedPosLayout } from './PosStudioPage'
 import './studio-layout.css'
@@ -20,7 +21,7 @@ export type OperationalConfig = {
   options?: Record<string, boolean>
 }
 export type SurfaceDefinition<T extends OperationalConfig> = {
-  surface: 'tables' | 'kitchen' | 'deliveries' | 'dashboard'
+  surface: 'tables' | 'kitchen' | 'deliveries' | 'dashboard' | 'receipt' | 'kitchen_print'
   title: string
   eyebrow: string
   description: string
@@ -90,6 +91,7 @@ function OperationalEditor<T extends OperationalConfig>({
   const [action, setAction] = useState<VersionAction | null>(null)
   const [reloading, setReloading] = useState(false)
   const [reloadError, setReloadError] = useState<unknown>(null)
+  const [transferBusy, setTransferBusy] = useState(false)
   function accepted(result: SavedPosLayout, publish = false) {
     const next = definition.parse(result.draft) ?? definition.defaults
     history.reset(next)
@@ -110,7 +112,7 @@ function OperationalEditor<T extends OperationalConfig>({
     toast('Diseño operativo publicado.')
   })
   const dirty = JSON.stringify(config) !== baseline
-  const locked = save.locked || publish.locked || !!action || reloading
+  const locked = save.locked || publish.locked || !!action || reloading || transferBusy
   const readOnly = locked || !!preview || !can('studio.edit')
   useEffect(() => {
     if (!dirty && !locked) return
@@ -187,6 +189,7 @@ function OperationalEditor<T extends OperationalConfig>({
           disabled={
             save.isPending ||
             reloading ||
+            transferBusy ||
             !!action ||
             !!preview ||
             publish.locked ||
@@ -203,6 +206,7 @@ function OperationalEditor<T extends OperationalConfig>({
             save.locked ||
             !!action ||
             reloading ||
+            transferBusy ||
             !!preview ||
             !can('studio.publish') ||
             (!publish.uncertain && (dirty || !revision))
@@ -214,6 +218,14 @@ function OperationalEditor<T extends OperationalConfig>({
       </header>
       <ErrorNotice error={save.error || publish.error || reloadError} />
       <OperationNotice uncertain={save.uncertain || publish.uncertain} />
+      <StudioTransfer
+        surface={definition.surface}
+        scope={defaultLayoutScope}
+        revision={revision}
+        disabled={locked || dirty || !!preview}
+        onBusy={setTransferBusy}
+        onSaved={accepted}
+      />
       <button disabled={locked} onClick={() => void reload()}>
         Recargar borrador guardado
       </button>
@@ -336,11 +348,24 @@ function OperationalPreview<T extends OperationalConfig>({
   const [scale, setScale] = useState(0.5)
   useEffect(() => {
     const node = host.current!
-    const measure = () => setScale(Math.min(1, Math.max(0.2, (node.clientWidth - 20) / width)))
+    let frame = 0
+    let previousWidth = -1
+    const measure = () => {
+      const measured = node.clientWidth
+      if (measured === previousWidth) return
+      previousWidth = measured
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() =>
+        setScale(Math.min(1, Math.max(0.2, (measured - 20) / width))),
+      )
+    }
     const observer = new ResizeObserver(measure)
     observer.observe(node)
     measure()
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
   }, [width])
   return (
     <div ref={host} className="studio-tables-preview" aria-label={definition.previewName}>

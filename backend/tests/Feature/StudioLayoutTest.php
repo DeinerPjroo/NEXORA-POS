@@ -8,6 +8,7 @@ use App\Domains\Studio\DashboardLayoutSchema;
 use App\Domains\Studio\DeliveriesLayoutSchema;
 use App\Domains\Studio\KitchenLayoutSchema;
 use App\Domains\Studio\PosLayoutSchema;
+use App\Domains\Studio\PrintLayoutSchema;
 use App\Domains\Studio\TablesLayoutSchema;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
@@ -190,6 +191,72 @@ class StudioLayoutTest extends TestCase
         $this->getJson('/api/v1/studio/dashboard')->assertJsonPath('data', null);
         $this->getJson('/api/v1/studio/dashboard/versions')->assertJsonCount(0, 'data');
         $this->getJson('/api/v1/studio/dashboard/active')->assertJsonPath('data.revision', 0);
+    }
+
+    public function test_print_layouts_keep_required_content_and_separate_publications(): void
+    {
+        $config = PrintLayoutSchema::defaults();
+        $bad = $config;
+        $bad['options']['show_total'] = false;
+        $this->postJson('/api/v1/studio/receipt/draft', [...$this->key(), 'revision' => 0, 'configuration' => $bad])->assertUnprocessable();
+        $bad = $config;
+        $bad['tokens']['paper_width'] = 79;
+        $this->postJson('/api/v1/studio/receipt/draft', [...$this->key(), 'revision' => 0, 'configuration' => $bad])->assertUnprocessable();
+        foreach (['receipt', 'kitchen_print'] as $surface) {
+            $this->postJson('/api/v1/studio/'.$surface.'/draft', [...$this->key(), 'revision' => 0, 'configuration' => $config])->assertOk();
+            $this->postJson('/api/v1/studio/'.$surface.'/publish', [...$this->key(), 'revision' => 1])->assertOk();
+            $this->getJson('/api/v1/studio/'.$surface.'/active')->assertJsonPath('data.configuration.tokens.paper_width', 80);
+        }
+        $collector = $this->employee(['sales.collect']);
+        $this->actingAs($collector);
+        $this->getJson('/api/v1/studio/receipt/active')->assertOk();
+        $this->getJson('/api/v1/studio/kitchen_print/active')->assertForbidden();
+        $this->getJson('/api/v1/studio/receipt/export')->assertForbidden();
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('kitchen_tickets', 0);
+    }
+
+    public function test_design_transfer_validates_scope_schema_and_imports_only_a_draft_idempotently(): void
+    {
+        $config = PrintLayoutSchema::defaults();
+        $this->postJson('/api/v1/studio/receipt/draft', [...$this->key(), 'revision' => 0, 'configuration' => $config])->assertOk();
+        $this->postJson('/api/v1/studio/receipt/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $file = $this->getJson('/api/v1/studio/receipt/export')->assertOk()->json();
+        $this->assertEqualsCanonicalizing(['format', 'version', 'surface', 'configuration'], array_keys($file));
+        $file['configuration']['tokens']['font_size'] = 14;
+        $body = [...$this->key(), 'revision' => 2, 'envelope' => $file];
+        $this->postJson('/api/v1/studio/receipt/import', $body)->assertOk()->assertJsonPath('data.revision', 3)->assertJsonPath('data.published_revision', 2);
+        $this->postJson('/api/v1/studio/receipt/import', $body)->assertOk()->assertJsonPath('data.revision', 3);
+        $this->getJson('/api/v1/studio/receipt/active')->assertJsonPath('data.configuration.tokens.font_size', 12);
+        $this->postJson('/api/v1/studio/kitchen_print/import', [...$body, ...$this->key(), 'revision' => 0])->assertUnprocessable();
+        $malicious = $body;
+        $malicious['envelope']['configuration']['tokens']['font_size'] = 'url(javascript:alert(1))';
+        $this->postJson('/api/v1/studio/receipt/import', [...$malicious, ...$this->key(), 'revision' => 3])->assertUnprocessable();
+        $this->postJson('/api/v1/studio/receipt/import', [...$body, ...$this->key(), 'revision' => 2])->assertConflict();
+        $reader = $this->employee(['studio.view']);
+        $this->actingAs($reader);
+        $this->postJson('/api/v1/studio/receipt/import', $body)->assertForbidden();
+        $other = $this->company('studio-transfer-other@example.test');
+        $this->actingAs($other);
+        $this->getJson('/api/v1/studio/receipt/export')->assertNotFound();
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+    }
+
+    public function test_design_import_audit_failure_rolls_back_draft_version_and_uuid(): void
+    {
+        $this->postJson('/api/v1/studio/pos/draft', $this->body())->assertOk();
+        $file = $this->getJson('/api/v1/studio/pos/export')->assertOk()->json();
+        $key = $this->key();
+        AuditLog::creating(function ($log) {
+            if ($log->action === 'studio.layout.saved') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $this->postJson('/api/v1/studio/pos/import', [...$key, 'revision' => 1, 'envelope' => $file])->assertServerError();
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data.revision', 1);
+        $this->assertDatabaseCount('studio_layout_versions', 1);
+        $this->assertDatabaseMissing('idempotency_records', ['key' => $key['idempotency_key']]);
     }
 
     public function test_kitchen_schema_permissions_and_tenant_enforcement(): void

@@ -18,6 +18,7 @@ import { PosLayoutCanvas } from './PosLayoutCanvas'
 import { useLayoutHistory } from './useLayoutHistory'
 import { posTemplates } from './pos-templates'
 import { StudioTemplates } from './StudioTemplates'
+import { StudioTransfer } from './StudioTransfer'
 import { defaultLayoutScope, scopeQuery, type LayoutScope } from './layout-scope'
 import {
   StudioVersions,
@@ -156,6 +157,7 @@ function PosLayoutEditor({
   const [reloadError, setReloadError] = useState<unknown>(null)
   const [reloading, setReloading] = useState(false)
   const [templateBusy, setTemplateBusy] = useState(false)
+  const [transferBusy, setTransferBusy] = useState(false)
   const client = useQueryClient()
   const can = useCan()
   const toast = useToast()
@@ -186,7 +188,8 @@ function PosLayoutEditor({
     void client.invalidateQueries({ queryKey: [`studio-${surface}-active`] })
     toast('Diseño publicado para esta terminal.')
   })
-  const locked = save.locked || publish.locked || !!versionAction || reloading || templateBusy
+  const locked =
+    save.locked || publish.locked || !!versionAction || reloading || templateBusy || transferBusy
   useEffect(() => {
     onBlocked(dirty || locked)
     return () => onBlocked(false)
@@ -352,6 +355,7 @@ function PosLayoutEditor({
           className="button secondary"
           disabled={
             save.isPending ||
+            transferBusy ||
             inspecting ||
             !!versionAction ||
             publish.locked ||
@@ -366,6 +370,7 @@ function PosLayoutEditor({
           className="button primary"
           disabled={
             publish.isPending ||
+            transferBusy ||
             inspecting ||
             !!versionAction ||
             save.locked ||
@@ -379,6 +384,23 @@ function PosLayoutEditor({
       </header>
       <ErrorNotice error={save.error || publish.error || reloadError} />
       <OperationNotice uncertain={save.uncertain || publish.uncertain} />
+      <StudioTransfer
+        surface={surface}
+        scope={scope}
+        revision={revision}
+        disabled={locked || dirty || inspecting}
+        onBusy={setTransferBusy}
+        onSaved={(result) => {
+          const next = parsePosLayout(result.draft) ?? defaultPosConfiguration
+          history.reset(next)
+          setBaseline(JSON.stringify(next))
+          setRevision(result.revision)
+          setPublished(result.published_revision ?? 0)
+          setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
+          setPreviewVersion(null)
+          setViewPublished(false)
+        }}
+      />
       <StudioTemplates
         config={config}
         disabled={editLocked}

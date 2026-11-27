@@ -3,21 +3,31 @@ import { createPortal } from 'react-dom'
 import { Modal } from './ui'
 import { useSession } from '../features/auth/SessionProvider'
 import '../features/orders/order-print.css'
+import { usePrintLayout } from '../features/studio/usePrintLayout'
+import { PrintLayoutFrame } from '../features/studio/print-layout'
 
 export function PrintDocumentPreview({
   title,
   children,
   onClose,
+  surface = 'kitchen_print',
 }: {
   title: string
   children: (width: string) => ReactNode
   onClose: () => void
+  surface?: 'receipt' | 'kitchen_print'
 }) {
   const { session, screenBlocked } = useSession()
-  const [width, setWidth] = useState('80')
+  const layout = usePrintLayout(surface)
+  const [chosenWidth, setWidth] = useState<string | null>(null)
+  const width = chosenWidth ?? String(layout.configuration?.tokens.paper_width ?? 80)
   const [error, setError] = useState('')
   if (!session || screenBlocked) return null
-  const content = children(width)
+  const content = (
+    <PrintLayoutFrame config={layout.configuration} width={width}>
+      {children(width)}
+    </PrintLayoutFrame>
+  )
   return (
     <>
       <Modal title={title} onClose={onClose}>
@@ -36,6 +46,7 @@ export function PrintDocumentPreview({
           <button
             type="button"
             className="button primary"
+            disabled={!layout.ready}
             onClick={() => {
               try {
                 window.print()

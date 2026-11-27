@@ -38,7 +38,16 @@ export function StudioVersions({
   onAction,
 }: {
   scope: LayoutScope
-  surface?: 'pos' | 'tables' | 'kitchen' | 'pickup' | 'delivery_pos' | 'deliveries' | 'dashboard'
+  surface?:
+    | 'pos'
+    | 'tables'
+    | 'kitchen'
+    | 'pickup'
+    | 'delivery_pos'
+    | 'deliveries'
+    | 'dashboard'
+    | 'receipt'
+    | 'kitchen_print'
   revision: number
   locked: boolean
   editable: boolean
@@ -172,7 +181,16 @@ export function StudioVersionAction({
   onStale,
 }: {
   scope: LayoutScope
-  surface?: 'pos' | 'tables' | 'kitchen' | 'pickup' | 'delivery_pos' | 'deliveries' | 'dashboard'
+  surface?:
+    | 'pos'
+    | 'tables'
+    | 'kitchen'
+    | 'pickup'
+    | 'delivery_pos'
+    | 'deliveries'
+    | 'dashboard'
+    | 'receipt'
+    | 'kitchen_print'
   value: VersionAction
   onClose: () => void
   onSaved: (layout: SavedPosLayout) => void

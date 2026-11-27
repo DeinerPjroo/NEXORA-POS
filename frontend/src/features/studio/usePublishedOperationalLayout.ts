@@ -4,7 +4,7 @@ import { api } from '../../lib/api'
 import { useCan, useSession } from '../auth/SessionProvider'
 
 export function usePublishedOperationalLayout<T>(
-  surface: 'tables' | 'kitchen' | 'deliveries' | 'dashboard',
+  surface: 'tables' | 'kitchen' | 'deliveries' | 'dashboard' | 'receipt' | 'kitchen_print',
   permission: string,
   parse: (value: unknown) => T | null,
   defaults: T,

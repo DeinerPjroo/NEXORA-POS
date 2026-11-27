@@ -1,0 +1,40 @@
+.studio-print-layout[data-custom='true'] .operational-ticket {
+  font-size: var(--studio-print-font);
+  line-height: var(--studio-print-line-height);
+}
+.studio-print-layout[data-custom='true'] .operational-ticket h1 {
+  font-size: 1.35em;
+  text-align: var(--studio-print-header);
+}
+.studio-print-layout[data-custom='true'] .operational-ticket h2 {
+  font-size: 1.17em;
+  text-align: var(--studio-print-header);
+}
+.studio-print-layout[data-custom='true'] .operational-ticket .ticket-line {
+  padding-top: var(--studio-print-spacing);
+  padding-bottom: var(--studio-print-spacing);
+}
+.studio-print-footer {
+  box-sizing: border-box;
+  width: 72mm;
+  max-width: 100%;
+  margin: auto;
+  padding: 8px;
+  color: #000;
+  background: #fff;
+  font:
+    var(--studio-print-font)/var(--studio-print-line-height) Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  text-align: center;
+}
+.studio-print-layout[data-width='58'] .studio-print-footer {
+  width: 50mm;
+}
+.studio-document-example {
+  height: 100vh;
+  overflow: auto;
+  padding: 12px;
+  background: var(--canvas);
+}

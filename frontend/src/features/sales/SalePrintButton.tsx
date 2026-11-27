@@ -21,6 +21,7 @@ export function SalePrintButton({ sale, disabled = false }: { sale: Sale; disabl
       </button>
       {copy && (
         <PrintDocumentPreview
+          surface="receipt"
           title={`Imprimir recibo ${copy.receipt_code}`}
           onClose={() => setCopy(null)}
         >
@@ -31,7 +32,7 @@ export function SalePrintButton({ sale, disabled = false }: { sale: Sale; disabl
   )
 }
 
-function ThermalSaleReceipt({ sale, width }: { sale: Sale; width: string }) {
+export function ThermalSaleReceipt({ sale, width }: { sale: Sale; width: string }) {
   const { session } = useSession()
   if (!session) return null
   const money = (amount: string) => formatMoney(amount, sale.currency)

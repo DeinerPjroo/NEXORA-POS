@@ -67,12 +67,14 @@ export function StudioPage() {
           <strong>Dashboard administrativo</strong>
           <small>Widgets reales, orden y visibilidad</small>
         </Link>
-        {['Recibos y comandas'].map((name) => (
-          <div key={name}>
-            <strong>{name}</strong>
-            <small>Próxima superficie · aún no editable</small>
-          </div>
-        ))}
+        <Link to="/admin/studio/recibos">
+          <strong>Recibos de venta</strong>
+          <small>Formato térmico del recibo interno</small>
+        </Link>
+        <Link to="/admin/studio/comandas">
+          <strong>Comandas y borradores</strong>
+          <small>Papel, tipografía y pie de texto</small>
+        </Link>
       </section>
       <ErrorNotice error={query.error} />
       {query.isPending ? (

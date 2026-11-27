@@ -34,7 +34,7 @@ final class SavePosLayout
             $layout->updated_by = $actor->id;
             $layout->save();
             $layout->versions()->create(['revision' => $layout->revision, 'kind' => $publish ? 'published' : 'draft', 'configuration' => $publish ? $layout->published : $layout->draft, 'actor_id' => $actor->id, 'created_at' => now()]);
-            Audit::record($publish ? 'studio.layout.published' : 'studio.layout.saved', $publish ? 'Se publicó un diseño operativo.' : 'Se guardó un borrador de diseño operativo.', $actor, ['layout_id' => $layout->id, 'revision' => $layout->revision, 'schema_version' => ($publish ? $layout->published : $layout->draft)['schema_version'], 'surface' => $layout->surface]);
+            Audit::record($publish ? 'studio.layout.published' : 'studio.layout.saved', $publish ? 'Se publicó un diseño operativo.' : 'Se guardó un borrador de diseño operativo.', $actor, ['layout_id' => $layout->id, 'revision' => $layout->revision, 'schema_version' => ($publish ? $layout->published : $layout->draft)['schema_version'], 'surface' => $layout->surface, 'source' => ($data['imported'] ?? false) ? 'import' : 'editor']);
 
             return $layout;
         });

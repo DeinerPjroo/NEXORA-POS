@@ -29,6 +29,7 @@ export function StudioPreviewFrame({
     if (node?.contentDocument?.body) setDocument(node.contentDocument)
   }, [])
   const { session, screenBlocked } = useSession()
+  const trackPanels = !!config
   useEffect(() => {
     if (!document) return
     const source = window.document
@@ -61,7 +62,7 @@ export function StudioPreviewFrame({
     }
   }, [document])
   useEffect(() => {
-    if (!document) return
+    if (!document || !trackPanels) return
     let frame = 0
     const measure = () => {
       cancelAnimationFrame(frame)
@@ -89,7 +90,7 @@ export function StudioPreviewFrame({
       resize.disconnect()
       document.removeEventListener('load', measure, true)
     }
-  }, [document, width, height, onMeasure])
+  }, [document, width, height, onMeasure, trackPanels])
   return (
     <>
       <iframe

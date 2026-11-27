@@ -15,6 +15,7 @@ import { TablesStudioPage } from './features/studio/TablesStudioPage'
 import { KitchenStudioPage } from './features/studio/KitchenStudioPage'
 import { DeliveriesStudioPage } from './features/studio/DeliveriesStudioPage'
 import { DashboardStudioPage } from './features/studio/DashboardStudioPage'
+import { PrintStudioPage } from './features/studio/PrintStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -472,6 +473,22 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <DashboardStudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/recibos"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <PrintStudioPage surface="receipt" />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/comandas"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <PrintStudioPage surface="kitchen_print" />
             </PermissionBoundary>
           }
         />
