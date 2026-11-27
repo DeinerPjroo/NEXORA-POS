@@ -298,17 +298,30 @@
   background: linear-gradient(135deg, #149b78, #0d7b5e);
   border-top: 2px solid #51c5a2;
 }
-:root[data-theme='dark'] .pos-terminal .pos-saved-order {
+:root[data-theme='dark'] .pos-terminal:not([data-studio-theme='light']) .pos-saved-order,
+.pos-terminal[data-studio-theme='dark'] .pos-saved-order {
   --order-state: #e8b452;
 }
-:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='preparing'] {
+:root[data-theme='dark']
+  .pos-terminal:not([data-studio-theme='light'])
+  .pos-saved-order[data-state='preparing'],
+.pos-terminal[data-studio-theme='dark'] .pos-saved-order[data-state='preparing'] {
   --order-state: #52bddb;
 }
-:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='ready'],
-:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='paid'] {
+:root[data-theme='dark']
+  .pos-terminal:not([data-studio-theme='light'])
+  .pos-saved-order[data-state='ready'],
+.pos-terminal[data-studio-theme='dark'] .pos-saved-order[data-state='ready'],
+:root[data-theme='dark']
+  .pos-terminal:not([data-studio-theme='light'])
+  .pos-saved-order[data-state='paid'],
+.pos-terminal[data-studio-theme='dark'] .pos-saved-order[data-state='paid'] {
   --order-state: #4bcda8;
 }
-:root[data-theme='dark'] .pos-terminal .pos-saved-order[data-state='cancelled'] {
+:root[data-theme='dark']
+  .pos-terminal:not([data-studio-theme='light'])
+  .pos-saved-order[data-state='cancelled'],
+.pos-terminal[data-studio-theme='dark'] .pos-saved-order[data-state='cancelled'] {
   --order-state: #ee899b;
 }
 @media (hover: hover) {

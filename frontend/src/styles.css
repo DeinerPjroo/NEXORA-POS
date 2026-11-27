@@ -20,15 +20,20 @@
   -webkit-font-smoothing: antialiased;
   --accent: #31d9fc;
   --secondary: #8271ff;
+  --radius: 15px;
+}
+:root,
+.pos-terminal[data-studio-theme='light'] {
+  color-scheme: light;
   --canvas: #f5f7fa;
   --surface: #fff;
   --text: #182132;
   --muted: #758093;
   --line: #e9edf2;
   --input: #fff;
-  --radius: 15px;
 }
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+.pos-terminal[data-studio-theme='dark'] {
   color-scheme: dark;
   --canvas: #101622;
   --surface: #182030;

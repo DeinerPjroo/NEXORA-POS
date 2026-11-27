@@ -34,6 +34,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesSettingController;
 use App\Http\Controllers\ScreenSecurityController;
 use App\Http\Controllers\StudioLayoutController;
+use App\Http\Controllers\StudioTemplateController;
 use App\Http\Controllers\TaxProfileController;
 use App\Http\Controllers\VariantController;
 use App\Http\Controllers\WorkspaceController;
@@ -163,6 +164,8 @@ Route::prefix('v1')->group(function () {
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
         Route::get('studio/pos', [StudioLayoutController::class, 'show']);
+        Route::get('studio/pos/templates', [StudioTemplateController::class, 'index']);
+        Route::post('studio/pos/templates', [StudioTemplateController::class, 'save']);
         Route::get('studio/pos/active', [StudioLayoutController::class, 'active']);
         Route::get('studio/pos/versions', [StudioLayoutController::class, 'versions']);
         Route::post('studio/pos/restore', [StudioLayoutController::class, 'restore']);

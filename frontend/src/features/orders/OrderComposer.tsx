@@ -687,6 +687,9 @@ export function OrderComposer({
       data-photos={photos ?? (studio.revision !== 0 && studio.configuration.options.photos)}
       data-studio={studio.revision !== 0}
       data-studio-hints={studio.configuration.options.hints}
+      data-studio-theme={
+        studio.revision !== 0 ? (studio.configuration.options.theme ?? 'inherit') : 'inherit'
+      }
       data-studio-revision={studio.revision}
       style={studio.revision !== 0 ? posLayoutStyle(studio.configuration) : undefined}
       data-layout-version={defaultPosLayout.schemaVersion}

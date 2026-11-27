@@ -17,6 +17,7 @@ import {
 import { PosLayoutCanvas } from './PosLayoutCanvas'
 import { useLayoutHistory } from './useLayoutHistory'
 import { posTemplates } from './pos-templates'
+import { StudioTemplates } from './StudioTemplates'
 import { defaultLayoutScope, scopeQuery, type LayoutScope } from './layout-scope'
 import {
   StudioVersions,
@@ -141,6 +142,7 @@ function PosLayoutEditor({
   const [dragging, setDragging] = useState<PosPanel | null>(null)
   const [reloadError, setReloadError] = useState<unknown>(null)
   const [reloading, setReloading] = useState(false)
+  const [templateBusy, setTemplateBusy] = useState(false)
   const client = useQueryClient()
   const can = useCan()
   const toast = useToast()
@@ -171,7 +173,7 @@ function PosLayoutEditor({
     void client.invalidateQueries({ queryKey: ['studio-pos-active'] })
     toast('Diseño publicado para Terminal POS.')
   })
-  const locked = save.locked || publish.locked || !!versionAction || reloading
+  const locked = save.locked || publish.locked || !!versionAction || reloading || templateBusy
   useEffect(() => {
     onBlocked(dirty || locked)
     return () => onBlocked(false)
@@ -180,6 +182,11 @@ function PosLayoutEditor({
   const editLocked = locked || inspecting
   const previewConfig = previewVersion?.config ?? (viewPublished ? publishedConfig : config)
   const changes = [
+    {
+      label: 'Tema',
+      draft: config.options.theme ?? 'inherit',
+      active: publishedConfig.options.theme ?? 'inherit',
+    },
     {
       label: 'Orden de paneles',
       draft: config.panels.map((id) => posComponents[id].name).join(' → '),
@@ -359,6 +366,21 @@ function PosLayoutEditor({
       </header>
       <ErrorNotice error={save.error || publish.error || reloadError} />
       <OperationNotice uncertain={save.uncertain || publish.uncertain} />
+      <StudioTemplates
+        config={config}
+        disabled={editLocked}
+        onBusy={setTemplateBusy}
+        onApply={(next) => {
+          if (
+            dirty &&
+            !window.confirm(
+              '¿Reemplazar los cambios locales por esta plantilla? Podrás deshacerlo.',
+            )
+          )
+            return
+          applyTemplate(next)
+        }}
+      />
       <fieldset
         disabled={editLocked || !can('studio.edit')}
         className="panel studio-template-picker"
@@ -550,6 +572,25 @@ function PosLayoutEditor({
                 setConfig({ ...config, tokens: { ...config.tokens, accent: event.target.value } })
               }
             />
+          </Field>
+          <Field label="Tema de la terminal">
+            <select
+              value={previewConfig.options.theme ?? 'inherit'}
+              onChange={(event) =>
+                setConfig({
+                  ...config,
+                  schema_version: 2,
+                  options: {
+                    ...config.options,
+                    theme: event.target.value as 'inherit' | 'light' | 'dark',
+                  },
+                })
+              }
+            >
+              <option value="inherit">Tema de la empresa</option>
+              <option value="light">Claro</option>
+              <option value="dark">Oscuro</option>
+            </select>
           </Field>
           <label>
             <input
