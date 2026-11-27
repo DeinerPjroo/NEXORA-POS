@@ -1,0 +1,41 @@
+.kitchen-board[data-studio-kitchen='true'] .kitchen-columns {
+  gap: var(--studio-kitchen-gap);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-ticket {
+  padding: var(--studio-kitchen-padding);
+  border-radius: var(--studio-kitchen-radius);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-food,
+.kitchen-board[data-studio-kitchen='true'] .kitchen-quantity {
+  font-size: var(--studio-kitchen-font-size);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-quantity,
+.kitchen-board[data-studio-kitchen='true'] .kitchen-column > h2 {
+  color: var(--text);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-column[data-state='new'] {
+  --lane-color: var(--studio-kitchen-new);
+  --lane-ink: var(--studio-kitchen-new-ink);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-column[data-state='preparing'] {
+  --lane-color: var(--studio-kitchen-preparing);
+  --lane-ink: var(--studio-kitchen-preparing-ink);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-column[data-state='ready'],
+.kitchen-board[data-studio-kitchen='true'] .kitchen-column[data-state='delivered'] {
+  --lane-color: var(--studio-kitchen-ready);
+  --lane-ink: var(--studio-kitchen-ready-ink);
+}
+.kitchen-board[data-studio-kitchen='true'] .kitchen-advance,
+.kitchen-board[data-studio-kitchen='true']
+  .kitchen-column:not([data-state='cancelled'])
+  > h2
+  > span:last-child {
+  background: var(--lane-color);
+  color: var(--lane-ink);
+}
+.studio-pos-render .kitchen-board {
+  height: 100vh;
+  padding: 10px;
+  overflow: hidden;
+}

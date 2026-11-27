@@ -12,6 +12,7 @@ import { SettingsPage } from './features/workspace/SettingsPage'
 import { StudioPage } from './features/studio/StudioPage'
 import { PosStudioPage } from './features/studio/PosStudioPage'
 import { TablesStudioPage } from './features/studio/TablesStudioPage'
+import { KitchenStudioPage } from './features/studio/KitchenStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -429,6 +430,14 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <StudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/cocina"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <KitchenStudioPage />
             </PermissionBoundary>
           }
         />

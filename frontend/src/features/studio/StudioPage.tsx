@@ -51,10 +51,13 @@ export function StudioPage() {
           <strong>Mesas y salones</strong>
           <small>Tarjetas operativas y Mesas Compactas</small>
         </Link>
+        <Link to="/admin/studio/cocina">
+          <strong>Nexora Kitchen</strong>
+          <small>Tablero real, tarjetas y colores por estado</small>
+        </Link>
         {[
           'Pedidos para llevar',
           'Domicilios',
-          'Nexora Kitchen',
           'Dashboard administrativo',
           'Recibos y comandas',
         ].map((name) => (

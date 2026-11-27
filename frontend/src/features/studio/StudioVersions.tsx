@@ -38,7 +38,7 @@ export function StudioVersions({
   onAction,
 }: {
   scope: LayoutScope
-  surface?: 'pos' | 'tables'
+  surface?: 'pos' | 'tables' | 'kitchen'
   revision: number
   locked: boolean
   editable: boolean
@@ -172,7 +172,7 @@ export function StudioVersionAction({
   onStale,
 }: {
   scope: LayoutScope
-  surface?: 'pos' | 'tables'
+  surface?: 'pos' | 'tables' | 'kitchen'
   value: VersionAction
   onClose: () => void
   onSaved: (layout: SavedPosLayout) => void

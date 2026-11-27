@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Studio\KitchenLayoutSchema;
 use App\Domains\Studio\PosLayoutSchema;
 use App\Domains\Studio\TablesLayoutSchema;
 use App\Domains\Tenancy\TenantContext;
@@ -77,6 +78,50 @@ class StudioLayoutTest extends TestCase
         $this->postJson('/api/v1/studio/tables/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[1]['id'], 'reason' => 'Restore tables'])->assertOk()->assertJsonPath('data.revision', 3)->assertJsonPath('data.published_revision', 2);
         $this->assertDatabaseCount('dining_sessions', 0);
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_kitchen_reuses_publication_versions_and_preserves_other_surfaces(): void
+    {
+        $config = KitchenLayoutSchema::defaults();
+        $config['tokens']['padding'] = 8;
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => $config];
+        $this->postJson('/api/v1/studio/kitchen/draft', $body)->assertOk()->assertJsonPath('data.surface', 'kitchen');
+        $this->postJson('/api/v1/studio/kitchen/draft', $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $this->getJson('/api/v1/studio/kitchen/active')->assertJsonPath('data.revision', 0);
+        $this->postJson('/api/v1/studio/kitchen/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $this->getJson('/api/v1/studio/kitchen/active')->assertJsonPath('data.configuration.tokens.padding', 8);
+        $versions = $this->getJson('/api/v1/studio/kitchen/versions')->assertOk()->assertJsonCount(2, 'data')->json('data');
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/tables')->assertJsonPath('data', null);
+        $this->postJson('/api/v1/studio/kitchen/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[1]['id'], 'reason' => 'Restore kitchen'])->assertOk()->assertJsonPath('data.published_revision', 2);
+        $this->assertDatabaseCount('kitchen_tickets', 0);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_kitchen_schema_permissions_and_tenant_enforcement(): void
+    {
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => KitchenLayoutSchema::defaults()];
+        $bad = $body;
+        $bad['configuration']['tokens']['new_color'] = 'url(javascript:alert(1))';
+        $this->postJson('/api/v1/studio/kitchen/draft', $bad)->assertUnprocessable();
+        $bad = $body;
+        $bad['configuration']['hide_notes'] = true;
+        $this->postJson('/api/v1/studio/kitchen/draft', $bad)->assertUnprocessable();
+        $this->postJson('/api/v1/studio/kitchen/draft', $this->body())->assertUnprocessable();
+        $this->postJson('/api/v1/studio/kitchen/draft', $body)->assertOk();
+        $reader = $this->employee(['studio.view', 'kitchen.view']);
+        $this->actingAs($reader);
+        $this->getJson('/api/v1/studio/kitchen/active')->assertOk();
+        $this->postJson('/api/v1/studio/kitchen/draft', $body)->assertForbidden();
+        $this->postJson('/api/v1/studio/kitchen/publish', [...$this->key(), 'revision' => 1])->assertForbidden();
+        $staff = $this->employee(['dining.view']);
+        $this->actingAs($staff);
+        $this->getJson('/api/v1/studio/kitchen/active')->assertForbidden();
+        $other = $this->company('kitchen-studio-other@example.test');
+        $this->actingAs($other);
+        $this->getJson('/api/v1/studio/kitchen')->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/kitchen/versions')->assertJsonCount(0, 'data');
+        $this->getJson('/api/v1/studio/kitchen/active')->assertJsonPath('data.revision', 0);
     }
 
     public function test_tables_schema_permissions_and_tenant_enforcement(): void

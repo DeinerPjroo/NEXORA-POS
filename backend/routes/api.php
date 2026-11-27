@@ -164,6 +164,13 @@ Route::prefix('v1')->group(function () {
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
         Route::get('studio/pos', [StudioLayoutController::class, 'show']);
+        Route::get('studio/kitchen', [StudioLayoutController::class, 'show'])->defaults('studio_surface', 'kitchen');
+        Route::get('studio/kitchen/active', [StudioLayoutController::class, 'active'])->defaults('studio_surface', 'kitchen');
+        Route::get('studio/kitchen/versions', [StudioLayoutController::class, 'versions'])->defaults('studio_surface', 'kitchen');
+        Route::post('studio/kitchen/draft', [StudioLayoutController::class, 'save'])->defaults('studio_surface', 'kitchen');
+        Route::post('studio/kitchen/publish', [StudioLayoutController::class, 'publish'])->defaults('studio_surface', 'kitchen');
+        Route::post('studio/kitchen/restore', [StudioLayoutController::class, 'restore'])->defaults('studio_surface', 'kitchen');
+        Route::post('studio/kitchen/archive', [StudioLayoutController::class, 'archive'])->defaults('studio_surface', 'kitchen');
         Route::get('studio/tables', [StudioLayoutController::class, 'show'])->defaults('studio_surface', 'tables');
         Route::get('studio/tables/active', [StudioLayoutController::class, 'active'])->defaults('studio_surface', 'tables');
         Route::get('studio/tables/versions', [StudioLayoutController::class, 'versions'])->defaults('studio_surface', 'tables');

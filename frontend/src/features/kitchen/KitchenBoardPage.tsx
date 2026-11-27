@@ -22,6 +22,14 @@ import type { CatalogPage } from '../catalog/types'
 import type { KitchenTicket } from './types'
 import { TicketPrintButton } from '../orders/OrderPrintActions'
 import './kitchen.css'
+import { usePublishedOperationalLayout } from '../studio/usePublishedOperationalLayout'
+import {
+  defaultKitchenLayout,
+  parseKitchenLayout,
+  kitchenStyle,
+  type KitchenLayout,
+} from '../studio/kitchen-layout'
+import '../studio/kitchen-layout.css'
 import { preparationLabels } from './TableKitchen'
 const labels = {
   new: 'Nuevas',
@@ -30,7 +38,7 @@ const labels = {
   delivered: 'Entregadas',
   cancelled: 'Canceladas',
 }
-export function KitchenBoardPage() {
+export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLayout }) {
   const context = useOperationContext()
   const can = useCan()
   const [branch, setBranch] = useState('')
@@ -40,6 +48,15 @@ export function KitchenBoardPage() {
   const [page, setPage] = useState(1)
   const [clock, setClock] = useState(Date.now())
   const [action, setAction] = useState<{ ticket: KitchenTicket; status: string } | null>(null)
+  const layout = usePublishedOperationalLayout(
+    'kitchen',
+    'kitchen.view',
+    parseKitchenLayout,
+    defaultKitchenLayout,
+    true,
+    !!action,
+    studioPreview,
+  )
   useEffect(() => {
     const timer = setInterval(() => setClock(Date.now()), 1000)
     return () => clearInterval(timer)
@@ -71,7 +88,7 @@ export function KitchenBoardPage() {
       >(
         `kitchen-tickets?branch_id=${branchId}&page=${page}&history=${history ? 1 : 0}${station ? '&station_id=' + station : ''}`,
       ),
-    refetchInterval: 5000,
+    refetchInterval: studioPreview ? false : 5000,
   })
   const serverClock = query.data?.server_now
     ? Date.parse(query.data.server_now) + clock - query.dataUpdatedAt
@@ -80,7 +97,12 @@ export function KitchenBoardPage() {
     ? ['delivered', 'cancelled']
     : ['new', 'preparing', 'ready']
   return (
-    <section className="kitchen-board" aria-label="Nexora Kitchen">
+    <section
+      className="kitchen-board"
+      aria-label="Nexora Kitchen"
+      data-studio-kitchen={!!layout}
+      style={layout ? kitchenStyle(layout) : undefined}
+    >
       <header className="kitchen-heading">
         <div className="kitchen-title">
           <span className="kitchen-title-icon">
@@ -97,7 +119,9 @@ export function KitchenBoardPage() {
             ? 'Sin actualizar · reintenta'
             : query.isPending
               ? 'Cargando cocina…'
-              : 'Actualización automática · cada 5 s'}
+              : studioPreview
+                ? 'Vista previa · sin actualización automática'
+                : 'Actualización automática · cada 5 s'}
         </span>
         {can('kitchen.manage') && (
           <Link className="kitchen-config" to="/cocina/rutas">
@@ -181,7 +205,9 @@ export function KitchenBoardPage() {
       ) : (
         <div
           className="kitchen-columns"
-          style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(230px, 1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${columns.length}, minmax(${layout?.tokens.column_width ?? 230}px, 1fr))`,
+          }}
         >
           {columns.map((status) => (
             <section key={status} className="kitchen-column" data-state={status}>
