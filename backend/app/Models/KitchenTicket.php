@@ -13,7 +13,7 @@ final class KitchenTicket extends Model
 
     protected function casts(): array
     {
-        return ['order_snapshot' => 'array', 'revision' => 'integer', 'priority' => 'integer', 'target_minutes' => 'integer', 'started_at' => 'datetime', 'ready_at' => 'datetime', 'delivered_at' => 'datetime'];
+        return ['order_snapshot' => 'array', 'display_snapshot' => 'array', 'revision' => 'integer', 'priority' => 'integer', 'target_minutes' => 'integer', 'started_at' => 'datetime', 'ready_at' => 'datetime', 'delivered_at' => 'datetime'];
     }
 
     public function lines()

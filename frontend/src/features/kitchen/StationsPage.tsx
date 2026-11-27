@@ -10,6 +10,7 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { useOperationContext } from '../operations/OperationalBranchPicker'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
+import { defaultKitchenDisplay, type KitchenDisplay } from './kitchen-display'
 
 type Station = {
   id: number
@@ -17,6 +18,7 @@ type Station = {
   name: string
   color: string
   target_minutes: number
+  display_settings: KitchenDisplay
   is_active: boolean
   revision: number
   branch: { id: number; name: string; is_active: boolean }
@@ -170,6 +172,17 @@ function StationEditor({ station, onClose }: { station: Station | null; onClose:
       name: data.get('name'),
       color: data.get('color'),
       target_minutes: Number(data.get('target_minutes')),
+      display_settings: {
+        schema_version: 1,
+        labels: Object.fromEntries(
+          Object.keys(defaultKitchenDisplay.labels).map((state) => [
+            state,
+            String(data.get(`label_${state}`)).trim(),
+          ]),
+        ),
+        warning_minutes: Number(data.get('warning_minutes')),
+        overdue_alert: data.get('overdue_alert') === 'on',
+      },
       is_active: data.get('is_active') === 'on',
       ...(station ? { revision: station.revision } : { branch_id: Number(data.get('branch_id')) }),
     })
@@ -177,6 +190,7 @@ function StationEditor({ station, onClose }: { station: Station | null; onClose:
   return (
     <Modal
       title={station ? 'Editar estación' : 'Nueva estación'}
+      locked={operation.locked}
       onClose={() => {
         if (!operation.locked) onClose()
       }}
@@ -216,6 +230,48 @@ function StationEditor({ station, onClose }: { station: Station | null; onClose:
           <Field label="Color de la estación">
             <input name="color" type="color" defaultValue={station?.color ?? '#8271ff'} />
           </Field>
+          <details>
+            <summary>Estados y avisos de preparación</summary>
+            <p>
+              Personaliza los nombres visibles. El flujo sigue siendo recibir, preparar y entregar.
+              Los cambios se aplican solo a nuevas comandas.
+            </p>
+            {Object.entries(defaultKitchenDisplay.labels).map(([state, label]) => (
+              <Field key={state} label={`Nombre visible · ${label}`}>
+                <input
+                  name={`label_${state}`}
+                  minLength={2}
+                  maxLength={24}
+                  required
+                  defaultValue={
+                    (station?.display_settings ?? defaultKitchenDisplay).labels[
+                      state as keyof KitchenDisplay['labels']
+                    ]
+                  }
+                />
+              </Field>
+            ))}
+            <Field label="Avisar minutos antes del objetivo">
+              <input
+                name="warning_minutes"
+                type="number"
+                required
+                min={0}
+                max={60}
+                step={1}
+                defaultValue={station?.display_settings?.warning_minutes ?? 0}
+              />
+            </Field>
+            <small>0 desactiva el aviso previo. No puede superar el objetivo de preparación.</small>
+            <label className="checkbox-line">
+              <input
+                name="overdue_alert"
+                type="checkbox"
+                defaultChecked={station?.display_settings?.overdue_alert ?? true}
+              />
+              Mostrar aviso de demora
+            </label>
+          </details>
           <label className="checkbox-line">
             <input name="is_active" type="checkbox" defaultChecked={station?.is_active ?? true} />
             Estación activa

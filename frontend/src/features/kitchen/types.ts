@@ -1,4 +1,7 @@
+import type { KitchenDisplay } from './kitchen-display'
+
 export type KitchenTicket = {
+  display_snapshot?: KitchenDisplay
   id: number
   order_id: number
   branch_id: number

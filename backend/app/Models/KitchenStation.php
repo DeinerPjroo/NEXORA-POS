@@ -14,7 +14,7 @@ final class KitchenStation extends Model
 
     protected function casts(): array
     {
-        return ['branch_id' => 'integer', 'target_minutes' => 'integer', 'revision' => 'integer', 'is_active' => 'boolean'];
+        return ['branch_id' => 'integer', 'target_minutes' => 'integer', 'revision' => 'integer', 'is_active' => 'boolean', 'display_settings' => 'array'];
     }
 
     public function branch(): BelongsTo

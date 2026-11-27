@@ -33,6 +33,7 @@ import '../studio/kitchen-layout.css'
 import { preparationLabels } from './TableKitchen'
 import { useKitchenRealtime } from './useKitchenRealtime'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
+import { defaultKitchenDisplay, type KitchenDisplay } from './kitchen-display'
 const labels = {
   new: 'Nuevas',
   preparing: 'En preparación',
@@ -70,7 +71,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
     queryKey: ['kitchen-stations', 'board', branchId],
     enabled: !!branchId && !screenBlocked,
     queryFn: () =>
-      api<CatalogPage<{ id: number; name: string }>>(
+      api<CatalogPage<{ id: number; name: string; display_settings: KitchenDisplay }>>(
         `kitchen-stations?branch_id=${branchId}&per_page=50`,
       ),
   })
@@ -98,6 +99,9 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
   const serverClock = query.data?.server_now
     ? Date.parse(query.data.server_now) + clock - query.dataUpdatedAt
     : clock
+  const columnLabels =
+    stations.data?.data.find((s) => String(s.id) === station)?.display_settings?.labels ??
+    defaultKitchenDisplay.labels
   const columns: KitchenTicket['status'][] = history
     ? ['delivered', 'cancelled']
     : ['new', 'preparing', 'ready']
@@ -227,7 +231,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                   ) : (
                     <CheckCheck size={19} aria-hidden="true" />
                   )}
-                  {labels[status]}
+                  {columnLabels[status]}
                 </span>
                 <span>{query.data?.data.filter((t) => t.status === status).length ?? 0}</span>
               </h2>
@@ -259,6 +263,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                       key={ticket.id}
                       data-urgent={ticket.priority === 1}
                       data-overdue={
+                        (ticket.display_snapshot?.overdue_alert ?? true) &&
                         serverClock - Date.parse(ticket.created_at) >
                           ticket.target_minutes * 60000 &&
                         ['new', 'preparing'].includes(ticket.status)
@@ -277,10 +282,25 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                         {ticket.station_name} · objetivo {ticket.target_minutes} min
                       </p>
                       <div className="kitchen-signals">
+                        {ticket.display_snapshot &&
+                          ticket.display_snapshot.labels[ticket.status] !==
+                            labels[ticket.status] && (
+                            <span>{ticket.display_snapshot.labels[ticket.status]}</span>
+                          )}
+                        {!!ticket.display_snapshot?.warning_minutes &&
+                          ['new', 'preparing'].includes(ticket.status) &&
+                          serverClock - Date.parse(ticket.created_at) >=
+                            (ticket.target_minutes - ticket.display_snapshot.warning_minutes) *
+                              60000 &&
+                          serverClock - Date.parse(ticket.created_at) <=
+                            ticket.target_minutes * 60000 && (
+                            <strong className="kitchen-delay">Próxima al objetivo</strong>
+                          )}
                         {ticket.priority === 1 && (
                           <strong className="kitchen-urgent">URGENTE</strong>
                         )}
-                        {['new', 'preparing'].includes(ticket.status) &&
+                        {(ticket.display_snapshot?.overdue_alert ?? true) &&
+                          ['new', 'preparing'].includes(ticket.status) &&
                           serverClock - Date.parse(ticket.created_at) >
                             ticket.target_minutes * 60000 && (
                             <strong className="kitchen-delay">
@@ -391,7 +411,12 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                         <summary>Historial de la comanda</summary>
                         {ticket.events?.map((event) => (
                           <p key={event.id}>
-                            {labels[event.to_status as KitchenTicket['status']]} ·{' '}
+                            {
+                              (ticket.display_snapshot?.labels ?? labels)[
+                                event.to_status as KitchenTicket['status']
+                              ]
+                            }{' '}
+                            ·{' '}
                             {new Date(event.created_at).toLocaleString('es-CO', {
                               timeZone: session?.company.timezone ?? 'America/Bogota',
                             })}

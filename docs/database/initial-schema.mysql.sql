@@ -905,3 +905,7 @@ alter table `kitchen_tickets` add `priority` tinyint unsigned not null default '
 
 alter table `kitchen_tickets` add index `kitchen_priority_queue`(`tenant_id`, `branch_id`, `priority`, `created_at`, `id`);
 
+alter table `kitchen_stations` add `display_settings` json null;
+
+alter table `kitchen_tickets` add `display_snapshot` json null;
+

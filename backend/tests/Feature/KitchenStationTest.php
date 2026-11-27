@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Kitchen\KitchenDisplay;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
 use App\Models\Branch;
@@ -33,6 +34,25 @@ class KitchenStationTest extends TestCase
         $this->owner = $this->company('kitchen@example.test');
         $this->actingAs($this->owner)->withHeader('Origin', 'http://127.0.0.1:5173');
         $this->branch = app(TenantContext::class)->run($this->owner->tenant_id, fn () => Branch::firstOrFail()->id);
+    }
+
+    public function test_station_display_is_closed_revisioned_and_preserved_when_legacy_clients_omit_it(): void
+    {
+        $display = KitchenDisplay::defaults();
+        $display['labels']['preparing'] = 'En horno';
+        $display['warning_minutes'] = 2;
+        $body = $this->input(['display_settings' => $display]);
+        $station = $this->postJson($this->url, $body)->assertCreated()->assertJsonPath('data.display_settings.labels.preparing', 'En horno')->json('data');
+        $this->postJson($this->url, $body)->assertCreated()->assertJsonPath('data.revision', 1);
+        $edit = $this->input(['revision' => 1]);
+        unset($edit['branch_id']);
+        $this->putJson($this->url.'/'.$station['id'], $edit)->assertOk()->assertJsonPath('data.display_settings', $display);
+        $this->putJson($this->url.'/'.$station['id'], [...$edit, 'display_settings' => $display, 'idempotency_key' => (string) Str::uuid()])->assertConflict();
+        foreach ([['javascript' => 'alert(1)'], ['labels' => [...$display['labels'], 'new' => '<script>']], ['warning_minutes' => 61], ['warning_minutes' => 30]] as $invalid) {
+            $this->postJson($this->url, $this->input(['display_settings' => [...$display, ...$invalid]]))->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('kitchen_stations', 1);
+        $this->assertDatabaseCount('kitchen_tickets', 0);
     }
 
     private function company(string $email): User

@@ -24,6 +24,11 @@ final class SaveKitchenStation
                 $station->branch_id = Branch::whereKey($data['branch_id'])->lockForUpdate()->firstOrFail()->id;
             }
             $station->fill(array_intersect_key($data, array_flip($station->getFillable())));
+            if (array_key_exists('display_settings', $data)) {
+                $station->display_settings = KitchenDisplay::validate($data['display_settings'], $station->target_minutes);
+            } elseif ($station->display_settings !== null) {
+                KitchenDisplay::validate($station->display_settings, $station->target_minutes);
+            }
             if (KitchenStation::where('branch_id', $station->branch_id)->where('name', $station->name)->when($existing, fn ($q) => $q->whereKeyNot($station->id))->exists()) {
                 throw ValidationException::withMessages(['name' => 'Ya existe una estación con este nombre en la sucursal.']);
             }

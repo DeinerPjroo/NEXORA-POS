@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
 use App\Domains\Kitchen\KitchenChanged;
+use App\Domains\Kitchen\KitchenDisplay;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
 use App\Models\Branch;
@@ -208,6 +209,29 @@ class KitchenWorkflowTest extends TestCase
         $other = $this->company('priority-other@example.test');
         $this->actingAs($other)->postJson($url, $body)->assertNotFound();
         $this->assertDatabaseHas('kitchen_tickets', ['id' => $ticket['id'], 'priority' => 0, 'revision' => 1]);
+    }
+
+    public function test_ticket_display_is_frozen_at_dispatch_and_never_changes_financial_or_transition_rules(): void
+    {
+        $station = $this->station();
+        $item = $this->route($this->product(), $station);
+        $old = $this->send($this->order([$item]))['tickets'][0];
+        $display = KitchenDisplay::defaults();
+        $display['labels']['preparing'] = 'En horno';
+        $display['warning_minutes'] = 2;
+        $display['overdue_alert'] = false;
+        $edit = [...$this->key(), 'revision' => 1, 'name' => $station['name'], 'color' => $station['color'], 'target_minutes' => 12, 'is_active' => true, 'display_settings' => $display];
+        $this->putJson('/api/v1/kitchen-stations/'.$station['id'], $edit)->assertOk();
+        $order = $this->order([$item]);
+        $ticket = $this->send($order)['tickets'][0];
+        $this->assertSame($display, $ticket['display_snapshot']);
+        $this->assertSame('En preparación', $old['display_snapshot']['labels']['preparing']);
+        $this->putJson('/api/v1/kitchen-stations/'.$station['id'], [...$edit, ...$this->key(), 'revision' => 2, 'display_settings' => KitchenDisplay::defaults()])->assertOk();
+        $this->getJson('/api/v1/orders/'.$order['id'].'/kitchen-tickets')->assertOk()->assertJsonPath('data.0.display_snapshot', $display);
+        $this->postJson('/api/v1/kitchen-tickets/'.$ticket['id'].'/status', [...$this->key(), 'revision' => 1, 'status' => 'En horno'])->assertUnprocessable();
+        $this->state($ticket, 'preparing');
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
     }
 
     public function test_delivery_additions_dispatch_only_new_lines_to_the_existing_order(): void

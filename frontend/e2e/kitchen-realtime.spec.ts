@@ -53,6 +53,18 @@ test('Kitchen privado: evento real, reconexion y bloqueo sin depender del pollin
     kitchen_station_id: station.id,
     is_active: true,
   })
+  await page.goto('/cocina/estaciones')
+  await page.getByRole('button', { name: 'Editar estación Pizzas', exact: true }).click()
+  const stationEditor = page.getByRole('dialog', { name: 'Editar estación', exact: true })
+  await stationEditor.getByLabel('Tiempo objetivo en minutos', { exact: true }).fill('1')
+  await stationEditor.getByText('Estados y avisos de preparación', { exact: true }).click()
+  await stationEditor
+    .getByLabel('Nombre visible · En preparación', { exact: true })
+    .fill('En horno')
+  await stationEditor.getByLabel('Avisar minutos antes del objetivo', { exact: true }).fill('1')
+  await stationEditor.getByLabel('Mostrar aviso de demora', { exact: true }).uncheck()
+  await stationEditor.getByRole('button', { name: 'Guardar estación', exact: true }).click()
+  await expect(stationEditor).toHaveCount(0)
   // Commands use the same authenticated session from a separate page, without UI invalidation.
   const cashierContext = await browser.newContext({
     storageState: await context.storageState(),
@@ -99,6 +111,9 @@ test('Kitchen privado: evento real, reconexion y bloqueo sin depender del pollin
   })
   const card = page.locator('.kitchen-ticket').filter({ hasText: 'Pizza Reverb' })
   await expect(card).toContainText('Empacar separado')
+  await expect(card).toContainText('Próxima al objetivo')
+  await page.getByLabel('Estación de cocina', { exact: true }).selectOption(String(station.id))
+  await expect(page.locator('.kitchen-column[data-state="preparing"] h2')).toContainText('En horno')
   const priorityPayloads: string[] = []
   await page.route('**/api/v1/kitchen-tickets/*/priority', async (route) => {
     priorityPayloads.push(route.request().postData()!)
@@ -141,10 +156,7 @@ test('Kitchen privado: evento real, reconexion y bloqueo sin depender del pollin
   )
 
   await expect(
-    page
-      .locator('.kitchen-column')
-      .filter({ hasText: 'En preparación' })
-      .locator('.kitchen-ticket'),
+    page.locator('.kitchen-column').filter({ hasText: 'En horno' }).locator('.kitchen-ticket'),
   ).toContainText('Pizza Reverb')
   expect((await readApi<{ data: unknown[] }>(cashier, 'sales')).data).toEqual([])
   await writeApi(page, 'POST', 'auth/screen/lock', {})

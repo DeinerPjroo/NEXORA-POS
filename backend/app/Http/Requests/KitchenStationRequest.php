@@ -19,6 +19,7 @@ final class KitchenStationRequest extends FormRequest
         return ['idempotency_key' => ['required', 'uuid'], 'tenant_id' => ['prohibited'],
             'revision' => [$create ? 'prohibited' : 'required', 'integer', 'min:1'],
             'branch_id' => [$create ? 'required' : 'prohibited', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $this->user()->tenant_id)],
+            'display_settings' => ['sometimes', 'required', 'array'],
             'name' => ['required', 'string', 'max:80'], 'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/D'],
             'target_minutes' => ['required', 'integer', 'between:1,1440'], 'is_active' => ['required', 'boolean']];
     }

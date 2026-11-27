@@ -80,12 +80,13 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 3.DEL-3 | PENDING | Disponibilidad de empleados repartidores, reasignación con motivo, despacho, entrega fallida/devolución al restaurante | 3.DEL-2; empleados |
 | 3.DEL-4 | PENDING | Pagos previstos separados de pagos reales; custodia de efectivo por repartidor y rendiciones parciales a caja, revisiones/UUID y compensaciones | 3.DEL-3; ventas/pagos/caja |
 | 3.DEL-5 | PENDING | Central táctil, indicadores y filtros reales, tiempos/retrasos y reportes básicos | 3.DEL-1/2/3/4 |
-| 3.1 | IN_PROGRESS | Kitchen/KDS en A estaciones, B rutas/comandas, C Reverb privado, D estados/tiempos/prioridades/historial. KITCHEN.md | Pedidos/POS; 3.0-EMP; 3.1-PREP |
+| 3.1 | COMPLETED | Alcance operativo A-D: estaciones, rutas/comandas incrementales, Reverb privado, prioridades/tiempos/historial y nombres/avisos configurables. No incluye despliegue productivo ni hardware; fase3 conserva pendientes | Pedidos/POS; empleados |
 | 3.1-A | COMPLETED | Estaciones existentes verificadas: creación/archivo/móvil y lector/403 Chromium2 cubiertos entre ejecuciones. Prueba de cambio de sesión espera logout y envía Origin a Sanctum. Cobertura backend/SQL/build previa conservada | Identidad, sucursales e idempotencia existentes |
 | 3.1-B | COMPLETED | Rutas/snapshots/comandas incrementales, estados sincronizados y cancelación; permisos/revisión/UUID/FK. Native8 cubiertos, SQL8/120, paginación1/27 y Chromium flujo real1 aprobados; migración000029 aplicada/DDL. Tablero consulta real5s, no Reverb todavía | 3.1-A; pedidos |
 | 3.1-C | COMPLETED | Reverb privado tenant/sucursal, auth Sanctum/CSRF/MFA/bloqueo/BranchAccess, avisos tras commit y recuperacion API; fallback5s. Backend16 dirigidos y Chromium real1/40.5s aprobados. Activacion local/productiva exige configurar/iniciar Reverb; no se modifica .env de usuario | 3.1-B |
-| 3.1-D | IN_PROGRESS | D1 prioridades/avisos visuales/tiempos/historial con actor implementados; D2 configuracion de estados/avisos pendiente | 3.1-B/C |
+| 3.1-D | COMPLETED | Alcance D1/D2: prioridad, tiempos/historial con actor, nombres de estados base y avisos por estacion; snapshot inmutable por envio. Flujo fijo preservado, sin etapas arbitrarias | 3.1-B/C |
 | 3.1-D1 | COMPLETED | Prioridad revisada/idempotente con motivo/auditoria, cola urgente/FIFO, demora y responsable. Backend16/241 y Chromium1/46.3s; migracion39 aplicada/DDL. Reverb local8085 activado y salud200 | 3.1-C |
+| 3.1-D2 | COMPLETED | Esquema cerrado por estacion, aviso previo/demora y nombres visibles; snapshots conservados. Backend7/76 y Chromium1/54.9s aprobados; migracion40 aplicada/DDL | 3.1-D1 |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |
 | 3.4 | PENDING | Proveedores/compras/recepciones/cuentas por pagar | 3.2 |

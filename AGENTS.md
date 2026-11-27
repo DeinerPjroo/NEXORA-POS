@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Kitchen3.1-D2: KitchenDisplay schema1 cerrado por estacion permite nombres visibles de new/preparing/ready/delivered/cancelled y avisos previo0..min60/objetivo y demora booleana. No crear transiciones ni reinterpretar codigos desde etiquetas. SaveKitchenStation conserva revision/UUID/Tenant lock/permisos/auditoria; clientes legados omiten config sin borrarla. Dispatch copia display_snapshot y objetivo; cambios futuros no reescriben comandas/eventos anteriores. Migracion40 nullable no inventa historia; fallback reproduce configuracion original conocida. A-D completos en alcance operativo actual, no produccion/hardware; seguir3.DEL-3 sin reiniciar ni cerrar fase3.
+
+
 - Kitchen3.1-D1: prioridad0/1 solo sobre comandas activas, kitchen.view/operate, revision/UUID/motivo y auditoria/evento append-only bajo Tenant lock. No altera pedido, estado ni dinero; urgentes primero/FIFO y historial historico descendente. Exponer actor solo id/nombre; conservar snapshots/fechas y objetivo original. Modal conserva payload incierto y bloquea TerminalGuard; tiempo/demora parten de fechas y reloj servidor, no metricas ficticias. Migracion39 agrega default0/indice sin inventar prioridades pasadas. Reverb local8085 habilitado con credenciales privadas; no registrar secretos ni confundir proceso local con servicio productivo supervisado. D2 sigue pendiente; no cerrar Kitchen/fase3.
 
 
