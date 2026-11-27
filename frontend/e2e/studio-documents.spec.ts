@@ -4,6 +4,37 @@ import { fixtureWorkspace, readApi, writeApi } from './helpers'
 import type { Sale } from '../src/features/sales/types'
 import { formatMoney } from '../src/lib/money'
 
+test('Studio: apertura de editores con carga diferida sin modificar datos operativos', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await fixtureWorkspace(page, 'Studio carga diferida')
+  for (const path of [
+    'pos',
+    'mesas',
+    'cocina',
+    'domicilios',
+    'domicilios/pedido',
+    'recogidas',
+    'dashboard',
+    'recibos',
+    'comandas',
+  ]) {
+    await page.goto(`/admin/studio/${path}`)
+    await expect(page.getByRole('button', { name: 'Guardar borrador', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Publicar diseño', exact: true })).toBeDisabled()
+  }
+  await page.goto('/admin/studio')
+  await expect(page.getByRole('heading', { name: 'Nexora Studio', exact: true })).toBeVisible()
+  const orders = await readApi<{ data: unknown[] }>(page, 'orders')
+  const sales = await readApi<{ data: unknown[] }>(page, 'sales')
+  expect(orders.data).toEqual([])
+  expect(sales.data).toEqual([])
+  expect(errors).toEqual([])
+})
+
 async function publish(editor: Locator, revision: number) {
   await editor.getByRole('button', { name: 'Guardar borrador', exact: true }).click()
   await expect(editor.getByRole('button', { name: 'Publicar diseño', exact: true })).toBeEnabled()

@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Studio4-F cierre del incremento: editores cargados mediante lazy/Suspense dentro de PermissionBoundary; no adelantar descargas administrativas desde Terminal. Preservar aislamiento rol/dispositivo y autorizacion antes del replay de importaciones. A-F implementados; no confundir con entrega estable general ni cerrar pendientes Kitchen/fase3. Continuar3.1-C desde estado existente.
+
+
 - Studio4-F documentos/transferencias: receipt y kitchen_print usan schema cerrado de papel58/80mm, fuente/espaciado acotados, encabezado y pie como texto plano. Conservar contenido obligatorio y renderers existentes; nunca recalcular dinero ni reenviar cocina al imprimir. Capturar publicado una vez por copia abierta y retirar portal al bloquear. Exportar solo configuracion sin IDs/datos de negocio; importar JSON64KB con format/version/surface exactos, permisos/revision/UUID/Tenant lock/auditoria mediante SavePosLayout, creando solo borrador. Publicacion siempre explicita; no aceptar HTML/CSS libre ni ocultar totales/detalles obligatorios. Sin afirmar impresion fisica o DIAN. Seguir estabilizacion dirigida sin cerrar fase4 ni pendientes de fase3.
 
 

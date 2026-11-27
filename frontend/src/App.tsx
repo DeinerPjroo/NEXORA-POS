@@ -9,13 +9,6 @@ import { DeliveriesPage } from './features/orders/DeliveriesPage'
 import { DeliveryTariffsPage } from './features/orders/DeliveryTariffsPage'
 import { RolesPage } from './features/workspace/RolesPage'
 import { SettingsPage } from './features/workspace/SettingsPage'
-import { StudioPage } from './features/studio/StudioPage'
-import { PosStudioPage } from './features/studio/PosStudioPage'
-import { TablesStudioPage } from './features/studio/TablesStudioPage'
-import { KitchenStudioPage } from './features/studio/KitchenStudioPage'
-import { DeliveriesStudioPage } from './features/studio/DeliveriesStudioPage'
-import { DashboardStudioPage } from './features/studio/DashboardStudioPage'
-import { PrintStudioPage } from './features/studio/PrintStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -37,6 +30,37 @@ import { TaxProfilesPage } from './features/sales/TaxProfilesPage'
 import { Loading } from './components/ui'
 import { PosAccess } from './features/pos/PosAccess'
 import { HomeRoute } from './features/auth/HomeRoute'
+const StudioPage = lazy(() =>
+  import('./features/studio/StudioPage').then((module) => ({ default: module.StudioPage })),
+)
+const PosStudioPage = lazy(() =>
+  import('./features/studio/PosStudioPage').then((module) => ({ default: module.PosStudioPage })),
+)
+const TablesStudioPage = lazy(() =>
+  import('./features/studio/TablesStudioPage').then((module) => ({
+    default: module.TablesStudioPage,
+  })),
+)
+const KitchenStudioPage = lazy(() =>
+  import('./features/studio/KitchenStudioPage').then((module) => ({
+    default: module.KitchenStudioPage,
+  })),
+)
+const DeliveriesStudioPage = lazy(() =>
+  import('./features/studio/DeliveriesStudioPage').then((module) => ({
+    default: module.DeliveriesStudioPage,
+  })),
+)
+const DashboardStudioPage = lazy(() =>
+  import('./features/studio/DashboardStudioPage').then((module) => ({
+    default: module.DashboardStudioPage,
+  })),
+)
+const PrintStudioPage = lazy(() =>
+  import('./features/studio/PrintStudioPage').then((module) => ({
+    default: module.PrintStudioPage,
+  })),
+)
 const TerminalTablesPage = lazy(() =>
   import('./features/dining/TerminalTablesPage').then((module) => ({
     default: module.TerminalTablesPage,
@@ -424,7 +448,9 @@ export default function App() {
           path="/studio"
           element={
             <PermissionBoundary permission="studio.view">
-              <StudioPage />
+              <Suspense fallback={<Loading />}>
+                <StudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -432,7 +458,9 @@ export default function App() {
           path="/admin/studio"
           element={
             <PermissionBoundary permission="studio.view">
-              <StudioPage />
+              <Suspense fallback={<Loading />}>
+                <StudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -440,7 +468,9 @@ export default function App() {
           path="/admin/studio/cocina"
           element={
             <PermissionBoundary permission="studio.view">
-              <KitchenStudioPage />
+              <Suspense fallback={<Loading />}>
+                <KitchenStudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -448,7 +478,9 @@ export default function App() {
           path="/admin/studio/domicilios"
           element={
             <PermissionBoundary permission="studio.view">
-              <DeliveriesStudioPage />
+              <Suspense fallback={<Loading />}>
+                <DeliveriesStudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -456,7 +488,9 @@ export default function App() {
           path="/admin/studio/domicilios/pedido"
           element={
             <PermissionBoundary permission="studio.view">
-              <PosStudioPage surface="delivery_pos" />
+              <Suspense fallback={<Loading />}>
+                <PosStudioPage surface="delivery_pos" />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -464,7 +498,9 @@ export default function App() {
           path="/admin/studio/recogidas"
           element={
             <PermissionBoundary permission="studio.view">
-              <PosStudioPage surface="pickup" />
+              <Suspense fallback={<Loading />}>
+                <PosStudioPage surface="pickup" />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -472,7 +508,9 @@ export default function App() {
           path="/admin/studio/dashboard"
           element={
             <PermissionBoundary permission="studio.view">
-              <DashboardStudioPage />
+              <Suspense fallback={<Loading />}>
+                <DashboardStudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -480,7 +518,9 @@ export default function App() {
           path="/admin/studio/recibos"
           element={
             <PermissionBoundary permission="studio.view">
-              <PrintStudioPage surface="receipt" />
+              <Suspense fallback={<Loading />}>
+                <PrintStudioPage surface="receipt" />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -488,7 +528,9 @@ export default function App() {
           path="/admin/studio/comandas"
           element={
             <PermissionBoundary permission="studio.view">
-              <PrintStudioPage surface="kitchen_print" />
+              <Suspense fallback={<Loading />}>
+                <PrintStudioPage surface="kitchen_print" />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -496,7 +538,9 @@ export default function App() {
           path="/admin/studio/pos"
           element={
             <PermissionBoundary permission="studio.view">
-              <PosStudioPage />
+              <Suspense fallback={<Loading />}>
+                <PosStudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />
@@ -504,7 +548,9 @@ export default function App() {
           path="/admin/studio/mesas"
           element={
             <PermissionBoundary permission="studio.view">
-              <TablesStudioPage />
+              <Suspense fallback={<Loading />}>
+                <TablesStudioPage />
+              </Suspense>
             </PermissionBoundary>
           }
         />

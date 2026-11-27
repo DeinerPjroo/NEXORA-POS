@@ -91,13 +91,13 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 3.5 | PENDING | Empleados/usuarios/sucursales/turnos/asistencia/comisiones | Equipo/permisos |
 | 3.6 | PENDING | Clientes/direcciones/historial/puntos/membresías/cupones | Ventas |
 | 3.7 | PENDING | Reportes reales y exportaciones Excel/PDF | Dominios anteriores |
-| 4 | IN_PROGRESS | Nexora Studio priorizado por usuario; A/B/C/D/E completos; F en progreso. No cerrar pendientes de otras fases | POS/dashboard y tema actual |
+| 4 | IN_PROGRESS | Studio A/B/C/D/E/F implementados y verificados por incremento; entrega estable general aun pendiente. Conservar pendientes de otras fases | POS/dashboard y tema actual |
 | STUDIO-A | COMPLETED | PosLayoutSchema1/registro de cuatro paneles, JSON permitido, persistencia tenant/borrador/publicado y runtime POS seguro. Permisos edit/publish separados, revisión/UUID/auditoría y fallback. Nativas4/53 y SQL6/67; migración36 aplicada/DDL | Tema/POS/seguridad existentes |
 | STUDIO-B | COMPLETED | Editor con componentes reales inert, selección, arrastre/flechas, resize de pedido, propiedades acotadas y guías por columnas. Chromium final~1.2min verifica edición, reintento exacto, publicación y cobro18k/teclas1024×600; build/TS/Pint/vista aprobados | STUDIO-A |
 | STUDIO-C | COMPLETED | Historial append-only con autor/fecha/fuente, archivo protegido y restauración como borrador sin publicar. Undo/redo100 pasos agrupados, preview read-only y comparación. Nativas9/121, SQL12/147 y Chromium final57.7s con reintento/conflicto; build/TS/vista aprobados. Migración37 aplicada | STUDIO-A/B |
 | STUDIO-D | COMPLETED | Original/Compacta/Táctil, plantillas personales y temas, scopes rol/dispositivo y preview real verificados; Mesas Compactas integrada con E-Mesas1 | STUDIO-C |
 | STUDIO-E | COMPLETED | Superficies Mesas/Kitchen/Domicilios/recogidas y Dashboard1 integradas con componentes reales, editor/runtime/publicación/historial compartidos. Dashboard backend3/47 y Chromium2/1.2min verifica permisos y venta/caja sin cambios; build aprobado | STUDIO-D |
-| STUDIO-F | IN_PROGRESS | Documentos y transferencias implementados: editor58/80mm, fuentes/pie, JSON cerrado como borrador, runtime congelado por copia. Backend17/224 y Chromium1 aprobados. Pendiente estabilizacion dirigida/cierre de alcance | STUDIO-E |
+| STUDIO-F | COMPLETED | Recibos/comandas y transferencia segura verificados en F1; carga diferida de editores reduce JS principal688.44 a568.97kB. Estabilizacion dirigida: backend2/20 y Chromium1/nueve editores; build/TS/Pint/Prettier aprobados | STUDIO-E |
 | 5 | PENDING | SaaS: superadmin, empresas/planes/límites/suscripciones/soporte/landing, restricciones backend | Dominios estables; cobros comerciales requieren autorización |
 | 6 | PENDING | Móvil/escritorio/offline/QR/delivery/hardware/pasarelas/DIAN; subdividir y comprobar cada integración | Web estable y dependencias externas |
 

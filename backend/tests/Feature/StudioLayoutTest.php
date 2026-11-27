@@ -64,6 +64,43 @@ class StudioLayoutTest extends TestCase
         });
     }
 
+    public function test_design_transfer_preserves_role_device_scope_and_rechecks_access_before_replay(): void
+    {
+        $employee = $this->employee(['studio.view', 'studio.edit']);
+        $config = PosLayoutSchema::defaults();
+        $config['tokens']['product_columns'] = 2;
+        $body = [...$this->key(), 'revision' => 0, 'role_id' => $employee->role_id, 'device' => 'tablet',
+            'envelope' => ['format' => 'nexora-studio', 'version' => 1, 'surface' => 'pos', 'configuration' => $config]];
+        $this->postJson('/api/v1/studio/pos/import', $body)->assertOk()->assertJsonPath('data.revision', 1)->assertJsonPath('data.published', null);
+        $this->getJson('/api/v1/studio/pos/export?device=tablet&role_id='.$employee->role_id)->assertOk()->assertExactJson($body['envelope']);
+        $this->getJson('/api/v1/studio/pos/export')->assertNotFound();
+        $this->getJson('/api/v1/studio/pos/export?device=desktop&role_id='.$employee->role_id)->assertNotFound();
+        $this->getJson('/api/v1/studio/pos/active')->assertJsonPath('data.revision', 0);
+
+        $this->actingAs($employee);
+        $this->postJson('/api/v1/studio/pos/import', $body)->assertForbidden();
+        $this->getJson('/api/v1/studio/pos/export?device=tablet&role_id='.$employee->role_id)->assertForbidden();
+        $other = $this->company('transfer-scope-other@example.test');
+        $this->actingAs($other);
+        $this->postJson('/api/v1/studio/pos/import', [...$body, ...$this->key()])->assertNotFound();
+        $this->assertDatabaseCount('studio_layouts', 1);
+        $this->assertDatabaseCount('studio_layout_versions', 1);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_design_import_rejects_oversized_envelopes_and_unknown_metadata_without_writes(): void
+    {
+        $envelope = ['format' => 'nexora-studio', 'version' => 1, 'surface' => 'receipt', 'configuration' => PrintLayoutSchema::defaults()];
+        $oversized = $envelope;
+        $oversized['configuration']['texts']['footer'] = str_repeat('x', 65537);
+        foreach ([$oversized, [...$envelope, 'tenant_id' => $this->owner->tenant_id], [...$envelope, 'role_id' => $this->owner->role_id]] as $invalid) {
+            $this->postJson('/api/v1/studio/receipt/import', [...$this->key(), 'revision' => 0, 'envelope' => $invalid])->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('studio_layouts', 0);
+        $this->assertDatabaseCount('studio_layout_versions', 0);
+        $this->assertDatabaseCount('idempotency_records', 0);
+    }
+
     public function test_tables_reuse_versions_but_remain_separate_from_pos(): void
     {
         $config = TablesLayoutSchema::defaults();
