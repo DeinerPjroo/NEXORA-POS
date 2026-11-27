@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Studio\DeliveriesLayoutSchema;
 use App\Domains\Studio\KitchenLayoutSchema;
 use App\Domains\Studio\PosLayoutSchema;
 use App\Domains\Studio\TablesLayoutSchema;
@@ -96,6 +97,54 @@ class StudioLayoutTest extends TestCase
         $this->postJson('/api/v1/studio/kitchen/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[1]['id'], 'reason' => 'Restore kitchen'])->assertOk()->assertJsonPath('data.published_revision', 2);
         $this->assertDatabaseCount('kitchen_tickets', 0);
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_pickup_and_delivery_studio_publications_remain_independent(): void
+    {
+        foreach (['pickup' => 400, 'delivery_pos' => 420] as $surface => $width) {
+            $body = $this->body();
+            $body['configuration']['tokens']['order_width'] = $width;
+            $this->postJson('/api/v1/studio/'.$surface.'/draft', $body)->assertOk()->assertJsonPath('data.surface', $surface);
+            $this->postJson('/api/v1/studio/'.$surface.'/publish', [...$this->key(), 'revision' => 1])->assertOk();
+            $this->getJson('/api/v1/studio/'.$surface.'/active')->assertOk()->assertJsonPath('data.configuration.tokens.order_width', $width);
+        }
+        $config = DeliveriesLayoutSchema::defaults();
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => $config];
+        $this->postJson('/api/v1/studio/deliveries/draft', $body)->assertOk();
+        $this->postJson('/api/v1/studio/deliveries/draft', $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $this->postJson('/api/v1/studio/deliveries/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $this->getJson('/api/v1/studio/deliveries/active')->assertJsonPath('data.configuration', $config);
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data', null);
+        $versions = $this->getJson('/api/v1/studio/pickup/versions')->json('data');
+        $this->postJson('/api/v1/studio/deliveries/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[0]['id'], 'reason' => 'Wrong surface'])->assertNotFound();
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertDatabaseCount('order_deliveries', 0);
+        $this->assertDatabaseCount('sales', 0);
+    }
+
+    public function test_delivery_studio_schema_permissions_and_tenant_enforcement(): void
+    {
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => DeliveriesLayoutSchema::defaults()];
+        $bad = $body;
+        $bad['configuration']['tokens']['pending'] = 'url(javascript:alert(1))';
+        $this->postJson('/api/v1/studio/deliveries/draft', $bad)->assertUnprocessable();
+        $this->postJson('/api/v1/studio/deliveries/draft', $this->body())->assertUnprocessable();
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'surface' => 'pickup'])->assertUnprocessable();
+        $this->postJson('/api/v1/studio/deliveries/draft', $body)->assertOk();
+        $reader = $this->employee(['orders.view']);
+        $this->actingAs($reader);
+        $this->getJson('/api/v1/studio/deliveries/active')->assertForbidden();
+        $this->getJson('/api/v1/studio/pickup/active')->assertForbidden();
+        $courier = $this->employee(['orders.view', 'deliveries.operate']);
+        $this->actingAs($courier);
+        $this->getJson('/api/v1/studio/deliveries/active')->assertOk();
+        $this->postJson('/api/v1/studio/deliveries/draft', $body)->assertForbidden();
+        $other = $this->company('delivery-studio-other@example.test');
+        $this->actingAs($other);
+        foreach (['deliveries', 'pickup', 'delivery_pos'] as $surface) {
+            $this->getJson('/api/v1/studio/'.$surface)->assertJsonPath('data', null);
+            $this->getJson('/api/v1/studio/'.$surface.'/active')->assertJsonPath('data.revision', 0);
+        }
     }
 
     public function test_kitchen_schema_permissions_and_tenant_enforcement(): void

@@ -13,6 +13,7 @@ import { StudioPage } from './features/studio/StudioPage'
 import { PosStudioPage } from './features/studio/PosStudioPage'
 import { TablesStudioPage } from './features/studio/TablesStudioPage'
 import { KitchenStudioPage } from './features/studio/KitchenStudioPage'
+import { DeliveriesStudioPage } from './features/studio/DeliveriesStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -438,6 +439,30 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <KitchenStudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/domicilios"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <DeliveriesStudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/domicilios/pedido"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <PosStudioPage surface="delivery_pos" />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/recogidas"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <PosStudioPage surface="pickup" />
             </PermissionBoundary>
           }
         />

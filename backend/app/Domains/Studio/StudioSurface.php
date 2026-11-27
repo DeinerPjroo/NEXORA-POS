@@ -7,7 +7,7 @@ final class StudioSurface
     public static function name(array $data): string
     {
         $surface = $data['surface'] ?? 'pos';
-        abort_unless(in_array($surface, ['pos', 'tables', 'kitchen'], true), 422);
+        abort_unless(in_array($surface, ['pos', 'tables', 'kitchen', 'pickup', 'delivery_pos', 'deliveries'], true), 422);
 
         return $surface;
     }
@@ -15,14 +15,14 @@ final class StudioSurface
     public static function defaults(string $surface, string $device = 'adaptive'): array
     {
         return match ($surface) {
-            'tables' => TablesLayoutSchema::defaults(), 'kitchen' => KitchenLayoutSchema::defaults(), default => LayoutScope::defaults($device)
+            'deliveries' => DeliveriesLayoutSchema::defaults(), 'tables' => TablesLayoutSchema::defaults(), 'kitchen' => KitchenLayoutSchema::defaults(), default => LayoutScope::defaults($device)
         };
     }
 
     public static function validate(array $config, string $surface, string $device): array
     {
         return match ($surface) {
-            'tables' => TablesLayoutSchema::validate($config), 'kitchen' => KitchenLayoutSchema::validate($config), default => LayoutScope::validateConfiguration($config, $device)
+            'deliveries' => DeliveriesLayoutSchema::validate($config), 'tables' => TablesLayoutSchema::validate($config), 'kitchen' => KitchenLayoutSchema::validate($config), default => LayoutScope::validateConfiguration($config, $device)
         };
     }
 }

@@ -32,6 +32,14 @@ import { OrderComposer } from './OrderComposer'
 import { DeliveryItemEditor } from './DeliveryItemEditor'
 import type { Order, OrderItem } from '../operations/types'
 import './deliveries.css'
+import { usePublishedOperationalLayout } from '../studio/usePublishedOperationalLayout'
+import {
+  defaultDeliveriesLayout,
+  parseDeliveriesLayout,
+  deliveriesStyle,
+  type DeliveriesLayout,
+} from '../studio/deliveries-layout'
+import '../studio/deliveries-layout.css'
 
 const filters = [
   { value: '', label: 'Todos', icon: Bike },
@@ -41,7 +49,13 @@ const filters = [
   { value: 'delivered', label: 'Entregados', icon: PackageCheck },
   { value: 'cancelled', label: 'Cancelados', icon: X },
 ]
-export function DeliveriesPage() {
+export function DeliveriesPage({
+  studioPreview,
+  studioPreviewDetail = false,
+}: {
+  studioPreview?: DeliveriesLayout
+  studioPreviewDetail?: boolean
+}) {
   const can = useCan()
   const { session } = useSession()
   const context = useOperationContext()
@@ -59,6 +73,15 @@ export function DeliveriesPage() {
   const [editorBusy, setEditorBusy] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
   const busy = !!checkout || !!action || !!kitchen || !!editing || !!changingItem
+  const layout = usePublishedOperationalLayout(
+    'deliveries',
+    'orders.view',
+    parseDeliveriesLayout,
+    defaultDeliveriesLayout,
+    can('orders.manage') || can('deliveries.operate'),
+    busy || !!adding || editorBusy,
+    studioPreview,
+  )
   useTerminalGuard(busy, busy)
   useEffect(() => {
     if (!busy) return
@@ -78,9 +101,12 @@ export function DeliveriesPage() {
         `deliveries?branch_id=${selected}&page=${page}${status ? '&status=' + status : ''}`,
         { signal },
       ),
-    refetchInterval: busy || adding ? false : 10000,
+    refetchInterval: studioPreview || busy || adding ? false : 10000,
   })
-  const delivery = query.data?.data.find((row) => row.id === selectedId) ?? null
+  const delivery =
+    query.data?.data.find(
+      (row) => row.id === (selectedId ?? (studioPreviewDetail ? query.data?.data[0]?.id : null)),
+    ) ?? null
   const term = search.trim().toLocaleLowerCase()
   const rows = (query.data?.data ?? []).filter(
     (row) =>
@@ -104,6 +130,8 @@ export function DeliveriesPage() {
   return (
     <section
       className="delivery-terminal"
+      data-studio-deliveries={!!layout}
+      style={layout ? deliveriesStyle(layout) : undefined}
       data-mode={adding ? 'edit' : checkout ? 'checkout' : 'board'}
       aria-label="Terminal de domicilios"
     >
@@ -280,6 +308,7 @@ export function DeliveriesPage() {
               )}
             </section>
             <DeliveryDetail
+              preview={!!studioPreview}
               onChangeItem={(order, item) => setChangingItem(structuredClone({ order, item }))}
               onAdd={(order) => setAdding(structuredClone(order))}
               delivery={delivery}
@@ -302,7 +331,9 @@ export function DeliveriesPage() {
             <span>Entrega y cobro son operaciones independientes</span>
             <span>
               <Clock3 size={12} />
-              Consulta automática cada 10 s
+              {studioPreview
+                ? 'Vista previa · sin consulta automática'
+                : 'Consulta automática cada 10 s'}
             </span>
           </footer>
         </>

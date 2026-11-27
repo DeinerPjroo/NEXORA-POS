@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { OrderComposer } from '../orders/OrderComposer'
 import { posComponents, type PosLayout, type PosPanel } from './pos-layout'
+import type { OrderChannel } from '../catalog/context-price-types'
 import { useSession } from '../auth/SessionProvider'
 
 export type PreviewBox = { id: PosPanel; left: number; top: number; width: number; height: number }
@@ -9,12 +10,14 @@ export type PreviewBox = { id: PosPanel; left: number; top: number; width: numbe
 export function StudioPreviewFrame({
   config,
   content,
+  channel = 'dine_in',
   panel = 'menu',
   width,
   height,
   onMeasure,
 }: {
   content?: ReactNode
+  channel?: OrderChannel
   config?: PosLayout
   panel?: 'menu' | 'cart'
   width: number
@@ -104,7 +107,12 @@ export function StudioPreviewFrame({
           <div className="studio-pos-render" inert>
             {content ??
               (config && (
-                <OrderComposer terminal studioPreview={config} studioPreviewPanel={panel} />
+                <OrderComposer
+                  terminal
+                  initialChannel={channel}
+                  studioPreview={config}
+                  studioPreviewPanel={panel}
+                />
               ))}
           </div>,
           document.body,

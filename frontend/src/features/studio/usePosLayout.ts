@@ -4,7 +4,12 @@ import { api } from '../../lib/api'
 import { useCan, useSession } from '../auth/SessionProvider'
 import { defaultPosConfiguration, parsePosLayout, type PosLayout } from './pos-layout'
 
-export function usePosLayout(enabled: boolean, frozen: boolean, preview?: PosLayout) {
+export function usePosLayout(
+  enabled: boolean,
+  frozen: boolean,
+  preview?: PosLayout,
+  surface: 'pos' | 'pickup' | 'delivery_pos' = 'pos',
+) {
   const can = useCan()
   const { session } = useSession()
   const [device, setDevice] = useState(() =>
@@ -23,10 +28,10 @@ export function usePosLayout(enabled: boolean, frozen: boolean, preview?: PosLay
     revision: 0,
   })
   const query = useQuery({
-    queryKey: ['studio-pos-active', session?.user.id, device],
+    queryKey: [`studio-${surface}-active`, session?.user.id, device],
     queryFn: ({ signal }) =>
       api<{ data: { configuration: unknown; revision: number } }>(
-        `studio/pos/active?device=${device}`,
+        `studio/${surface}/active?device=${device}`,
         { signal },
       ),
     enabled: enabled && !preview && can('orders.manage') && can('catalog.view') && !frozen,

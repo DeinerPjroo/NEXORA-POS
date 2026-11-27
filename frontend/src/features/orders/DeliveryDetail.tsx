@@ -10,6 +10,7 @@ import { deliveryLabels, deliveryKitchenLabels, type Delivery } from './delivery
 
 export function DeliveryDetail({
   delivery,
+  preview = false,
   onBack,
   onAction,
   onCollect,
@@ -19,6 +20,7 @@ export function DeliveryDetail({
   onChangeItem,
 }: {
   delivery: Delivery | null
+  preview?: boolean
   onBack: () => void
   onAction: (status: string) => void
   onCollect: () => void
@@ -34,7 +36,7 @@ export function DeliveryDetail({
     enabled: !!delivery,
     queryFn: ({ signal }) => api<{ data: Order }>(`orders/${delivery!.order_id}`, { signal }),
     refetchOnMount: 'always',
-    refetchInterval: 10000,
+    refetchInterval: preview ? false : 10000,
   })
   const order =
     delivery &&

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { StudioPreviewFrame, type PreviewBox } from './StudioPreviewFrame'
+import type { OrderChannel } from '../catalog/context-price-types'
 import type { LayoutScope } from './layout-scope'
 import { posComponents, type PosLayout, type PosPanel } from './pos-layout'
 
@@ -10,6 +11,7 @@ const viewports = {
 } as const
 export function PosLayoutCanvas({
   config,
+  channel = 'dine_in',
   device = 'adaptive',
   selected,
   onSelect,
@@ -17,6 +19,7 @@ export function PosLayoutCanvas({
   editable,
 }: {
   config: PosLayout
+  channel?: OrderChannel
   device?: LayoutScope['device']
   selected: PosPanel
   onSelect: (panel: PosPanel) => void
@@ -92,6 +95,7 @@ export function PosLayoutCanvas({
           style={{ width: viewport.width, height: viewport.height, transform: `scale(${scale})` }}
         >
           <StudioPreviewFrame
+            channel={channel}
             config={config}
             panel={panel}
             width={viewport.width}

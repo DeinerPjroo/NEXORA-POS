@@ -47,14 +47,17 @@ final class StudioLayoutController extends Controller
         Gate::authorize('studio.view');
 
         return ['data' => LayoutScope::query($request->scopeData())->first(), 'defaults' => StudioSurface::defaults($request->route('studio_surface', 'pos'), $request->validated('device', 'adaptive')), 'components' => match ($request->route('studio_surface', 'pos')) {
-            'tables' => ['rooms', 'tables', 'actions'], 'kitchen' => ['new', 'preparing', 'ready'], default => PosLayoutSchema::PANELS
+            'deliveries' => ['detail', 'board', 'actions'], 'tables' => ['rooms', 'tables', 'actions'], 'kitchen' => ['new', 'preparing', 'ready'], default => PosLayoutSchema::PANELS
         }, 'roles' => $request->user()->hasPermission('roles.view') ? Role::orderBy('name')->get(['id', 'name']) : []];
     }
 
     public function active(Request $request)
     {
         $surface = $request->route('studio_surface', 'pos');
-        if ($surface === 'kitchen') {
+        if ($surface === 'deliveries') {
+            Gate::authorize('orders.view');
+            abort_unless($request->user()->can('orders.manage') || $request->user()->can('deliveries.operate'), 403);
+        } elseif ($surface === 'kitchen') {
             Gate::authorize('kitchen.view');
         } elseif ($surface === 'tables') {
             Gate::authorize('dining.view');

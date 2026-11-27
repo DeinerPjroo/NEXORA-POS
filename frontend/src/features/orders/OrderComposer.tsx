@@ -369,7 +369,7 @@ export function OrderComposer({
   })
   const locked = operation.locked || pricing.locked || !!customerEditId || deliveryBookBusy
   const studio = usePosLayout(
-    terminal && channel === 'dine_in',
+    terminal,
     locked ||
       checkoutOpen ||
       cart.length > 0 ||
@@ -377,6 +377,7 @@ export function OrderComposer({
       deliveryFeeDirty ||
       !!kitchenOrderId,
     studioPreview,
+    channel === 'takeaway' ? 'pickup' : channel === 'delivery' ? 'delivery_pos' : 'pos',
   )
   const customerAvailable =
     !appendDelivery &&

@@ -20,7 +20,7 @@ export type OperationalConfig = {
   options?: Record<string, boolean>
 }
 export type SurfaceDefinition<T extends OperationalConfig> = {
-  surface: 'tables' | 'kitchen'
+  surface: 'tables' | 'kitchen' | 'deliveries'
   title: string
   eyebrow: string
   description: string
@@ -35,7 +35,7 @@ export type SurfaceDefinition<T extends OperationalConfig> = {
   colors: Record<string, string>
   flags?: Record<string, string>
   presets: { name: string; configuration: T }[]
-  render: (config: T) => ReactNode
+  render: (config: T, mode?: 'main' | 'detail') => ReactNode
 }
 
 type StudioData = { data: SavedPosLayout | null; defaults: unknown }
@@ -330,6 +330,7 @@ function OperationalPreview<T extends OperationalConfig>({
 }) {
   const host = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(1280)
+  const [mode, setMode] = useState<'main' | 'detail'>('main')
   const [scale, setScale] = useState(0.5)
   useEffect(() => {
     const node = host.current!
@@ -349,6 +350,19 @@ function OperationalPreview<T extends OperationalConfig>({
           <option value={390}>Móvil</option>
         </select>
       </label>
+      {definition.surface === 'deliveries' && (
+        <label>
+          Panel de vista previa
+          <select
+            aria-label="Panel de vista previa"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as typeof mode)}
+          >
+            <option value="main">Lista de domicilios</option>
+            <option value="detail">Detalle del primer domicilio cargado</option>
+          </select>
+        </label>
+      )}
       <div style={{ height: 740 * scale, position: 'relative' }}>
         <div
           style={{ width, height: 740, transform: `scale(${scale})`, transformOrigin: 'top left' }}
@@ -357,7 +371,7 @@ function OperationalPreview<T extends OperationalConfig>({
             width={width}
             height={740}
             onMeasure={noop}
-            content={<div className="studio-tables-preview">{definition.render(config)}</div>}
+            content={<div className="studio-tables-preview">{definition.render(config, mode)}</div>}
           />
         </div>
       </div>

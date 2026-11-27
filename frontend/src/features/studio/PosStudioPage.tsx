@@ -41,19 +41,29 @@ type StudioPosData = {
   components: string[]
   roles: { id: number; name: string }[]
 }
-export function PosStudioPage() {
+export function PosStudioPage({
+  surface = 'pos',
+}: {
+  surface?: 'pos' | 'pickup' | 'delivery_pos'
+}) {
   const [scope, setScope] = useState<LayoutScope>(defaultLayoutScope)
   const [scopeBlocked, setScopeBlocked] = useState(false)
   const query = useQuery({
-    queryKey: ['studio-pos-editor', scope],
-    queryFn: () => api<StudioPosData>(`studio/pos?${scopeQuery(scope)}`),
+    queryKey: ['studio-pos-editor', surface, scope],
+    queryFn: () => api<StudioPosData>(`studio/${surface}?${scopeQuery(scope)}`),
     refetchOnWindowFocus: false,
   })
   return (
     <>
       <PageTitle
         eyebrow="NEXORA STUDIO / TERMINAL"
-        title="Diseña tu terminal"
+        title={
+          surface === 'pickup'
+            ? 'Diseña Para llevar'
+            : surface === 'delivery_pos'
+              ? 'Diseña pedidos de domicilio'
+              : 'Diseña tu terminal'
+        }
         description="Configuración visual segura. Los operadores reciben únicamente el diseño publicado."
         action={<Link to="/studio">Volver a Studio</Link>}
       />
@@ -94,9 +104,10 @@ export function PosStudioPage() {
       ) : (
         query.data && (
           <PosLayoutEditor
-            key={scopeQuery(scope)}
+            key={surface + scopeQuery(scope)}
             data={query.data}
             scope={scope}
+            surface={surface}
             onBlocked={setScopeBlocked}
           />
         )
@@ -117,8 +128,10 @@ function PosLayoutEditor({
   data,
   scope,
   onBlocked,
+  surface,
 }: {
   data: StudioPosData
+  surface: 'pos' | 'pickup' | 'delivery_pos'
   scope: LayoutScope
   onBlocked: (blocked: boolean) => void
 }) {
@@ -154,7 +167,7 @@ function PosLayoutEditor({
     if (scope.device === 'mobile') next.panels = [...defaultPosConfiguration.panels]
     setConfig(next)
   }
-  const save = useOperation<SavedPosLayout>('studio/pos/draft', (result) => {
+  const save = useOperation<SavedPosLayout>(`studio/${surface}/draft`, (result) => {
     const saved = parsePosLayout(result.draft) ?? defaultPosConfiguration
     setConfig(saved)
     setBaseline(JSON.stringify(saved))
@@ -163,15 +176,15 @@ function PosLayoutEditor({
     setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
     toast('Borrador guardado. La terminal todavía no cambia.')
   })
-  const publish = useOperation<SavedPosLayout>('studio/pos/publish', (result) => {
+  const publish = useOperation<SavedPosLayout>(`studio/${surface}/publish`, (result) => {
     const saved = parsePosLayout(result.draft) ?? defaultPosConfiguration
     history.reset(saved)
     setBaseline(JSON.stringify(saved))
     setRevision(result.revision)
     setPublished(result.published_revision ?? 0)
     setPublishedConfig(parsePosLayout(result.published) ?? defaultPosConfiguration)
-    void client.invalidateQueries({ queryKey: ['studio-pos-active'] })
-    toast('Diseño publicado para Terminal POS.')
+    void client.invalidateQueries({ queryKey: [`studio-${surface}-active`] })
+    toast('Diseño publicado para esta terminal.')
   })
   const locked = save.locked || publish.locked || !!versionAction || reloading || templateBusy
   useEffect(() => {
@@ -243,7 +256,7 @@ function PosLayoutEditor({
     setReloadError(null)
     setReloading(true)
     try {
-      const fresh = await api<StudioPosData>(`studio/pos?${scopeQuery(scope)}`)
+      const fresh = await api<StudioPosData>(`studio/${surface}?${scopeQuery(scope)}`)
       const next =
         parsePosLayout(fresh.data?.draft) ??
         parsePosLayout(fresh.defaults) ??
@@ -517,6 +530,13 @@ function PosLayoutEditor({
         </aside>
         {can('catalog.view') && can('orders.manage') ? (
           <PosLayoutCanvas
+            channel={
+              surface === 'pickup'
+                ? 'takeaway'
+                : surface === 'delivery_pos'
+                  ? 'delivery'
+                  : 'dine_in'
+            }
             device={scope.device}
             config={previewConfig}
             selected={selected}
@@ -622,6 +642,7 @@ function PosLayoutEditor({
         </fieldset>
       </div>
       <StudioVersions
+        surface={surface}
         scope={scope}
         revision={revision}
         locked={locked}
@@ -636,6 +657,7 @@ function PosLayoutEditor({
       )}
       {versionAction && (
         <StudioVersionAction
+          surface={surface}
           scope={scope}
           value={versionAction}
           onClose={() => setVersionAction(null)}
@@ -666,7 +688,13 @@ function PosLayoutEditor({
         Pedidos, cobros y permisos mantienen sus servicios actuales.
       </p>
       <Link
-        to="/pos"
+        to={
+          surface === 'pickup'
+            ? '/terminal/recogidas'
+            : surface === 'delivery_pos'
+              ? '/terminal/domicilios/nuevo'
+              : '/pos'
+        }
         onClick={(event) => {
           if (locked) event.preventDefault()
         }}
