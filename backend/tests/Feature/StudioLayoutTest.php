@@ -127,6 +127,44 @@ class StudioLayoutTest extends TestCase
         $this->assertDatabaseCount('studio_layouts', 2);
     }
 
+    public function test_scoped_layouts_are_independent_and_runtime_derives_role_from_session(): void
+    {
+        $employee = $this->employee(['orders.manage', 'catalog.view']);
+        $global = $this->body();
+        $global['configuration']['tokens']['accent'] = '#112233';
+        $this->postJson('/api/v1/studio/pos/draft', $global)->assertOk();
+        $this->postJson('/api/v1/studio/pos/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $specific = [...$this->body(), 'device' => 'desktop', 'role_id' => $employee->role_id];
+        $specific['configuration']['tokens']['accent'] = '#334455';
+        $this->postJson('/api/v1/studio/pos/draft', $specific)->assertOk();
+        $this->postJson('/api/v1/studio/pos/publish', [...$this->key(), 'revision' => 1, 'device' => 'desktop', 'role_id' => $employee->role_id])->assertOk();
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data.revision', 2)->assertJsonPath('data.published.tokens.accent', '#112233');
+        $this->actingAs($employee);
+        $this->getJson('/api/v1/studio/pos/active?device=desktop')->assertOk()->assertJsonPath('data.configuration.tokens.accent', '#334455');
+        $this->getJson('/api/v1/studio/pos/active?device=mobile')->assertOk()->assertJsonPath('data.configuration.tokens.accent', '#112233');
+        $this->getJson('/api/v1/studio/pos/active?role_id='.$this->owner->role_id)->assertUnprocessable();
+    }
+
+    public function test_scope_authorization_device_constraints_and_version_isolation(): void
+    {
+        $other = $this->company('studio-scope-other@example.test');
+        $this->actingAs($this->owner);
+        $this->getJson('/api/v1/studio/pos?role_id='.$other->role_id)->assertNotFound();
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'role_id' => $other->role_id])->assertNotFound();
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'device' => 'mobile'])->assertUnprocessable();
+        $mobile = [...$this->body(), 'device' => 'mobile'];
+        $mobile['configuration']['tokens']['product_columns'] = 2;
+        $this->postJson('/api/v1/studio/pos/draft', $mobile)->assertOk();
+        $versions = $this->getJson('/api/v1/studio/pos/versions?device=mobile')->assertOk()->json('data');
+        $this->getJson('/api/v1/studio/pos/versions')->assertOk()->assertJsonCount(0, 'data');
+        $this->postJson('/api/v1/studio/pos/draft', $this->body())->assertOk();
+        $this->postJson('/api/v1/studio/pos/restore', [...$this->key(), 'revision' => 1, 'version_id' => $versions[0]['id'], 'reason' => 'Wrong scope'])->assertNotFound();
+        $editor = $this->employee(['studio.view', 'studio.edit']);
+        $this->actingAs($editor);
+        $this->getJson('/api/v1/studio/pos?role_id='.$editor->role_id)->assertForbidden();
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'role_id' => $editor->role_id])->assertForbidden();
+    }
+
     public function test_studio_audit_failure_rolls_back_publication_and_invalid_published_schema_falls_back(): void
     {
         $this->postJson('/api/v1/studio/pos/draft', $this->body())->assertOk();

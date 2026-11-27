@@ -8,6 +8,7 @@ import type { CatalogPage } from '../catalog/types'
 import { useOperation } from '../operations/useOperation'
 import { OperationNotice } from '../operations/OperationNotice'
 import type { SavedPosLayout } from './PosStudioPage'
+import { scopeQuery, type LayoutScope } from './layout-scope'
 
 export type LayoutVersion = {
   id: number
@@ -28,12 +29,14 @@ export type VersionAction = {
   revision: number
 }
 export function StudioVersions({
+  scope,
   revision,
   locked,
   editable,
   onPreview,
   onAction,
 }: {
+  scope: LayoutScope
   revision: number
   locked: boolean
   editable: boolean
@@ -44,10 +47,10 @@ export function StudioVersions({
   const [archived, setArchived] = useState(false)
   const { session } = useSession()
   const query = useQuery({
-    queryKey: ['studio-pos-versions', revision, page, archived],
+    queryKey: ['studio-pos-versions', scope, revision, page, archived],
     queryFn: ({ signal }) =>
       api<CatalogPage<LayoutVersion>>(
-        `studio/pos/versions?page=${page}&archived=${archived ? 1 : 0}`,
+        `studio/pos/versions?${scopeQuery(scope)}&page=${page}&archived=${archived ? 1 : 0}`,
         { signal },
       ),
     enabled: !locked,
@@ -159,11 +162,13 @@ export function StudioVersions({
   )
 }
 export function StudioVersionAction({
+  scope,
   value,
   onClose,
   onSaved,
   onStale,
 }: {
+  scope: LayoutScope
   value: VersionAction
   onClose: () => void
   onSaved: (layout: SavedPosLayout) => void
@@ -180,6 +185,7 @@ export function StudioVersionAction({
       return
     }
     operation.send({
+      ...scope,
       revision: value.revision,
       version_id: value.version.id,
       reason: new FormData(event.currentTarget).get('reason'),

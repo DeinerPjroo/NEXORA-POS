@@ -16,6 +16,8 @@ import {
 } from './pos-layout'
 import { PosLayoutCanvas } from './PosLayoutCanvas'
 import { useLayoutHistory } from './useLayoutHistory'
+import { posTemplates } from './pos-templates'
+import { defaultLayoutScope, scopeQuery, type LayoutScope } from './layout-scope'
 import {
   StudioVersions,
   StudioVersionAction,
@@ -32,11 +34,18 @@ export type SavedPosLayout = {
   published_revision: number | null
   draft_revision: number | null
 }
-type StudioPosData = { data: SavedPosLayout | null; defaults: unknown; components: string[] }
+type StudioPosData = {
+  data: SavedPosLayout | null
+  defaults: unknown
+  components: string[]
+  roles: { id: number; name: string }[]
+}
 export function PosStudioPage() {
+  const [scope, setScope] = useState<LayoutScope>(defaultLayoutScope)
+  const [scopeBlocked, setScopeBlocked] = useState(false)
   const query = useQuery({
-    queryKey: ['studio-pos-editor'],
-    queryFn: () => api<StudioPosData>('studio/pos'),
+    queryKey: ['studio-pos-editor', scope],
+    queryFn: () => api<StudioPosData>(`studio/pos?${scopeQuery(scope)}`),
     refetchOnWindowFocus: false,
   })
   return (
@@ -48,7 +57,49 @@ export function PosStudioPage() {
         action={<Link to="/studio">Volver a Studio</Link>}
       />
       <ErrorNotice error={query.error} />
-      {query.isPending ? <Loading /> : query.data && <PosLayoutEditor data={query.data} />}
+      <fieldset disabled={scopeBlocked || query.isFetching} className="panel form-actions">
+        <Field label="Dispositivo">
+          <select
+            value={scope.device}
+            onChange={(e) =>
+              setScope({ ...scope, device: e.target.value as LayoutScope['device'] })
+            }
+          >
+            <option value="adaptive">Todos los dispositivos</option>
+            <option value="desktop">Escritorio</option>
+            <option value="tablet">Tablet</option>
+            <option value="mobile">Móvil</option>
+          </select>
+        </Field>
+        <Field label="Rol operativo">
+          <select
+            value={scope.role_id ?? ''}
+            onChange={(e) =>
+              setScope({ ...scope, role_id: e.target.value ? Number(e.target.value) : null })
+            }
+          >
+            <option value="">Todos los roles</option>
+            {query.data?.roles.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <small>Guarda o descarta los cambios antes de cambiar la asignación.</small>
+      </fieldset>
+      {query.isPending ? (
+        <Loading />
+      ) : (
+        query.data && (
+          <PosLayoutEditor
+            key={scopeQuery(scope)}
+            data={query.data}
+            scope={scope}
+            onBlocked={setScopeBlocked}
+          />
+        )
+      )}
     </>
   )
 }
@@ -61,7 +112,15 @@ const labels = {
   radius: 'Radio de esquinas',
   font_size: 'Tamaño de texto',
 }
-function PosLayoutEditor({ data }: { data: StudioPosData }) {
+function PosLayoutEditor({
+  data,
+  scope,
+  onBlocked,
+}: {
+  data: StudioPosData
+  scope: LayoutScope
+  onBlocked: (blocked: boolean) => void
+}) {
   const history = useLayoutHistory(
     parsePosLayout(data.data?.draft) ?? parsePosLayout(data.defaults) ?? defaultPosConfiguration,
   )
@@ -86,6 +145,13 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
   const can = useCan()
   const toast = useToast()
   const dirty = JSON.stringify(config) !== baseline
+  const scopedDefault = parsePosLayout(data.defaults) ?? defaultPosConfiguration
+  function applyTemplate(configuration: PosLayout) {
+    const next = structuredClone(configuration)
+    if (scope.device === 'mobile' || scope.device === 'tablet') next.tokens.product_columns = 2
+    if (scope.device === 'mobile') next.panels = [...defaultPosConfiguration.panels]
+    setConfig(next)
+  }
   const save = useOperation<SavedPosLayout>('studio/pos/draft', (result) => {
     const saved = parsePosLayout(result.draft) ?? defaultPosConfiguration
     setConfig(saved)
@@ -106,6 +172,10 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
     toast('Diseño publicado para Terminal POS.')
   })
   const locked = save.locked || publish.locked || !!versionAction || reloading
+  useEffect(() => {
+    onBlocked(dirty || locked)
+    return () => onBlocked(false)
+  }, [dirty, locked, onBlocked])
   const inspecting = viewPublished || !!previewVersion
   const editLocked = locked || inspecting
   const previewConfig = previewVersion?.config ?? (viewPublished ? publishedConfig : config)
@@ -166,8 +236,11 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
     setReloadError(null)
     setReloading(true)
     try {
-      const fresh = await api<StudioPosData>('studio/pos')
-      const next = parsePosLayout(fresh.data?.draft) ?? defaultPosConfiguration
+      const fresh = await api<StudioPosData>(`studio/pos?${scopeQuery(scope)}`)
+      const next =
+        parsePosLayout(fresh.data?.draft) ??
+        parsePosLayout(fresh.defaults) ??
+        defaultPosConfiguration
       history.reset(next)
       setBaseline(JSON.stringify(next))
       setRevision(fresh.data?.revision ?? 0)
@@ -251,7 +324,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
         <button
           className="button secondary"
           disabled={editLocked || !can('studio.edit')}
-          onClick={() => setConfig(structuredClone(defaultPosConfiguration))}
+          onClick={() => setConfig(structuredClone(scopedDefault))}
         >
           Restaurar diseño base
         </button>
@@ -265,7 +338,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             !can('studio.edit') ||
             (!save.uncertain && !dirty && revision > 0)
           }
-          onClick={() => save.send({ revision, configuration: config })}
+          onClick={() => save.send({ ...scope, revision, configuration: config })}
         >
           {save.uncertain ? 'Reintentar guardado' : 'Guardar borrador'}
         </button>
@@ -279,13 +352,43 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             !can('studio.publish') ||
             (!publish.uncertain && (dirty || !revision))
           }
-          onClick={() => publish.send({ revision })}
+          onClick={() => publish.send({ ...scope, revision })}
         >
           {publish.uncertain ? 'Reintentar publicación' : 'Publicar diseño'}
         </button>
       </header>
       <ErrorNotice error={save.error || publish.error || reloadError} />
       <OperationNotice uncertain={save.uncertain || publish.uncertain} />
+      <fieldset
+        disabled={editLocked || !can('studio.edit')}
+        className="panel studio-template-picker"
+      >
+        <legend>Plantillas de Terminal</legend>
+        <p>Aplicar cambia solo el borrador local. Puedes deshacer, guardar y publicar después.</p>
+        <div>
+          {posTemplates.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className="button secondary"
+              onClick={() => {
+                if (
+                  dirty &&
+                  !window.confirm(
+                    '¿Reemplazar los cambios locales por esta plantilla? Podrás deshacerlo.',
+                  )
+                )
+                  return
+                applyTemplate(template.configuration)
+                toast(`Plantilla ${template.name} aplicada al borrador local.`)
+              }}
+            >
+              <strong>{template.name}</strong>
+              <span>{template.description}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
       {inspecting && (
         <p className="notice">
           Vista previa de{' '}
@@ -345,13 +448,14 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
           {previewConfig.panels.map((id, index) => (
             <div
               key={id}
-              draggable={!editLocked && can('studio.edit')}
+              draggable={!editLocked && can('studio.edit') && scope.device !== 'mobile'}
               onDragStart={() => setDragging(id)}
               onDragEnd={() => setDragging(null)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault()
-                if (!dragging || editLocked || !can('studio.edit')) return
+                if (!dragging || editLocked || !can('studio.edit') || scope.device === 'mobile')
+                  return
                 const panels = config.panels.filter((item) => item !== dragging)
                 panels.splice(index, 0, dragging)
                 setConfig({ ...config, panels })
@@ -370,6 +474,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
                     disabled={
                       editLocked ||
                       !can('studio.edit') ||
+                      scope.device === 'mobile' ||
                       index + step < 0 ||
                       index + step >= config.panels.length
                     }
@@ -386,7 +491,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             </div>
           ))}
           <p>Todos los paneles son obligatorios. Fotografías y ayudas son opcionales.</p>
-          <small>Plantillas y asignación por rol/dispositivo: STUDIO-D.</small>
+          <small>Tablet y móvil usan dos columnas; móvil conserva el orden operativo.</small>
         </aside>
         {can('catalog.view') && can('orders.manage') ? (
           <PosLayoutCanvas
@@ -394,7 +499,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
             selected={selected}
             onSelect={setSelected}
             onChange={setConfig}
-            editable={!editLocked && can('studio.edit')}
+            editable={!editLocked && can('studio.edit') && scope.device !== 'mobile'}
           />
         ) : (
           <p className="notice">
@@ -421,6 +526,9 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
                   aria-label={labels[key as keyof typeof labels]}
                   min={min}
                   max={max}
+                  disabled={
+                    key === 'product_columns' && ['tablet', 'mobile'].includes(scope.device)
+                  }
                   value={previewConfig.tokens[key as keyof typeof tokenBounds]}
                   onChange={(event) =>
                     setConfig({
@@ -472,6 +580,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
         </fieldset>
       </div>
       <StudioVersions
+        scope={scope}
         revision={revision}
         locked={locked}
         editable={!dirty && can('studio.edit')}
@@ -485,6 +594,7 @@ function PosLayoutEditor({ data }: { data: StudioPosData }) {
       )}
       {versionAction && (
         <StudioVersionAction
+          scope={scope}
           value={versionAction}
           onClose={() => setVersionAction(null)}
           onStale={() => {

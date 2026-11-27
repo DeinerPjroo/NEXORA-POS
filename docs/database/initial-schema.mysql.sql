@@ -887,3 +887,17 @@ alter table `studio_version_archives` add constraint `studio_archive_version_fk`
 
 alter table `studio_version_archives` add constraint `studio_archive_actor_fk` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `studio_layouts` drop index `studio_surface_identity`;
+
+alter table `studio_layouts` add `role_scope` bigint unsigned as (coalesce(role_id, 0)) stored;
+
+alter table `studio_layouts` add unique `studio_scope_identity`(`tenant_id`, `surface`, `device`, `role_scope`);
+
+create table `studio_templates` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `surface` varchar(30) not null default 'pos', `name` varchar(80) not null, `revision` int unsigned not null default '1', `configuration` json not null, `updated_by` bigint unsigned not null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `studio_templates` add constraint `studio_templates_tenant_id_foreign` foreign key (`tenant_id`) references `tenants` (`id`) on delete restrict;
+
+alter table `studio_templates` add unique `studio_template_name`(`tenant_id`, `surface`, `name`);
+
+alter table `studio_templates` add constraint `studio_template_actor_fk` foreign key (`tenant_id`, `updated_by`) references `users` (`tenant_id`, `id`) on delete restrict;
+

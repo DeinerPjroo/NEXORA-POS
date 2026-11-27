@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Studio4-D en progreso: presets locales reversibles y editor/historial/publicación por rol/dispositivo integrados. Runtime deriva rol de sesión, nunca del cliente, y conserva congelado crítico. Migración38 aplica unicidad tenant/surface/device/coalesce(role,0); SQLite poblado usa columna virtual y MySQL stored. Seguir plantillas personales, temas y preview real de dispositivos antes de cerrar D; E/F pendientes.
+
+
 - Empleados3.0-EMP: reutiliza users/roles/permissions, employee_branches con FK tenant/usuario/sucursal y revisiones. Altas nuevas con sucursales explícitas; acceso legado conservado. BranchAccess se deriva de sesión y limita lecturas/escrituras operativas en servidor. No conceder roles/permisos/sucursales superiores al actor; propietario/cuenta propia protegidos. Cambios de acceso revocan sesiones/versiones, conservan MFA y auditan atómicamente. PIN personal de6 dígitos solo desbloquea sesión ya autenticada, nunca omite login/MFA. Mantener guardas de IdempotentOperation ante revocación concurrente; no duplicar autenticación.
 
 - Operación1-OPS: CI remota dirigida y carreras SQL9/121 aprobadas (MariaDB/MySQL8.4). Backup/restore son CLI administrativos, fuera de HTTP: ZIP AES-256/catálogo/APP_KEY, destino fuera del proyecto/raíz web; backup exige mantenimiento+drenado y workers detenidos. Restauración siempre esquema/directorio nuevos, cuenta SQL temporal limitada y sin DROP DATABASE; nunca cambia .env/APP_KEY ni activa la copia. BACKUPS.md y DELIVERY_CHECKLIST.md. No reparar tablas internas del servidor compartido para resolver un test; usar CI aislada y registrar el pendiente externo. No publicar logs/trazas/archivos de respaldo ni secretos.

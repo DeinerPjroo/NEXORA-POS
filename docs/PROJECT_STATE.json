@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "Nexora POS",
-  "reference_date": "2026-11-24",
+  "reference_date": "2026-11-27",
   "version": "0.33.0",
   "phase": 4,
   "module": "Nexora Studio: esquemas seguros y editor visual de Terminal POS",
@@ -12,7 +12,7 @@
   "studio_verification": "STUDIO-A/B COMPLETED: esquema1/registro cerrado de cuatro paneles, tokens acotados y JSON validado; borrador/publicado separados con permisos view/edit/publish, revisiones/UUID/Tenant lock/auditoría. Terminal aplica publicado sin recrear componentes ni alterar DTO/finanzas; fallback seguro y estructura compacta original. Editor Admin con OrderComposer real inert, selección, arrastre/flechas, resize de pedido y propiedades permitidas. Publicación básica integrada; versiones históricas/undo quedan en C. Nativas4/53 y SQL6/67 con carreras save/publish, permisos/tenant/rollback/XSS; Chromium final1/~1.2min: preview sin pedidos, drag/resize, guardado incierto exacto, borrador aislado, persistencia/publicación y cobro único/caja18000 con teclado accesible1024×600. Caso ok; runner interrumpido al cerrar servicios. Build/TS/Pint/Prettier y vista correctos; migración36 aplicada/DDL actualizado. Sin catálogo/pedidos reales modificados. Fase3/Domicilios/Kitchen conservan pendientes.",
   "delivery_item_changes_verification": "3.DEL-2B y padre3.DEL-2 COMPLETED: corregir cantidad/notas o retirar productos guardados desde detalle. Ledger append-only, líneas vigentes únicas para cálculo, originales intactos y combos retirados completos. Sin venta/salida, permisos/revisiones/UUID/motivo y auditoría atómica; tarifa/snapshots conservados. Cocina actualiza solo línea afectada, marca originales NO PREPARAR y muestra cambios30min/historial permanente. Última retirada cancela domicilio. Nativas4/76 y sucursales1/17, SQL41/748 con impuestos/tarifa/combos/carreras/regresiones; Chromium final1/47.9s con reintento exacto, KDS y retiro final, pantalla compacta1024×600. Build/TS/Pint/Prettier y vista correctos; caso ok, runner interrumpido al cerrar servicios. Migración35 aplicada y DDL actualizado. Domicilios sigue IN_PROGRESS: repartidores/incidencias, custodia/rendiciones e indicadores pendientes.",
   "delivery_additions_verification": "3.DEL-2A COMPLETED: Añadir productos desde detalle reutiliza OrderComposer/CreateOrder sobre el mismo domicilio, solo pending/assigned y sin venta. Revisiones de pedido/entrega, UUID exacto, auditoría/eventos atómicos y tarifa congelada; cocina solo despacha adiciones. Conflicto requiere actualización explícita conservando borrador. Pruebas nativas dirigidas; SQL14/215 incluidas carreras de UUID/revisión/cobro y regresión de mesa; Chromium1/52.8s con respuesta perdida, conflicto y cocina incremental. Build/TS/Pint/Prettier aprobados. Caso Chromium ok; runner interrumpido esperando cierre de servicios. Sin migración ni datos reales. Correcciones/cancelaciones de líneas registradas siguen pendientes en3.DEL-2.",
-  "next_task": "STUDIO-D: plantillas y asignaciones de diseño por rol/dispositivo, reutilizando esquemas, versiones y publicación existentes. Después E Mesas y otras superficies, F documentos/importación/exportación. Mantener abiertos los pendientes de fase3 (3.DEL-3/4/5 y Kitchen3.1-C, entre otros).",
+  "next_task": "STUDIO-D: personal template CRUD/duplicate/rename, layout themes and actual device preview. Then STUDIO-E tables and other surfaces, STUDIO-F documents/import-export. Preserve phase3 pending work.",
   "baseline_commit": "a487f235649d2a7cf769b317a66229e8beabdd6a",
   "remote": "https://github.com/DeinerPjroo/NEXORA-POS",
   "branch": "main",
@@ -94,9 +94,11 @@
     "nexora_test_127a213572e98b16",
     "nexora_test_11047dfb15806bcf",
     "nexora_test_3073f8dcd1b432f1",
-    "nexora_test_1f123fc94806f4cb"
+    "nexora_test_1f123fc94806f4cb",
+    "nexora_test_2a7e94e4b199e93d"
   ],
   "sql_test_policy": "Esquema nuevo aleatorio conservado al finalizar; DROP DATABASE prohibido",
   "handoff": "docs/HANDOFF.md",
-  "task_catalog": "docs/TASKS.md"
+  "task_catalog": "docs/TASKS.md",
+  "studio_scopes_verification": "STUDIO-D IN_PROGRESS: Original/Compacta/Tactil apply reversible local presets; editor selects own-tenant role/device, scoped draft/publication/history/restore, guards dirty/uncertain context. Runtime derives role from session and selects viewport device, preserving critical-operation freeze. Frontend accepts schema1/2. Migration38 applied to local MySQL; SQLite populated-table recovery fixed with virtual generated column; DDL updated. Directed backend6/75, SQL2/22 in retained nexora_test_2a7e94e4b199e93d, Chromium1 passed48.7s and TypeScript/build passed. Remaining D: personal template CRUD/duplicate/rename, layout themes and actual device preview; E/F pending. No completed phase3 work restarted."
 }

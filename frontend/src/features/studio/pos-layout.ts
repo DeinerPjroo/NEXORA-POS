@@ -15,7 +15,7 @@ export const posComponents = {
 } as const
 export type PosPanel = keyof typeof posComponents
 export type PosLayout = {
-  schema_version: 1
+  schema_version: 1 | 2
   panels: PosPanel[]
   tokens: {
     order_width: number
@@ -27,7 +27,7 @@ export type PosLayout = {
     font_size: number
     accent: string
   }
-  options: { photos: boolean; hints: boolean }
+  options: { photos: boolean; hints: boolean; theme?: 'inherit' | 'light' | 'dark' }
 }
 export const defaultPosConfiguration: PosLayout = {
   schema_version: 1,
@@ -65,7 +65,7 @@ function exactKeys(value: unknown, keys: string[]): value is Record<string, unkn
 export function parsePosLayout(value: unknown): PosLayout | null {
   if (
     !exactKeys(value, ['schema_version', 'panels', 'tokens', 'options']) ||
-    value.schema_version !== 1 ||
+    ![1, 2].includes(value.schema_version as number) ||
     !Array.isArray(value.panels) ||
     value.panels.length !== 4 ||
     new Set(value.panels).size !== 4 ||
@@ -74,11 +74,19 @@ export function parsePosLayout(value: unknown): PosLayout | null {
     return null
   if (
     !exactKeys(value.tokens, [...Object.keys(tokenBounds), 'accent']) ||
-    !exactKeys(value.options, ['photos', 'hints']) ||
+    !exactKeys(
+      value.options,
+      value.schema_version === 2 ? ['photos', 'hints', 'theme'] : ['photos', 'hints'],
+    ) ||
     typeof value.options.photos !== 'boolean' ||
     typeof value.options.hints !== 'boolean' ||
     typeof value.tokens.accent !== 'string' ||
     !/^#[0-9a-fA-F]{6}$/.test(value.tokens.accent)
+  )
+    return null
+  if (
+    value.schema_version === 2 &&
+    !['inherit', 'light', 'dark'].includes(value.options.theme as string)
   )
     return null
   const tokens = value.tokens
