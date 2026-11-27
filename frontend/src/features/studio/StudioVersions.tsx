@@ -30,6 +30,7 @@ export type VersionAction = {
 }
 export function StudioVersions({
   scope,
+  surface = 'pos',
   revision,
   locked,
   editable,
@@ -37,6 +38,7 @@ export function StudioVersions({
   onAction,
 }: {
   scope: LayoutScope
+  surface?: 'pos' | 'tables'
   revision: number
   locked: boolean
   editable: boolean
@@ -47,10 +49,10 @@ export function StudioVersions({
   const [archived, setArchived] = useState(false)
   const { session } = useSession()
   const query = useQuery({
-    queryKey: ['studio-pos-versions', scope, revision, page, archived],
+    queryKey: ['studio-pos-versions', surface, scope, revision, page, archived],
     queryFn: ({ signal }) =>
       api<CatalogPage<LayoutVersion>>(
-        `studio/pos/versions?${scopeQuery(scope)}&page=${page}&archived=${archived ? 1 : 0}`,
+        `studio/${surface}/versions?${scopeQuery(scope)}&page=${page}&archived=${archived ? 1 : 0}`,
         { signal },
       ),
     enabled: !locked,
@@ -163,18 +165,20 @@ export function StudioVersions({
 }
 export function StudioVersionAction({
   scope,
+  surface = 'pos',
   value,
   onClose,
   onSaved,
   onStale,
 }: {
   scope: LayoutScope
+  surface?: 'pos' | 'tables'
   value: VersionAction
   onClose: () => void
   onSaved: (layout: SavedPosLayout) => void
   onStale: () => void
 }) {
-  const operation = useOperation<SavedPosLayout>(`studio/pos/${value.action}`, (result) => {
+  const operation = useOperation<SavedPosLayout>(`studio/${surface}/${value.action}`, (result) => {
     onSaved(result)
     onClose()
   })

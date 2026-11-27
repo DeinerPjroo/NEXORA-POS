@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
 use App\Domains\Studio\PosLayoutSchema;
+use App\Domains\Studio\TablesLayoutSchema;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
 use App\Models\Permission;
@@ -57,6 +58,46 @@ class StudioLayoutTest extends TestCase
 
             return User::factory()->create(['role_id' => $role->id]);
         });
+    }
+
+    public function test_tables_reuse_versions_but_remain_separate_from_pos(): void
+    {
+        $config = TablesLayoutSchema::defaults();
+        $config['tokens']['card_width'] = 130;
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => $config];
+        $this->postJson('/api/v1/studio/tables/draft', $body)->assertOk()->assertJsonPath('data.surface', 'tables');
+        $this->postJson('/api/v1/studio/tables/draft', $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $this->getJson('/api/v1/studio/pos')->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/tables/active')->assertJsonPath('data.revision', 0);
+        $this->postJson('/api/v1/studio/tables/publish', [...$this->key(), 'revision' => 1])->assertOk();
+        $this->getJson('/api/v1/studio/tables/active')->assertJsonPath('data.configuration.tokens.card_width', 130);
+        $versions = $this->getJson('/api/v1/studio/tables/versions')->assertOk()->assertJsonCount(2, 'data')->json('data');
+        $this->postJson('/api/v1/studio/pos/draft', $this->body())->assertOk();
+        $this->postJson('/api/v1/studio/pos/restore', [...$this->key(), 'revision' => 1, 'version_id' => $versions[0]['id'], 'reason' => 'Wrong surface'])->assertNotFound();
+        $this->postJson('/api/v1/studio/tables/restore', [...$this->key(), 'revision' => 2, 'version_id' => $versions[1]['id'], 'reason' => 'Restore tables'])->assertOk()->assertJsonPath('data.revision', 3)->assertJsonPath('data.published_revision', 2);
+        $this->assertDatabaseCount('dining_sessions', 0);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_tables_schema_permissions_and_tenant_enforcement(): void
+    {
+        $this->postJson('/api/v1/studio/tables/draft', $this->body())->assertUnprocessable();
+        $body = [...$this->key(), 'revision' => 0, 'configuration' => TablesLayoutSchema::defaults()];
+        $bad = $body;
+        $bad['configuration']['tokens']['available'] = 'url(javascript:alert(1))';
+        $this->postJson('/api/v1/studio/tables/draft', $bad)->assertUnprocessable();
+        $this->postJson('/api/v1/studio/pos/draft', [...$this->body(), 'surface' => 'tables'])->assertUnprocessable();
+        $this->postJson('/api/v1/studio/tables/draft', $body)->assertOk();
+        $reader = $this->employee(['studio.view']);
+        $this->actingAs($reader);
+        $this->postJson('/api/v1/studio/tables/draft', $body)->assertForbidden();
+        $this->getJson('/api/v1/studio/tables/active')->assertForbidden();
+        $this->getJson('/api/v1/studio/tables')->assertOk();
+        $other = $this->company('tables-studio-other@example.test');
+        $this->actingAs($other);
+        $this->getJson('/api/v1/studio/tables')->assertJsonPath('data', null);
+        $this->getJson('/api/v1/studio/tables/versions')->assertJsonCount(0, 'data');
+        $this->getJson('/api/v1/studio/tables/active')->assertJsonPath('data.revision', 0);
     }
 
     public function test_studio_layout_draft_is_isolated_from_runtime_and_publication_preserves_business_data(): void

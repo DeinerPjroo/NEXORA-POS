@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { OrderComposer } from '../orders/OrderComposer'
 import { posComponents, type PosLayout, type PosPanel } from './pos-layout'
@@ -8,13 +8,15 @@ export type PreviewBox = { id: PosPanel; left: number; top: number; width: numbe
 
 export function StudioPreviewFrame({
   config,
-  panel,
+  content,
+  panel = 'menu',
   width,
   height,
   onMeasure,
 }: {
-  config: PosLayout
-  panel: 'menu' | 'cart'
+  content?: ReactNode
+  config?: PosLayout
+  panel?: 'menu' | 'cart'
   width: number
   height: number
   onMeasure: (boxes: PreviewBox[]) => void
@@ -100,7 +102,10 @@ export function StudioPreviewFrame({
         !screenBlocked &&
         createPortal(
           <div className="studio-pos-render" inert>
-            <OrderComposer terminal studioPreview={config} studioPreviewPanel={panel} />
+            {content ??
+              (config && (
+                <OrderComposer terminal studioPreview={config} studioPreviewPanel={panel} />
+              ))}
           </div>,
           document.body,
         )}

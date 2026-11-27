@@ -17,7 +17,7 @@ final class ChangeStudioVersion
         Gate::authorize('studio.edit');
         LayoutScope::query($data);
 
-        return app(IdempotentOperation::class)->run($actor, $archive ? 'studio.pos.archive' : 'studio.pos.restore', $data, StudioLayout::class, function ($data) use ($actor, $archive) {
+        return app(IdempotentOperation::class)->run($actor, 'studio.'.StudioSurface::name($data).($archive ? '.archive' : '.restore'), $data, StudioLayout::class, function ($data) use ($actor, $archive) {
             $layout = LayoutScope::query($data)->lockForUpdate()->firstOrFail();
             abort_unless($layout->revision === (int) $data['revision'], 409, 'El diseño cambió. Recarga antes de continuar.');
             $version = $layout->versions()->whereKey($data['version_id'])->firstOrFail();
@@ -26,7 +26,7 @@ final class ChangeStudioVersion
                 abort_if($version->archive()->exists(), 409, 'La versión ya está archivada.');
                 StudioVersionArchive::create(['studio_layout_id' => $layout->id, 'studio_layout_version_id' => $version->id, 'actor_id' => $actor->id, 'reason' => $data['reason'], 'created_at' => now()]);
             } else {
-                $layout->draft = LayoutScope::validateConfiguration($version->configuration, $layout->device);
+                $layout->draft = StudioSurface::validate($version->configuration, $layout->surface, $layout->device);
                 $layout->draft_revision = $layout->revision + 1;
             }
             $layout->revision++;

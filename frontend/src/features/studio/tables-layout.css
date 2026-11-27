@@ -1,0 +1,57 @@
+.digital-floor[data-studio-tables='true'] .dining-occupancy-grid {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, var(--studio-table-width)), var(--studio-table-width))
+  );
+  grid-auto-rows: var(--studio-table-height);
+  gap: var(--studio-table-gap);
+}
+.digital-floor[data-studio-tables='true'] .digital-table.dining-occupancy-card {
+  border-radius: var(--studio-table-radius);
+}
+.digital-floor[data-studio-tables='true'] .digital-table-top strong {
+  font-size: var(--studio-table-font) !important;
+}
+.digital-floor[data-studio-tables='true'] .digital-table[data-state='paid'] {
+  --table-color: var(--studio-table-paid);
+}
+.digital-floor[data-studio-symbol='false'] .digital-table-symbol,
+.digital-floor[data-studio-capacity='false'] .digital-table-bottom > span:first-child {
+  display: none;
+}
+.studio-tables-preview {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  background: var(--canvas);
+}
+.studio-tables-preview .terminal-tables {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  overflow: hidden;
+}
+.studio-pos-render > .studio-tables-preview {
+  height: 100%;
+  padding: 0;
+  border: 0;
+}
+.studio-tables-workspace {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 12px;
+}
+@media (max-width: 800px) {
+  .studio-tables-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.studio-tables-preview .digital-floor {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

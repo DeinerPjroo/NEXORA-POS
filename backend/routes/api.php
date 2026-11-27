@@ -164,6 +164,13 @@ Route::prefix('v1')->group(function () {
         Route::put('workspace/company', [WorkspaceController::class, 'updateCompany']);
         Route::get('workspace/theme', [WorkspaceController::class, 'theme']);
         Route::get('studio/pos', [StudioLayoutController::class, 'show']);
+        Route::get('studio/tables', [StudioLayoutController::class, 'show'])->defaults('studio_surface', 'tables');
+        Route::get('studio/tables/active', [StudioLayoutController::class, 'active'])->defaults('studio_surface', 'tables');
+        Route::get('studio/tables/versions', [StudioLayoutController::class, 'versions'])->defaults('studio_surface', 'tables');
+        Route::post('studio/tables/draft', [StudioLayoutController::class, 'save'])->defaults('studio_surface', 'tables');
+        Route::post('studio/tables/publish', [StudioLayoutController::class, 'publish'])->defaults('studio_surface', 'tables');
+        Route::post('studio/tables/restore', [StudioLayoutController::class, 'restore'])->defaults('studio_surface', 'tables');
+        Route::post('studio/tables/archive', [StudioLayoutController::class, 'archive'])->defaults('studio_surface', 'tables');
         Route::get('studio/pos/templates', [StudioTemplateController::class, 'index']);
         Route::post('studio/pos/templates', [StudioTemplateController::class, 'save']);
         Route::get('studio/pos/active', [StudioLayoutController::class, 'active']);

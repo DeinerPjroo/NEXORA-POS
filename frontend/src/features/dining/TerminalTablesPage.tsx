@@ -9,8 +9,9 @@ import type { CatalogPage } from '../catalog/types'
 import type { DiningRoom } from './types'
 import { OccupancyPanel } from './OccupancyPanel'
 import './dining.css'
+import type { TablesLayout } from '../studio/tables-layout'
 
-export function TerminalTablesPage() {
+export function TerminalTablesPage({ studioPreview }: { studioPreview?: TablesLayout }) {
   const can = useCan()
   const [selected, setSelected] = useState<number | null>(null)
   const [page, setPage] = useState(1)
@@ -44,7 +45,7 @@ export function TerminalTablesPage() {
       {query.isPending ? (
         <Loading />
       ) : room ? (
-        <OccupancyPanel key={room.id} room={room} digital />
+        <OccupancyPanel key={room.id} room={room} digital studioPreview={studioPreview} />
       ) : (
         <p className="notice">
           No hay salones activos. Configúralos en Nexora Admin para operar sus mesas.

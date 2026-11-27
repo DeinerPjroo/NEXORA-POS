@@ -47,8 +47,11 @@ export function StudioPage() {
           <strong>Terminal POS</strong>
           <small>Diseño guardado y publicación</small>
         </Link>
+        <Link to="/admin/studio/mesas">
+          <strong>Mesas y salones</strong>
+          <small>Tarjetas operativas y Mesas Compactas</small>
+        </Link>
         {[
-          'Mesas y salones',
           'Pedidos para llevar',
           'Domicilios',
           'Nexora Kitchen',

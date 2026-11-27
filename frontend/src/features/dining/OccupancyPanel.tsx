@@ -10,6 +10,9 @@ import type { DiningSelection, TableChoice } from './session-types'
 import { SessionEditor } from './SessionEditor'
 import { ReleaseTable } from './ReleaseTable'
 import './digital-tables.css'
+import { useTablesLayout } from '../studio/useTablesLayout'
+import { tablesStyle, type TablesLayout } from '../studio/tables-layout'
+import '../studio/tables-layout.css'
 
 type Occupancy = {
   table: TableChoice
@@ -27,10 +30,12 @@ export function OccupancyPanel({
   room,
   onSelect,
   digital = false,
+  studioPreview,
 }: {
   room: DiningRoom
   onSelect?: (selection: DiningSelection) => void
   digital?: boolean
+  studioPreview?: TablesLayout
 }) {
   const can = useCan()
   const navigate = useNavigate()
@@ -41,11 +46,12 @@ export function OccupancyPanel({
     session: NonNullable<Occupancy['session']>
     label: string
   } | null>(null)
+  const layout = useTablesLayout(digital, !!opening || !!releasing, studioPreview)
   const query = useQuery({
     queryKey: ['dining-occupancy', room.id],
     queryFn: ({ signal }) =>
       api<{ data: Occupancy[] }>('dining-rooms/' + room.id + '/occupancy', { signal }),
-    refetchInterval: 15000,
+    refetchInterval: studioPreview ? false : 15000,
   })
   const entries = query.data?.data ?? []
   const occupied = entries.filter((entry) => entry.session).length
@@ -55,7 +61,13 @@ export function OccupancyPanel({
       entry.table.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   )
   return (
-    <section className={'panel dining-layout' + (digital ? ' digital-floor' : '')}>
+    <section
+      className={'panel dining-layout' + (digital ? ' digital-floor' : '')}
+      data-studio-tables={!!layout}
+      data-studio-symbol={layout?.options.symbol}
+      data-studio-capacity={layout?.options.capacity}
+      style={layout ? tablesStyle(layout) : undefined}
+    >
       {digital && (
         <>
           <div className="digital-floor-heading">

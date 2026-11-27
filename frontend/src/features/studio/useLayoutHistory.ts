@@ -1,19 +1,18 @@
 import { useCallback, useReducer } from 'react'
 import type { SetStateAction } from 'react'
-import type { PosLayout } from './pos-layout'
 
-type State = {
-  past: PosLayout[]
-  present: PosLayout
-  future: PosLayout[]
-  gesture: PosLayout | null
+type State<T> = {
+  past: T[]
+  present: T
+  future: T[]
+  gesture: T | null
 }
-type Action =
-  | { type: 'set'; value: SetStateAction<PosLayout> }
-  | { type: 'reset'; value: PosLayout }
+type Action<T> =
+  | { type: 'set'; value: SetStateAction<T> }
+  | { type: 'reset'; value: T }
   | { type: 'undo' | 'redo' | 'begin' | 'end' }
-const equal = (a: PosLayout, b: PosLayout) => JSON.stringify(a) === JSON.stringify(b)
-function reducer(state: State, action: Action): State {
+const equal = <T>(a: T, b: T) => JSON.stringify(a) === JSON.stringify(b)
+function reducer<T>(state: State<T>, action: Action<T>): State<T> {
   if (action.type === 'reset') return { past: [], present: action.value, future: [], gesture: null }
   if (action.type === 'begin') return state.gesture ? state : { ...state, gesture: state.present }
   if (action.type === 'end')
@@ -27,7 +26,10 @@ function reducer(state: State, action: Action): State {
           gesture: null,
         }
   if (action.type === 'set') {
-    const value = typeof action.value === 'function' ? action.value(state.present) : action.value
+    const value =
+      typeof action.value === 'function'
+        ? (action.value as (previous: T) => T)(state.present)
+        : action.value
     if (equal(value, state.present)) return state
     return {
       ...state,
@@ -53,8 +55,8 @@ function reducer(state: State, action: Action): State {
     }
   return state
 }
-export function useLayoutHistory(initial: PosLayout) {
-  const [state, dispatch] = useReducer(reducer, {
+export function useLayoutHistory<T>(initial: T) {
+  const [state, dispatch] = useReducer(reducer<T>, {
     past: [],
     present: initial,
     future: [],
@@ -62,8 +64,8 @@ export function useLayoutHistory(initial: PosLayout) {
   })
   return {
     config: state.present,
-    set: useCallback((value: SetStateAction<PosLayout>) => dispatch({ type: 'set', value }), []),
-    reset: useCallback((value: PosLayout) => dispatch({ type: 'reset', value }), []),
+    set: useCallback((value: SetStateAction<T>) => dispatch({ type: 'set', value }), []),
+    reset: useCallback((value: T) => dispatch({ type: 'reset', value }), []),
     undo: () => dispatch({ type: 'undo' }),
     redo: () => dispatch({ type: 'redo' }),
     begin: () => dispatch({ type: 'begin' }),

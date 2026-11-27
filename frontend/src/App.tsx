@@ -11,6 +11,7 @@ import { RolesPage } from './features/workspace/RolesPage'
 import { SettingsPage } from './features/workspace/SettingsPage'
 import { StudioPage } from './features/studio/StudioPage'
 import { PosStudioPage } from './features/studio/PosStudioPage'
+import { TablesStudioPage } from './features/studio/TablesStudioPage'
 import { AboutPage, NotFoundPage } from './features/workspace/AboutPage'
 import { ProductsPage } from './features/catalog/ProductsPage'
 import { CategoriesPage } from './features/catalog/CategoriesPage'
@@ -436,6 +437,14 @@ export default function App() {
           element={
             <PermissionBoundary permission="studio.view">
               <PosStudioPage />
+            </PermissionBoundary>
+          }
+        />
+        <Route
+          path="/admin/studio/mesas"
+          element={
+            <PermissionBoundary permission="studio.view">
+              <TablesStudioPage />
             </PermissionBoundary>
           }
         />
