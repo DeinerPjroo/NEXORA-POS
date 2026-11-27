@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Kitchen3.1-D1: prioridad0/1 solo sobre comandas activas, kitchen.view/operate, revision/UUID/motivo y auditoria/evento append-only bajo Tenant lock. No altera pedido, estado ni dinero; urgentes primero/FIFO y historial historico descendente. Exponer actor solo id/nombre; conservar snapshots/fechas y objetivo original. Modal conserva payload incierto y bloquea TerminalGuard; tiempo/demora parten de fechas y reloj servidor, no metricas ficticias. Migracion39 agrega default0/indice sin inventar prioridades pasadas. Reverb local8085 habilitado con credenciales privadas; no registrar secretos ni confundir proceso local con servicio productivo supervisado. D2 sigue pendiente; no cerrar Kitchen/fase3.
+
+
 - Kitchen3.1-C: canales private-kitchen.{tenant}.{branch} exigen Sanctum/CSRF/MFA/pantalla desbloqueada/kitchen.view y sucursal activa autorizada en servidor. Emitir solo refresh=true tras commit de KitchenTicket, nunca snapshots/contactos ni cambios financieros; rollback/replay no emiten. Transporte acotado y fallo conserva comando confirmado; respaldo API5s permanece. Echo consulta API al evento/suscripcion/reconexion y se desconecta al bloquear/cambiar contexto/salir; preview Studio no conecta. Reverb deshabilitado/log no equivale a conexion: indicador solo tras suscripcion real. No eventos cliente ni origen comodin. Prueba Reverb aislada usa NEXORA_E2E_REVERB=1, puerto8086 y e2e.sqlite; nunca credenciales/datos reales. Continuar3.1-D sin duplicar workflow.
 
 

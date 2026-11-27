@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\Kitchen\KitchenWorkflow;
+use App\Http\Requests\KitchenPriorityRequest;
 use App\Http\Resources\KitchenTicketResource;
 use App\Models\DiningSession;
 use App\Models\KitchenRoute;
@@ -22,7 +23,7 @@ final class KitchenController extends Controller
         Gate::authorize('orders.view');
         $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
 
-        return KitchenTicketResource::collection(KitchenTicket::where('order_id', $order->id)->with('lines', 'events')->latest('id')->paginate(30));
+        return KitchenTicketResource::collection(KitchenTicket::where('order_id', $order->id)->with('lines', 'events.actor')->latest('id')->paginate(30));
     }
 
     public function sessionTickets(Request $request, DiningSession $diningSession)
@@ -31,7 +32,7 @@ final class KitchenController extends Controller
         Gate::authorize('orders.view');
         $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
 
-        return KitchenTicketResource::collection(KitchenTicket::whereIn('order_id', Order::where('dining_session_id', $diningSession->id)->select('id'))->with('lines', 'events')->latest('id')->paginate(30))->additional(['server_now' => now()->toISOString()]);
+        return KitchenTicketResource::collection(KitchenTicket::whereIn('order_id', Order::where('dining_session_id', $diningSession->id)->select('id'))->with('lines', 'events.actor')->latest('id')->paginate(30))->additional(['server_now' => now()->toISOString()]);
     }
 
     private function own(Request $request, string $table)
@@ -83,7 +84,19 @@ final class KitchenController extends Controller
         $tickets = KitchenTicket::where('branch_id', $data['branch_id'])->when($data['station_id'] ?? null, fn ($q, $id) => $q->where('kitchen_station_id', $id));
         $changes = OrderItemChange::where('created_at', '>=', now()->subMinutes(30))->whereIn('order_item_id', KitchenTicketLine::whereIn('kitchen_ticket_id', (clone $tickets)->select('id'))->select('order_item_id'))->with('item')->latest('id')->limit(20)->get()->map(fn ($c) => [...$c->only('id', 'order_id', 'reason', 'created_at'), 'product_name' => $c->item->product_name, 'quantity' => $c->item->quantity, 'corrected' => $c->replacement_item_id !== null]);
 
-        return KitchenTicketResource::collection($tickets->whereIn('status', ($data['history'] ?? false) ? ['delivered', 'cancelled'] : ['new', 'preparing', 'ready'])->with('lines', 'events')->orderByDesc('id')->paginate(60))->additional(['server_now' => now()->toISOString(), 'recent_changes' => $changes]);
+        $tickets->whereIn('status', ($data['history'] ?? false) ? ['delivered', 'cancelled'] : ['new', 'preparing', 'ready'])->with('lines', 'events.actor');
+        if ($data['history'] ?? false) {
+            $tickets->orderByDesc('id');
+        } else {
+            $tickets->orderByDesc('priority')->orderBy('created_at')->orderBy('id');
+        }
+
+        return KitchenTicketResource::collection($tickets->paginate(60))->additional(['server_now' => now()->toISOString(), 'recent_changes' => $changes]);
+    }
+
+    public function priority(KitchenPriorityRequest $request, KitchenTicket $kitchenTicket, KitchenWorkflow $service)
+    {
+        return new KitchenTicketResource($service->priority($request->user(), $kitchenTicket, $request->validated())->load('lines', 'events.actor'));
     }
 
     public function transition(Request $request, KitchenTicket $kitchenTicket, KitchenWorkflow $service)
@@ -92,6 +105,6 @@ final class KitchenController extends Controller
         Gate::authorize('kitchen.view');
         $data = $request->validate(['tenant_id' => ['prohibited'], 'idempotency_key' => ['required', 'uuid'], 'revision' => ['required', 'integer', 'min:1'], 'status' => ['required', Rule::in(['preparing', 'ready', 'delivered'])]]);
 
-        return new KitchenTicketResource($service->transition($request->user(), $kitchenTicket, $data)->load('lines', 'events'));
+        return new KitchenTicketResource($service->transition($request->user(), $kitchenTicket, $data)->load('lines', 'events.actor'));
     }
 }

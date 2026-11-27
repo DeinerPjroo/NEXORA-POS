@@ -112,6 +112,28 @@ final class KitchenWorkflow
         });
     }
 
+    public function priority(User $actor, KitchenTicket $ticket, array $data): KitchenTicket
+    {
+        Gate::authorize('kitchen.view');
+        Gate::authorize('kitchen.operate');
+
+        return app(IdempotentOperation::class)->run($actor, 'kitchen.ticket.priority.'.$ticket->id, $data, KitchenTicket::class, function ($data) use ($actor, $ticket) {
+            $ticket = KitchenTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            $order = Order::whereKey($ticket->order_id)->lockForUpdate()->firstOrFail();
+            abort_unless($ticket->revision === (int) $data['revision'], 409, 'La comanda cambió. Actualiza cocina.');
+            abort_if($order->status === 'cancelled' || in_array($ticket->status, ['cancelled', 'delivered'], true), 409, 'La comanda ya está finalizada.');
+            $from = $ticket->priority;
+            abort_if($from === (int) $data['priority'], 409, 'La comanda ya tiene esa prioridad.');
+            $ticket->priority = (int) $data['priority'];
+            $ticket->revision++;
+            $ticket->save();
+            $this->event($actor, $ticket, $ticket->status, $ticket->status, 'Prioridad '.($from ? 'urgente' : 'normal').' → '.($ticket->priority ? 'urgente' : 'normal').': '.$data['reason']);
+            Audit::record('kitchen.ticket.priority', 'Se cambió la prioridad de una comanda.', $actor, ['ticket_id' => $ticket->id, 'from_priority' => $from, 'priority' => $ticket->priority, 'reason' => $data['reason']]);
+
+            return $ticket;
+        });
+    }
+
     public function synchronize(User $actor, Order $order): void
     {
         $tickets = KitchenTicket::where('order_id', $order->id)->where('status', '!=', 'cancelled')->get();

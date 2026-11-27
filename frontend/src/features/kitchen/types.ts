@@ -6,6 +6,7 @@ export type KitchenTicket = {
   station_name: string
   station_color: string
   target_minutes: number
+  priority: number
   revision: number
   status: 'new' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
   created_at: string
@@ -43,6 +44,7 @@ export type KitchenTicket = {
     preparations: { name: string; options: string[] }[]
   }[]
   events: {
+    actor?: { id: number; name: string } | null
     id: number
     from_status: string | null
     to_status: string

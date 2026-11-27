@@ -99,6 +99,7 @@ Route::prefix('v1')->group(function () {
         Route::get('orders/{order}/kitchen-tickets', [KitchenController::class, 'orderTickets']);
         Route::get('kitchen-tickets', [KitchenController::class, 'index']);
         Route::post('kitchen-tickets/{kitchenTicket}/status', [KitchenController::class, 'transition']);
+        Route::post('kitchen-tickets/{kitchenTicket}/priority', [KitchenController::class, 'priority']);
         Route::get('orders/{order}/kitchen-preview', [KitchenController::class, 'preview']);
         Route::post('orders/{order}/kitchen-dispatch', [KitchenController::class, 'dispatch']);
         Route::controller(DiningReservationController::class)->group(function () {

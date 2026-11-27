@@ -11,7 +11,9 @@ use App\Models\Branch;
 use App\Models\Category;
 use App\Models\KitchenTicket;
 use App\Models\KitchenTicketLine;
+use App\Models\Permission;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,6 +135,79 @@ class KitchenWorkflowTest extends TestCase
         $this->assertDatabaseCount('kitchen_tickets', 1);
         $this->assertDatabaseCount('sales', 0);
         $this->getJson('/api/v1/kitchen-tickets?branch_id='.$this->branch)->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_priority_is_audited_idempotent_and_orders_the_queue_without_changing_orders_or_money(): void
+    {
+        $item = $this->route($this->product(), $this->station());
+        $otherOrder = $this->order([$item]);
+        $other = $this->send($otherOrder)['tickets'][0];
+        $order = $this->order([$item]);
+        $ticket = $this->send($order)['tickets'][0];
+        $this->getJson('/api/v1/kitchen-tickets?branch_id='.$this->branch)->assertOk()->assertJsonPath('data.0.id', $other['id']);
+        $orderBefore = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        $body = [...$this->key(), 'revision' => $ticket['revision'], 'priority' => 1, 'reason' => 'Cliente requiere salida pronta'];
+        $url = '/api/v1/kitchen-tickets/'.$ticket['id'].'/priority';
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.priority', 1)->assertJsonPath('data.revision', 2)->assertJsonPath('data.status', 'new')->assertJsonPath('data.events.1.actor.id', $this->owner->id);
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.revision', 2);
+        $this->postJson($url, [...$body, ...$this->key(), 'priority' => 0])->assertConflict();
+        $this->postJson($url, [...$body, ...$this->key(), 'revision' => 2, 'priority' => 2])->assertUnprocessable();
+        $this->postJson($url, [...$body, ...$this->key(), 'revision' => 2, 'reason' => ''])->assertUnprocessable();
+        $this->getJson('/api/v1/kitchen-tickets?branch_id='.$this->branch)->assertOk()->assertJsonPath('data.0.id', $ticket['id'])->assertJsonPath('data.1.id', $other['id']);
+        $this->assertSame($orderBefore, $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data'));
+        $this->assertDatabaseCount('kitchen_ticket_events', 3);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'kitchen.ticket.priority', 'actor_id' => $this->owner->id]);
+        $this->postJson($url, [...$this->key(), 'revision' => 2, 'priority' => 0, 'reason' => 'Se normaliza la espera'])->assertOk()->assertJsonPath('data.priority', 0);
+        $this->getJson('/api/v1/kitchen-tickets?branch_id='.$this->branch)->assertOk()->assertJsonPath('data.0.id', $other['id']);
+    }
+
+    public function test_priority_rejects_final_tickets_and_rolls_back_when_audit_fails(): void
+    {
+        $item = $this->route($this->product(), $this->station());
+        $ticket = $this->send($this->order([$item]))['tickets'][0];
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'kitchen.ticket.priority') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $body = [...$this->key(), 'revision' => 1, 'priority' => 1, 'reason' => 'Prioridad autorizada'];
+        $url = '/api/v1/kitchen-tickets/'.$ticket['id'].'/priority';
+        $this->postJson($url, $body)->assertServerError();
+        $this->assertDatabaseHas('kitchen_tickets', ['id' => $ticket['id'], 'priority' => 0, 'revision' => 1]);
+        $this->assertDatabaseCount('kitchen_ticket_events', 1);
+        $fail = false;
+        $ticket = $this->postJson($url, $body)->assertOk()->json('data');
+        foreach (['preparing', 'ready', 'delivered'] as $status) {
+            $ticket = $this->state($ticket, $status);
+        }
+        $this->postJson($url, [...$this->key(), 'revision' => $ticket['revision'], 'priority' => 0, 'reason' => 'Ya no es urgente'])->assertConflict();
+    }
+
+    public function test_priority_requires_operate_permission_and_cannot_cross_tenants_or_branch_assignments(): void
+    {
+        $item = $this->route($this->product(), $this->station());
+        $ticket = $this->send($this->order([$item]))['tickets'][0];
+        $url = '/api/v1/kitchen-tickets/'.$ticket['id'].'/priority';
+        $body = [...$this->key(), 'revision' => 1, 'priority' => 1, 'reason' => 'Cambio solicitado'];
+        $reader = app(TenantContext::class)->run($this->owner->tenant_id, function () {
+            $role = Role::create(['name' => 'Lector cocina', 'is_owner' => false]);
+            $role->permissions()->attach(Permission::where('key', 'kitchen.view')->firstOrFail()->id, ['tenant_id' => $this->owner->tenant_id]);
+
+            return User::factory()->create(['role_id' => $role->id, 'all_branches' => true]);
+        });
+        $this->actingAs($reader)->postJson($url, $body)->assertForbidden();
+        app(TenantContext::class)->run($this->owner->tenant_id, function () use ($reader) {
+            $reader->role->permissions()->attach(Permission::where('key', 'kitchen.operate')->firstOrFail()->id, ['tenant_id' => $this->owner->tenant_id]);
+            $reader->all_branches = false;
+            $reader->save();
+        });
+        $this->actingAs($reader->fresh())->postJson($url, $body)->assertNotFound();
+        $other = $this->company('priority-other@example.test');
+        $this->actingAs($other)->postJson($url, $body)->assertNotFound();
+        $this->assertDatabaseHas('kitchen_tickets', ['id' => $ticket['id'], 'priority' => 0, 'revision' => 1]);
     }
 
     public function test_delivery_additions_dispatch_only_new_lines_to_the_existing_order(): void

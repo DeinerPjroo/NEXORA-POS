@@ -84,7 +84,8 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 3.1-A | COMPLETED | Estaciones existentes verificadas: creación/archivo/móvil y lector/403 Chromium2 cubiertos entre ejecuciones. Prueba de cambio de sesión espera logout y envía Origin a Sanctum. Cobertura backend/SQL/build previa conservada | Identidad, sucursales e idempotencia existentes |
 | 3.1-B | COMPLETED | Rutas/snapshots/comandas incrementales, estados sincronizados y cancelación; permisos/revisión/UUID/FK. Native8 cubiertos, SQL8/120, paginación1/27 y Chromium flujo real1 aprobados; migración000029 aplicada/DDL. Tablero consulta real5s, no Reverb todavía | 3.1-A; pedidos |
 | 3.1-C | COMPLETED | Reverb privado tenant/sucursal, auth Sanctum/CSRF/MFA/bloqueo/BranchAccess, avisos tras commit y recuperacion API; fallback5s. Backend16 dirigidos y Chromium real1/40.5s aprobados. Activacion local/productiva exige configurar/iniciar Reverb; no se modifica .env de usuario | 3.1-B |
-| 3.1-D | PENDING | Estados configurables, prioridad/tiempos/avisos e historial conectado | 3.1-B/C |
+| 3.1-D | IN_PROGRESS | D1 prioridades/avisos visuales/tiempos/historial con actor implementados; D2 configuracion de estados/avisos pendiente | 3.1-B/C |
+| 3.1-D1 | COMPLETED | Prioridad revisada/idempotente con motivo/auditoria, cola urgente/FIFO, demora y responsable. Backend16/241 y Chromium1/46.3s; migracion39 aplicada/DDL. Reverb local8085 activado y salud200 | 3.1-C |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |
 | 3.4 | PENDING | Proveedores/compras/recepciones/cuentas por pagar | 3.2 |

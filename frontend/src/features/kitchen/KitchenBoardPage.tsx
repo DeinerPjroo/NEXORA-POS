@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
-import { ErrorNotice, Loading } from '../../components/ui'
+import { ErrorNotice, Loading, Modal, Field } from '../../components/ui'
 import { useCan, useSession } from '../auth/SessionProvider'
 import { useOperationContext } from '../operations/OperationalBranchPicker'
 import { useOperation } from '../operations/useOperation'
@@ -32,6 +32,7 @@ import {
 import '../studio/kitchen-layout.css'
 import { preparationLabels } from './TableKitchen'
 import { useKitchenRealtime } from './useKitchenRealtime'
+import { useTerminalGuard } from '../pos/TerminalEnvironment'
 const labels = {
   new: 'Nuevas',
   preparing: 'En preparación',
@@ -42,7 +43,7 @@ const labels = {
 export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLayout }) {
   const context = useOperationContext()
   const can = useCan()
-  const { screenBlocked } = useSession()
+  const { screenBlocked, session } = useSession()
   const [branch, setBranch] = useState('')
   const branchId = branch || String(context.data?.branches.find((b) => b.is_active)?.id ?? '')
   const realtime = useKitchenRealtime(branchId, !!studioPreview)
@@ -51,13 +52,14 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
   const [page, setPage] = useState(1)
   const [clock, setClock] = useState(Date.now())
   const [action, setAction] = useState<{ ticket: KitchenTicket; status: string } | null>(null)
+  const [priority, setPriority] = useState<KitchenTicket | null>(null)
   const layout = usePublishedOperationalLayout(
     'kitchen',
     'kitchen.view',
     parseKitchenLayout,
     defaultKitchenLayout,
     true,
-    !!action,
+    !!action || !!priority,
     studioPreview,
   )
   useEffect(() => {
@@ -255,6 +257,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                     <article
                       className="kitchen-ticket"
                       key={ticket.id}
+                      data-urgent={ticket.priority === 1}
                       data-overdue={
                         serverClock - Date.parse(ticket.created_at) >
                           ticket.target_minutes * 60000 &&
@@ -273,6 +276,29 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                       <p className="kitchen-station">
                         {ticket.station_name} · objetivo {ticket.target_minutes} min
                       </p>
+                      <div className="kitchen-signals">
+                        {ticket.priority === 1 && (
+                          <strong className="kitchen-urgent">URGENTE</strong>
+                        )}
+                        {['new', 'preparing'].includes(ticket.status) &&
+                          serverClock - Date.parse(ticket.created_at) >
+                            ticket.target_minutes * 60000 && (
+                            <strong className="kitchen-delay">
+                              Demora +
+                              {duration(
+                                serverClock -
+                                  Date.parse(ticket.created_at) -
+                                  ticket.target_minutes * 60000,
+                              )}
+                            </strong>
+                          )}
+                        {ticket.ready_at && (
+                          <span>
+                            Hasta lista:{' '}
+                            {duration(Date.parse(ticket.ready_at) - Date.parse(ticket.created_at))}
+                          </span>
+                        )}
+                      </div>
                       <p className="kitchen-destination">
                         {ticket.order_snapshot.dining?.tables
                           ?.map((table) => table.name ?? table.table_name)
@@ -329,7 +355,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                         ['new', 'preparing', 'ready'].includes(ticket.status) && (
                           <button
                             className="kitchen-advance"
-                            disabled={!!action}
+                            disabled={!!action || !!priority}
                             type="button"
                             onClick={() =>
                               setAction({
@@ -350,13 +376,27 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
                           </button>
                         )}
                       <TicketPrintButton ticket={ticket} />
+                      {can('kitchen.operate') &&
+                        ['new', 'preparing', 'ready'].includes(ticket.status) && (
+                          <button
+                            className="kitchen-priority-button"
+                            type="button"
+                            disabled={!!action || !!priority}
+                            onClick={() => setPriority(structuredClone(ticket))}
+                          >
+                            {ticket.priority === 1 ? 'Quitar urgente' : 'Marcar urgente'}
+                          </button>
+                        )}
                       <details>
                         <summary>Historial de la comanda</summary>
                         {ticket.events?.map((event) => (
                           <p key={event.id}>
                             {labels[event.to_status as KitchenTicket['status']]} ·{' '}
-                            {new Date(event.created_at).toLocaleTimeString('es-CO')}
+                            {new Date(event.created_at).toLocaleString('es-CO', {
+                              timeZone: session?.company.timezone ?? 'America/Bogota',
+                            })}
                             {event.reason && ` · ${event.reason}`}
+                            {event.actor && ` · ${event.actor.name}`}
                           </p>
                         ))}
                       </details>
@@ -371,7 +411,66 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
         <Pagination meta={query.data.meta} pending={query.isFetching} onPage={setPage} />
       )}
       {action && <KitchenAction value={action} onClose={() => setAction(null)} />}
+      {priority && <KitchenPriority ticket={priority} onClose={() => setPriority(null)} />}
     </section>
+  )
+}
+function duration(milliseconds: number) {
+  const seconds = Math.max(0, Math.floor(milliseconds / 1000))
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+function KitchenPriority({ ticket, onClose }: { ticket: KitchenTicket; onClose: () => void }) {
+  const client = useQueryClient()
+  const [reason, setReason] = useState('')
+  const operation = useOperation(`kitchen-tickets/${ticket.id}/priority`, async () => {
+    await Promise.all(
+      ['kitchen-tickets', 'table-kitchen'].map((key) =>
+        client.invalidateQueries({ queryKey: [key] }),
+      ),
+    )
+    onClose()
+  })
+  useTerminalGuard(operation.locked, operation.locked)
+  return (
+    <Modal
+      title={ticket.priority === 1 ? 'Quitar prioridad urgente' : 'Marcar comanda urgente'}
+      locked={operation.locked}
+      onClose={onClose}
+    >
+      <p>
+        Comanda #{ticket.id} · Pedido #{ticket.order_id}. El cambio quedará registrado en el
+        historial.
+      </p>
+      <Field label="Motivo de prioridad">
+        <textarea
+          value={reason}
+          minLength={3}
+          maxLength={200}
+          disabled={operation.locked}
+          onChange={(event) => setReason(event.target.value)}
+        />
+      </Field>
+      <ErrorNotice error={operation.error} />
+      <OperationNotice uncertain={operation.uncertain} />
+      <div className="form-actions">
+        <button disabled={operation.locked} onClick={onClose}>
+          Volver
+        </button>
+        <button
+          className="button primary"
+          disabled={operation.isPending || (!operation.uncertain && reason.trim().length < 3)}
+          onClick={() =>
+            operation.send({
+              revision: ticket.revision,
+              priority: ticket.priority === 1 ? 0 : 1,
+              reason: reason.trim(),
+            })
+          }
+        >
+          {operation.uncertain ? 'Reintentar misma prioridad' : 'Confirmar prioridad'}
+        </button>
+      </div>
+    </Modal>
   )
 }
 function elapsed(ticket: KitchenTicket, clock: number) {

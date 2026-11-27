@@ -901,3 +901,7 @@ alter table `studio_templates` add unique `studio_template_name`(`tenant_id`, `s
 
 alter table `studio_templates` add constraint `studio_template_actor_fk` foreign key (`tenant_id`, `updated_by`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `kitchen_tickets` add `priority` tinyint unsigned not null default '0';
+
+alter table `kitchen_tickets` add index `kitchen_priority_queue`(`tenant_id`, `branch_id`, `priority`, `created_at`, `id`);
+

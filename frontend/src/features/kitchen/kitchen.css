@@ -435,3 +435,35 @@
   text-decoration: line-through;
   opacity: 0.65;
 }
+.kitchen-ticket[data-urgent='true'] {
+  border: 2px solid #de5266;
+}
+.kitchen-signals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.kitchen-urgent,
+.kitchen-delay {
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #de52661a;
+  color: #c9364f;
+}
+.kitchen-delay {
+  background: #d293251a;
+  color: #ac710f;
+}
+.kitchen-priority-button {
+  min-height: 36px;
+  margin: 6px 0;
+  font-size: 12px;
+}
+[data-theme='dark'] .kitchen-urgent {
+  color: #ff9bad;
+}
+[data-theme='dark'] .kitchen-delay {
+  color: #f7ca7e;
+}

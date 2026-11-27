@@ -14,6 +14,11 @@ final class KitchenTicketEvent extends Model
 
     protected $guarded = ['id', 'tenant_id'];
 
+    public function actor()
+    {
+        return $this->belongsTo(User::class, 'actor_id');
+    }
+
     protected function casts(): array
     {
         return ['created_at' => 'datetime'];

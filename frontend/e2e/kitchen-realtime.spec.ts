@@ -99,13 +99,40 @@ test('Kitchen privado: evento real, reconexion y bloqueo sin depender del pollin
   })
   const card = page.locator('.kitchen-ticket').filter({ hasText: 'Pizza Reverb' })
   await expect(card).toContainText('Empacar separado')
+  const priorityPayloads: string[] = []
+  await page.route('**/api/v1/kitchen-tickets/*/priority', async (route) => {
+    priorityPayloads.push(route.request().postData()!)
+    const response = await route.fetch()
+    if (priorityPayloads.length === 1) await route.abort('failed')
+    else await route.fulfill({ response })
+  })
+  await card.getByRole('button', { name: 'Marcar urgente', exact: true }).click()
+  const priority = page.getByRole('dialog', { name: 'Marcar comanda urgente', exact: true })
+  await priority.getByLabel('Motivo de prioridad').fill('Cliente requiere salida pronta')
+  await priority.getByRole('button', { name: 'Confirmar prioridad', exact: true }).click()
+  await expect(
+    priority.getByRole('button', { name: 'Reintentar misma prioridad', exact: true }),
+  ).toBeVisible()
+  await expect(priority.getByRole('button', { name: 'Volver', exact: true })).toBeDisabled()
+  await expect(page.locator('.terminal-header')).toHaveAttribute('inert', '')
+  await priority.getByRole('button', { name: 'Reintentar misma prioridad', exact: true }).click()
+  await expect(priority).toHaveCount(0)
+  await expect(page.locator('.terminal-header')).not.toHaveAttribute('inert')
+  expect(priorityPayloads).toHaveLength(2)
+  expect(priorityPayloads[0]).toBe(priorityPayloads[1])
+  await expect(card.locator('.kitchen-urgent')).toHaveText('URGENTE')
+  await expect(card.getByRole('button', { name: 'Quitar urgente', exact: true })).toBeVisible()
+  await card.getByText('Historial de la comanda', { exact: true }).click()
+  await expect(card.locator('details')).toContainText('Cliente requiere salida pronta')
+  const identity = await readApi<{ user: { name: string } }>(cashier, 'auth/me')
+  await expect(card.locator('details')).toContainText(identity.user.name)
   await context.setOffline(true)
   await expect(page.getByText('Canal privado conectado', { exact: false })).toHaveCount(0, {
     timeout: 30_000,
   })
   await writeApi(cashier, 'POST', `kitchen-tickets/${dispatch.tickets[0].id}/status`, {
     idempotency_key: crypto.randomUUID(),
-    revision: dispatch.tickets[0].revision,
+    revision: dispatch.tickets[0].revision + 1,
     status: 'preparing',
   })
   await context.setOffline(false)
