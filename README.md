@@ -56,7 +56,9 @@ npm ci
 npm run dev
 ```
 
-Abre **http://127.0.0.1:5173/registro**, registra tu empresa y crea tu contraseña. No hay cuentas compartidas ni contraseñas predeterminadas. Usa siempre el mismo host (`127.0.0.1`) para la SPA y Laravel. Vite envía `/api` y `/sanctum` al backend mediante proxy y las sesiones usan cookies HttpOnly con protección CSRF.
+En Windows, desde la raíz del proyecto, usa dos terminales: `.\scripts\dev-backend.cmd` y `.\scripts\dev-frontend.cmd`. Los iniciadores usan Laravel8001 y Vite5174, evitan `npm.ps1` bloqueado y establecen el origen SPA/Sanctum solo para esos procesos, sin modificar `.env`. El puerto5173 puede estar ocupado por otro proyecto; no detenerlo para iniciar Nexora.
+
+Abre **http://127.0.0.1:5174/registro**, registra tu empresa y crea tu contraseña. No hay cuentas compartidas ni contraseñas predeterminadas. Usa siempre el mismo host (`127.0.0.1`) para la SPA y Laravel. Vite envía `/api` y `/sanctum` al backend mediante proxy y las sesiones usan cookies HttpOnly con protección CSRF.
 
 El backend usa el puerto **8001** porque el 8000 lo ocupa otro proyecto local. Escribe el comando sin una barra `\` al final. Si indica que el puerto ya está ocupado, comprueba si Nexora sigue ejecutándose antes de iniciar otra instancia.
 
