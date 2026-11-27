@@ -83,7 +83,7 @@ Protocolo vigente: modo rápido según AGENTS.md. Código funcional y cambios ag
 | 3.1 | IN_PROGRESS | Kitchen/KDS en A estaciones, B rutas/comandas, C Reverb privado, D estados/tiempos/prioridades/historial. KITCHEN.md | Pedidos/POS; 3.0-EMP; 3.1-PREP |
 | 3.1-A | COMPLETED | Estaciones existentes verificadas: creación/archivo/móvil y lector/403 Chromium2 cubiertos entre ejecuciones. Prueba de cambio de sesión espera logout y envía Origin a Sanctum. Cobertura backend/SQL/build previa conservada | Identidad, sucursales e idempotencia existentes |
 | 3.1-B | COMPLETED | Rutas/snapshots/comandas incrementales, estados sincronizados y cancelación; permisos/revisión/UUID/FK. Native8 cubiertos, SQL8/120, paginación1/27 y Chromium flujo real1 aprobados; migración000029 aplicada/DDL. Tablero consulta real5s, no Reverb todavía | 3.1-A; pedidos |
-| 3.1-C | IN_PROGRESS | Reverb privado por tenant/sucursal, autorización y reconexión con estado real | 3.1-B |
+| 3.1-C | COMPLETED | Reverb privado tenant/sucursal, auth Sanctum/CSRF/MFA/bloqueo/BranchAccess, avisos tras commit y recuperacion API; fallback5s. Backend16 dirigidos y Chromium real1/40.5s aprobados. Activacion local/productiva exige configurar/iniciar Reverb; no se modifica .env de usuario | 3.1-B |
 | 3.1-D | PENDING | Estados configurables, prioridad/tiempos/avisos e historial conectado | 3.1-B/C |
 | 3.2 | PENDING | Inventario/kardex/unidades/ajustes/traslados y vencimientos | Catálogo/sucursales |
 | 3.3 | PENDING | Recetas/subrecetas/costos y consumos idempotentes compensables | 3.2 y ventas |

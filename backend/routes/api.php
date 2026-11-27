@@ -15,6 +15,7 @@ use App\Http\Controllers\DiningSessionController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\KitchenController;
+use App\Http\Controllers\KitchenRealtimeController;
 use App\Http\Controllers\KitchenStationController;
 use App\Http\Controllers\MultiFactorController;
 use App\Http\Controllers\OperationsController;
@@ -49,6 +50,8 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/mfa/challenge', [MultiFactorController::class, 'challenge'])->middleware('throttle:mfa-challenge');
     Route::post('auth/mfa/cancel', [MultiFactorController::class, 'cancel']);
     Route::middleware(['auth:sanctum', 'audit.denials', 'mfa.session', 'tenant', 'screen.unlocked'])->group(function () {
+        Route::get('kitchen/realtime', [KitchenRealtimeController::class, 'show']);
+        Route::post('broadcasting/auth', [KitchenRealtimeController::class, 'authorize'])->middleware('throttle:60,1');
         Route::get('auth/mfa', [MultiFactorController::class, 'show']);
         Route::post('auth/mfa/setup', [MultiFactorController::class, 'begin'])->middleware('throttle:credentials');
         Route::post('auth/mfa/enable', [MultiFactorController::class, 'enable'])->middleware('throttle:mfa-manage');

@@ -13,7 +13,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { ErrorNotice, Loading } from '../../components/ui'
-import { useCan } from '../auth/SessionProvider'
+import { useCan, useSession } from '../auth/SessionProvider'
 import { useOperationContext } from '../operations/OperationalBranchPicker'
 import { useOperation } from '../operations/useOperation'
 import { OperationNotice } from '../operations/OperationNotice'
@@ -31,6 +31,7 @@ import {
 } from '../studio/kitchen-layout'
 import '../studio/kitchen-layout.css'
 import { preparationLabels } from './TableKitchen'
+import { useKitchenRealtime } from './useKitchenRealtime'
 const labels = {
   new: 'Nuevas',
   preparing: 'En preparación',
@@ -41,8 +42,10 @@ const labels = {
 export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLayout }) {
   const context = useOperationContext()
   const can = useCan()
+  const { screenBlocked } = useSession()
   const [branch, setBranch] = useState('')
   const branchId = branch || String(context.data?.branches.find((b) => b.is_active)?.id ?? '')
+  const realtime = useKitchenRealtime(branchId, !!studioPreview)
   const [station, setStation] = useState('')
   const [history, setHistory] = useState(false)
   const [page, setPage] = useState(1)
@@ -63,7 +66,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
   }, [])
   const stations = useQuery({
     queryKey: ['kitchen-stations', 'board', branchId],
-    enabled: !!branchId,
+    enabled: !!branchId && !screenBlocked,
     queryFn: () =>
       api<CatalogPage<{ id: number; name: string }>>(
         `kitchen-stations?branch_id=${branchId}&per_page=50`,
@@ -71,7 +74,7 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
   })
   const query = useQuery({
     queryKey: ['kitchen-tickets', branchId, station, history, page],
-    enabled: !!branchId,
+    enabled: !!branchId && !screenBlocked,
     queryFn: () =>
       api<
         CatalogPage<KitchenTicket> & {
@@ -121,7 +124,9 @@ export function KitchenBoardPage({ studioPreview }: { studioPreview?: KitchenLay
               ? 'Cargando cocina…'
               : studioPreview
                 ? 'Vista previa · sin actualización automática'
-                : 'Actualización automática · cada 5 s'}
+                : realtime
+                  ? 'Canal privado conectado · respaldo cada 5 s'
+                  : 'Actualización automática · cada 5 s'}
         </span>
         {can('kitchen.manage') && (
           <Link className="kitchen-config" to="/cocina/rutas">

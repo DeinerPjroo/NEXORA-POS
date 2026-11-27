@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Kitchen3.1-C: canales private-kitchen.{tenant}.{branch} exigen Sanctum/CSRF/MFA/pantalla desbloqueada/kitchen.view y sucursal activa autorizada en servidor. Emitir solo refresh=true tras commit de KitchenTicket, nunca snapshots/contactos ni cambios financieros; rollback/replay no emiten. Transporte acotado y fallo conserva comando confirmado; respaldo API5s permanece. Echo consulta API al evento/suscripcion/reconexion y se desconecta al bloquear/cambiar contexto/salir; preview Studio no conecta. Reverb deshabilitado/log no equivale a conexion: indicador solo tras suscripcion real. No eventos cliente ni origen comodin. Prueba Reverb aislada usa NEXORA_E2E_REVERB=1, puerto8086 y e2e.sqlite; nunca credenciales/datos reales. Continuar3.1-D sin duplicar workflow.
+
+
 - Studio4-F cierre del incremento: editores cargados mediante lazy/Suspense dentro de PermissionBoundary; no adelantar descargas administrativas desde Terminal. Preservar aislamiento rol/dispositivo y autorizacion antes del replay de importaciones. A-F implementados; no confundir con entrega estable general ni cerrar pendientes Kitchen/fase3. Continuar3.1-C desde estado existente.
 
 

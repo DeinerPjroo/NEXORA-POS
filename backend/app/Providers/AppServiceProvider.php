@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Domains\Identity\PermissionCatalog;
+use App\Domains\Kitchen\KitchenRealtime;
 use App\Domains\Tenancy\BranchAccess;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\KitchenTicket;
 use App\Models\Product;
 use App\Models\Role;
 use App\Models\User;
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        KitchenTicket::saved([KitchenRealtime::class, 'changed']);
         Gate::policy(Branch::class, BranchPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Category::class, CatalogPolicy::class);

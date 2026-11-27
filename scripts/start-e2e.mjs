@@ -17,9 +17,18 @@ const env = {
   SESSION_DOMAIN: 'null', MAIL_MAILER: 'log', QUEUE_CONNECTION: 'sync', BCRYPT_ROUNDS: '4',
   CATALOG_MEDIA_ROOT: resolve(root, '.runtime/e2e-catalog'),
   CACHE_PREFIX: `nexora-e2e-${randomBytes(8).toString('hex')}-`,
+  ...(process.env.NEXORA_E2E_REVERB === '1' ? {
+    BROADCAST_CONNECTION: 'reverb', REVERB_APP_ID: 'nexora-e2e', REVERB_APP_KEY: 'nexora-e2e-key',
+    REVERB_APP_SECRET: 'nexora-e2e-test-only-secret', REVERB_HOST: '127.0.0.1', REVERB_PORT: '8086',
+    REVERB_SCHEME: 'http', REVERB_SERVER_HOST: '127.0.0.1', REVERB_SERVER_PORT: '8086',
+    REVERB_ALLOWED_ORIGINS: '127.0.0.1',
+  } : { BROADCAST_CONNECTION: 'null' }),
 }
 const migrate = spawnSync('php', ['artisan', 'migrate', '--seed', '--force', '--no-interaction'], { cwd, env, stdio: 'inherit', windowsHide: true })
 if (migrate.status !== 0) process.exit(migrate.status ?? 1)
 const server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', '--port=8011', '--no-reload'], { cwd, env, stdio: 'inherit', windowsHide: true })
+const reverb = process.env.NEXORA_E2E_REVERB === '1'
+  ? spawn('php', ['artisan', 'reverb:start'], { cwd, env, stdio: 'inherit', windowsHide: true }) : null
 server.on('exit', (code) => process.exit(code ?? 0))
-for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.kill())
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { reverb?.kill(); server.kill() })
+process.on('exit', () => reverb?.kill())

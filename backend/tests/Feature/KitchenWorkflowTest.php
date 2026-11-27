@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Identity\PermissionCatalog;
 use App\Domains\Identity\RegisterCompany;
+use App\Domains\Kitchen\KitchenChanged;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
 use App\Models\Branch;
@@ -82,6 +83,56 @@ class KitchenWorkflowTest extends TestCase
     private function state(array $ticket, string $status): array
     {
         return $this->postJson('/api/v1/kitchen-tickets/'.$ticket['id'].'/status', [...$this->key(), 'revision' => $ticket['revision'], 'status' => $status])->assertOk()->json('data');
+    }
+
+    public function test_realtime_invalidation_waits_for_commit_and_is_not_repeated_on_replay(): void
+    {
+        config(['broadcasting.default' => 'reverb']);
+        Event::fake([KitchenChanged::class]);
+        $item = $this->route($this->product(), $this->station());
+        $order = $this->order([$item]);
+        $body = [...$this->key(), 'order_revision' => $order['revision']];
+        DB::beginTransaction();
+        $ticket = $this->postJson('/api/v1/orders/'.$order['id'].'/kitchen-dispatch', $body)->assertCreated()->json('data.tickets.0');
+        Event::assertNotDispatched(KitchenChanged::class);
+        DB::commit();
+        Event::assertDispatchedTimes(KitchenChanged::class, 1);
+        $this->postJson('/api/v1/orders/'.$order['id'].'/kitchen-dispatch', $body)->assertCreated();
+        Event::assertDispatchedTimes(KitchenChanged::class, 1);
+        $this->state($ticket, 'preparing');
+        Event::assertDispatchedTimes(KitchenChanged::class, 2);
+    }
+
+    public function test_realtime_does_not_publish_rolled_back_dispatches(): void
+    {
+        config(['broadcasting.default' => 'reverb']);
+        Event::fake([KitchenChanged::class]);
+        $item = $this->route($this->product(), $this->station());
+        $order = $this->order([$item]);
+        AuditLog::creating(function ($log) {
+            if ($log->action === 'kitchen.dispatched') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $this->postJson('/api/v1/orders/'.$order['id'].'/kitchen-dispatch', [...$this->key(), 'order_revision' => $order['revision']])->assertServerError();
+        Event::assertNotDispatched(KitchenChanged::class);
+        $this->assertDatabaseCount('kitchen_tickets', 0);
+    }
+
+    public function test_realtime_transport_failure_does_not_fail_a_committed_dispatch(): void
+    {
+        config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'test-key',
+            'broadcasting.connections.reverb.secret' => 'test-secret', 'broadcasting.connections.reverb.app_id' => 'test-app',
+            'broadcasting.connections.reverb.options.host' => '127.0.0.1', 'broadcasting.connections.reverb.options.port' => 1,
+            'broadcasting.connections.reverb.options.scheme' => 'http', 'broadcasting.connections.reverb.options.useTLS' => false,
+            'broadcasting.connections.reverb.client_options' => ['connect_timeout' => 0.25, 'timeout' => 0.25]]);
+        $item = $this->route($this->product(), $this->station());
+        $order = $this->order([$item]);
+        $dispatch = $this->send($order);
+        $this->assertCount(1, $dispatch['tickets']);
+        $this->assertDatabaseCount('kitchen_tickets', 1);
+        $this->assertDatabaseCount('sales', 0);
+        $this->getJson('/api/v1/kitchen-tickets?branch_id='.$this->branch)->assertOk()->assertJsonCount(1, 'data');
     }
 
     public function test_delivery_additions_dispatch_only_new_lines_to_the_existing_order(): void
