@@ -139,5 +139,38 @@ test('Cobro en reparto y rendicion parcial sin duplicar pagos ante respuesta per
     (await readApi<{ data: { expected_amount: string } }>(page, `cash/sessions/${cash.id}`)).data
       .expected_amount,
   ).toBe('1030.0000')
+  await modal.getByRole('button', { name: /Diego cobros/ }).click()
+  await modal.getByLabel('Operación con el efectivo').selectOption('refund')
+  await expect(modal.getByLabel('Caja que recibe la rendición')).toHaveCount(0)
+  await modal.getByLabel('Importe devuelto al cliente').fill('40')
+  await modal.getByLabel('Motivo de la devolución').fill('Devolucion fisica confirmada')
+  await modal.getByRole('checkbox').check()
+  const refunds: string[] = []
+  await page.route('**/api/v1/deliveries/collections/*/refund', async (route) => {
+    refunds.push(route.request().postData()!)
+    const response = await route.fetch()
+    if (refunds.length === 1) await route.abort('failed')
+    else await route.fulfill({ response })
+  })
+  await modal.getByRole('button', { name: 'Confirmar devolución desde repartidor' }).click()
+  await expect(modal.getByRole('button', { name: 'Reintentar misma devolución' })).toBeVisible()
+  await expect(modal.getByLabel('Operación con el efectivo')).toBeDisabled()
+  await expect(modal.getByRole('button', { name: 'Volver a cobros pendientes' })).toBeDisabled()
+  await modal.getByRole('button', { name: 'Reintentar misma devolución' }).click()
+  await expect(modal.getByRole('button', { name: /Diego cobros/ })).toBeVisible()
+  expect(refunds).toHaveLength(2)
+  expect(refunds[0]).toBe(refunds[1])
+  expect(
+    (
+      await readApi<{ data: { pending: string }[] }>(
+        page,
+        `deliveries/collections?branch_id=${branch}`,
+      )
+    ).data[0].pending,
+  ).toBe('30.0100')
+  expect(
+    (await readApi<{ data: { expected_amount: string } }>(page, `cash/sessions/${cash.id}`)).data
+      .expected_amount,
+  ).toBe('1030.0000')
   expect(errors).toEqual([])
 })

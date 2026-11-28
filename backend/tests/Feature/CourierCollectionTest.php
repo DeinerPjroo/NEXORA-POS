@@ -186,6 +186,54 @@ class CourierCollectionTest extends TestCase
         $this->assertDatabaseCount('payments', 1);
     }
 
+    public function test_courier_refund_reduces_custody_not_cash_and_cannot_be_returned_twice(): void
+    {
+        $sale = $this->postJson($this->url(), $this->body())->assertCreated()->json('data');
+        $collection = $this->scope(fn () => CourierCollection::firstOrFail());
+        $url = '/api/v1/deliveries/collections/'.$collection->id.'/refund';
+        $body = [...$this->key(), 'sale_revision' => $sale['revision'], 'collection_revision' => 1, 'expected_pending' => '100.01', 'expected_refundable' => '100.01', 'amount' => '40', 'confirmed_handover' => true, 'reason' => 'Devolucion fisica al cliente'];
+        $this->postJson($url, [...$body, 'confirmed_handover' => false])->assertUnprocessable();
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.net_paid_amount', '60.0100')->assertJsonPath('data.balance_due', '0.0000')->assertJsonPath('data.payments.0.custody.pending', '60.0100')->assertJsonPath('data.refunds.0.cash_session_id', null)->assertJsonPath('data.refunds.0.courier_collection_id', $collection->id);
+        $this->postJson($url, $body)->assertOk();
+        $this->postJson($url, [...$body, ...$this->key()])->assertConflict();
+        $this->assertDatabaseCount('sale_refunds', 1);
+        $this->assertDatabaseCount('cash_movements', 0);
+        $cash = $this->openCash();
+        $this->postJson('/api/v1/deliveries/collections/'.$collection->id.'/settle', [...$this->key(), 'collection_revision' => 2, 'expected_pending' => '60.01', 'amount' => '60.01', 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'confirmed_handover' => true, 'reason' => 'Rendicion del remanente'])->assertOk();
+        $this->postJson($url, [...$body, ...$this->key(), 'sale_revision' => $sale['revision'] + 1, 'collection_revision' => 3, 'expected_pending' => '0', 'expected_refundable' => '60.01', 'amount' => '1'])->assertUnprocessable();
+        $this->getJson('/api/v1/cash/sessions/'.$cash['id'])->assertOk()->assertJsonPath('data.expected_amount', '1060.0100');
+        $this->assertDatabaseCount('payments', 1);
+    }
+
+    public function test_courier_refund_permissions_audit_rollback_and_sale_limit(): void
+    {
+        $sale = $this->postJson($this->url(), $this->body())->assertCreated()->json('data');
+        $collection = $this->scope(fn () => CourierCollection::firstOrFail());
+        $url = '/api/v1/deliveries/collections/'.$collection->id.'/refund';
+        $body = [...$this->key(), 'sale_revision' => $sale['revision'], 'collection_revision' => 1, 'expected_pending' => '100.01', 'expected_refundable' => '100.01', 'amount' => '100.02', 'confirmed_handover' => true, 'reason' => 'Devolucion fisica al cliente'];
+        $this->postJson($url, $body)->assertUnprocessable();
+        $body['amount'] = '100.01';
+        $foreign = app(RegisterCompany::class)->execute(['company_name' => 'Otra devolucion', 'business_type' => 'restaurant', 'branch_name' => 'Otra', 'name' => 'Otro', 'email' => 'foreign-custody-refund@example.test', 'password' => 'SeguraNexora123']);
+        $this->actingAs($foreign)->postJson($url, $body)->assertNotFound();
+        $this->actingAs($this->owner);
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'sale.partially_refunded') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $this->postJson($url, $body)->assertServerError();
+        $this->assertDatabaseCount('sale_refunds', 0);
+        $fail = false;
+        $courier = $this->scope(fn () => User::findOrFail($collection->courier_id));
+        $this->actingAs($courier)->postJson($url, $body)->assertForbidden();
+        $this->actingAs($this->owner)->postJson($url, $body)->assertOk()->assertJsonPath('data.status', 'refunded')->assertJsonPath('data.payments.0.custody.pending', '0.0000');
+        $this->owner->all_branches = false;
+        $this->owner->save();
+        $this->actingAs($this->owner->fresh())->postJson($url, $body)->assertNotFound();
+        $this->assertDatabaseCount('cash_movements', 0);
+    }
+
     public function test_ordinary_checkout_cannot_be_forged_into_courier_custody(): void
     {
         $cash = $this->openCash();

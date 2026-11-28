@@ -8,6 +8,7 @@ import { OperationNotice } from '../operations/OperationNotice'
 import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import type { CashSession } from '../operations/types'
+import { useCan } from '../auth/SessionProvider'
 
 type Collection = {
   id: number
@@ -19,6 +20,8 @@ type Collection = {
   amount: string
   pending: string
   revision: number
+  sale_revision: number
+  refundable: string
 }
 export function CourierRemittances({
   branchId,
@@ -81,6 +84,8 @@ function SettleCollection({
   onClose: () => void
 }) {
   const client = useQueryClient()
+  const can = useCan()
+  const [refund, setRefund] = useState(false)
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -90,19 +95,22 @@ function SettleCollection({
     queryFn: () =>
       api<CatalogPage<CashSession>>(`cash/sessions?branch_id=${branchId}&status=open&per_page=50`),
   })
-  const operation = useOperation(`deliveries/collections/${collection.id}/settle`, async () => {
-    await Promise.all(
-      [
-        'courier-collections',
-        'cash-sessions',
-        'cash-session',
-        'cash-movements',
-        'sales',
-        'sale',
-      ].map((key) => client.invalidateQueries({ queryKey: [key] })),
-    )
-    onClose()
-  })
+  const operation = useOperation(
+    `deliveries/collections/${collection.id}/${refund ? 'refund' : 'settle'}`,
+    async () => {
+      await Promise.all(
+        [
+          'courier-collections',
+          'cash-sessions',
+          'cash-session',
+          'cash-movements',
+          'sales',
+          'sale',
+        ].map((key) => client.invalidateQueries({ queryKey: [key] })),
+      )
+      onClose()
+    },
+  )
   return (
     <div className="form-stack">
       <strong>
@@ -112,29 +120,55 @@ function SettleCollection({
       <ErrorNotice error={operation.error || sessions.error} />
       <OperationNotice uncertain={operation.uncertain} />
       <fieldset className="form-stack" disabled={operation.locked}>
-        <Field label="Caja que recibe la rendición">
-          <select
-            value={session?.id ?? ''}
-            onChange={(event) => {
-              const selected = sessions.data?.data.find(
-                (row) =>
-                  String(row.id) === event.target.value && row.currency === collection.currency,
-              )
-              setSession(selected ? structuredClone(selected) : null)
-              setConfirmed(false)
-            }}
-          >
-            <option value="">Selecciona una caja abierta</option>
-            {sessions.data?.data
-              .filter((row) => row.currency === collection.currency)
-              .map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.register_name ?? 'Caja'} · Sesión #{row.id}
-                </option>
-              ))}
-          </select>
-        </Field>
-        <Field label="Importe recibido en caja">
+        {can('sales.refund') && (
+          <Field label="Operación con el efectivo">
+            <select
+              value={refund ? 'refund' : 'settle'}
+              onChange={(e) => {
+                setRefund(e.target.value === 'refund')
+                setAmount('')
+                setConfirmed(false)
+              }}
+            >
+              <option value="settle">Ingresar efectivo a caja</option>
+              <option value="refund">Devolver al cliente desde el repartidor</option>
+            </select>
+          </Field>
+        )}
+        {refund && (
+          <p>
+            Confirma una devolución física al cliente desde este cobro. Reduce lo retenido por el
+            repartidor; no retira dinero de caja. Devolvible de la venta:{' '}
+            {formatMoney(collection.refundable, collection.currency)}.
+          </p>
+        )}
+        {!refund && (
+          <>
+            <Field label="Caja que recibe la rendición">
+              <select
+                value={session?.id ?? ''}
+                onChange={(event) => {
+                  const selected = sessions.data?.data.find(
+                    (row) =>
+                      String(row.id) === event.target.value && row.currency === collection.currency,
+                  )
+                  setSession(selected ? structuredClone(selected) : null)
+                  setConfirmed(false)
+                }}
+              >
+                <option value="">Selecciona una caja abierta</option>
+                {sessions.data?.data
+                  .filter((row) => row.currency === collection.currency)
+                  .map((row) => (
+                    <option key={row.id} value={row.id}>
+                      {row.register_name ?? 'Caja'} · Sesión #{row.id}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          </>
+        )}
+        <Field label={refund ? 'Importe devuelto al cliente' : 'Importe recibido en caja'}>
           <input
             inputMode="decimal"
             value={amount}
@@ -144,7 +178,7 @@ function SettleCollection({
             }}
           />
         </Field>
-        <Field label="Motivo de la rendición">
+        <Field label={refund ? 'Motivo de la devolución' : 'Motivo de la rendición'}>
           <textarea
             value={reason}
             maxLength={250}
@@ -157,7 +191,9 @@ function SettleCollection({
             checked={confirmed}
             onChange={(event) => setConfirmed(event.target.checked)}
           />
-          Confirmo que caja recibió físicamente este efectivo
+          {refund
+            ? 'Confirmo que el repartidor devolvió físicamente este efectivo al cliente'
+            : 'Confirmo que caja recibió físicamente este efectivo'}
         </label>
       </fieldset>
       <div className="form-actions">
@@ -169,21 +205,31 @@ function SettleCollection({
           disabled={
             operation.isPending ||
             (!operation.uncertain &&
-              (!confirmed || !session || !amount || reason.trim().length < 3))
+              (!confirmed || (!refund && !session) || !amount || reason.trim().length < 3))
           }
           onClick={() =>
             operation.send({
               collection_revision: collection.revision,
               expected_pending: collection.pending.replace(/(\.\d{2})00$/, '$1'),
               amount,
-              cash_session_id: session?.id,
-              cash_revision: session?.revision,
+              ...(refund
+                ? {
+                    sale_revision: collection.sale_revision,
+                    expected_refundable: collection.refundable.replace(/(\.\d{2})00$/, '$1'),
+                  }
+                : { cash_session_id: session?.id, cash_revision: session?.revision }),
               confirmed_handover: confirmed,
               reason: reason.trim(),
             })
           }
         >
-          {operation.uncertain ? 'Reintentar misma rendición' : 'Confirmar ingreso a caja'}
+          {operation.uncertain
+            ? refund
+              ? 'Reintentar misma devolución'
+              : 'Reintentar misma rendición'
+            : refund
+              ? 'Confirmar devolución desde repartidor'
+              : 'Confirmar ingreso a caja'}
         </button>
       </div>
     </div>

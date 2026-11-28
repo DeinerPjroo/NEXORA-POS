@@ -96,7 +96,10 @@ export function SaleReceipt({ sale }: { sale: Sale }) {
               <p>{refund.reason}</p>
               {refund.reference && <p>Referencia: {refund.reference}</p>}
               <small>
-                {date(refund.created_at)} · Sesión de caja #{refund.cash_session_id}
+                {date(refund.created_at)} ·{' '}
+                {refund.courier_collection_id
+                  ? 'Devuelto desde custodia del repartidor'
+                  : `Sesión de caja #${refund.cash_session_id}`}
               </small>
             </div>
           ))}

@@ -122,7 +122,8 @@ export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
     reason: string
     reference: string | null
     created_at: string
-    cash_session_id: number
+    cash_session_id: number | null
+    courier_collection_id?: number | null
   } | null
 }
 export type CashOption = { id: number; name: string; revision: number; currency: string }

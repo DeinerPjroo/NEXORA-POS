@@ -40,7 +40,20 @@ final class CourierCollection extends Model
         foreach ($this->settlements as $settlement) {
             $paid = bcadd($paid, $settlement->amount, 4);
         }
+        foreach ($this->custodyRefunds as $refund) {
+            $paid = bcadd($paid, $refund->amount, 4);
+        }
 
         return bcsub($this->payment->amount, $paid, 4);
+    }
+
+    public function custodyRefunds()
+    {
+        return $this->hasMany(SaleRefund::class, 'courier_collection_id');
+    }
+
+    public function revision(): int
+    {
+        return $this->settlements->count() + $this->custodyRefunds->count() + 1;
     }
 }

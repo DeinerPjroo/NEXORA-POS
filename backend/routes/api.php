@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
         Route::post('deliveries/{orderDelivery}/collect-courier', [CourierCollectionController::class, 'collect']);
         Route::get('deliveries/collections', [CourierCollectionController::class, 'index']);
         Route::post('deliveries/collections/{courierCollection}/settle', [CourierCollectionController::class, 'settle']);
+        Route::post('deliveries/collections/{courierCollection}/refund', [CourierCollectionController::class, 'refund']);
         Route::get('deliveries/payment-options', [DeliveryController::class, 'paymentOptions']);
         Route::post('deliveries/{orderDelivery}/payment-plan', [DeliveryController::class, 'planPayment']);
         Route::get('deliveries/tariff-context', [DeliveryTariffController::class, 'context']);

@@ -79,6 +79,7 @@ try {
                 'courier.cash' => app(TransferCourierCash::class)->execute($actor, (int) $resource, $data),
                 'courier.collect' => app(CollectCash::class)->execute($actor, Order::findOrFail(OrderDelivery::findOrFail($resource)->order_id), [...$data, 'discount_amount' => '0'], (int) $resource),
                 'courier.settle' => app(CourierCollections::class)->settle($actor, CourierCollection::findOrFail($resource), $data),
+                'courier.refund' => app(PartialRefund::class)->execute($actor, CourierCollection::findOrFail($resource)->sale, $data, (int) $resource),
                 'order.append' => app(CreateOrder::class)->execute($actor, $data),
                 'order.item.change' => app(ChangeDeliveryItem::class)->execute($actor, Order::findOrFail($resource), $data),
                 'studio.save' => app(SavePosLayout::class)->execute($actor, $data),

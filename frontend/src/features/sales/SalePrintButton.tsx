@@ -153,6 +153,7 @@ export function ThermalSaleReceipt({ sale, width }: { sale: Sale; width: string 
           {sale.refunds.map((refund) => (
             <p key={refund.id}>
               {date(refund.created_at)} · {money(refund.amount)} · {refund.reason}
+              {refund.courier_collection_id ? ' · Devuelto desde custodia del repartidor' : ''}
             </p>
           ))}
           <p>Devuelto: {money(sale.refunded_amount)}</p>

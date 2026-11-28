@@ -985,3 +985,21 @@ alter table `courier_settlements` add constraint `courier_settlement_movement_fk
 
 alter table `courier_settlements` add constraint `courier_settlements_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `sale_refunds` drop foreign key `sale_refunds_session_fk`;
+
+alter table `sale_refunds` drop foreign key `sale_refunds_movement_fk`;
+
+alter table `sale_refunds` modify `cash_session_id` bigint unsigned null;
+
+alter table `courier_collections` add unique `courier_collection_refund_identity`(`tenant_id`, `sale_id`, `payment_id`, `id`);
+
+alter table `sale_refunds` add `courier_collection_id` bigint unsigned null;
+
+alter table `sale_refunds` add `confirmed_courier_handover` tinyint(1) null;
+
+alter table `sale_refunds` add constraint `sale_refunds_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add constraint `sale_refunds_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `sale_refunds` add constraint `refund_courier_collection_fk` foreign key (`tenant_id`, `sale_id`, `payment_id`, `courier_collection_id`) references `courier_collections` (`tenant_id`, `sale_id`, `payment_id`, `id`) on delete restrict;
+

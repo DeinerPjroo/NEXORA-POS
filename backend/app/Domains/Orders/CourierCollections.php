@@ -42,9 +42,9 @@ final class CourierCollections
         }
 
         return app(IdempotentOperation::class)->run($actor, 'courier.settlement.'.$collection->id, $data, CourierSettlement::class, function ($data) use ($actor, $collection) {
-            $collection = CourierCollection::whereKey($collection->id)->lockForUpdate()->firstOrFail()->load('payment', 'sale', 'settlements');
+            $collection = CourierCollection::whereKey($collection->id)->lockForUpdate()->firstOrFail()->load('payment', 'sale', 'settlements', 'custodyRefunds');
             $pending = $collection->pending();
-            abort_unless($collection->settlements->count() + 1 === (int) $data['collection_revision'] && bccomp($pending, $data['expected_pending'], 4) === 0, 409, 'La rendición cambió. Actualiza el saldo pendiente.');
+            abort_unless($collection->revision() === (int) $data['collection_revision'] && bccomp($pending, $data['expected_pending'], 4) === 0, 409, 'La rendición cambió. Actualiza el saldo pendiente.');
             $amount = Money::normalize($data['amount']);
             abort_unless(bccomp($amount, '0', 4) > 0 && bccomp($amount, $pending, 4) <= 0, 422, 'El importe debe ser positivo y no superar el efectivo pendiente.');
             abort_unless(filter_var($data['confirmed_handover'] ?? false, FILTER_VALIDATE_BOOLEAN), 422, 'Confirma la entrega física de efectivo.');

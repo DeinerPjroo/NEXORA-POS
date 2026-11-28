@@ -8,9 +8,11 @@ use App\Domains\Tenancy\TenantContext;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\CourierCollection;
+use App\Models\CourierSettlement;
 use App\Models\OrderDelivery;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\SaleRefund;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Tests\SqlConcurrencyTestCase;
@@ -55,5 +57,12 @@ class CourierCollectionConcurrencyTest extends SqlConcurrencyTestCase
         $this->assertDatabaseCount('courier_settlements', 1);
         $this->assertDatabaseCount('payments', 1);
         $this->assertDatabaseHas('cash_sessions', ['id' => $cash['id'], 'expected_amount' => '1060.0000']);
+        $refund = ['operation' => 'courier.refund', 'actor_id' => $actor->id, 'resource_id' => $collection->id, 'data' => [...$key(), 'sale_revision' => 2, 'expected_refundable' => '100.01', 'collection_revision' => 2, 'expected_pending' => '40.01', 'confirmed_handover' => true, 'reason' => 'Devolucion desde custodia concurrente', 'refunds' => [['payment_id' => $collection->payment_id, 'amount' => '30']]]];
+        $settle = ['operation' => 'courier.settle', 'actor_id' => $actor->id, 'resource_id' => $collection->id, 'data' => [...$key(), 'collection_revision' => 2, 'expected_pending' => '40.01', 'amount' => '30', 'cash_session_id' => $cash['id'], 'cash_revision' => 2, 'confirmed_handover' => true, 'reason' => 'Rendicion concurrente']];
+        $accepted = array_column($this->race([$refund, $settle]), 'accepted');
+        sort($accepted);
+        $this->assertSame([false, true], $accepted);
+        $this->assertSame('10.0100', app(TenantContext::class)->run($actor->tenant_id, fn () => CourierCollection::firstOrFail()->pending()));
+        $this->assertSame(2, CourierSettlement::withoutGlobalScopes()->count() + SaleRefund::withoutGlobalScopes()->count());
     }
 }
