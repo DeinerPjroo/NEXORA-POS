@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommercialDashboardController;
 use App\Http\Controllers\ContextPriceController;
 use App\Http\Controllers\CourierCashController;
+use App\Http\Controllers\CourierCollectionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\DeliveryTariffController;
@@ -73,6 +74,9 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/commercial-dashboard', [CommercialDashboardController::class, 'show']);
         Route::get('operations/context', [OperationsController::class, 'context']);
         Route::get('deliveries', [DeliveryController::class, 'index']);
+        Route::post('deliveries/{orderDelivery}/collect-courier', [CourierCollectionController::class, 'collect']);
+        Route::get('deliveries/collections', [CourierCollectionController::class, 'index']);
+        Route::post('deliveries/collections/{courierCollection}/settle', [CourierCollectionController::class, 'settle']);
         Route::get('deliveries/payment-options', [DeliveryController::class, 'paymentOptions']);
         Route::post('deliveries/{orderDelivery}/payment-plan', [DeliveryController::class, 'planPayment']);
         Route::get('deliveries/tariff-context', [DeliveryTariffController::class, 'context']);

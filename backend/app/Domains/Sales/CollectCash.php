@@ -13,9 +13,14 @@ use Illuminate\Validation\ValidationException;
 
 final class CollectCash
 {
-    public function execute(User $actor, Order $order, array $data): Sale
+    public function execute(User $actor, Order $order, array $data, ?int $custodyDeliveryId = null): Sale
     {
         Gate::authorize('sales.collect');
+        if ($custodyDeliveryId !== null) {
+            Gate::authorize('orders.view');
+            Gate::authorize('orders.manage');
+            $data['custody_delivery_id'] = $custodyDeliveryId;
+        }
         if (bccomp(($data['discount_type'] ?? 'fixed') === 'percentage' ? $data['discount_value'] : $data['discount_amount'], '0', 4) > 0) {
             Gate::authorize('sales.discount');
         }
@@ -53,7 +58,7 @@ final class CollectCash
             $settings->save();
             $order->revision++;
             $order->save();
-            Audit::record($sale->status === 'paid' ? 'sale.paid' : 'sale.partially_paid', 'Se registró una venta con pago declarado por el operador.', $actor, ['sale_id' => $sale->id, 'order_id' => $order->id, 'total' => $sale->total, 'provenance' => 'operator', 'discount_type' => $sale->discount_type, 'discount_value' => $sale->discount_value, 'tip_amount' => $sale->tip_amount, 'tip_confirmed' => $sale->tip_confirmed, 'tip_tax_mode' => $sale->tip_tax_mode, 'account_count' => $sale->accounts->count(), 'initial_account_number' => $account?->number]);
+            Audit::record($sale->status === 'paid' ? 'sale.paid' : 'sale.partially_paid', 'Se registró una venta con pago declarado por el operador.', $actor, ['sale_id' => $sale->id, 'order_id' => $order->id, 'total' => $sale->total, 'provenance' => isset($data['custody_delivery_id']) ? 'courier_cash' : 'operator', 'discount_type' => $sale->discount_type, 'discount_value' => $sale->discount_value, 'tip_amount' => $sale->tip_amount, 'tip_confirmed' => $sale->tip_confirmed, 'tip_tax_mode' => $sale->tip_tax_mode, 'account_count' => $sale->accounts->count(), 'initial_account_number' => $account?->number]);
 
             return $sale;
         });

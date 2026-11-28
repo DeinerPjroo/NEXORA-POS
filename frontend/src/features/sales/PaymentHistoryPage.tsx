@@ -220,7 +220,9 @@ export function PaymentHistoryPage() {
                       <td>
                         {date(entry.created_at)}
                         <small className="sale-order-id">
-                          {can('cash.view') ? (
+                          {entry.cash_session_id === null ? (
+                            'Efectivo en custodia de repartidor'
+                          ) : can('cash.view') ? (
                             <Link
                               className="text-button"
                               to={`/caja/sesiones/${entry.cash_session_id}`}

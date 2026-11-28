@@ -23,6 +23,11 @@ final class Payment extends Model
         return ['amount' => 'decimal:4', 'received_amount' => 'decimal:4', 'change_amount' => 'decimal:4', 'created_at' => 'datetime'];
     }
 
+    public function courierCollection(): HasOne
+    {
+        return $this->hasOne(CourierCollection::class);
+    }
+
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);

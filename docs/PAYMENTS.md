@@ -1,5 +1,7 @@
 # Abonos y pagos mixtos manuales (0.7)
 
+Desde 3.DEL-4B2, el cobro inicial completo en efectivo recibido por repartidor reutiliza CollectCash/RecordPayments, con provenance=courier_cash y cash_session_id/cash_movement_id null. CourierCollection conserva el destino; rendir parcial o totalmente crea ingreso de caja y registro append-only, sin otro pago. Esta ruta no admite abonos, ajustes ni division; los flujos ordinarios conservan su comportamiento. Se requiere confirmacion fisica y autorizacion de gestor/cobro; el rol Repartidor no cobra por defecto.
+
 Actualización 0.9: devoluciones parciales y remanentes por pago en [REFUNDS.md](REFUNDS.md). Se conserva el total y no se genera deuda nueva por devolver. Una venta partially_refunded con saldo positivo permite agregar pagos.
 
 Actualización 0.10: [SPLIT_ACCOUNTS.md](SPLIT_ACCOUNTS.md) añade partes iguales antes del primer pago. Cada línea se asigna a una cuenta de esa venta y queda limitada a su saldo además del saldo global. Sin división, las asignaciones permanecen null y las API anteriores funcionan igual.

@@ -112,6 +112,12 @@ export function ThermalSaleReceipt({ sale, width }: { sale: Sale; width: string 
         <h2>Pagos registrados</h2>
         {sale.payments.map((payment) => (
           <div className="thermal-payment" key={payment.id}>
+            {payment.custody && (
+              <p>
+                Recibido por repartidor: {payment.custody.courier_name}. Pendiente de ingresar a
+                caja: {money(payment.custody.pending)}.
+              </p>
+            )}
             <strong>
               {payment.method_name}: {money(payment.amount)}
             </strong>

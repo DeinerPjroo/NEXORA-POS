@@ -98,9 +98,10 @@ export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
   combos?: import('../operations/types').OrderCombo[]
   reference?: string | null
   payment?: {
+    custody?: { collection_id: number; courier_name: string; pending: string } | null
     id: number
     account_id: number | null
-    cash_session_id: number
+    cash_session_id: number | null
     amount: string
     refunded_amount: string
     refundable_amount: string
@@ -109,7 +110,7 @@ export type Sale = Omit<SaleQuote, 'order_revision' | 'accounts_preview'> & {
     method_kind: 'cash' | 'non_cash'
     payment_method_id: number
     method_revision: number
-    provenance: 'operator'
+    provenance: 'operator' | 'courier_cash'
     reference: string | null
     received_amount: string
     change_amount: string

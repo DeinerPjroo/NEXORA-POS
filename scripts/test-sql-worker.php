@@ -1,5 +1,30 @@
 <?php
 
+use App\Domains\Cash\CashOperations;
+use App\Domains\Identity\MultiFactor;
+use App\Domains\Orders\ChangeDeliveryItem;
+use App\Domains\Orders\CourierCollections;
+use App\Domains\Orders\CreateOrder;
+use App\Domains\Orders\TransferCourierCash;
+use App\Domains\Sales\AddPayments;
+use App\Domains\Sales\CollectCash;
+use App\Domains\Sales\PartialRefund;
+use App\Domains\Studio\ChangeStudioVersion;
+use App\Domains\Studio\SavePosLayout;
+use App\Domains\Tenancy\TenantContext;
+use App\Models\CashRegister;
+use App\Models\CourierCollection;
+use App\Models\Order;
+use App\Models\OrderDelivery;
+use App\Models\Sale;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
 // Worker de concurrencia SQL: jamás permite la base de trabajo ni imprime credenciales.
 $database = getenv('DB_DATABASE');
 if (PHP_SAPI !== 'cli' || getenv('NEXORA_SQL_TEST_WORKER') !== '1' || ! is_string($database)
@@ -13,7 +38,7 @@ $app = require __DIR__.'/../backend/bootstrap/app.php';
 if ($app->configurationIsCached()) {
     exit(2);
 }
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 if (! in_array(config('database.default'), ['mysql', 'mariadb'], true)
     || config('database.connections.'.config('database.default').'.database') !== $database
     || config('database.connections.'.config('database.default').'.url')) {
@@ -38,25 +63,27 @@ try {
     $input = json_decode(stream_get_contents(STDIN, 4096), true, 512, JSON_THROW_ON_ERROR);
     $operation = $input['operation'] ?? 'mfa.challenge';
     if ($operation === 'mfa.challenge') {
-        $user = app(App\Domains\Identity\MultiFactor::class)->challenge($input['pending'], $input['data']);
+        $user = app(MultiFactor::class)->challenge($input['pending'], $input['data']);
         $result = ['accepted' => $user !== null, 'status' => $user ? 200 : 422];
     } else {
-        $actor = App\Models\User::findOrFail($input['actor_id']);
-        $result = app(App\Domains\Tenancy\TenantContext::class)->run($actor->tenant_id, function () use ($input, $operation, $actor) {
-            Illuminate\Support\Facades\Auth::guard('web')->setUser($actor);
+        $actor = User::findOrFail($input['actor_id']);
+        $result = app(TenantContext::class)->run($actor->tenant_id, function () use ($input, $operation, $actor) {
+            Auth::guard('web')->setUser($actor);
             $resource = $input['resource_id'];
             $data = $input['data'];
             $model = match ($operation) {
-                'sale.collect' => app(App\Domains\Sales\CollectCash::class)->execute($actor, App\Models\Order::findOrFail($resource), $data),
-                'sale.payments' => app(App\Domains\Sales\AddPayments::class)->execute($actor, App\Models\Sale::findOrFail($resource), $data),
-                'sale.refunds' => app(App\Domains\Sales\PartialRefund::class)->execute($actor, App\Models\Sale::findOrFail($resource), $data),
-                'cash.open' => app(App\Domains\Cash\CashOperations::class)->open($actor, App\Models\CashRegister::findOrFail($resource), $data),
-                'courier.cash' => app(App\Domains\Orders\TransferCourierCash::class)->execute($actor, (int) $resource, $data),
-                'order.append' => app(App\Domains\Orders\CreateOrder::class)->execute($actor, $data),
-                'order.item.change' => app(App\Domains\Orders\ChangeDeliveryItem::class)->execute($actor, App\Models\Order::findOrFail($resource), $data),
-                'studio.save' => app(App\Domains\Studio\SavePosLayout::class)->execute($actor, $data),
-                'studio.publish' => app(App\Domains\Studio\SavePosLayout::class)->execute($actor, $data, true),
-                'studio.restore' => app(App\Domains\Studio\ChangeStudioVersion::class)->execute($actor, $data),
+                'sale.collect' => app(CollectCash::class)->execute($actor, Order::findOrFail($resource), $data),
+                'sale.payments' => app(AddPayments::class)->execute($actor, Sale::findOrFail($resource), $data),
+                'sale.refunds' => app(PartialRefund::class)->execute($actor, Sale::findOrFail($resource), $data),
+                'cash.open' => app(CashOperations::class)->open($actor, CashRegister::findOrFail($resource), $data),
+                'courier.cash' => app(TransferCourierCash::class)->execute($actor, (int) $resource, $data),
+                'courier.collect' => app(CollectCash::class)->execute($actor, Order::findOrFail(OrderDelivery::findOrFail($resource)->order_id), [...$data, 'discount_amount' => '0'], (int) $resource),
+                'courier.settle' => app(CourierCollections::class)->settle($actor, CourierCollection::findOrFail($resource), $data),
+                'order.append' => app(CreateOrder::class)->execute($actor, $data),
+                'order.item.change' => app(ChangeDeliveryItem::class)->execute($actor, Order::findOrFail($resource), $data),
+                'studio.save' => app(SavePosLayout::class)->execute($actor, $data),
+                'studio.publish' => app(SavePosLayout::class)->execute($actor, $data, true),
+                'studio.restore' => app(ChangeStudioVersion::class)->execute($actor, $data),
                 default => throw new LogicException('Operación de prueba no permitida.'),
             };
 
@@ -64,13 +91,13 @@ try {
         });
     }
     echo json_encode($result, JSON_THROW_ON_ERROR).PHP_EOL;
-} catch (Illuminate\Validation\ValidationException $failure) {
+} catch (ValidationException $failure) {
     echo json_encode(['accepted' => false, 'status' => 422], JSON_THROW_ON_ERROR).PHP_EOL;
-} catch (Illuminate\Auth\Access\AuthorizationException $failure) {
+} catch (AuthorizationException $failure) {
     echo json_encode(['accepted' => false, 'status' => $failure->status() ?? 403], JSON_THROW_ON_ERROR).PHP_EOL;
-} catch (Illuminate\Database\Eloquent\ModelNotFoundException $failure) {
+} catch (ModelNotFoundException $failure) {
     echo json_encode(['accepted' => false, 'status' => 404], JSON_THROW_ON_ERROR).PHP_EOL;
-} catch (Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $failure) {
+} catch (HttpExceptionInterface $failure) {
     echo json_encode(['accepted' => false, 'status' => $failure->getStatusCode()], JSON_THROW_ON_ERROR).PHP_EOL;
 } catch (Throwable $failure) {
     fwrite(STDERR, get_class($failure).PHP_EOL);

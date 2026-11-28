@@ -1,5 +1,7 @@
 # Nexora POS
 
+- Domicilios3.DEL-4B2: cobro inicial completo en efectivo con CollectCash/RecordPayments/SaleTotals, sin descuentos/propina/division/abonos en esta ruta. Destino courier_cash interno, nunca confiado al cliente; payment sin caja/movimiento y CourierCollection append-only con FK tenant/branch/order/delivery/sale/payment/courier. orders.view/manage + sales.collect, entrega en reparto/entregada, revisiones/UUID/confirmacion/motivo/auditoria atomicos. Rendicion parcial/total usa CashLedger con caja autorizada abierta, revision/saldo esperado y confirmacion fisica; no crea otro pago. Fondos de cambio separados. Devolucion desde caja fisica no reduce efectivo bruto aun retenido por repartidor; compensaciones directamente desde custodia pendientes en4C. Esta regla actualiza los pendientes historicos4B2; no cerrar padre3.DEL-4 ni fase3.
+
 Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaurante».
 
 ## Requisito permanente de interfaces

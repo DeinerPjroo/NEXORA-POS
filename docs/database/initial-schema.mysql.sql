@@ -945,3 +945,43 @@ alter table `order_deliveries` add `payment_expectation` json null;
 
 alter table `order_deliveries` add constraint `delivery_expected_method_fk` foreign key (`tenant_id`, `expected_payment_method_id`) references `payment_methods` (`tenant_id`, `id`) on delete restrict;
 
+alter table `payments` drop foreign key `payments_session_fk`;
+
+alter table `payments` drop foreign key `payments_movement_fk`;
+
+alter table `payments` modify `cash_session_id` bigint unsigned null;
+
+alter table `payments` add constraint `payments_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `payments` add constraint `payments_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `sales` add unique `sales_collection_order_identity`(`tenant_id`, `order_id`, `id`);
+
+create table `courier_collections` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `order_id` bigint unsigned not null, `order_delivery_id` bigint unsigned not null, `sale_id` bigint unsigned not null, `payment_id` bigint unsigned not null, `courier_id` bigint unsigned not null, `confirmed_received` tinyint(1) not null, `reason` varchar(250) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `courier_collections` add unique `courier_collection_payment_unique`(`tenant_id`, `payment_id`);
+
+alter table `courier_collections` add unique `courier_collection_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `courier_collections` add constraint `courier_collection_sale_branch_fk` foreign key (`tenant_id`, `branch_id`, `sale_id`) references `sales` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `courier_collections` add constraint `courier_collection_sale_order_fk` foreign key (`tenant_id`, `order_id`, `sale_id`) references `sales` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `courier_collections` add constraint `courier_collection_payment_fk` foreign key (`tenant_id`, `sale_id`, `payment_id`) references `payments` (`tenant_id`, `sale_id`, `id`) on delete restrict;
+
+alter table `courier_collections` add constraint `courier_collection_delivery_fk` foreign key (`tenant_id`, `order_id`, `order_delivery_id`) references `order_deliveries` (`tenant_id`, `order_id`, `id`) on delete restrict;
+
+alter table `courier_collections` add constraint `courier_collections_tenant_id_courier_id_foreign` foreign key (`tenant_id`, `courier_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `courier_settlements` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `courier_collection_id` bigint unsigned not null, `cash_session_id` bigint unsigned not null, `cash_movement_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `amount` decimal(19, 4) not null, `reason` varchar(250) not null, `confirmed_handover` tinyint(1) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `courier_settlements` add unique `courier_settlement_movement_unique`(`tenant_id`, `cash_movement_id`);
+
+alter table `courier_settlements` add constraint `courier_settlement_collection_fk` foreign key (`tenant_id`, `branch_id`, `courier_collection_id`) references `courier_collections` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `courier_settlements` add constraint `courier_settlement_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `courier_settlements` add constraint `courier_settlement_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `courier_settlements` add constraint `courier_settlements_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

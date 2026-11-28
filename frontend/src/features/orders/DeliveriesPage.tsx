@@ -27,6 +27,8 @@ import { DeliveryDetail } from './DeliveryDetail'
 import { CourierAvailability, courierAvailabilityLabel, type Courier } from './CourierAvailability'
 import { CourierCash } from './CourierCash'
 import { DeliveryPaymentPlan } from './DeliveryPaymentPlan'
+import { CourierCheckout } from './CourierCheckout'
+import { CourierRemittances } from './CourierRemittances'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
@@ -79,6 +81,11 @@ export function DeliveriesPage({
   const [couriersOpen, setCouriersOpen] = useState(false)
   const [cashCustodyOpen, setCashCustodyOpen] = useState(false)
   const [planningPayment, setPlanningPayment] = useState<Delivery | null>(null)
+  const [courierCheckout, setCourierCheckout] = useState<{
+    delivery: Delivery
+    order: Order
+  } | null>(null)
+  const [remittancesOpen, setRemittancesOpen] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
   const busy =
     !!checkout ||
@@ -88,7 +95,9 @@ export function DeliveriesPage({
     !!changingItem ||
     couriersOpen ||
     cashCustodyOpen ||
-    !!planningPayment
+    !!planningPayment ||
+    !!courierCheckout ||
+    remittancesOpen
   const layout = usePublishedOperationalLayout(
     'deliveries',
     'orders.view',
@@ -148,10 +157,18 @@ export function DeliveriesPage({
       className="delivery-terminal"
       data-studio-deliveries={!!layout}
       style={layout ? deliveriesStyle(layout) : undefined}
-      data-mode={adding ? 'edit' : checkout ? 'checkout' : 'board'}
+      data-mode={adding ? 'edit' : checkout || courierCheckout ? 'checkout' : 'board'}
       aria-label="Terminal de domicilios"
     >
-      {adding ? (
+      {courierCheckout ? (
+        <CourierCheckout
+          {...courierCheckout}
+          onClose={() => {
+            setCourierCheckout(null)
+            refresh()
+          }}
+        />
+      ) : adding ? (
         <OrderComposer
           key={adding.id}
           terminal
@@ -195,6 +212,15 @@ export function DeliveriesPage({
               }}
             />
             <div className="delivery-toolbar-actions">
+              {can('orders.manage') && can('cash.view') && can('cash.movements') && (
+                <button
+                  type="button"
+                  disabled={!selected || busy}
+                  onClick={() => setRemittancesOpen(true)}
+                >
+                  Rendir cobros
+                </button>
+              )}
               {can('orders.manage') && can('cash.view') && can('cash.movements') && (
                 <button
                   type="button"
@@ -347,6 +373,9 @@ export function DeliveriesPage({
               onPlanPayment={() => {
                 if (delivery) setPlanningPayment(structuredClone(delivery))
               }}
+              onCollectCourier={(order) => {
+                if (delivery) setCourierCheckout(structuredClone({ delivery, order }))
+              }}
               onAdd={(order) => setAdding(structuredClone(order))}
               delivery={delivery}
               onBack={() => setSelectedId(null)}
@@ -382,6 +411,9 @@ export function DeliveriesPage({
         <CourierAvailability branchId={selected} onClose={() => setCouriersOpen(false)} />
       )}
       {action && <DeliveryAction value={action} onClose={() => setAction(null)} />}
+      {remittancesOpen && selected && (
+        <CourierRemittances branchId={selected} onClose={() => setRemittancesOpen(false)} />
+      )}
       {planningPayment && (
         <DeliveryPaymentPlan delivery={planningPayment} onClose={() => setPlanningPayment(null)} />
       )}

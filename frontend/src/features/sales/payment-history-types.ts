@@ -25,10 +25,10 @@ export type PaymentEntry = {
   branch_id: number
   branch_name: string
   account_label: string | null
-  cash_session_id: number
+  cash_session_id: number | null
   method_name: string
   method_kind: 'cash' | 'non_cash'
-  provenance: 'operator'
+  provenance: 'operator' | 'courier_cash'
   reference: string | null
   applied_amount: string
   refunded_amount: string

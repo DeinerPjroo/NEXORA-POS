@@ -1,0 +1,62 @@
+.courier-checkout-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+}
+.courier-checkout-summary {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+.courier-checkout-summary table {
+  width: 100%;
+  font-size: 14px;
+}
+.courier-checkout-controls {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px;
+}
+.courier-checkout-fields {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.courier-tender-dock {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+}
+.courier-tender-dock fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.courier-tender-dock .cash-tender-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.courier-tender-dock .cash-tender-keypad button {
+  min-height: 36px;
+  font-size: 18px;
+}
+.courier-tender-dock .cash-tender-keypad button:last-child {
+  grid-column: 1 / -1;
+}
+@media (max-width: 640px) {
+  .courier-checkout-grid {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+  .courier-checkout-controls {
+    min-height: 560px;
+  }
+}

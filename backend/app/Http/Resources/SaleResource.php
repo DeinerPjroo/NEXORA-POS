@@ -11,8 +11,13 @@ final class SaleResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $this->resource->loadMissing('payments.courierCollection.settlements', 'payments.courierCollection.payment', 'payments.courierCollection.courier');
+        if ($this->resource->relationLoaded('payment')) {
+            $this->resource->loadMissing('payment.courierCollection.settlements', 'payment.courierCollection.payment', 'payment.courierCollection.courier');
+        }
         $returned = app(SaleBalance::class)->refundedByPayment($this->resource);
         $payment = fn ($p) => [...$p->only('id', 'account_id', 'cash_session_id', 'amount', 'method', 'payment_method_id', 'method_name', 'method_kind', 'method_revision', 'provenance', 'reference', 'received_amount', 'change_amount', 'created_at'),
+            'custody' => $p->courierCollection ? ['collection_id' => $p->courierCollection->id, 'courier_name' => $p->courierCollection->courier->name, 'pending' => $p->courierCollection->pending()] : null,
             'refunded_amount' => $returned[$p->id] ?? '0.0000', 'refundable_amount' => bcsub($p->amount, $returned[$p->id] ?? '0', 4)];
 
         return [

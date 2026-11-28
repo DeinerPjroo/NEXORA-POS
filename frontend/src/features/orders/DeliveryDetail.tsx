@@ -19,6 +19,7 @@ export function DeliveryDetail({
   onAdd,
   onChangeItem,
   onPlanPayment,
+  onCollectCourier,
 }: {
   delivery: Delivery | null
   preview?: boolean
@@ -30,6 +31,7 @@ export function DeliveryDetail({
   onAdd: (order: Order) => void
   onChangeItem: (order: Order, item: OrderItem) => void
   onPlanPayment: () => void
+  onCollectCourier: (order: Order) => void
 }) {
   const can = useCan()
   const { session } = useSession()
@@ -245,6 +247,15 @@ export function DeliveryDetail({
         </details>
       </div>
       <footer className="delivery-detail-actions">
+        {can('sales.collect') &&
+          can('orders.manage') &&
+          order &&
+          !order.sale_id &&
+          ['out_for_delivery', 'delivered'].includes(delivery.status) && (
+            <button type="button" onClick={() => onCollectCourier(order)}>
+              Cobrar efectivo con repartidor
+            </button>
+          )}
         {can('orders.manage') &&
           order &&
           !order.sale_id &&
