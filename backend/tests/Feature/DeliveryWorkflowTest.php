@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderDelivery;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\Role;
@@ -143,6 +144,7 @@ class DeliveryWorkflowTest extends TestCase
         $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'order_revision' => 3, 'settings_revision' => 2, 'discount_amount' => '0', 'expected_total' => '20000.00', 'received_amount' => '20000'])->assertCreated();
         $snapshot = fn () => $this->scope(fn () => [Sale::firstOrFail()->getAttributes(), Payment::firstOrFail()->getAttributes(), CashSession::firstOrFail()->getAttributes()]);
         $before = $snapshot();
+        $this->postJson('/api/v1/deliveries/'.$delivery->id.'/payment-plan', [...$this->key(), 'revision' => 2, 'payment_method_id' => null, 'reason' => 'Intento posterior al cobro'])->assertConflict();
         $this->postJson($url, [...$this->key(), 'revision' => 2, 'status' => 'out_for_delivery'])->assertOk();
         $this->postJson($url, [...$this->key(), 'revision' => 3, 'status' => 'failed', 'reason' => 'Direccion cerrada'])->assertOk();
         $this->postJson($url, [...$this->key(), 'revision' => 4, 'status' => 'returned', 'reason' => 'Pedido recibido en local'])->assertOk();
@@ -169,6 +171,70 @@ class DeliveryWorkflowTest extends TestCase
         $this->postJson($url, $body)->assertNotFound();
         $this->getJson('/api/v1/deliveries/couriers?branch_id='.$this->branch)->assertNotFound();
         $this->assertDatabaseCount('courier_availabilities', 1);
+    }
+
+    public function test_expected_payment_is_snapshot_only_idempotent_and_can_be_cleared_without_financial_effects(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $delivery = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $method = $this->scope(fn () => PaymentMethod::where('code', 'cash')->firstOrFail());
+        $url = '/api/v1/deliveries/'.$delivery->id.'/payment-plan';
+        $body = [...$this->key(), 'revision' => 1, 'payment_method_id' => $method->id, 'method_revision' => $method->revision, 'reason' => 'Cliente pagará en efectivo'];
+        $before = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.payment_expectation.name', $method->name)->assertJsonPath('data.revision', 2);
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.revision', 2);
+        $originalName = $method->name;
+        $this->scope(fn () => $method->forceFill(['name' => 'Nuevo nombre', 'revision' => $method->revision + 1])->save());
+        $this->getJson('/api/v1/deliveries?branch_id='.$this->branch)->assertOk()->assertJsonPath('data.0.payment_expectation.name', $originalName);
+        $this->postJson($url, [...$body, ...$this->key(), 'revision' => 2])->assertConflict();
+        $this->postJson($url, [...$this->key(), 'revision' => 2, 'payment_method_id' => null, 'reason' => 'Cliente aún no decide'])->assertOk()->assertJsonPath('data.payment_expectation', null);
+        $after = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        unset($before['delivery_revision'], $after['delivery_revision']);
+        $this->assertSame($before, $after);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+        $this->assertDatabaseCount('courier_cash_transfers', 0);
+    }
+
+    public function test_expected_payment_rejects_foreign_context_couriers_and_late_changes(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $delivery = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $method = $this->scope(fn () => PaymentMethod::where('code', 'cash')->firstOrFail());
+        $url = '/api/v1/deliveries/'.$delivery->id.'/payment-plan';
+        $body = [...$this->key(), 'revision' => 1, 'payment_method_id' => $method->id, 'method_revision' => $method->revision, 'reason' => 'Método solicitado'];
+        $courier = $this->courier();
+        $this->actingAs($courier)->postJson($url, $body)->assertForbidden();
+        $foreign = $this->company('plan-foreign@example.test');
+        $this->actingAs($foreign)->postJson($url, $body)->assertNotFound();
+        $this->actingAs($this->owner);
+        $foreignMethod = app(TenantContext::class)->run($foreign->tenant_id, fn () => PaymentMethod::firstOrFail()->id);
+        $this->postJson($url, [...$body, 'payment_method_id' => $foreignMethod])->assertNotFound();
+        $this->scope(fn () => $delivery->update(['status' => 'out_for_delivery']));
+        $this->postJson($url, $body)->assertConflict();
+        $this->assertDatabaseCount('payments', 0);
+    }
+
+    public function test_expected_payment_audit_failure_rolls_back_instruction_revision_event_and_uuid(): void
+    {
+        $this->postJson('/api/v1/orders', $this->payload())->assertCreated();
+        $delivery = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $method = $this->scope(fn () => PaymentMethod::firstOrFail());
+        $body = [...$this->key(), 'revision' => 1, 'payment_method_id' => $method->id, 'method_revision' => $method->revision, 'reason' => 'Instrucción autorizada'];
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'delivery.payment.planned') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $url = '/api/v1/deliveries/'.$delivery->id.'/payment-plan';
+        $this->postJson($url, $body)->assertServerError();
+        $this->assertDatabaseHas('order_deliveries', ['id' => $delivery->id, 'revision' => 1, 'expected_payment_method_id' => null]);
+        $this->assertDatabaseCount('delivery_events', 1);
+        $fail = false;
+        $this->postJson($url, $body)->assertOk();
+        $this->assertDatabaseCount('delivery_events', 2);
     }
 
     private function company(string $email): User

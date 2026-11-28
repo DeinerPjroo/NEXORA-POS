@@ -51,3 +51,6 @@ Las pruebas verifican sobrepago, revisión obsoleta, error en línea posterior, 
 ## Fondos de cambio de repartidores (3.DEL-4A)
 
 Domicilios permite entregar fondo de cambio y recibir su devolucion parcial/total mediante el CashLedger existente. No crea ventas, pagos ni refunds comerciales. Custodia y caja se actualizan juntas con revision/UUID/saldo esperado, BCMath, confirmacion fisica persistida y auditoria; historial append-only con FK tenant/sucursal/cuenta/sesion/movimiento. Caso SQL/UI probado: caja1000.00, fondo100.01 y devolucion40.01 dejan caja940.00 y custodia60.00. El fondo no es ingreso comercial ni cobro al cliente. Cobros al cliente en custodia, rendiciones de esos pagos y compensaciones permanecen pendientes; no usar este anticipo como sustituto de RecordPayments.
+
+
+3.DEL-4B1 separa el metodo previsto para el domicilio de cualquier pago real. Es una instruccion con snapshot del metodo activo/revisado, motivo/revision/UUID y auditoria, editable solo antes de salir a reparto y de crear una venta. Elegir efectivo/transferencia no registra cobro, no confirma banco ni mueve caja/custodia. El medio real del pago continuara registrado exclusivamente por los servicios financieros existentes; cobro al cliente en custodia4B2 y sus rendiciones siguen pendientes.

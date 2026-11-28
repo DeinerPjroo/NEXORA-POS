@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Domicilios3.DEL-4B1: payment_expectation es solo instruccion prevista, nunca pago/confirmacion bancaria. Snapshot de PaymentMethod activo/revisado con FK tenant/method; cambiar/limpiar exige orders.view/manage, revision/UUID/motivo, Tenant lock y auditoria/evento atomicos antes de salida y de cualquier venta. Conservar precios, pedido, fondos, ventas/pagos/caja; metodos futuros no reescriben snapshot. UI Solo instruccion y modal con payload congelado/guardas; refrescar detalle tras cambiar revision de entrega. Cobro real en custodia4B2 y rendiciones/compensaciones siguen pendientes: no usar esta instruccion ni fondo de cambio como sustituto de RecordPayments.
+
+
 - Domicilios3.DEL-4A: CourierCashAccount por tenant/sucursal/repartidor/moneda y transferencias append-only con FK a cuenta/caja/movimiento/actor. Fondos de cambio: advance resta caja y suma custodia; return hace lo contrario, parcial hasta saldo. CashLedger existente, BCMath/DECIMAL, Tenant lock, revisiones/saldo esperado, UUID exacto, entrega fisica confirmada y auditoria atomica. Exigir orders.view/manage + cash.view/movements y BranchAccess tambien al replay. Inactivo puede devolver pero no recibir fondos nuevos; caja abierta/autorizada/misma moneda-sucursal y saldo suficiente. UI congela cuenta y caja seleccionadas; incertidumbre no reinterpreta DTO. No crear ventas/payments/refunds ni confundir fondo de cambio con cobro al cliente: 4B/C cobros en custodia, sus rendiciones y compensaciones siguen pendientes. No declarar padre3.DEL-4 completo.
 
 

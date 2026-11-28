@@ -100,6 +100,40 @@ test('Domicilios: disponibilidad declarada, reasignacion e incidencias sin alter
       })
     ).data
   await page.goto('/terminal/domicilios')
+  await page
+    .getByRole('button', { name: `Ver domicilio de Ana entrega, pedido #${order.id}`, exact: true })
+    .click()
+  const paymentDetail = page.getByRole('complementary', {
+    name: 'Detalle del domicilio',
+    exact: true,
+  })
+  await paymentDetail.getByRole('button', { name: 'Método de pago previsto', exact: true }).click()
+  const plan = page.getByRole('dialog', { name: 'Método de pago previsto', exact: true })
+  const methods = await readApi<{ data: { id: number; kind: string; name: string }[] }>(
+    page,
+    'deliveries/payment-options',
+  )
+  const cashMethod = methods.data.find((method) => method.kind === 'cash')!
+  await plan.getByLabel('Método previsto', { exact: true }).selectOption(String(cashMethod.id))
+  await plan.getByLabel('Motivo del método previsto').fill('Cliente indica pago en efectivo')
+  const plans: string[] = []
+  await page.route('**/api/v1/deliveries/*/payment-plan', async (route) => {
+    plans.push(route.request().postData()!)
+    const response = await route.fetch()
+    if (plans.length === 1) await route.abort('failed')
+    else await route.fulfill({ response })
+  })
+  await plan.getByRole('button', { name: 'Guardar método previsto', exact: true }).click()
+  await expect(
+    plan.getByRole('button', { name: 'Reintentar misma instrucción', exact: true }),
+  ).toBeVisible()
+  await expect(plan.getByRole('button', { name: 'Volver', exact: true })).toBeDisabled()
+  await plan.getByRole('button', { name: 'Reintentar misma instrucción', exact: true }).click()
+  await expect(plan).toHaveCount(0)
+  expect(plans).toHaveLength(2)
+  expect(plans[0]).toBe(plans[1])
+  await expect(paymentDetail).toContainText(`Pago previsto: ${cashMethod.name}`)
+  await expect(paymentDetail).toContainText('Solo instrucción')
   await page.getByRole('button', { name: 'Repartidores', exact: true }).click()
   const availability = page.getByRole('dialog', {
     name: 'Disponibilidad de repartidores',

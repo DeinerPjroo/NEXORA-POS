@@ -18,6 +18,7 @@ export function DeliveryDetail({
   onEdit,
   onAdd,
   onChangeItem,
+  onPlanPayment,
 }: {
   delivery: Delivery | null
   preview?: boolean
@@ -28,6 +29,7 @@ export function DeliveryDetail({
   onEdit: () => void
   onAdd: (order: Order) => void
   onChangeItem: (order: Order, item: OrderItem) => void
+  onPlanPayment: () => void
 }) {
   const can = useCan()
   const { session } = useSession()
@@ -106,6 +108,10 @@ export function DeliveryDetail({
             <p className="delivery-instructions">{delivery.instructions}</p>
           )}
           <div className="delivery-detail-tags">
+            <span>
+              Pago previsto: {delivery.payment_expectation?.name ?? 'Sin definir'} · Solo
+              instrucción
+            </span>
             <span>
               <UserRound size={14} />
               {delivery.courier_name ?? 'Sin repartidor'}
@@ -239,6 +245,15 @@ export function DeliveryDetail({
         </details>
       </div>
       <footer className="delivery-detail-actions">
+        {can('orders.manage') &&
+          order &&
+          !order.sale_id &&
+          order.status !== 'cancelled' &&
+          ['pending', 'assigned'].includes(delivery.status) && (
+            <button type="button" onClick={onPlanPayment}>
+              Método de pago previsto
+            </button>
+          )}
         {can('orders.manage') &&
           can('catalog.view') &&
           order &&

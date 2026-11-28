@@ -939,3 +939,9 @@ alter table `courier_cash_transfers` add constraint `courier_transfer_movement_f
 
 alter table `courier_cash_transfers` add constraint `courier_cash_transfers_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+alter table `order_deliveries` add `expected_payment_method_id` bigint unsigned null;
+
+alter table `order_deliveries` add `payment_expectation` json null;
+
+alter table `order_deliveries` add constraint `delivery_expected_method_fk` foreign key (`tenant_id`, `expected_payment_method_id`) references `payment_methods` (`tenant_id`, `id`) on delete restrict;
+

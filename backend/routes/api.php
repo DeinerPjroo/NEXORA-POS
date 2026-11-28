@@ -73,6 +73,8 @@ Route::prefix('v1')->group(function () {
         Route::get('workspace/commercial-dashboard', [CommercialDashboardController::class, 'show']);
         Route::get('operations/context', [OperationsController::class, 'context']);
         Route::get('deliveries', [DeliveryController::class, 'index']);
+        Route::get('deliveries/payment-options', [DeliveryController::class, 'paymentOptions']);
+        Route::post('deliveries/{orderDelivery}/payment-plan', [DeliveryController::class, 'planPayment']);
         Route::get('deliveries/tariff-context', [DeliveryTariffController::class, 'context']);
         Route::post('deliveries/fee-preview', [DeliveryTariffController::class, 'preview']);
         Route::get('deliveries/tariff-settings', [DeliveryTariffController::class, 'settings']);

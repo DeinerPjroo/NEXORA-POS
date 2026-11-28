@@ -26,6 +26,7 @@ import { deliveryLabels as labels, deliveryKitchenLabels, type Delivery } from '
 import { DeliveryDetail } from './DeliveryDetail'
 import { CourierAvailability, courierAvailabilityLabel, type Courier } from './CourierAvailability'
 import { CourierCash } from './CourierCash'
+import { DeliveryPaymentPlan } from './DeliveryPaymentPlan'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
@@ -77,6 +78,7 @@ export function DeliveriesPage({
   const [editorBusy, setEditorBusy] = useState(false)
   const [couriersOpen, setCouriersOpen] = useState(false)
   const [cashCustodyOpen, setCashCustodyOpen] = useState(false)
+  const [planningPayment, setPlanningPayment] = useState<Delivery | null>(null)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
   const busy =
     !!checkout ||
@@ -85,7 +87,8 @@ export function DeliveriesPage({
     !!editing ||
     !!changingItem ||
     couriersOpen ||
-    cashCustodyOpen
+    cashCustodyOpen ||
+    !!planningPayment
   const layout = usePublishedOperationalLayout(
     'deliveries',
     'orders.view',
@@ -341,6 +344,9 @@ export function DeliveriesPage({
             <DeliveryDetail
               preview={!!studioPreview}
               onChangeItem={(order, item) => setChangingItem(structuredClone({ order, item }))}
+              onPlanPayment={() => {
+                if (delivery) setPlanningPayment(structuredClone(delivery))
+              }}
               onAdd={(order) => setAdding(structuredClone(order))}
               delivery={delivery}
               onBack={() => setSelectedId(null)}
@@ -376,6 +382,9 @@ export function DeliveriesPage({
         <CourierAvailability branchId={selected} onClose={() => setCouriersOpen(false)} />
       )}
       {action && <DeliveryAction value={action} onClose={() => setAction(null)} />}
+      {planningPayment && (
+        <DeliveryPaymentPlan delivery={planningPayment} onClose={() => setPlanningPayment(null)} />
+      )}
       {cashCustodyOpen && selected && (
         <CourierCash branchId={selected} onClose={() => setCashCustodyOpen(false)} />
       )}

@@ -1,4 +1,10 @@
 export type Delivery = {
+  payment_expectation?: {
+    id: number
+    name: string
+    kind: 'cash' | 'non_cash'
+    revision: number
+  } | null
   id: number
   order_id: number
   branch_id: number
