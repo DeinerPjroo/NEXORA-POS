@@ -21,6 +21,7 @@ export type Delivery = {
     'pending' | 'assigned' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'failed' | 'returned'
   preparation_status: 'open' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
   created_at: string
+  timing?: { total_minutes: number; route_minutes: number | null }
   events: {
     id: number
     status: string

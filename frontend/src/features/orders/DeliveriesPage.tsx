@@ -71,6 +71,8 @@ export function DeliveriesPage({
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('')
   const [search, setSearch] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [preparationStatus, setPreparationStatus] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [checkout, setCheckout] = useState<number | null>(null)
   const [kitchen, setKitchen] = useState<number | null>(null)
@@ -119,11 +121,16 @@ export function DeliveriesPage({
   }, [busy])
   const selected = branch ?? context.data?.branches.find((b) => b.is_active)?.id ?? null
   const query = useQuery({
-    queryKey: ['deliveries', selected, status, page],
+    queryKey: ['deliveries', selected, status, page, appliedSearch, preparationStatus],
     enabled: !!selected && !busy && !adding,
     queryFn: ({ signal }) =>
-      api<CatalogPage<Delivery>>(
-        `deliveries?branch_id=${selected}&page=${page}${status ? '&status=' + status : ''}`,
+      api<
+        CatalogPage<Delivery> & {
+          summary: { total: number; by_status: Partial<Record<Delivery['status'], number>> }
+          generated_at: string
+        }
+      >(
+        `deliveries?branch_id=${selected}&page=${page}${status ? '&status=' + status : ''}&search=${encodeURIComponent(appliedSearch)}&preparation_status=${preparationStatus}`,
         { signal },
       ),
     refetchInterval: studioPreview || busy || adding ? false : 10000,
@@ -132,16 +139,8 @@ export function DeliveriesPage({
     query.data?.data.find(
       (row) => row.id === (selectedId ?? (studioPreviewDetail ? query.data?.data[0]?.id : null)),
     ) ?? null
-  const term = search.trim().toLocaleLowerCase()
-  const rows = (query.data?.data ?? []).filter(
-    (row) =>
-      !term ||
-      [row.order_id, row.recipient_name, row.phone, row.address, row.courier_name]
-        .filter(Boolean)
-        .join(' ')
-        .toLocaleLowerCase()
-        .includes(term),
-  )
+  const term = appliedSearch
+  const rows = query.data?.data ?? []
   const time = (value: string) =>
     new Intl.DateTimeFormat('es-CO', {
       hour: 'numeric',
@@ -206,6 +205,7 @@ export function DeliveriesPage({
               value={selected}
               onChange={(id) => {
                 setBranch(id)
+                setAppliedSearch('')
                 setPage(1)
                 setSelectedId(null)
                 setSearch('')
@@ -273,6 +273,7 @@ export function DeliveriesPage({
                   setPage(1)
                   setSelectedId(null)
                   setSearch('')
+                  setAppliedSearch('')
                 }}
               >
                 <Icon size={16} />
@@ -280,22 +281,74 @@ export function DeliveriesPage({
               </button>
             ))}
           </div>
+          {query.data?.summary && (
+            <div className="delivery-summary" aria-label="Resumen de domicilios filtrados">
+              <span>
+                <strong>{query.data.summary.total}</strong> Coincidencias
+              </span>
+              <span>
+                <strong>
+                  {(query.data.summary.by_status.pending ?? 0) +
+                    (query.data.summary.by_status.assigned ?? 0)}
+                </strong>{' '}
+                Antes de salida
+              </span>
+              <span>
+                <strong>{query.data.summary.by_status.out_for_delivery ?? 0}</strong> En reparto
+              </span>
+              <span>
+                <strong>
+                  {(query.data.summary.by_status.failed ?? 0) +
+                    (query.data.summary.by_status.returned ?? 0)}
+                </strong>{' '}
+                Incidencias
+              </span>
+              <small>Sucursal y filtros actuales · todas las páginas</small>
+            </div>
+          )}
           <ErrorNotice error={query.error || context.error} />
           <div className="delivery-workspace" data-selected={!!delivery}>
             <section className="delivery-board" aria-label="Pedidos a domicilio">
               <header className="delivery-board-tools">
-                <label>
-                  <Search size={17} />
-                  <input
-                    aria-label="Buscar entre los domicilios de esta página"
-                    placeholder="Cliente, teléfono o pedido de esta página…"
-                    value={search}
-                    onChange={(event) => {
-                      setSearch(event.target.value)
-                      setSelectedId(null)
-                    }}
-                  />
-                </label>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    setAppliedSearch(search.trim())
+                    setPage(1)
+                    setSelectedId(null)
+                  }}
+                >
+                  <label>
+                    <Search size={17} />
+                    <input
+                      aria-label="Buscar domicilios"
+                      placeholder="Cliente, teléfono, repartidor o pedido…"
+                      maxLength={100}
+                      value={search}
+                      onChange={(event) => {
+                        setSearch(event.target.value)
+                        setSelectedId(null)
+                      }}
+                    />
+                  </label>
+                  <button type="submit">Buscar</button>
+                </form>
+                <select
+                  aria-label="Filtrar por cocina"
+                  value={preparationStatus}
+                  onChange={(event) => {
+                    setPreparationStatus(event.target.value)
+                    setPage(1)
+                    setSelectedId(null)
+                  }}
+                >
+                  <option value="">Toda la cocina</option>
+                  {Object.entries(deliveryKitchenLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
                 <span>
                   {query.data
                     ? `${query.data.meta.total} registros · ${filters.find((f) => f.value === status)?.label}`
@@ -308,15 +361,24 @@ export function DeliveriesPage({
                   <div className="delivery-empty">
                     <Bike size={38} />
                     <h2>
-                      {term ? 'Sin coincidencias en esta página' : 'Sin domicilios en este estado'}
+                      {term
+                        ? 'Sin coincidencias con estos filtros'
+                        : 'Sin domicilios en este estado'}
                     </h2>
                     <p>
                       {term
-                        ? 'Prueba otro nombre o consulta otra página.'
+                        ? 'Prueba otro nombre o cambia los filtros.'
                         : 'Los pedidos registrados aparecerán aquí.'}
                     </p>
                     {term && (
-                      <button type="button" onClick={() => setSearch('')}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearch('')
+                          setAppliedSearch('')
+                          setPage(1)
+                        }}
+                      >
                         Limpiar búsqueda
                       </button>
                     )}
@@ -352,6 +414,14 @@ export function DeliveriesPage({
                         {time(row.created_at)}
                       </time>
                     </div>
+                    {row.timing && (
+                      <span className="delivery-elapsed">
+                        <Clock3 size={14} /> {row.timing.total_minutes} min desde registro
+                        {row.timing.route_minutes !== null
+                          ? ` · ${row.timing.route_minutes} min de reparto`
+                          : ''}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -362,7 +432,6 @@ export function DeliveriesPage({
                   onPage={(next) => {
                     setPage(next)
                     setSelectedId(null)
-                    setSearch('')
                   }}
                 />
               )}

@@ -21,10 +21,25 @@ final class DeliveryController extends Controller
     public function index(Request $request)
     {
         abort_unless($request->user()->can('orders.view') && ($request->user()->can('orders.manage') || $request->user()->can('deliveries.operate')), 403);
-        $d = $request->validate(['branch_id' => ['required', 'integer'], 'page' => ['sometimes', 'integer', 'min:1'], 'status' => ['nullable', 'in:pending,assigned,out_for_delivery,delivered,cancelled,failed,returned']]);
+        $d = $request->validate(['branch_id' => ['required', 'integer'], 'page' => ['sometimes', 'integer', 'min:1'], 'status' => ['nullable', 'in:pending,assigned,out_for_delivery,delivered,cancelled,failed,returned'], 'preparation_status' => ['nullable', 'in:open,preparing,ready,delivered,cancelled'], 'search' => ['nullable', 'string', 'max:100']]);
         Branch::findOrFail($d['branch_id']);
 
-        return JsonResource::collection(OrderDelivery::where('branch_id', $d['branch_id'])->when(! $request->user()->can('orders.manage'), fn ($q) => $q->where('courier_id', $request->user()->id))->when($d['status'] ?? null, fn ($q, $s) => $q->where('status', $s))->with('order', 'courier', 'events.actor', 'events.courier')->latest('id')->paginate(20)->through(fn ($row) => $this->present($row)));
+        $query = OrderDelivery::where('branch_id', $d['branch_id'])->when(! $request->user()->can('orders.manage'), fn ($q) => $q->where('courier_id', $request->user()->id))->when($d['status'] ?? null, fn ($q, $s) => $q->where('status', $s))->when($d['preparation_status'] ?? null, fn ($q, $s) => $q->whereHas('order', fn ($q) => $q->where('status', $s)));
+        if (($term = trim($d['search'] ?? '')) !== '') {
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+            $query->where(function ($q) use ($term, $pattern) {
+                foreach (['recipient_name', 'phone', 'address'] as $column) {
+                    $q->orWhereRaw($column." LIKE ? ESCAPE '!'", [$pattern]);
+                }
+                $q->orWhereHas('courier', fn ($q) => $q->whereRaw("name LIKE ? ESCAPE '!'", [$pattern]));
+                if (ctype_digit($term) && strlen($term) <= 18) {
+                    $q->orWhere('order_id', $term);
+                }
+            });
+        }
+        $counts = (clone $query)->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status')->map(fn ($count) => (int) $count);
+
+        return JsonResource::collection($query->with('order', 'courier', 'events.actor', 'events.courier')->latest('id')->paginate(20)->through(fn ($row) => $this->present($row)))->additional(['summary' => ['scope' => 'filtered_results', 'by_status' => $counts, 'total' => $counts->sum()], 'generated_at' => now()->toIso8601String()]);
     }
 
     public function couriers(Request $request)
@@ -51,8 +66,14 @@ final class DeliveryController extends Controller
     public function present(OrderDelivery $d): array
     {
         $d->loadMissing('events.actor', 'events.courier');
+        $end = $d->delivered_at;
+        if (! $end && in_array($d->status, ['cancelled', 'failed', 'returned'], true)) {
+            $end = $d->events->last(fn ($event) => $event->status === $d->status)?->created_at;
+        }
+        $end ??= now();
+        $timing = ['total_minutes' => max(0, (int) $d->created_at->diffInMinutes($end)), 'route_minutes' => $d->out_at ? max(0, (int) $d->out_at->diffInMinutes($end)) : null];
 
-        return [...$d->only('payment_expectation', 'id', 'order_id', 'branch_id', 'recipient_name', 'phone', 'address', 'instructions', 'neighborhood', 'location_reference', 'customer_id', 'customer_address_id', 'courier_id', 'status', 'revision', 'out_at', 'delivered_at', 'created_at'), 'courier_name' => $d->courier?->name, 'preparation_status' => $d->order->status, 'events' => $d->events->map(fn ($e) => [...$e->only('id', 'status', 'reason', 'created_at'), 'actor' => $e->actor?->only('id', 'name'), 'courier' => $e->courier?->only('id', 'name')])];
+        return [...$d->only('payment_expectation', 'id', 'order_id', 'branch_id', 'recipient_name', 'phone', 'address', 'instructions', 'neighborhood', 'location_reference', 'customer_id', 'customer_address_id', 'courier_id', 'status', 'revision', 'out_at', 'delivered_at', 'created_at'), 'timing' => $timing, 'courier_name' => $d->courier?->name, 'preparation_status' => $d->order->status, 'events' => $d->events->map(fn ($e) => [...$e->only('id', 'status', 'reason', 'created_at'), 'actor' => $e->actor?->only('id', 'name'), 'courier' => $e->courier?->only('id', 'name')])];
     }
 
     public function paymentOptions(Request $request)

@@ -237,6 +237,33 @@ class DeliveryWorkflowTest extends TestCase
         $this->assertDatabaseCount('delivery_events', 2);
     }
 
+    public function test_delivery_central_searches_all_pages_counts_scoped_results_and_reports_elapsed_time(): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        $first = $this->postJson('/api/v1/orders', [...$this->payload(), 'delivery' => ['recipient_name' => 'Cliente 100% real', 'phone' => '3001234567', 'address' => 'Calle unica']])->assertCreated()->json('data');
+        $courier = $this->courier();
+        $other = $this->courier();
+        $delivery = $this->scope(fn () => OrderDelivery::where('order_id', $first['id'])->firstOrFail());
+        $this->scope(function () use ($delivery, $courier) {
+            $delivery->update(['created_at' => now()->subMinutes(45), 'out_at' => now()->subMinutes(12), 'courier_id' => $courier->id, 'status' => 'out_for_delivery']);
+        });
+        for ($i = 0; $i < 21; $i++) {
+            $this->postJson('/api/v1/orders', $this->payload())->assertCreated();
+        }
+        $this->getJson('/api/v1/deliveries?branch_id='.$this->branch)->assertOk()->assertJsonPath('summary.total', 22)->assertJsonPath('summary.by_status.pending', 21)->assertJsonCount(20, 'data');
+        $url = '/api/v1/deliveries?branch_id='.$this->branch.'&search='.urlencode('100%');
+        $this->getJson($url)->assertOk()->assertJsonPath('summary.total', 1)->assertJsonPath('data.0.order_id', $first['id'])->assertJsonPath('data.0.timing.total_minutes', 45)->assertJsonPath('data.0.timing.route_minutes', 12);
+        $this->getJson($url.'&preparation_status=ready')->assertOk()->assertJsonPath('summary.total', 0);
+        $this->actingAs($other)->getJson($url)->assertOk()->assertJsonPath('summary.total', 0)->assertJsonCount(0, 'data');
+        $this->actingAs($courier)->getJson($url)->assertOk()->assertJsonPath('summary.total', 1);
+        $foreign = $this->company('foreign-central@example.test');
+        $this->actingAs($foreign)->getJson($url)->assertNotFound();
+        $this->actingAs($this->owner);
+        $this->getJson('/api/v1/deliveries?branch_id='.$this->branch.'&preparation_status=invalid')->assertUnprocessable();
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+    }
+
     private function company(string $email): User
     {
         return app(RegisterCompany::class)->execute(['company_name' => 'Entregas', 'business_type' => 'restaurant', 'branch_name' => 'Principal', 'name' => 'Operador', 'email' => $email, 'password' => 'SeguraNexora123']);
