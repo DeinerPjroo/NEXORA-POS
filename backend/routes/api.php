@@ -6,6 +6,7 @@ use App\Http\Controllers\CashController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommercialDashboardController;
 use App\Http\Controllers\ContextPriceController;
+use App\Http\Controllers\CourierCashController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\DeliveryTariffController;
@@ -85,6 +86,9 @@ Route::prefix('v1')->group(function () {
         Route::post('customers/{customer}/addresses', [CustomerController::class, 'storeAddress']);
         Route::put('customers/{customer}/addresses/{customerAddress}', [CustomerController::class, 'updateAddress']);
         Route::get('deliveries/couriers', [DeliveryController::class, 'couriers']);
+        Route::get('deliveries/courier-cash', [CourierCashController::class, 'index']);
+        Route::get('deliveries/couriers/{courier}/cash', [CourierCashController::class, 'history'])->whereNumber('courier');
+        Route::post('deliveries/couriers/{courier}/cash', [CourierCashController::class, 'store'])->whereNumber('courier');
         Route::post('deliveries/couriers/{courier}/availability', [DeliveryController::class, 'availability'])->whereNumber('courier');
         Route::post('deliveries/{orderDelivery}/status', [DeliveryController::class, 'change']);
         Route::post('orders/{order}/preparation-corrections', [OrderController::class, 'correctPreparation']);

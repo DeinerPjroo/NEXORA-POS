@@ -11,7 +11,7 @@ final class BranchAccess
 {
     private ?array $ids = null;
 
-    private const DIRECT = ['courier_availabilities', 'delivery_policies', 'delivery_zones', 'customers', 'customer_addresses', 'order_deliveries', 'cash_registers', 'cash_sessions', 'orders', 'sales', 'payments', 'sale_refunds', 'payment_reviews', 'dining_rooms', 'dining_tables', 'dining_sessions', 'dining_session_tables', 'dining_reservations', 'dining_reservation_tables', 'kitchen_stations', 'kitchen_routes', 'kitchen_dispatches', 'kitchen_tickets'];
+    private const DIRECT = ['courier_cash_accounts', 'courier_cash_transfers', 'courier_availabilities', 'delivery_policies', 'delivery_zones', 'customers', 'customer_addresses', 'order_deliveries', 'cash_registers', 'cash_sessions', 'orders', 'sales', 'payments', 'sale_refunds', 'payment_reviews', 'dining_rooms', 'dining_tables', 'dining_sessions', 'dining_session_tables', 'dining_reservations', 'dining_reservation_tables', 'kitchen_stations', 'kitchen_routes', 'kitchen_dispatches', 'kitchen_tickets'];
 
     private const PARENTS = ['order_item_changes' => ['order_id', 'orders'], 'delivery_events' => ['order_id', 'orders'], 'preparation_corrections' => ['order_id', 'orders'], 'cash_movements' => ['cash_session_id', 'cash_sessions'], 'order_items' => ['order_id', 'orders'], 'order_events' => ['order_id', 'orders'], 'order_combos' => ['order_id', 'orders'], 'sale_accounts' => ['sale_id', 'sales'], 'dining_events' => ['dining_session_id', 'dining_sessions'], 'kitchen_ticket_lines' => ['order_id', 'orders'], 'kitchen_ticket_events' => ['order_id', 'orders']];
 

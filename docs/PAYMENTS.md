@@ -46,3 +46,8 @@ Las devoluciones de una parte elegida de un pago existen desde 0.9; la devoluci�
 Venta 100.01, caja base 1000.00. Abono cash 40.00, recibido 50.00, cambio 10.00: saldo 60.01, caja 1040.00. Lote siguiente: cash 10.00 con recibido 20.00/cambio 10.00 y transferencia manual 50.01 con referencia: saldo 0, caja 1050.00. La devolución compensa cash 50.00 y no efectivo 50.01; caja vuelve a 1000.00. El cierre con conteo 1000.00 concilia efectivo. Esto no concilia ni confirma movimientos bancarios.
 
 Las pruebas verifican sobrepago, revisión obsoleta, error en línea posterior, fallo de auditoría, reintentos, permisos y tenant, referencia ajena y FK de devolución contra otro pago/venta. El E2E comprueba pérdida de respuesta del lote, recibo mixto/móvil, devolución y cierre. MySQL 8 y carga/concurrencia de varios procesos siguen pendientes.
+
+
+## Fondos de cambio de repartidores (3.DEL-4A)
+
+Domicilios permite entregar fondo de cambio y recibir su devolucion parcial/total mediante el CashLedger existente. No crea ventas, pagos ni refunds comerciales. Custodia y caja se actualizan juntas con revision/UUID/saldo esperado, BCMath, confirmacion fisica persistida y auditoria; historial append-only con FK tenant/sucursal/cuenta/sesion/movimiento. Caso SQL/UI probado: caja1000.00, fondo100.01 y devolucion40.01 dejan caja940.00 y custodia60.00. El fondo no es ingreso comercial ni cobro al cliente. Cobros al cliente en custodia, rendiciones de esos pagos y compensaciones permanecen pendientes; no usar este anticipo como sustituto de RecordPayments.

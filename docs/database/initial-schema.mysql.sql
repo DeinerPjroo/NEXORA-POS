@@ -917,3 +917,25 @@ alter table `courier_availabilities` add constraint `courier_availabilities_tena
 
 alter table `courier_availabilities` add constraint `courier_availabilities_tenant_id_user_id_foreign` foreign key (`tenant_id`, `user_id`) references `users` (`tenant_id`, `id`) on delete restrict;
 
+create table `courier_cash_accounts` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `courier_id` bigint unsigned not null, `currency` varchar(3) not null, `balance` decimal(19, 4) not null default '0', `revision` int unsigned not null default '0', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `courier_cash_accounts` add unique `courier_cash_identity`(`tenant_id`, `branch_id`, `courier_id`, `currency`);
+
+alter table `courier_cash_accounts` add unique `courier_cash_branch_identity`(`tenant_id`, `branch_id`, `id`);
+
+alter table `courier_cash_accounts` add constraint `courier_cash_accounts_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `courier_cash_accounts` add constraint `courier_cash_accounts_tenant_id_courier_id_foreign` foreign key (`tenant_id`, `courier_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+
+create table `courier_cash_transfers` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `courier_cash_account_id` bigint unsigned not null, `cash_session_id` bigint unsigned not null, `cash_movement_id` bigint unsigned not null, `actor_id` bigint unsigned not null, `kind` varchar(20) not null, `amount` decimal(19, 4) not null, `balance_after` decimal(19, 4) not null, `account_revision` int unsigned not null, `reason` varchar(250) not null, `confirmed_handover` tinyint(1) not null, `created_at` timestamp not null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `courier_cash_transfers` add unique `courier_cash_movement_unique`(`tenant_id`, `cash_movement_id`);
+
+alter table `courier_cash_transfers` add constraint `courier_transfer_account_fk` foreign key (`tenant_id`, `branch_id`, `courier_cash_account_id`) references `courier_cash_accounts` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `courier_cash_transfers` add constraint `courier_transfer_session_fk` foreign key (`tenant_id`, `branch_id`, `cash_session_id`) references `cash_sessions` (`tenant_id`, `branch_id`, `id`) on delete restrict;
+
+alter table `courier_cash_transfers` add constraint `courier_transfer_movement_fk` foreign key (`tenant_id`, `cash_session_id`, `cash_movement_id`) references `cash_movements` (`tenant_id`, `cash_session_id`, `id`) on delete restrict;
+
+alter table `courier_cash_transfers` add constraint `courier_cash_transfers_tenant_id_actor_id_foreign` foreign key (`tenant_id`, `actor_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

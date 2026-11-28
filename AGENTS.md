@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Domicilios3.DEL-4A: CourierCashAccount por tenant/sucursal/repartidor/moneda y transferencias append-only con FK a cuenta/caja/movimiento/actor. Fondos de cambio: advance resta caja y suma custodia; return hace lo contrario, parcial hasta saldo. CashLedger existente, BCMath/DECIMAL, Tenant lock, revisiones/saldo esperado, UUID exacto, entrega fisica confirmada y auditoria atomica. Exigir orders.view/manage + cash.view/movements y BranchAccess tambien al replay. Inactivo puede devolver pero no recibir fondos nuevos; caja abierta/autorizada/misma moneda-sucursal y saldo suficiente. UI congela cuenta y caja seleccionadas; incertidumbre no reinterpreta DTO. No crear ventas/payments/refunds ni confundir fondo de cambio con cobro al cliente: 4B/C cobros en custodia, sus rendiciones y compensaciones siguen pendientes. No declarar padre3.DEL-4 completo.
+
+
 - Domicilios3.DEL-3: CourierAvailability por tenant/sucursal/usuario con FK compuestas, BranchAccess DIRECT, revision/UUID/motivo y auditoria atomica; no duplica empleados ni modifica accesos. Ausencia significa sin declarar, no disponibilidad real; false bloquea nuevas asignaciones/salidas, no entrega/regreso existentes. Reasignar antes de salida exige repartidor distinto y motivo. failed solo desde out_for_delivery, returned solo desde failed; ambos con motivo y gestor o repartidor asignado/lectura autorizada. Nunca cobrar/cancelar/reembolsar automaticamente ni alterar venta/pagos/caja/cocina al registrar incidencia. Eventos append-only conservan repartidores/actor; exponer solo id/nombre. Aplicar DTO confirmado a cache antes de cerrar accion, preservando UUID/payload inciertos y guardas Terminal. Sin GPS/presencia simulados. Seguir3.DEL-4 custodia/rendiciones como dominio financiero distinto; Domicilios/fase3 siguen pendientes.
 
 

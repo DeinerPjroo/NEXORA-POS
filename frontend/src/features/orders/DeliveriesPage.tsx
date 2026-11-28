@@ -25,6 +25,7 @@ import type { CatalogPage } from '../catalog/types'
 import { deliveryLabels as labels, deliveryKitchenLabels, type Delivery } from './delivery-types'
 import { DeliveryDetail } from './DeliveryDetail'
 import { CourierAvailability, courierAvailabilityLabel, type Courier } from './CourierAvailability'
+import { CourierCash } from './CourierCash'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
@@ -75,8 +76,16 @@ export function DeliveriesPage({
   const [changingItem, setChangingItem] = useState<{ order: Order; item: OrderItem } | null>(null)
   const [editorBusy, setEditorBusy] = useState(false)
   const [couriersOpen, setCouriersOpen] = useState(false)
+  const [cashCustodyOpen, setCashCustodyOpen] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
-  const busy = !!checkout || !!action || !!kitchen || !!editing || !!changingItem || couriersOpen
+  const busy =
+    !!checkout ||
+    !!action ||
+    !!kitchen ||
+    !!editing ||
+    !!changingItem ||
+    couriersOpen ||
+    cashCustodyOpen
   const layout = usePublishedOperationalLayout(
     'deliveries',
     'orders.view',
@@ -183,6 +192,15 @@ export function DeliveriesPage({
               }}
             />
             <div className="delivery-toolbar-actions">
+              {can('orders.manage') && can('cash.view') && can('cash.movements') && (
+                <button
+                  type="button"
+                  disabled={!selected || busy}
+                  onClick={() => setCashCustodyOpen(true)}
+                >
+                  Fondos de cambio
+                </button>
+              )}
               {can('orders.manage') && (
                 <button
                   type="button"
@@ -358,6 +376,9 @@ export function DeliveriesPage({
         <CourierAvailability branchId={selected} onClose={() => setCouriersOpen(false)} />
       )}
       {action && <DeliveryAction value={action} onClose={() => setAction(null)} />}
+      {cashCustodyOpen && selected && (
+        <CourierCash branchId={selected} onClose={() => setCashCustodyOpen(false)} />
+      )}
       {kitchen && (
         <KitchenSend
           orderId={kitchen}
