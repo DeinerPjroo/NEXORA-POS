@@ -24,6 +24,7 @@ import { Pagination } from '../catalog/catalog-ui'
 import type { CatalogPage } from '../catalog/types'
 import { deliveryLabels as labels, deliveryKitchenLabels, type Delivery } from './delivery-types'
 import { DeliveryDetail } from './DeliveryDetail'
+import { CourierAvailability, courierAvailabilityLabel, type Courier } from './CourierAvailability'
 import { TerminalCheckout } from '../pos/TerminalCheckout'
 import { useTerminalGuard } from '../pos/TerminalEnvironment'
 import { KitchenSend } from '../kitchen/KitchenSend'
@@ -47,6 +48,8 @@ const filters = [
   { value: 'assigned', label: 'Asignados', icon: PackageCheck },
   { value: 'out_for_delivery', label: 'En reparto', icon: ArrowUpRight },
   { value: 'delivered', label: 'Entregados', icon: PackageCheck },
+  { value: 'failed', label: 'Fallidos', icon: X },
+  { value: 'returned', label: 'Devueltos', icon: PackageCheck },
   { value: 'cancelled', label: 'Cancelados', icon: X },
 ]
 export function DeliveriesPage({
@@ -71,8 +74,9 @@ export function DeliveriesPage({
   const [adding, setAdding] = useState<Order | null>(null)
   const [changingItem, setChangingItem] = useState<{ order: Order; item: OrderItem } | null>(null)
   const [editorBusy, setEditorBusy] = useState(false)
+  const [couriersOpen, setCouriersOpen] = useState(false)
   const [action, setAction] = useState<{ delivery: Delivery; status: string } | null>(null)
-  const busy = !!checkout || !!action || !!kitchen || !!editing || !!changingItem
+  const busy = !!checkout || !!action || !!kitchen || !!editing || !!changingItem || couriersOpen
   const layout = usePublishedOperationalLayout(
     'deliveries',
     'orders.view',
@@ -179,6 +183,15 @@ export function DeliveriesPage({
               }}
             />
             <div className="delivery-toolbar-actions">
+              {can('orders.manage') && (
+                <button
+                  type="button"
+                  disabled={!selected || busy}
+                  onClick={() => setCouriersOpen(true)}
+                >
+                  Repartidores
+                </button>
+              )}
               <button
                 type="button"
                 aria-label="Actualizar domicilios"
@@ -341,6 +354,9 @@ export function DeliveriesPage({
       {changingItem && (
         <DeliveryItemEditor {...changingItem} onClose={() => setChangingItem(null)} />
       )}
+      {couriersOpen && selected && (
+        <CourierAvailability branchId={selected} onClose={() => setCouriersOpen(false)} />
+      )}
       {action && <DeliveryAction value={action} onClose={() => setAction(null)} />}
       {kitchen && (
         <KitchenSend
@@ -381,14 +397,23 @@ function DeliveryAction({
     queryKey: ['couriers', value.delivery.branch_id],
     enabled: value.status === 'assigned',
     queryFn: () =>
-      api<{ data: { id: number; name: string }[] }>(
-        `deliveries/couriers?branch_id=${value.delivery.branch_id}`,
-      ),
+      api<{ data: Courier[] }>(`deliveries/couriers?branch_id=${value.delivery.branch_id}`),
   })
-  const operation = useOperation(`deliveries/${value.delivery.id}/status`, async () => {
-    await client.invalidateQueries({ queryKey: ['deliveries'] })
-    onClose()
-  })
+  const operation = useOperation<Delivery>(
+    `deliveries/${value.delivery.id}/status`,
+    async (updated) => {
+      client.setQueriesData<CatalogPage<Delivery>>({ queryKey: ['deliveries'] }, (previous) =>
+        previous
+          ? {
+              ...previous,
+              data: previous.data.map((row) => (row.id === updated.id ? updated : row)),
+            }
+          : previous,
+      )
+      await client.invalidateQueries({ queryKey: ['deliveries'] })
+      onClose()
+    },
+  )
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
@@ -406,7 +431,11 @@ function DeliveryAction({
           ? 'Asignar repartidor'
           : value.status === 'out_for_delivery'
             ? 'Confirmar salida a reparto'
-            : 'Confirmar entrega al cliente'
+            : value.status === 'failed'
+              ? 'Registrar entrega fallida'
+              : value.status === 'returned'
+                ? 'Confirmar devolución al restaurante'
+                : 'Confirmar entrega al cliente'
       }
       onClose={onClose}
       locked={operation.locked}
@@ -422,15 +451,29 @@ function DeliveryAction({
                   Selecciona un empleado
                 </option>
                 {couriers.data?.data.map((u) => (
-                  <option value={u.id} key={u.id}>
-                    {u.name}
+                  <option
+                    value={u.id}
+                    key={u.id}
+                    disabled={
+                      u.id === value.delivery.courier_id || u.availability?.available === false
+                    }
+                  >
+                    {u.name} · {courierAvailabilityLabel(u)}
                   </option>
                 ))}
               </select>
             </Field>
           )}
           <Field label="Observación de entrega">
-            <textarea name="reason" maxLength={250} />
+            <textarea
+              name="reason"
+              minLength={3}
+              maxLength={250}
+              required={
+                ['failed', 'returned'].includes(value.status) ||
+                (value.status === 'assigned' && !!value.delivery.courier_id)
+              }
+            />
           </Field>
         </fieldset>
         {operation.uncertain ? (

@@ -85,6 +85,7 @@ Route::prefix('v1')->group(function () {
         Route::post('customers/{customer}/addresses', [CustomerController::class, 'storeAddress']);
         Route::put('customers/{customer}/addresses/{customerAddress}', [CustomerController::class, 'updateAddress']);
         Route::get('deliveries/couriers', [DeliveryController::class, 'couriers']);
+        Route::post('deliveries/couriers/{courier}/availability', [DeliveryController::class, 'availability'])->whereNumber('courier');
         Route::post('deliveries/{orderDelivery}/status', [DeliveryController::class, 'change']);
         Route::post('orders/{order}/preparation-corrections', [OrderController::class, 'correctPreparation']);
         Route::get('orders/{order}/customer', [OrderController::class, 'customer']);

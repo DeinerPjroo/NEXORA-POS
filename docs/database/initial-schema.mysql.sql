@@ -909,3 +909,11 @@ alter table `kitchen_stations` add `display_settings` json null;
 
 alter table `kitchen_tickets` add `display_snapshot` json null;
 
+create table `courier_availabilities` (`id` bigint unsigned not null auto_increment primary key, `tenant_id` bigint unsigned not null, `branch_id` bigint unsigned not null, `user_id` bigint unsigned not null, `available` tinyint(1) not null, `revision` int unsigned not null default '1', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci';
+
+alter table `courier_availabilities` add unique `courier_availability_identity`(`tenant_id`, `branch_id`, `user_id`);
+
+alter table `courier_availabilities` add constraint `courier_availabilities_tenant_id_branch_id_foreign` foreign key (`tenant_id`, `branch_id`) references `branches` (`tenant_id`, `id`) on delete restrict;
+
+alter table `courier_availabilities` add constraint `courier_availabilities_tenant_id_user_id_foreign` foreign key (`tenant_id`, `user_id`) references `users` (`tenant_id`, `id`) on delete restrict;
+

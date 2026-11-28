@@ -231,6 +231,8 @@ export function DeliveryDetail({
                 <strong>{deliveryLabels[event.status as Delivery['status']]}</strong>
                 <time dateTime={event.created_at}>{time(event.created_at)}</time>
                 {event.reason && <p>{event.reason}</p>}
+                {event.actor && <small>Registrado por {event.actor.name}</small>}
+                {event.courier && <small>Repartidor: {event.courier.name}</small>}
               </li>
             ))}
           </ol>
@@ -269,6 +271,16 @@ export function DeliveryDetail({
           >
             <Bike size={17} />
             {delivery.status === 'assigned' ? 'Sale a reparto' : 'Confirmar entrega al cliente'}
+          </button>
+        )}
+        {canTransition && delivery.status === 'out_for_delivery' && (
+          <button type="button" onClick={() => onAction('failed')}>
+            Registrar entrega fallida
+          </button>
+        )}
+        {canTransition && delivery.status === 'failed' && (
+          <button type="button" onClick={() => onAction('returned')}>
+            Devuelto al restaurante
           </button>
         )}
         {can('sales.collect') &&

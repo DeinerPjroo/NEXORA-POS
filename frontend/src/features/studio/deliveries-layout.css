@@ -23,6 +23,8 @@
 .delivery-terminal[data-studio-deliveries='true'] [data-status='delivered'] {
   --delivery-status: var(--studio-delivery-delivered);
 }
+.delivery-terminal[data-studio-deliveries='true'] [data-status='failed'],
+.delivery-terminal[data-studio-deliveries='true'] [data-status='returned'],
 .delivery-terminal[data-studio-deliveries='true'] [data-status='cancelled'] {
   --delivery-status: var(--studio-delivery-cancelled);
 }

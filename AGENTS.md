@@ -86,6 +86,9 @@ Producto comercial modular para restaurantes. Eslogan: «El futuro de tu restaur
 
 ## Protocolo de continuidad autónoma
 
+- Domicilios3.DEL-3: CourierAvailability por tenant/sucursal/usuario con FK compuestas, BranchAccess DIRECT, revision/UUID/motivo y auditoria atomica; no duplica empleados ni modifica accesos. Ausencia significa sin declarar, no disponibilidad real; false bloquea nuevas asignaciones/salidas, no entrega/regreso existentes. Reasignar antes de salida exige repartidor distinto y motivo. failed solo desde out_for_delivery, returned solo desde failed; ambos con motivo y gestor o repartidor asignado/lectura autorizada. Nunca cobrar/cancelar/reembolsar automaticamente ni alterar venta/pagos/caja/cocina al registrar incidencia. Eventos append-only conservan repartidores/actor; exponer solo id/nombre. Aplicar DTO confirmado a cache antes de cerrar accion, preservando UUID/payload inciertos y guardas Terminal. Sin GPS/presencia simulados. Seguir3.DEL-4 custodia/rendiciones como dominio financiero distinto; Domicilios/fase3 siguen pendientes.
+
+
 - Kitchen3.1-D2: KitchenDisplay schema1 cerrado por estacion permite nombres visibles de new/preparing/ready/delivered/cancelled y avisos previo0..min60/objetivo y demora booleana. No crear transiciones ni reinterpretar codigos desde etiquetas. SaveKitchenStation conserva revision/UUID/Tenant lock/permisos/auditoria; clientes legados omiten config sin borrarla. Dispatch copia display_snapshot y objetivo; cambios futuros no reescriben comandas/eventos anteriores. Migracion40 nullable no inventa historia; fallback reproduce configuracion original conocida. A-D completos en alcance operativo actual, no produccion/hardware; seguir3.DEL-3 sin reiniciar ni cerrar fase3.
 
 

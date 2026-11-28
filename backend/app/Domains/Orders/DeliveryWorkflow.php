@@ -5,11 +5,13 @@ namespace App\Domains\Orders;
 use App\Domains\Identity\Audit;
 use App\Domains\Kitchen\KitchenWorkflow;
 use App\Domains\Operations\IdempotentOperation;
+use App\Models\CourierAvailability;
 use App\Models\DeliveryEvent;
 use App\Models\Order;
 use App\Models\OrderDelivery;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 
 final class DeliveryWorkflow
 {
@@ -30,6 +32,7 @@ final class DeliveryWorkflow
 
     public function change(User $actor, OrderDelivery $delivery, array $data): OrderDelivery
     {
+        Gate::authorize('orders.view');
         abort_unless($actor->can('orders.manage') || $actor->can('deliveries.operate'), 403);
         abort_unless($actor->can('orders.manage') || (int) $delivery->courier_id === $actor->id, 403);
 
@@ -38,23 +41,33 @@ final class DeliveryWorkflow
             abort_unless($actor->can('orders.manage') || (int) $delivery->courier_id === $actor->id, 403);
             abort_unless($delivery->revision === (int) $data['revision'], 409, 'La entrega cambió. Actualiza antes de continuar.');
             $order = Order::whereKey($delivery->order_id)->lockForUpdate()->firstOrFail();
-            abort_if($order->status === 'cancelled' || in_array($delivery->status, ['delivered', 'cancelled'], true), 409, 'La entrega está finalizada.');
+            abort_if($order->status === 'cancelled' || in_array($delivery->status, ['delivered', 'cancelled', 'returned'], true), 409, 'La entrega está finalizada.');
+            $previousCourier = $delivery->courier_id;
+            $from = $delivery->status;
             if ($data['status'] === 'assigned') {
                 Gate::authorize('orders.manage');
                 abort_unless(in_array($delivery->status, ['pending', 'assigned'], true), 409, 'El domicilio ya salió a reparto.');
                 $courier = User::where('tenant_id', $actor->tenant_id)->whereKey($data['courier_id'])->firstOrFail();
-                abort_unless($courier->hasPermission('deliveries.operate') && $courier->canAccessBranch($delivery->branch_id), 422, 'El repartidor no está autorizado en esta sucursal.');
+                abort_unless($courier->is_active && $courier->hasPermission('deliveries.operate') && $courier->canAccessBranch($delivery->branch_id), 422, 'El repartidor no está autorizado en esta sucursal.');
+                abort_if(CourierAvailability::where('branch_id', $delivery->branch_id)->where('user_id', $courier->id)->where('available', false)->exists(), 409, 'El repartidor fue marcado como no disponible.');
+                if ($previousCourier !== null) {
+                    abort_if((int) $previousCourier === $courier->id, 409, 'El repartidor ya está asignado.');
+                    Validator::make($data, ['reason' => ['required', 'string', 'min:3', 'max:250']])->validate();
+                }
                 $delivery->courier_id = $courier->id;
             } else {
-                $next = ['assigned' => 'out_for_delivery', 'out_for_delivery' => 'delivered'];
-                abort_unless(($next[$delivery->status] ?? null) === $data['status'], 409, 'No se permite ese cambio de entrega.');
+                $next = ['assigned' => ['out_for_delivery'], 'out_for_delivery' => ['delivered', 'failed'], 'failed' => ['returned']];
+                abort_unless(in_array($data['status'], $next[$delivery->status] ?? [], true), 409, 'No se permite ese cambio de entrega.');
                 $courier = User::where('tenant_id', $actor->tenant_id)->whereKey($delivery->courier_id)->firstOrFail();
-                abort_unless($courier->hasPermission('deliveries.operate') && $courier->canAccessBranch($delivery->branch_id), 409, 'Revisa los accesos del repartidor.');
+                if (! in_array($data['status'], ['failed', 'returned'], true)) {
+                    abort_unless($courier->is_active && $courier->hasPermission('deliveries.operate') && $courier->canAccessBranch($delivery->branch_id), 409, 'Revisa los accesos del repartidor.');
+                }
                 if ($data['status'] === 'out_for_delivery') {
+                    abort_if(CourierAvailability::where('branch_id', $delivery->branch_id)->where('user_id', $courier->id)->where('available', false)->exists(), 409, 'El repartidor fue marcado como no disponible.');
                     abort_unless(in_array($order->status, ['ready', 'delivered'], true), 409, 'Cocina debe marcar el pedido listo antes del reparto.');
                     $delivery->out_at = now();
                     app(KitchenWorkflow::class)->handOffForDelivery($actor, $order);
-                } else {
+                } elseif ($data['status'] === 'delivered') {
                     $delivery->delivered_at = now();
                 }
             }
@@ -62,7 +75,7 @@ final class DeliveryWorkflow
             $delivery->revision++;
             $delivery->save();
             $this->event($actor, $delivery, $data['reason'] ?? null);
-            Audit::record('delivery.status', 'Se actualizó una entrega a domicilio.', $actor, ['delivery_id' => $delivery->id, 'status' => $delivery->status]);
+            Audit::record('delivery.status', 'Se actualizó una entrega a domicilio.', $actor, ['delivery_id' => $delivery->id, 'from_status' => $from, 'status' => $delivery->status, 'previous_courier_id' => $previousCourier, 'courier_id' => $delivery->courier_id, 'reason' => $data['reason'] ?? null]);
 
             return $delivery;
         });

@@ -22,6 +22,8 @@
 .delivery-terminal [data-status='delivered'] {
   --delivery-status: var(--terminal-green, #209b79);
 }
+.delivery-terminal [data-status='failed'],
+.delivery-terminal [data-status='returned'],
 .delivery-terminal [data-status='cancelled'] {
   --delivery-status: #cc5365;
 }

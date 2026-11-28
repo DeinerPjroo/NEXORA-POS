@@ -7,10 +7,15 @@ use App\Domains\Identity\RegisterCompany;
 use App\Domains\Tenancy\TenantContext;
 use App\Models\AuditLog;
 use App\Models\Branch;
+use App\Models\CashSession;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\OrderDelivery;
+use App\Models\Payment;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -39,6 +44,131 @@ class DeliveryWorkflowTest extends TestCase
 
             return ['product_id' => $p->id, 'product_revision' => 1, 'quantity' => 2, 'expected_unit_price' => '10000', 'preparation_destination' => 'takeaway'];
         });
+    }
+
+    public function test_reassignment_requires_reason_and_incidents_preserve_order_and_financial_history(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $d = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $first = $this->courier();
+        $second = $this->courier();
+        $url = '/api/v1/deliveries/'.$d->id.'/status';
+        $this->postJson($url, [...$this->key(), 'revision' => 1, 'status' => 'assigned', 'courier_id' => $first->id])->assertOk();
+        $reassign = [...$this->key(), 'revision' => 2, 'status' => 'assigned', 'courier_id' => $second->id];
+        $this->postJson($url, $reassign)->assertUnprocessable();
+        $reassign['reason'] = 'Cambio de turno autorizado';
+        $this->postJson($url, $reassign)->assertOk()->assertJsonPath('data.events.2.courier.id', $second->id);
+        $this->postJson($url, $reassign)->assertOk()->assertJsonPath('data.revision', 3);
+        $this->scope(fn () => Order::whereKey($order['id'])->update(['status' => 'ready']));
+        $this->postJson($url, [...$this->key(), 'revision' => 3, 'status' => 'out_for_delivery'])->assertOk();
+        $before = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        $fail = [...$this->key(), 'revision' => 4, 'status' => 'failed', 'reason' => 'Cliente no responde'];
+        $this->actingAs($first)->postJson($url, $fail)->assertForbidden();
+        $this->actingAs($second)->postJson($url, [...$fail, 'reason' => null])->assertUnprocessable();
+        $this->postJson($url, $fail)->assertOk()->assertJsonPath('data.status', 'failed');
+        $this->postJson($url, $fail)->assertOk()->assertJsonPath('data.revision', 5);
+        $this->postJson($url, [...$this->key(), 'revision' => 4, 'status' => 'returned', 'reason' => 'Regreso al restaurante'])->assertConflict();
+        $this->postJson($url, [...$this->key(), 'revision' => 5, 'status' => 'returned', 'reason' => 'Regreso al restaurante'])->assertOk()->assertJsonPath('data.status', 'returned')->assertJsonPath('data.delivered_at', null);
+        $this->actingAs($this->owner);
+        $after = $this->getJson('/api/v1/orders/'.$order['id'])->assertOk()->json('data');
+        foreach (['status', 'revision', 'subtotal', 'items', 'sale_id'] as $key) {
+            $this->assertSame($before[$key], $after[$key]);
+        }
+        $this->getJson('/api/v1/deliveries?branch_id='.$this->branch.'&status=returned')->assertOk()->assertJsonCount(1, 'data');
+        $this->assertDatabaseCount('order_deliveries', 1);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('cash_movements', 0);
+    }
+
+    public function test_courier_availability_is_explicit_revisioned_audited_and_blocks_assignment_without_touching_finance(): void
+    {
+        $courier = $this->courier();
+        $url = '/api/v1/deliveries/couriers/'.$courier->id.'/availability';
+        $list = $this->getJson('/api/v1/deliveries/couriers?branch_id='.$this->branch)->assertOk()->json('data');
+        $this->assertNull(collect($list)->firstWhere('id', $courier->id)['availability']);
+        $body = [...$this->key(), 'branch_id' => $this->branch, 'revision' => 0, 'available' => false, 'reason' => 'Fuera de turno'];
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.available', false)->assertJsonPath('data.revision', 1);
+        $this->postJson($url, $body)->assertOk()->assertJsonPath('data.revision', 1);
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $delivery = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $assign = [...$this->key(), 'revision' => 1, 'status' => 'assigned', 'courier_id' => $courier->id];
+        $this->postJson('/api/v1/deliveries/'.$delivery->id.'/status', $assign)->assertConflict();
+        $this->postJson($url, [...$body, ...$this->key(), 'available' => true])->assertConflict();
+        $this->postJson($url, [...$body, ...$this->key(), 'revision' => 1, 'available' => true])->assertOk()->assertJsonPath('data.revision', 2);
+        $this->postJson('/api/v1/deliveries/'.$delivery->id.'/status', $assign)->assertOk();
+        $this->postJson($url, [...$body, ...$this->key(), 'revision' => 2])->assertOk();
+        $this->scope(fn () => Order::whereKey($order['id'])->update(['status' => 'ready']));
+        $this->postJson('/api/v1/deliveries/'.$delivery->id.'/status', [...$this->key(), 'revision' => 2, 'status' => 'out_for_delivery'])->assertConflict();
+        $this->assertDatabaseCount('courier_availabilities', 1);
+        $this->assertDatabaseCount('sales', 0);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'courier.availability', 'actor_id' => $this->owner->id]);
+    }
+
+    public function test_courier_availability_rejects_foreign_context_permissions_and_rolls_back_audit_failure(): void
+    {
+        $courier = $this->courier();
+        $url = '/api/v1/deliveries/couriers/'.$courier->id.'/availability';
+        $body = [...$this->key(), 'branch_id' => $this->branch, 'revision' => 0, 'available' => true, 'reason' => 'Inicio de turno'];
+        $this->actingAs($courier)->postJson($url, $body)->assertForbidden();
+        $foreign = $this->company('availability-foreign@example.test');
+        $this->actingAs($foreign)->postJson($url, $body)->assertNotFound();
+        $this->actingAs($this->owner);
+        $this->postJson($url, [...$body, 'tenant_id' => $this->owner->tenant_id])->assertUnprocessable();
+        $fail = true;
+        AuditLog::creating(function ($log) use (&$fail) {
+            if ($fail && $log->action === 'courier.availability') {
+                throw new \RuntimeException('Audit unavailable');
+            }
+        });
+        $this->postJson($url, $body)->assertServerError();
+        $this->assertDatabaseCount('courier_availabilities', 0);
+        $fail = false;
+        $this->postJson($url, $body)->assertOk();
+        $this->assertDatabaseCount('courier_availabilities', 1);
+    }
+
+    public function test_failed_paid_delivery_preserves_the_sale_payment_and_cash_balance(): void
+    {
+        $order = $this->postJson('/api/v1/orders', $this->payload())->assertCreated()->json('data');
+        $this->postJson('/api/v1/orders/'.$order['id'].'/status', [...$this->key(), 'revision' => 1, 'status' => 'preparing'])->assertOk();
+        $this->postJson('/api/v1/orders/'.$order['id'].'/status', [...$this->key(), 'revision' => 2, 'status' => 'ready'])->assertOk();
+        $courier = $this->courier();
+        $delivery = $this->scope(fn () => OrderDelivery::firstOrFail());
+        $url = '/api/v1/deliveries/'.$delivery->id.'/status';
+        $this->postJson($url, [...$this->key(), 'revision' => 1, 'status' => 'assigned', 'courier_id' => $courier->id])->assertOk();
+        $this->putJson('/api/v1/sales/settings', ['revision' => 1, 'confirmed' => true, 'tax_mode' => 'none', 'tax_name' => 'Sin impuesto', 'tax_rate' => '0'])->assertOk();
+        $register = $this->getJson('/api/v1/cash/registers')->assertOk()->json('data.0.id');
+        $cash = $this->postJson('/api/v1/cash/registers/'.$register.'/open', [...$this->key(), 'opening_amount' => '0', 'currency' => 'COP'])->assertCreated()->json('data');
+        $this->postJson('/api/v1/orders/'.$order['id'].'/collect', [...$this->key(), 'cash_session_id' => $cash['id'], 'cash_revision' => 1, 'order_revision' => 3, 'settings_revision' => 2, 'discount_amount' => '0', 'expected_total' => '20000.00', 'received_amount' => '20000'])->assertCreated();
+        $snapshot = fn () => $this->scope(fn () => [Sale::firstOrFail()->getAttributes(), Payment::firstOrFail()->getAttributes(), CashSession::firstOrFail()->getAttributes()]);
+        $before = $snapshot();
+        $this->postJson($url, [...$this->key(), 'revision' => 2, 'status' => 'out_for_delivery'])->assertOk();
+        $this->postJson($url, [...$this->key(), 'revision' => 3, 'status' => 'failed', 'reason' => 'Direccion cerrada'])->assertOk();
+        $this->postJson($url, [...$this->key(), 'revision' => 4, 'status' => 'returned', 'reason' => 'Pedido recibido en local'])->assertOk();
+        $this->assertSame($before, $snapshot());
+        $this->assertDatabaseCount('sale_refunds', 0);
+        $this->assertDatabaseCount('cash_movements', 1);
+    }
+
+    public function test_courier_availability_replay_fails_after_actor_loses_branch_access(): void
+    {
+        $courier = $this->courier();
+        $manager = $this->scope(function () {
+            $role = Role::create(['name' => 'Gestor de repartidores', 'is_owner' => false]);
+            $role->permissions()->attach(Permission::whereIn('key', ['orders.view', 'orders.manage'])->pluck('id'), ['tenant_id' => $this->owner->tenant_id]);
+            $user = User::factory()->create(['role_id' => $role->id, 'all_branches' => false]);
+            $user->branches()->attach($this->branch, ['tenant_id' => $user->tenant_id]);
+
+            return $user;
+        });
+        $body = [...$this->key(), 'branch_id' => $this->branch, 'revision' => 0, 'available' => true, 'reason' => 'Inicio autorizado'];
+        $url = '/api/v1/deliveries/couriers/'.$courier->id.'/availability';
+        $this->actingAs($manager)->postJson($url, $body)->assertOk();
+        $this->scope(fn () => $manager->branches()->detach($this->branch));
+        $this->postJson($url, $body)->assertNotFound();
+        $this->getJson('/api/v1/deliveries/couriers?branch_id='.$this->branch)->assertNotFound();
+        $this->assertDatabaseCount('courier_availabilities', 1);
     }
 
     private function company(string $email): User
